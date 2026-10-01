@@ -8,13 +8,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
-function thDateTime(iso: string | null): string {
-  if (!iso) return '-';
+function thTime(iso: string | null): string | null {
+  if (!iso) return null;
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '-';
-  const s = new Date(d.getTime() + TH_OFFSET_MS);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(s.getUTCDate())}/${pad(s.getUTCMonth() + 1)} ${pad(s.getUTCHours())}:${pad(s.getUTCMinutes())}`;
+  if (isNaN(d.getTime())) return null;
+  const shifted = new Date(d.getTime() + TH_OFFSET_MS);
+  return `${String(shifted.getUTCHours()).padStart(2, '0')}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
 }
 
 function stripMarkdown(text: string): string {
@@ -26,152 +25,120 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-function formatDetail(text: string | null): string {
-  if (!text) return '-';
-  const lines = stripMarkdown(text).split('\n').map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return '-';
+function formatDetail(text: string | null): string | null {
+  if (!text) return null;
+  const clean = stripMarkdown(text).trim();
+  if (!clean) return null;
+  const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return null;
   if (lines.length <= 5) return lines.join('\n');
   return [...lines.slice(0, 5), '...'].join('\n');
 }
 
-const NUDGES = [
-  'Past due, but not past hope! Let\'s knock it out~ 📸',
-  'This one slipped by — want to finish it now?',
-  'Deadline\'s gone, the task is still waiting for you!',
-  'Late is better than never. You got this!',
-];
+type LineMessage =
+  | { type: 'text'; text: string }
+  | { type: 'image'; originalContentUrl: string; previewImageUrl: string };
 
-async function pushText(token: string, to: string, text: string) {
+async function pushMessages(token: string, to: string, messages: LineMessage[]) {
   const res = await fetch(`${LINE_API}/message/push`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ to, messages: [{ type: 'text', text: text.slice(0, 4900) }] }),
+    body: JSON.stringify({ to, messages: messages.slice(0, 5) }),
   });
   if (!res.ok) throw new Error(`LINE push failed ${res.status}: ${await res.text()}`);
 }
 
+// Signed https URLs for image attachments LINE can fetch (JPEG/PNG only).
+async function imageMessages(
+  supabase: ReturnType<typeof createClient>,
+  attachments: unknown,
+): Promise<LineMessage[]> {
+  const list = Array.isArray(attachments) ? attachments : [];
+  const images = list.filter(
+    (a: Record<string, unknown>) =>
+      typeof a?.type === 'string' && /^image\/(jpeg|jpg|png)$/i.test(a.type as string) && typeof a?.path === 'string',
+  );
+  const out: LineMessage[] = [];
+  for (const img of images) {
+    const { data } = await supabase.storage
+      .from('attachments')
+      .createSignedUrl(img.path as string, 60 * 60 * 24);
+    if (data?.signedUrl) {
+      out.push({ type: 'image', originalContentUrl: data.signedUrl, previewImageUrl: data.signedUrl });
+    }
+  }
+  return out;
+}
+
+const NUDGES = [
+  "Past due, but not past hope! Let's knock it out~ 📸",
+  'This one slipped by — want to finish it now?',
+  "Deadline's gone, but it's still waiting for you!",
+  'Late is better than never. You got this!',
+];
+
+function thDateTime(iso: string): string {
+  const s = new Date(new Date(iso).getTime() + TH_OFFSET_MS);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(s.getUTCDate())}/${p(s.getUTCMonth() + 1)} ${p(s.getUTCHours())}:${p(s.getUTCMinutes())}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-
   const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
     const accessToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN');
     if (!accessToken) return json({ error: 'LINE_CHANNEL_ACCESS_TOKEN not configured' }, 500);
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
     const cronSecret = req.headers.get('x-cron-secret');
     const validSecrets = [Deno.env.get('CRON_SECRET'), Deno.env.get('LINE_CRON_SECRET')].filter(Boolean);
-    const isCron = !!cronSecret && validSecrets.includes(cronSecret);
+    if (!cronSecret || !validSecrets.includes(cronSecret)) return json({ error: 'Unauthorized' }, 401);
 
-    let targetUserId: string | null = null;
-    if (!isCron) {
-      const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
-      const { data: userData } = await supabase.auth.getUser(token);
-      if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
-      targetUserId = userData.user.id;
-    }
-
-    let query = supabase
+    const { data: links, error } = await supabase
       .from('line_links')
-      .select('user_id, line_user_id, overdue_enabled')
+      .select('user_id, line_user_id')
       .not('line_user_id', 'is', null)
       .eq('overdue_enabled', true);
-    if (targetUserId) query = query.eq('user_id', targetUserId);
-
-    const { data: links, error: linksError } = await query;
-    if (linksError) throw linksError;
-    if (!links || links.length === 0) return json({ message: 'No linked LINE accounts', sent: 0 });
+    if (error) throw error;
 
     const now = new Date();
-    // Only nudge for deadlines missed within the last 7 days, so old items stay quiet.
-    const floor = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
+    const floor = new Date(now.getTime() - 3 * 86400000); // only deadlines missed in the last 3 days
     let sent = 0;
     const failures: string[] = [];
 
-    for (const link of links) {
+    for (const link of links ?? []) {
       try {
         const { data: tasks } = await supabase
-          .from('tasks')
-          .select('id, title, description, deadline, tag_ids')
-          .eq('user_id', link.user_id)
-          .eq('is_completed', false)
-          .is('recurrence_unit', null)
-          .not('deadline', 'is', null)
-          .lt('deadline', now.toISOString())
-          .gte('deadline', floor.toISOString());
-
-        const { data: events } = await supabase
-          .from('events')
-          .select('id, title, description, deadline, tag_ids')
-          .eq('user_id', link.user_id)
-          .not('deadline', 'is', null)
-          .lt('deadline', now.toISOString())
-          .gte('deadline', floor.toISOString());
-
+          .from('tasks').select('id, title, description, deadline, tag_ids')
+          .eq('user_id', link.user_id).eq('is_completed', false).is('recurrence_unit', null)
+          .lt('deadline', now.toISOString()).gte('deadline', floor.toISOString());
         const { data: tags } = await supabase.from('tags').select('id, name').eq('user_id', link.user_id);
         const tagMap = new Map((tags ?? []).map((t) => [t.id, t.name]));
-        const formatTags = (ids: string[] | null) => {
-          const names = (ids ?? []).map((id) => tagMap.get(id)).filter(Boolean) as string[];
-          return names.length ? names.join(', ') : '-';
-        };
 
-        type Missed = {
-          type: 'task' | 'event';
-          id: string;
-          title: string;
-          description: string | null;
-          deadline: string;
-          tag_ids: string[] | null;
-        };
-
-        const missed: Missed[] = [
-          ...(tasks ?? []).map((t) => ({ ...t, type: 'task' as const })),
-          ...(events ?? []).map((e) => ({ ...e, type: 'event' as const })),
-        ] as Missed[];
-
-        for (const item of missed) {
-          // One nudge per item per deadline (unique index on the sent table).
+        for (const t of tasks ?? []) {
           const { error: markErr } = await supabase.from('line_reminders_sent').insert({
-            user_id: link.user_id,
-            item_type: `${item.type}_overdue`,
-            item_id: item.id,
-            occurrence_at: item.deadline,
+            user_id: link.user_id, item_type: 'task_overdue', item_id: t.id, occurrence_at: t.deadline,
           });
           if (markErr) continue;
-
-          const lines = [
-            '⚠️ Missed deadline!',
-            '',
-            item.type === 'event' ? '📅 Event' : '📋 Task',
-            `Name : ${item.title}`,
-            'Detail :',
-            formatDetail(item.description),
-            `Deadline was : ${thDateTime(item.deadline)}`,
-            `Tag : ${formatTags(item.tag_ids)}`,
-            '',
+          const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ') || '-';
+          const text = [
+            '⚠️ Missed deadline!', '', '📋 Task',
+            `Name : ${t.title}`, 'Detail :', formatDetail(t.description) ?? '-',
+            `Deadline was : ${thDateTime(t.deadline)}`, `Tag : ${tagNames}`, '',
             `"${NUDGES[Math.floor(Math.random() * NUDGES.length)]}"`,
-          ];
-
-          await pushText(accessToken, link.line_user_id as string, lines.join('\n'));
+          ].join('\n');
+          await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: text.slice(0, 4900) }]);
           sent++;
         }
       } catch (err) {
-        console.error(`Overdue nudge failed for user ${link.user_id}:`, err);
+        console.error(`Overdue nudge failed for ${link.user_id}:`, err);
         failures.push(String(err));
       }
     }
-
-    return json({ message: 'LINE overdue nudges processed', sent, failures });
+    return json({ message: 'Overdue nudges processed', sent, failures });
   } catch (error) {
     console.error('send-line-overdue error:', error);
     return json({ error: (error as Error).message }, 500);

@@ -1,3 +1,4 @@
+import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Event } from '@/lib/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,7 @@ export const EventsPage = ({
     deadline: '',
     tag_ids: [] as string[],
     attachments: [] as import('@/lib/types').Attachment[],
+    notice_before: false,
   });
   const [sort, setSort] = useSortPreference('events');
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
@@ -98,6 +100,7 @@ export const EventsPage = ({
         start_time: event.start_time,
         deadline: event.deadline,
         attachments: event.attachments || [],
+        notice_before: !!((event as any).notice_before),
       });
     });
     setShowUndo(false);
@@ -116,6 +119,7 @@ export const EventsPage = ({
       deadline: '',
       tag_ids: [],
       attachments: [],
+      notice_before: false,
     });
     setEditingEvent(null);
   };
@@ -482,6 +486,7 @@ export const EventsPage = ({
                 value={formData.deadline}
                 onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
               />
+              <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
               <div>
                 <label className="text-sm font-medium mb-1 block">Tags</label>
                 <TagPicker
