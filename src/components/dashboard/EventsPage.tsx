@@ -155,6 +155,7 @@ export const EventsPage = ({
       deadline: event.deadline ? format(parseISO(event.deadline), "yyyy-MM-dd'T'HH:mm") : '',
       tag_ids: event.tag_ids || [],
       attachments: event.attachments || [],
+      notice_before: !!event.notice_before,
     });
     setIsCreateOpen(true);
   };
