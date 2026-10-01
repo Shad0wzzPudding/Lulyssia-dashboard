@@ -1,3 +1,4 @@
+import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Task } from '@/lib/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -57,6 +58,7 @@ export const TasksPage = ({
     recurrence_unit: '' as '' | 'day' | 'week' | 'month' | 'year',
     recurrence_interval: 1,
     attachments: [] as import('@/lib/types').Attachment[],
+    notice_before: false,
   });
   const [sort, setSort] = useSortPreference('tasks');
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
@@ -101,6 +103,7 @@ export const TasksPage = ({
         recurrence_unit: task.recurrence_unit || null,
         recurrence_interval: task.recurrence_interval || 1,
         attachments: task.attachments || [],
+        notice_before: !!((task as any).notice_before),
       });
     });
     setShowUndo(false);
@@ -122,6 +125,7 @@ export const TasksPage = ({
       recurrence_unit: '',
       recurrence_interval: 1,
       attachments: [],
+      notice_before: false,
     });
     setEditingTask(null);
   };
@@ -578,6 +582,7 @@ export const TasksPage = ({
                 />
                 <label htmlFor="is_completed" className="text-sm">Mark as completed</label>
               </div>
+              <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
               <div>
                 <label className="text-sm font-medium mb-1 block">Tags</label>
                 <TagPicker
