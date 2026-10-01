@@ -90,6 +90,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           id: string
+          notice_before: boolean
           sort_order: number
           start_time: string | null
           tag_ids: string[]
@@ -103,6 +104,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          notice_before?: boolean
           sort_order?: number
           start_time?: string | null
           tag_ids?: string[]
@@ -116,6 +118,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          notice_before?: boolean
           sort_order?: number
           start_time?: string | null
           tag_ids?: string[]
@@ -295,6 +298,7 @@ export type Database = {
           description: string | null
           id: string
           is_completed: boolean
+          notice_before: boolean
           recurrence_interval: number
           recurrence_unit: string | null
           sort_order: number
@@ -311,6 +315,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_completed?: boolean
+          notice_before?: boolean
           recurrence_interval?: number
           recurrence_unit?: string | null
           sort_order?: number
@@ -327,6 +332,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_completed?: boolean
+          notice_before?: boolean
           recurrence_interval?: number
           recurrence_unit?: string | null
           sort_order?: number
