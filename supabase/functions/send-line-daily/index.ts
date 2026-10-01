@@ -141,13 +141,13 @@ Deno.serve(async (req) => {
       try {
         const { data: tasks } = await supabase
           .from('tasks')
-          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, tag_ids, attachments')
+          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, tag_ids, attachments, notice_before')
           .eq('user_id', link.user_id)
           .eq('is_completed', false);
 
         const { data: events } = await supabase
           .from('events')
-          .select('title, description, start_time, deadline, tag_ids, attachments')
+          .select('title, description, start_time, deadline, tag_ids, attachments, notice_before')
           .eq('user_id', link.user_id);
 
         const { data: tags } = await supabase
@@ -286,6 +286,36 @@ Deno.serve(async (req) => {
           ...images.slice(0, 4),
         ]);
         sent++;
+
+        // Separate "Notice before" message: items flagged to warn one day ahead.
+        const tomorrow = thDateString(new Date(Date.now() + 86400000));
+        const isTomorrow = (iso: string | null) => !!iso && thDateString(new Date(iso)) === tomorrow;
+        const noticeItems = [
+          ...(events ?? [])
+            .filter((e) => e.notice_before && (isTomorrow(e.start_time) || isTomorrow(e.deadline)))
+            .map((e) => ({ kind: '📅 Event', title: e.title, description: e.description, start: e.start_time, deadline: e.deadline, tag_ids: e.tag_ids })),
+          ...(tasks ?? [])
+            .filter((t) => t.notice_before && !t.recurrence_unit && (isTomorrow(t.start_date) || isTomorrow(t.deadline)))
+            .map((t) => ({ kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids })),
+        ];
+        if (noticeItems.length > 0) {
+          const n: string[] = [`🔔 Notice before — coming up tomorrow (${tomorrow})`, ''];
+          for (const it of noticeItems) {
+            const startStr = isTomorrow(it.start) ? thTime(it.start) : null;
+            const dueStr = isTomorrow(it.deadline) ? thTime(it.deadline) : null;
+            n.push(it.kind);
+            n.push(`Name : ${it.title}`);
+            n.push('Detail :');
+            n.push(formatDetail(it.description) ?? '-');
+            n.push(`Start time - deadline: ${startStr ?? '-'} - ${dueStr ?? '-'}`);
+            n.push(`Tag : ${formatTags(it.tag_ids).replace(' 🏷 ', '') || '-'}`);
+            n.push('');
+          }
+          n.push('"Get ready ahead of time~ 📸"');
+          await pushMessages(accessToken, link.line_user_id as string, [
+            { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
+          ]);
+        }
       } catch (err) {
         console.error(`Failed for user ${link.user_id}:`, err);
         failures.push(String(err));
