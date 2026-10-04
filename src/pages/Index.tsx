@@ -204,7 +204,7 @@ const Index = () => {
             <Navigation activePage={activePage} onPageChange={setActivePage} />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user.email}
+                Welcome, {user.email} version {session.user?.app_metadata?.version || 'N/A'}
               </span>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out
