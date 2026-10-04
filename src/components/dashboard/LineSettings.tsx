@@ -20,8 +20,9 @@ interface LineLink {
 const LINK_FIELDS = 'id, link_code, line_user_id, display_name, is_enabled, reminders_enabled, overdue_enabled';
 
 const generateCode = () =>
-  Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
-
+  Array.from(crypto.getRandomValues(new Uint8Array(8)),
+    (b) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
+    
 export const LineSettings = () => {
   const { toast } = useToast();
   const [link, setLink] = useState<LineLink | null>(null);

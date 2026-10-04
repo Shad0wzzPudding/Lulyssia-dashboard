@@ -2,6 +2,10 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
+const newCode = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(8)),
+    (b) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
+
 function base64(bytes: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(bytes)));
 }
@@ -177,18 +181,27 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        if (code.length >= 6 && code.length <= 12) {
+          if (code.length >= 6 && code.length <= 12) {
           const { data: link } = await supabase
             .from('line_links')
-            .select('id, user_id')
+            .select('id, user_id, line_user_id')
             .eq('link_code', code)
             .maybeSingle();
+
+          if (link && link.line_user_id && link.line_user_id !== lineUserId) {
+            await reply(
+              accessToken,
+              replyToken,
+              'That code is already linked to another LINE account. Tap the refresh button next to the code in Settings to generate a new one.',
+            );
+            continue;
+          }
 
           if (link) {
             // Free the code from any other LINE account first
             await supabase
               .from('line_links')
-              .update({ line_user_id: null })
+              .update({ link_code: newCode(), line_user_id: null })
               .eq('line_user_id', lineUserId)
               .neq('id', link.id);
 
