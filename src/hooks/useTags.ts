@@ -36,7 +36,7 @@ export const useTags = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err?.message?.includes('duplicate') ? 'Tag already exists' : 'Failed to create tag');
     },
   });
@@ -45,7 +45,7 @@ export const useTags = () => {
     mutationFn: async ({ id, name, color }: { id: string; name?: string; color?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      const patch: Record<string, any> = {};
+      const patch: { name?: string; color?: string } = {};
       if (name !== undefined) patch.name = name.trim();
       if (color !== undefined) patch.color = color;
       const { error } = await supabase

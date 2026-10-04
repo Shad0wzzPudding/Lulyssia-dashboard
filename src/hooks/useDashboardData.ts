@@ -505,7 +505,7 @@ export const useDashboardData = () => {
   });
 
   const revertActivityLog = useMutation({
-    mutationFn: async (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, any> }) => {
+    mutationFn: async (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -532,7 +532,8 @@ export const useDashboardData = () => {
         // Undo delete → re-insert the item
         const { error } = await supabase
           .from(tableName)
-          .insert([log.previous_data as any]);
+          // tableName is a runtime union; the stored snapshot has that table's row shape
+          .insert([log.previous_data as never]);
         if (error) throw error;
       } else {
         throw new Error('Cannot revert this action - missing data');

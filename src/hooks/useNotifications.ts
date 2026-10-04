@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import type { Task, Event as CalendarEvent, DailyTask } from '@/lib/types';
+
+// Background Sync isn't part of the standard DOM typings yet
+type SyncCapableRegistration = ServiceWorkerRegistration & {
+  sync?: {
+    register: (tag: string) => Promise<void>;
+    getTags?: () => Promise<string[]>;
+  };
+};
+
+// Shape of the JSON body returned by our edge functions on failure
+type FunctionResult = { error?: string } | null;
 
 export const useNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
@@ -21,7 +33,7 @@ export const useNotifications = () => {
                    /Macintosh/.test(userAgent) && 'ontouchend' in document;
       
       const standaloneCheck1 = window.matchMedia('(display-mode: standalone)').matches;
-      const standaloneCheck2 = (window.navigator as any).standalone === true;
+      const standaloneCheck2 = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
       const isStandalone = standaloneCheck1 || standaloneCheck2;
       
       // Individual logging for debugging (keeping for now)
@@ -86,7 +98,7 @@ export const useNotifications = () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       
-      const existingSubscription = await (registration as any).pushManager.getSubscription();
+      const existingSubscription = await registration.pushManager.getSubscription();
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 if (existingSubscription && currentUser) {
   try {
@@ -97,8 +109,8 @@ if (existingSubscription && currentUser) {
         subscription: existingSubscription.toJSON(),
       },
     });
-    if (fnError || (fnData as any)?.error) {
-      console.error('save-push-subscription failed (existing):', fnError || (fnData as any)?.error);
+    if (fnError || (fnData as FunctionResult)?.error) {
+      console.error('save-push-subscription failed (existing):', fnError || (fnData as FunctionResult)?.error);
     }
   } catch (e) {
     console.error('save-push-subscription threw (existing):', e);
@@ -126,7 +138,7 @@ if (existingSubscription && currentUser) {
         throw new Error('Failed to fetch VAPID key');
       }
       
-      const subscription = await (registration as any).pushManager.subscribe({
+      const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey)
       });
@@ -142,8 +154,8 @@ try {
       subscription: subscription.toJSON(),
     },
   });
-  if (fnError || (fnData as any)?.error) {
-    console.error('save-push-subscription failed (new):', fnError || (fnData as any)?.error);
+  if (fnError || (fnData as FunctionResult)?.error) {
+    console.error('save-push-subscription failed (new):', fnError || (fnData as FunctionResult)?.error);
   } else {
     toast({
       title: "Success",
@@ -205,7 +217,7 @@ try {
     }
   };
 
-  const scheduleNotificationCheck = async (tasks: any[], events: any[], dailyTasks: any[]) => {
+  const scheduleNotificationCheck = async (tasks: Task[], events: CalendarEvent[], dailyTasks: DailyTask[]) => {
     if (permission !== 'granted' || !('serviceWorker' in navigator)) {
       return;
     }
@@ -220,7 +232,7 @@ try {
       await cache.put('/dailyTasks', new Response(JSON.stringify(dailyTasks)));
       
       // Schedule background sync (avoid duplicate tags)
-      const regAny = registration as any;
+      const regAny = registration as SyncCapableRegistration;
       if ('sync' in regAny) {
         try {
           const tags = regAny.sync.getTags ? await regAny.sync.getTags() : [];
@@ -231,7 +243,7 @@ try {
           }
         } catch (e) {
           console.warn('Background Sync tag check failed, attempting register once', e);
-          try { await regAny.sync.register('check-tasks'); } catch {}
+          try { await regAny.sync.register('check-tasks'); } catch { /* background sync unavailable */ }
         }
       }
     } catch (error) {
@@ -272,7 +284,7 @@ try {
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
+    .replace(/-/g, '+')
     .replace(/_/g, '/');
 
   const rawData = window.atob(base64);

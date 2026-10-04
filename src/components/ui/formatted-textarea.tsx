@@ -674,7 +674,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
         isUpdatingRef.current = false;
       });
     }
-  }, [autoBullet, onChange, pushSnapshotNow]);
+  }, [autoBullet, onChange, performRedo, performUndo, pushSnapshotNow]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;

@@ -7,15 +7,17 @@ const haptic = (pattern: number | number[] = 30) => {
     if (navigator.vibrate) {
       navigator.vibrate(pattern);
     }
-  } catch {}
+  } catch { /* vibration unsupported */ }
 };
+
+type WindowWithWebkitAudio = Window & { webkitAudioContext?: typeof AudioContext };
 
 // Shared AudioContext - unlocked once on first user interaction
 let sharedAudioContext: AudioContext | null = null;
 
 const getAudioContext = (): AudioContext => {
   if (!sharedAudioContext) {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
     sharedAudioContext = new AudioContextClass();
     console.log('[sounds] Created shared AudioContext, state:', sharedAudioContext.state);
   }
@@ -43,7 +45,7 @@ export const unlockAudio = () => {
 export const playSuccessSound = () => {
   haptic([20, 30, 20]);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     const playTone = (frequency: number, startTime: number, duration: number) => {
       const oscillator = audioContext.createOscillator();
@@ -77,7 +79,7 @@ export const playSuccessSound = () => {
 export const playCompletionSound = () => {
   haptic(40);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     const playTone = (frequency: number, startTime: number, duration: number, type: OscillatorType = 'sine') => {
       const oscillator = audioContext.createOscillator();
@@ -110,7 +112,7 @@ export const playCompletionSound = () => {
 export const playMarchSound = () => {
   haptic([15, 20, 15]);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     const playTone = (frequency: number, startTime: number, duration: number) => {
       const oscillator = audioContext.createOscillator();
@@ -143,7 +145,7 @@ export const playMarchSound = () => {
 export const playConfirmSound = () => {
   haptic([10, 15, 10, 15, 10]);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     const playTone = (frequency: number, startTime: number, duration: number) => {
       const oscillator = audioContext.createOscillator();
@@ -178,7 +180,7 @@ export const playConfirmSound = () => {
 export const playCancelSound = async () => {
   haptic(25);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     // iOS requires resuming the audio context on user gesture
     if (audioContext.state === 'suspended') {
@@ -217,7 +219,7 @@ export const playCancelSound = async () => {
 export const playDeleteSound = async () => {
   haptic([40, 30, 50]);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     // iOS requires resuming the audio context on user gesture
     if (audioContext.state === 'suspended') {
@@ -256,7 +258,7 @@ export const playDeleteSound = async () => {
 export const playDuplicateSound = () => {
   haptic([15, 30, 15]);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     const playTone = (frequency: number, startTime: number, duration: number) => {
       const oscillator = audioContext.createOscillator();
@@ -289,7 +291,7 @@ export const playDuplicateSound = () => {
 export const playPinSound = async () => {
   haptic(30);
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();
     
     // iOS requires resuming the audio context on user gesture
     if (audioContext.state === 'suspended') {

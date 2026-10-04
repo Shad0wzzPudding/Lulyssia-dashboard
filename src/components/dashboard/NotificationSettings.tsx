@@ -28,10 +28,10 @@ export const NotificationSettings = ({ detailed = false }: NotificationSettingsP
   const toggleCollapse = () => {
     setIsCollapsed(prev => {
       const newValue = !prev;
-      newValue ? playCollapseSound() : playExpandSound();
+      if (newValue) playCollapseSound(); else playExpandSound();
       try {
         localStorage.setItem('notificationSettingsCollapsed', String(newValue));
-      } catch {}
+      } catch { /* storage unavailable */ }
       return newValue;
     });
   };
@@ -74,7 +74,7 @@ export const NotificationSettings = ({ detailed = false }: NotificationSettingsP
       // Force-save the current browser push subscription on the server
       try {
         const registration = await navigator.serviceWorker.ready;
-        let subscription = await (registration as any).pushManager.getSubscription();
+        let subscription = await registration.pushManager.getSubscription();
 
         if (!subscription) {
           // Fetch VAPID key and create a new subscription if none exists
@@ -84,14 +84,14 @@ export const NotificationSettings = ({ detailed = false }: NotificationSettingsP
           }
           const appServerKey = (function urlBase64ToUint8Array(base64String: string) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
             return outputArray;
           })(vapidData.publicKey);
 
-          subscription = await (registration as any).pushManager.subscribe({
+          subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: appServerKey,
           });
@@ -101,8 +101,8 @@ export const NotificationSettings = ({ detailed = false }: NotificationSettingsP
           headers: { Authorization: `Bearer ${session.access_token}` },
           body: { subscription: subscription.toJSON() },
         });
-        if (saveError || (saveData as any)?.error) {
-          throw new Error(saveError?.message || (saveData as any)?.error || 'Failed to save subscription');
+        if (saveError || (saveData as { error?: string } | null)?.error) {
+          throw new Error(saveError?.message || (saveData as { error?: string } | null)?.error || 'Failed to save subscription');
         }
       } catch (saveErr) {
         console.error('Failed to ensure server subscription:', saveErr);
@@ -170,10 +170,10 @@ export const NotificationSettings = ({ detailed = false }: NotificationSettingsP
   const toggleInstallCollapse = () => {
     setIsInstallCollapsed(prev => {
       const newValue = !prev;
-      newValue ? playCollapseSound() : playExpandSound();
+      if (newValue) playCollapseSound(); else playExpandSound();
       try {
         localStorage.setItem('installSectionCollapsed', String(newValue));
-      } catch {}
+      } catch { /* storage unavailable */ }
       return newValue;
     });
   };

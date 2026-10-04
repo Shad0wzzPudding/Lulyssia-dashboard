@@ -18,11 +18,15 @@ interface SubscriptionBody {
 }
 
 // Validate push subscription structure and content
-function validateSubscription(subscription: any): subscription is PushSubscription {
+function validateSubscription(input: unknown): input is PushSubscription {
   // Check basic structure
-  if (!subscription || typeof subscription !== 'object') {
+  if (!input || typeof input !== 'object') {
     return false;
   }
+  const subscription = input as {
+    endpoint?: unknown;
+    keys?: { p256dh?: unknown; auth?: unknown };
+  };
 
   // Validate endpoint
   if (!subscription.endpoint || typeof subscription.endpoint !== 'string') {

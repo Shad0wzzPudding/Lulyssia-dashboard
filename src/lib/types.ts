@@ -72,7 +72,7 @@ export interface ActivityLog {
   item_type: 'interests' | 'tasks' | 'events';
   item_title: string;
   item_id?: string;
-  previous_data?: Record<string, any>;
+  previous_data?: Record<string, unknown>;
   created_at: string;
 }
 

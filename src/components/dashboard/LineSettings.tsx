@@ -66,7 +66,6 @@ export const LineSettings = () => {
         if (id) setBotId(id);
       })
       .catch(() => { /* bot info unavailable — hide shortcut button */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const regenerate = async () => {

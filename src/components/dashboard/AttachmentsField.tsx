@@ -18,7 +18,7 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
-export async function openAttachment(a: Attachment) {
+async function openAttachment(a: Attachment) {
   const { data, error } = await supabase.storage
     .from('attachments')
     .createSignedUrl(a.path, 60);
@@ -29,11 +29,11 @@ export async function openAttachment(a: Attachment) {
   window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
 }
 
-export function isImageAttachment(a: Attachment) {
+function isImageAttachment(a: Attachment) {
   return typeof a.type === 'string' && a.type.startsWith('image/');
 }
 
-export function isDisplayed(a: Attachment) {
+function isDisplayed(a: Attachment) {
   return isImageAttachment(a) && Number(a.display) === 1;
 }
 
@@ -58,7 +58,7 @@ export function AttachmentsField({ value, onChange }: AttachmentsFieldProps) {
           toast.error(`${file.name} exceeds 25MB`);
           continue;
         }
-        const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+        const safeName = file.name.replace(/[^\w.-]+/g, '_');
         const path = `${user.id}/${crypto.randomUUID()}-${safeName}`;
         const { error } = await supabase.storage
           .from('attachments')

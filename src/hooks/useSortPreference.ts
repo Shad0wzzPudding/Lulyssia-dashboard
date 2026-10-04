@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { SortOption } from '@/components/dashboard/SortAndFilterBar';
+import type { SortOption } from '@/lib/sortAndFilter';
 
 type PageKey = 'tasks' | 'events' | 'interests';
 

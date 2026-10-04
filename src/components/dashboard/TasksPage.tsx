@@ -19,11 +19,14 @@ import { MarchConfirmDialog } from './MarchConfirmDialog';
 import { playSuccessSound, playCompletionSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
-import { SortAndFilterBar, SortOption, sortItems, filterByTags, searchItems } from './SortAndFilterBar';
+import { SortAndFilterBar } from './SortAndFilterBar';
+import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
+
+type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
 interface TasksPageProps {
   tasks: Task[];
@@ -55,7 +58,7 @@ export const TasksPage = ({
     deadline: '',
     is_completed: false,
     tag_ids: [] as string[],
-    recurrence_unit: '' as '' | 'day' | 'week' | 'month' | 'year',
+    recurrence_unit: '' as RecurrenceUnit,
     recurrence_interval: 1,
     attachments: [] as import('@/lib/types').Attachment[],
     notice_before: false,
@@ -103,7 +106,7 @@ export const TasksPage = ({
         recurrence_unit: task.recurrence_unit || null,
         recurrence_interval: task.recurrence_interval || 1,
         attachments: task.attachments || [],
-        notice_before: !!((task as any).notice_before),
+        notice_before: !!task.notice_before,
       });
     });
     setShowUndo(false);
@@ -145,7 +148,7 @@ export const TasksPage = ({
       onUpdateTask({ id: editingTask.id, ...submissionData });
       playUpdateSound();
     } else {
-      onCreateTask(submissionData as any);
+      onCreateTask(submissionData);
       playSuccessSound();
     }
     
@@ -163,7 +166,7 @@ export const TasksPage = ({
       deadline: task.deadline ? format(parseISO(task.deadline), "yyyy-MM-dd'T'HH:mm") : '',
       is_completed: task.is_completed,
       tag_ids: task.tag_ids || [],
-      recurrence_unit: (task.recurrence_unit as any) || '',
+      recurrence_unit: (task.recurrence_unit as RecurrenceUnit) || '',
       recurrence_interval: task.recurrence_interval || 1,
       attachments: task.attachments || [],
       notice_before: !!task.notice_before,
@@ -253,7 +256,7 @@ export const TasksPage = ({
 
   const handleUserReorder = (orderedIds: string[]) => {
     orderedIds.forEach((id, index) => {
-      onUpdateTask({ id, sort_order: index } as any);
+      onUpdateTask({ id, sort_order: index });
     });
   };
 
@@ -557,7 +560,7 @@ export const TasksPage = ({
                     />
                     <Select
                       value={formData.recurrence_unit}
-                      onValueChange={(val) => setFormData(prev => ({ ...prev, recurrence_unit: val as any }))}
+                      onValueChange={(val) => setFormData(prev => ({ ...prev, recurrence_unit: val as RecurrenceUnit }))}
                     >
                       <SelectTrigger className="flex-1 h-9 text-sm">
                         <SelectValue />

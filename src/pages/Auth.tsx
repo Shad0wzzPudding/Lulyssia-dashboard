@@ -74,11 +74,11 @@ const Auth = () => {
       if (error) throw error;
       
       toast.success('Check your email for the confirmation link!');
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || 'Failed to sign up');
+        toast.error((error as Error).message || 'Failed to sign up');
       }
     } finally {
       setLoading(false);
@@ -103,11 +103,11 @@ const Auth = () => {
       if (data.user) {
         navigate('/');
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || 'Failed to sign in');
+        toast.error((error as Error).message || 'Failed to sign in');
       }
     } finally {
       setLoading(false);
@@ -130,8 +130,8 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success('Password reset email sent! Check your inbox.');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to send reset email');
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to send reset email');
     } finally {
       setResetLoading(false);
     }
@@ -157,11 +157,11 @@ const Auth = () => {
       toast.success('Password updated successfully!');
       setIsPasswordRecovery(false);
       navigate('/');
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error(error.message || 'Failed to update password');
+        toast.error((error as Error).message || 'Failed to update password');
       }
     } finally {
       setLoading(false);

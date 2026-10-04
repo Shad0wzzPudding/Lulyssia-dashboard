@@ -2,6 +2,14 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
+interface LineEvent {
+  type?: string;
+  replyToken?: string;
+  source?: { userId?: string };
+  message?: { type?: string; text?: string };
+  postback?: { data?: string };
+}
+
 const newCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)),
     (b) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
@@ -58,7 +66,7 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  let payload: { events?: any[] };
+  let payload: { events?: LineEvent[] };
   try {
     payload = JSON.parse(raw);
   } catch {
@@ -87,7 +95,7 @@ Deno.serve(async (req) => {
 
       const isPostback = event.type === 'postback' && !!event.postback?.data;
       if ((isPostback || (event.type === 'message' && event.message?.type === 'text')) && lineUserId && replyToken) {
-        const text = String((isPostback ? event.postback.data : event.message.text) ?? '').trim();
+        const text = String((isPostback ? event.postback?.data : event.message?.text) ?? '').trim();
         const code = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
         if (/^(TODAY|DIGEST NOW|TODAY'?S LIST)$/i.test(text)) {

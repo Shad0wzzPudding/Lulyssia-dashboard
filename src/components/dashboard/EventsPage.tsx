@@ -18,7 +18,8 @@ import { MarchConfirmDialog } from './MarchConfirmDialog';
 import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
-import { SortAndFilterBar, SortOption, sortItems, filterByTags, searchItems } from './SortAndFilterBar';
+import { SortAndFilterBar } from './SortAndFilterBar';
+import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
@@ -100,7 +101,7 @@ export const EventsPage = ({
         start_time: event.start_time,
         deadline: event.deadline,
         attachments: event.attachments || [],
-        notice_before: !!((event as any).notice_before),
+        notice_before: !!event.notice_before,
       });
     });
     setShowUndo(false);
@@ -215,7 +216,7 @@ export const EventsPage = ({
 
   const handleUserReorder = (orderedIds: string[]) => {
     orderedIds.forEach((id, index) => {
-      onUpdateEvent({ id, sort_order: index } as any);
+      onUpdateEvent({ id, sort_order: index });
     });
   };
 

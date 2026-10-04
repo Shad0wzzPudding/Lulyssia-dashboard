@@ -25,7 +25,7 @@ interface HomePageProps {
   activityLog: ActivityLog[];
   onUpdateInterest?: (data: Partial<Interest> & { id: string }) => void;
   onDeleteActivityLog?: (id: string) => void;
-  onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, any> }) => void;
+  onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
 }
 
 export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog }: HomePageProps) => {
@@ -83,7 +83,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       return new Set();
     } catch {
       // Clear corrupted data
-      try { localStorage.removeItem('hiddenCalendarDates'); } catch {}
+      try { localStorage.removeItem('hiddenCalendarDates'); } catch { /* storage unavailable */ }
       return new Set();
     }
   });
@@ -825,7 +825,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       setCollapsedInterests(newSet);
                       try {
                         localStorage.setItem('collapsedInterests', JSON.stringify(Array.from(newSet)));
-                      } catch {}
+                      } catch { /* storage unavailable */ }
                     }}
                     title={hasExpanded ? "Collapse all" : "Nothing to collapse"}
                   >
@@ -988,7 +988,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       <Collapsible 
         open={!recentChangesCollapsed}
         onOpenChange={(open) => {
-          open ? playExpandSound() : playCollapseSound();
+          if (open) playExpandSound(); else playCollapseSound();
           setRecentChangesCollapsed(!open);
           try {
             localStorage.setItem('recentChangesCollapsed', String(!open));
