@@ -22,7 +22,7 @@ select
       url := 'https://orlypvtllefclnwjayyf.supabase.co/functions/v1/send-daily-notifications',
       headers := jsonb_build_object(
         'Content-Type','application/json',
-        'x-cron-secret','cron-trigger-secret'
+        'x-cron-secret','REDACTED-see-README'
       ),
       body := jsonb_build_object('trigger','cron','tz','Asia/Bangkok','invoked_at', now())
     );
