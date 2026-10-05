@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { NavigationPage } from '@/lib/types';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useNotifications } from '@/hooks/useNotifications';
 import { WelcomeMessage } from '@/components/dashboard/WelcomeMessage';
 import { Navigation } from '@/components/dashboard/Navigation';
 import { HomePage } from '@/components/dashboard/HomePage';
@@ -68,27 +67,6 @@ const Index = () => {
     error, 
     mutations 
   } = useDashboardData();
-
-  const { scheduleNotificationCheck, permission } = useNotifications();
-
-  // Schedule notification checks whenever data changes and permission is granted
-  useEffect(() => {
-    if (permission === 'granted' && tasks && events && dailyTasks) {
-      const today = new Date().toISOString().split('T')[0];
-
-      // Schedule background check only once per day
-      const scheduleKey = `notif_scheduled_${today}`;
-      if (!localStorage.getItem(scheduleKey)) {
-        console.log('Scheduling notification check with data:', {
-          tasks: tasks.length,
-          events: events.length,
-          dailyTasks: dailyTasks.length,
-        });
-        scheduleNotificationCheck(tasks, events, dailyTasks);
-        localStorage.setItem(scheduleKey, '1');
-      }
-    }
-  }, [tasks, events, dailyTasks, permission, scheduleNotificationCheck]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);

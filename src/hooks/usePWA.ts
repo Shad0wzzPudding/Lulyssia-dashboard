@@ -26,7 +26,7 @@ export const usePWA = () => {
       setIsInstalled(isStandaloneMode);
     };
 
-    // Check if iOS device - using same logic as useNotifications hook
+    // Check if iOS device
     const checkIOS = () => {
       const userAgent = window.navigator.userAgent;
       const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || 
@@ -51,7 +51,7 @@ export const usePWA = () => {
       setDeferredPrompt(null);
       toast({
         title: "App Installed!",
-        description: "Dashboard has been added to your home screen. You can now receive notifications!"
+        description: "Dashboard has been added to your home screen."
       });
     };
 
@@ -69,7 +69,7 @@ export const usePWA = () => {
       if (isIOS) {
         toast({
           title: "Install on iOS",
-          description: "Tap the share button in Safari, then 'Add to Home Screen' to enable notifications.",
+          description: "Tap the share button in Safari, then 'Add to Home Screen'.",
           variant: "default"
         });
       } else {

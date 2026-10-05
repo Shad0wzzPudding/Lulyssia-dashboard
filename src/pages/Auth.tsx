@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,9 +25,11 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const openedFromRecovery = (location.state as { recovery?: boolean } | null)?.recovery === true;
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(openedFromRecovery);
+  const [newPassword, setNewPassword] = useState('');
 
   const { isIOS, isStandalone } = usePWA();
   const containerClass = "min-h-[100svh] bg-background p-4 flex items-center justify-center";
@@ -36,8 +38,8 @@ const Auth = () => {
     // Check if this is a password recovery flow FIRST
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
-    const isRecovery = type === 'recovery';
-    
+    const isRecovery = type === 'recovery' || openedFromRecovery;
+
     if (isRecovery) {
       setIsPasswordRecovery(true);
       return; // Don't redirect if it's a recovery flow
@@ -51,7 +53,7 @@ const Auth = () => {
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, openedFromRecovery]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ const Auth = () => {
 
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
         options: {
@@ -72,7 +74,14 @@ const Auth = () => {
       });
 
       if (error) throw error;
-      
+
+      // When email confirmation is on, Supabase hides existing accounts by returning a
+      // "successful" fake user with no identities instead of an error.
+      if (data.user && data.user.identities?.length === 0) {
+        toast.error('This email is already registered. Try signing in, or use "Forgot password".');
+        return;
+      }
+
       toast.success('Check your email for the confirmation link!');
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -156,7 +165,7 @@ const Auth = () => {
 
       toast.success('Password updated successfully!');
       setIsPasswordRecovery(false);
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);

@@ -1,4 +1,4 @@
-import { NotificationSettings } from './NotificationSettings';
+import { InstallAppCard } from './InstallAppCard';
 import { TagManager } from './TagManager';
 import { LineSettings } from './LineSettings';
 import { Camera } from 'lucide-react';
@@ -15,7 +15,7 @@ export const SettingsPage = () => {
           <p className="text-sm text-muted-foreground">March 7th's behind-the-scenes controls~</p>
         </div>
       </div>
-      <NotificationSettings detailed />
+      <InstallAppCard />
       <LineSettings />
       <TagManager />
     </div>

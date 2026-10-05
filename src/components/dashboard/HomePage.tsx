@@ -8,8 +8,7 @@ import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDow
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
 import { Interest, Task, Event, ActivityLog } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useNotifications } from "@/hooks/useNotifications";
-import { NotificationSettings } from "./NotificationSettings";
+import { InstallAppCard } from "./InstallAppCard";
 import { SwipeableInterestCard } from "./SwipeableInterestCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
 import { DraggableSummaryItem } from "./DraggableSummaryItem";
@@ -45,7 +44,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       return false;
     }
   });
-  const { scheduleNotificationCheck } = useNotifications();
   const audioUnlockedRef = useRef(false);
   
   // Unlock audio on first touch (iOS requirement)
@@ -198,13 +196,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     setInterestDragOverIndex(null);
   };
 
-  // Schedule notification checks when data changes
-  useEffect(() => {
-    if (tasks.length > 0 || events.length > 0) {
-      scheduleNotificationCheck(tasks, events, []);
-    }
-  }, [tasks, events, scheduleNotificationCheck]);
-  
   const toggleInterestCollapse = (interestId: string) => {
     setCollapsedInterests(prev => {
       const newSet = new Set(prev);
@@ -465,8 +456,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
 
   return (
     <div className="space-y-6">
-      {/* Notification Settings */}
-      <NotificationSettings />
+      <InstallAppCard />
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Main Focus Section */}
