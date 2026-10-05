@@ -88,7 +88,7 @@ Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 
 ### Scheduled jobs
 
-Jobs are created by migration `20261005000002_sync_drift_and_vault_cron.sql` using pg_cron and pg_net.
+Jobs are created by migration `20261005000003_line_cron_vault.sql` using pg_cron and pg_net.
 
 | Job | Schedule (UTC) | Meaning | Calls |
 | --- | --- | --- | --- |
@@ -130,8 +130,8 @@ To move to another LINE account, press the refresh button next to the code in Se
   `https://<your-domain>/auth` to the Redirect URLs.
 - Supabase's built-in email service is heavily rate limited. If sign-up or reset emails stop arriving,
   connect a custom SMTP provider.
-- Migrations are applied automatically when pushed through Lovable. Otherwise run new files from
-  `supabase/migrations/` in the SQL Editor.
+- Pushed migrations have been applied to the database automatically. If one doesn't seem to take effect,
+  run the file from `supabase/migrations/` in the SQL Editor.
 
 ## Security notes
 
