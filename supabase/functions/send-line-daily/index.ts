@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
           'Take it one step at a time.',
           'Make today count!',
           'Stay positive and keep going!',
-          'March 7th believes in you!',
+          'Lulyssia believes in you!',
           "Let's get things done today!",
         ];
         const toast = toasts[Math.floor(Math.random() * toasts.length)];

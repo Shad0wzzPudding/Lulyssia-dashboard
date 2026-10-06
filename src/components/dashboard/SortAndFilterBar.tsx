@@ -39,28 +39,28 @@ export const SortAndFilterBar = ({
     else onFilterChange([...filterTagIds, id]);
   };
 
-  const marchMessages = [
-    "March 7th is on the case! Sorting by what's due soonest~ ❄️",
-    "Leave it to me! March 7th has rearranged everything by deadline! ✨",
+  const lulyssiaMessages = [
+    "Lulyssia is on the case! Sorting by what's due soonest~ ❄️",
+    "Leave it to me! Lulyssia has rearranged everything by deadline! ✨",
     "Don't worry, I got this! Putting the urgent stuff up top~ 🏹",
-    "March 7th to the rescue! Soonest deadlines first, just for you! 💖",
+    "Lulyssia to the rescue! Soonest deadlines first, just for you! 💖",
     "Tada~! Sorted by deadline! You can thank me later~ 📸",
-    "Ehehe~ March 7th magic! All your urgent stuff is now front and center! ✨",
+    "Ehehe~ Lulyssia magic! All your urgent stuff is now front and center! ✨",
     "Ice arrows locked on the deadlines! Sorted and ready, Trailblazer! 🏹❄️",
-    "Smile~! March 7th took a snapshot and rearranged everything by deadline! 📷",
+    "Smile~! Lulyssia took a snapshot and rearranged everything by deadline! 📷",
     "Astral Express express delivery! Soonest tasks coming through! 🚂💨",
     "Pom-Pom would be so proud~ Sorted by what's due first! 📦",
     "Trust me, I'm a memory expert! Deadlines first, no time to lose! 💫",
     "Hehe, leave the boring sorting to me! Earliest deadlines on top! 💝",
-    "Boop! March 7th's deadline radar activated~ ❄️✨",
+    "Boop! Lulyssia's deadline radar activated~ ❄️✨",
     "Yoink! Grabbed all your tasks and lined them up by deadline! 🎀",
-    "Don't panic, Trailblazer! March 7th has your schedule under control~ 🌟",
+    "Don't panic, Trailblazer! Lulyssia has your schedule under control~ 🌟",
   ];
 
   const requestHelp = () => {
     onSortChange('deadline_asc');
     playSuccessSound();
-    const msg = marchMessages[Math.floor(Math.random() * marchMessages.length)];
+    const msg = lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
     toast(msg);
   };
 
@@ -90,10 +90,10 @@ export const SortAndFilterBar = ({
         variant="outline"
         size="sm"
         onClick={requestHelp}
-        className="h-8 px-2 text-xs gap-1 border-pink-300 text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-950"
+        className="h-8 px-2 text-xs gap-1 border-p5-400 text-p5-400 hover:bg-p5-950 hover:text-p5-300"
       >
         <Sparkles size={12} />
-        Request March 7th help
+        Request Lulyssia help
       </Button>
 
       {tags.length > 0 && (
@@ -103,13 +103,13 @@ export const SortAndFilterBar = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-2 gap-1.5 text-xs relative bg-white dark:bg-zinc-100 text-zinc-800 border-zinc-300 hover:bg-zinc-50 shadow-sm max-w-[260px]"
+                className="h-8 px-2 gap-1.5 text-xs relative bg-card/95 text-foreground border-foreground/30 hover:bg-accent hover:text-foreground shadow-sm max-w-[260px]"
                 title="Filter by tag"
                 aria-label="Filter by tag"
               >
                 {/* Polaroid-style icon */}
-                <span className="relative inline-flex items-center justify-center w-5 h-6 bg-white border border-zinc-400 rounded-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.2)] rotate-[-6deg]">
-                  <ImageIcon size={10} className="text-pink-500" />
+                <span className="relative inline-flex items-center justify-center w-5 h-6 bg-zinc-800 border border-zinc-500 rounded-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.2)] rotate-[-6deg]">
+                  <ImageIcon size={10} className="text-p5-400" />
                 </span>
                 {filterTagIds.length === 0 ? (
                   <span>Filter</span>
@@ -136,7 +136,7 @@ export const SortAndFilterBar = ({
                           <span className="truncate">{first.name}</span>
                         </span>
                         {extra > 0 && (
-                          <span className="inline-flex items-center justify-center h-4 px-1.5 rounded-full bg-pink-500 text-white text-[10px] font-bold">
+                          <span className="inline-flex items-center justify-center h-4 px-1.5 rounded-full bg-p5-500 text-primary-foreground text-[10px] font-bold">
                             +{extra}
                           </span>
                         )}

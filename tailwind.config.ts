@@ -53,6 +53,20 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Persona 5 accent scale built around #3aadd0 (500)
+				p5: {
+					50: '#eefafd',
+					100: '#d4f1f9',
+					200: '#ade3f2',
+					300: '#77cfe6',
+					400: '#4bbcdb',
+					500: '#3aadd0',
+					600: '#2a8cad',
+					700: '#24718c',
+					800: '#215d73',
+					900: '#1f4e61',
+					950: '#0f3341'
+				},
 				'welcome-primary': 'hsl(var(--welcome-primary))',
 				'welcome-secondary': 'hsl(var(--welcome-secondary))',
 				'main-focus': 'hsl(var(--main-focus))',

@@ -109,7 +109,7 @@ export const playCompletionSound = () => {
   }
 };
 
-export const playMarchSound = () => {
+export const playLulyssiaSound = () => {
   haptic([15, 20, 15]);
   try {
     const audioContext = new (window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext)();

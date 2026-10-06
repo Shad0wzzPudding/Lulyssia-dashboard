@@ -10,12 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, X, CheckSquare, Repeat } from 'lucide-react';
+import { PageIcon } from './PageIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO, isAfter, isBefore, addHours } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
-import { MarchConfirmDialog } from './MarchConfirmDialog';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 import { playSuccessSound, playCompletionSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
@@ -122,7 +123,7 @@ export const TasksPage = ({
     setClearedTasks([]);
     toast({
       title: "Tasks restored! 📸",
-      description: "March 7th saved the day~",
+      description: "Lulyssia saved the day~",
     });
   };
 
@@ -398,8 +399,8 @@ export const TasksPage = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* March Confirmation Dialogs */}
-      <MarchConfirmDialog
+      {/* Lulyssia Confirmation Dialogs */}
+      <LulyssiaConfirmDialog
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
         onConfirm={handleClearConfirm}
@@ -408,7 +409,7 @@ export const TasksPage = ({
         confirmText="Yep, clear them!"
         cancelText="Wait, no!"
       />
-      <MarchConfirmDialog
+      <LulyssiaConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
@@ -419,9 +420,12 @@ export const TasksPage = ({
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-upcoming-events">
-          My Tasks
-        </h2>
+        <div className="flex items-center gap-3">
+          <PageIcon icon={CheckSquare} />
+          <h2 className="p5-title w-fit text-2xl">
+            My Tasks
+          </h2>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {showUndo && (
             <Button 

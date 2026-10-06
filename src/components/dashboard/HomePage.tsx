@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
-import march7thPout from '@/assets/march7th-tg-06.webp';
+import lulyssiaPout from '@/assets/lulyssia-tg-06.webp';
 interface HomePageProps {
   interests: Interest[];
   tasks: Task[];
@@ -423,7 +423,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const summaryItems = {
-    todayTasks: { value: todayTasks.length + todayStartingTasks.length, label: "Today's Tasks", colorClass: "text-blue-600 dark:text-blue-400" },
+    todayTasks: { value: todayTasks.length + todayStartingTasks.length, label: "Today's Tasks", colorClass: "text-p5-600 dark:text-p5-400" },
     completed: { value: tasks.filter(task => task.is_completed && task.deadline && isToday(parseISO(task.deadline))).length, label: "Completed", colorClass: "text-green-600 dark:text-green-400" },
     todayEvents: { value: todayEvents.length, label: "Today's Events", colorClass: "text-orange-600 dark:text-orange-400" },
     overdueTasks: { value: overdueTasks.length, label: "Overdue Tasks", colorClass: "text-red-600 dark:text-red-400" },
@@ -463,9 +463,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       </div>
       
       {/* Daily Overview */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+      <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+          <CardTitle className="flex items-center gap-2 text-p5-700 dark:text-p5-300">
             <AlertCircle size={20} />
             <span className="font-bold">Today's Summary</span>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full ml-auto">
@@ -500,9 +500,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       </Card>
 
       {/* Today Events */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+      <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+          <CardTitle className="flex items-center gap-2 text-p5-700 dark:text-p5-300">
             <AlertCircle size={20} />
             <span className="font-bold">Today Events</span>
           </CardTitle>
@@ -511,7 +511,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
           <div className="grid gap-4 md:grid-cols-2">
             {/* Today's Tasks */}
             <div>
-              <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-300 mb-2">Today's Tasks</h4>
+              <h4 className="font-semibold text-sm text-p5-700 dark:text-p5-300 mb-2">Today's Tasks</h4>
               {(todayTasks.length > 0 || todayStartingTasks.length > 0) ? (
                 <div className="space-y-2">
                   {/* Tasks with deadlines today */}
@@ -552,11 +552,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
 
             {/* Today's Events */}
             <div>
-              <h4 className="font-semibold text-sm text-blue-700 dark:text-blue-300 mb-2">Today's Events</h4>
+              <h4 className="font-semibold text-sm text-p5-700 dark:text-p5-300 mb-2">Today's Events</h4>
               {todayEvents.length > 0 ? (
                 <div className="space-y-2">
                   {todayEvents.map(event => (
-                    <div key={event.id} className="p-3 bg-card/90 rounded border border-blue-200/40 dark:border-blue-800/40">
+                    <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
                       <p className="font-medium text-sm">{event.title}</p>
                         {event.description && (
                           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
@@ -579,9 +579,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       </Card>
 
       {/* Calendar with Event Markers */}
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+      <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+          <CardTitle className="flex items-center gap-2 text-p5-700 dark:text-p5-300">
             <CalendarDays size={20} />
             <span className="font-bold">Calendar Overview</span>
           </CardTitle>
@@ -592,7 +592,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             <div className="flex flex-col items-center">
               <Calendar
                 mode="single"
-                className="rounded-md border border-purple-200 dark:border-purple-800 bg-white/50 dark:bg-purple-950/20"
+                className="rounded-md border border-p5-200 dark:border-p5-800 bg-white/50 dark:bg-p5-950/20"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 modifiers={{
@@ -611,7 +611,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 }}
                 modifiersClassNames={{
                   marked:
-                    "bg-gradient-to-br from-purple-200 to-pink-200 dark:from-purple-700/50 dark:to-pink-700/50 text-purple-900 dark:text-purple-100 font-semibold relative after:absolute after:inset-0 after:rounded-full after:bg-purple-300/30 dark:after:bg-purple-500/30 cursor-pointer hover:scale-105 transition-transform",
+                    "bg-gradient-to-br from-p5-200 to-p5-200 dark:from-p5-700/50 dark:to-p5-700/50 text-p5-900 dark:text-p5-100 font-semibold relative after:absolute after:inset-0 after:rounded-full after:bg-p5-300/30 dark:after:bg-p5-500/30 cursor-pointer hover:scale-105 transition-transform",
                   neutralized:
                     "!bg-transparent !from-transparent !to-transparent !text-foreground !font-normal !after:hidden !shadow-none",
                   today:
@@ -619,27 +619,27 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 }}
               />
               <div className="mt-4 text-center">
-                <p className="text-sm text-purple-600 dark:text-purple-400">
+                <p className="text-sm text-p5-600 dark:text-p5-400">
                   Click on highlighted dates to see details
                 </p>
               </div>
             </div>
 
             {/* Right side - Day Information Panel */}
-            <div className="bg-gradient-to-br from-white/90 to-purple-50/50 dark:from-gray-900/70 dark:to-purple-950/40 rounded-xl border-2 border-purple-300/40 dark:border-purple-600/30 shadow-lg backdrop-blur-sm p-5 min-h-[400px]">
+            <div className="bg-gradient-to-br from-white/90 to-p5-50/50 dark:from-gray-900/70 dark:to-p5-950/40 rounded-xl border-2 border-p5-300/40 dark:border-p5-600/30 shadow-lg backdrop-blur-sm p-5 min-h-[400px]">
               {selectedDate ? (
                 <div className="space-y-4 animate-fade-in">
                   {/* Compact Header with Toggle Button */}
-                  <div className="flex items-center justify-between pb-3 border-b border-purple-200/60 dark:border-purple-700/50">
+                  <div className="flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
                     <div className="flex items-center gap-3">
-                      <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                        <CalendarIcon size={16} className="text-purple-600 dark:text-purple-400" />
+                      <div className="p-1.5 bg-p5-100 dark:bg-p5-900/50 rounded-lg">
+                        <CalendarIcon size={16} className="text-p5-600 dark:text-p5-400" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-base text-purple-800 dark:text-purple-200">
+                        <h3 className="font-bold text-base text-p5-800 dark:text-p5-200">
                           {format(selectedDate, 'EEE, MMM d')}
                         </h3>
-                        <p className="text-xs text-purple-600 dark:text-purple-400">
+                        <p className="text-xs text-p5-600 dark:text-p5-400">
                           {format(selectedDate, 'yyyy')}
                         </p>
                       </div>
@@ -648,7 +648,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleDateVisibility(selectedDate)}
-                      className="text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50"
+                      className="text-p5-600 dark:text-p5-400 hover:bg-p5-100 dark:hover:bg-p5-900/50"
                       title={isDateHidden(selectedDate) ? "Show highlight" : "Hide highlight"}
                     >
                       {isDateHidden(selectedDate) ? (
@@ -665,14 +665,14 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     if (dateItems.length === 0) {
                       return (
                         <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                          <div className="p-3 bg-purple-100/50 dark:bg-purple-900/30 rounded-full">
-                            <CalendarIcon size={24} className="text-purple-400 dark:text-purple-500" />
+                          <div className="p-3 bg-p5-100/50 dark:bg-p5-900/30 rounded-full">
+                            <CalendarIcon size={24} className="text-p5-400 dark:text-p5-500" />
                           </div>
                           <div className="text-center">
-                            <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300 mb-1">
+                            <h4 className="font-medium text-sm text-p5-700 dark:text-p5-300 mb-1">
                               Free Day
                             </h4>
-                            <p className="text-xs text-purple-500 dark:text-purple-400">
+                            <p className="text-xs text-p5-500 dark:text-p5-400">
                               No scheduled items
                             </p>
                           </div>
@@ -685,7 +685,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         {dateItems.map((item) => (
                           <div 
                             key={`${item.type}-${item.id}`} 
-                            className="group relative bg-white/80 dark:bg-gray-800/60 rounded-lg border border-purple-200/60 dark:border-purple-700/40 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] hover:border-purple-300 dark:hover:border-purple-600 cursor-pointer"
+                            className="group relative bg-white/80 dark:bg-gray-800/60 rounded-lg border border-p5-200/60 dark:border-p5-700/40 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] hover:border-p5-300 dark:hover:border-p5-600 cursor-pointer"
                             onClick={() => setSelectedItem(item)}
                           >
                             {/* Slim accent border */}
@@ -702,7 +702,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                 item.dateTypes.includes('deadline')
                                   ? 'bg-red-500'
                                   : item.type === 'event'
-                                  ? 'bg-blue-500'
+                                  ? 'bg-p5-500'
                                   : 'bg-green-500'
                               }`} />
                             )}
@@ -760,18 +760,18 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full py-12 space-y-4">
-                  <div className="p-4 bg-purple-100/60 dark:bg-purple-900/30 rounded-full">
-                    <CalendarIcon size={32} className="text-purple-400 dark:text-purple-500" />
+                  <div className="p-4 bg-p5-100/60 dark:bg-p5-900/30 rounded-full">
+                    <CalendarIcon size={32} className="text-p5-400 dark:text-p5-500" />
                   </div>
                   <div className="text-center space-y-1">
-                    <h3 className="font-bold text-lg text-purple-700 dark:text-purple-300">
+                    <h3 className="font-bold text-lg text-p5-700 dark:text-p5-300">
                       Select a Date
                     </h3>
-                    <p className="text-sm text-purple-600 dark:text-purple-400 max-w-xs">
+                    <p className="text-sm text-p5-600 dark:text-p5-400 max-w-xs">
                       Click on highlighted dates to see details
                     </p>
-                    <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/50 rounded-lg border border-purple-200 dark:border-purple-700">
-                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                    <div className="mt-4 p-3 bg-p5-50 dark:bg-p5-950/50 rounded-lg border border-p5-200 dark:border-p5-700">
+                      <p className="text-xs text-p5-600 dark:text-p5-400">
                         💡 Highlighted dates have scheduled activities
                       </p>
                     </div>
@@ -828,8 +828,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       onClick={(e) => e.stopPropagation()}
                     >
                       <img
-                        src={march7thPout}
-                        alt="March 7th pouting"
+                        src={lulyssiaPout}
+                        alt="Lulyssia pouting"
                         className="w-20 h-20 object-contain drop-shadow-md -mt-2 flex-shrink-0"
                       />
                       <div className="relative w-[260px] mt-3">
@@ -936,7 +936,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               {upcomingTasks.length > 0 ? (
                 <div className="space-y-2">
                   {upcomingTasks.map(task => (
-                    <div key={task.id} className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200 dark:border-blue-800">
+                    <div key={task.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
                       <p className="font-medium text-sm">{task.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Due: {format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm')}
@@ -955,7 +955,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               {upcomingEvents.length > 0 ? (
                 <div className="space-y-2">
                   {upcomingEvents.map(event => (
-                    <div key={event.id} className="p-2 bg-blue-50 dark:bg-blue-950/20 rounded border border-blue-200 dark:border-blue-800">
+                    <div key={event.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
                       <p className="font-medium text-sm">{event.title}</p>
                       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
                         <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
@@ -1023,13 +1023,13 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     const log = activityLog.find(l => l.id === id);
                     if (!log) return null;
                     return (
-                      <div key={`undo-${id}`} className="flex items-center justify-between p-2 rounded border border-pink-300 dark:border-pink-700 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20">
+                      <div key={`undo-${id}`} className="flex items-center justify-between p-2 rounded border border-p5-300 dark:border-p5-700 bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-900/20 dark:to-p5-900/20">
                         <span className="text-sm text-muted-foreground italic">Undoing "{log.item_title}" ({log.action_type})...</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleUndoActivityLog(id)}
-                          className="bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 border-pink-300 dark:border-pink-700 text-pink-600 dark:text-pink-400 hover:from-pink-200 hover:to-purple-200 animate-pulse"
+                          className="bg-gradient-to-r from-p5-100 to-p5-100 dark:from-p5-900/30 dark:to-p5-900/30 border-p5-300 dark:border-p5-700 text-p5-600 dark:text-p5-400 hover:from-p5-200 hover:to-p5-200 animate-pulse"
                         >
                           <Undo2 size={14} className="mr-1" />
                           Undo

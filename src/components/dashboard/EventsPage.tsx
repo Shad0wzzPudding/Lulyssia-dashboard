@@ -9,12 +9,13 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Calendar } from 'lucide-react';
+import { PageIcon } from './PageIcon';
 import { format, parseISO, isAfter, isBefore, isToday, addHours } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
-import { MarchConfirmDialog } from './MarchConfirmDialog';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
@@ -108,7 +109,7 @@ export const EventsPage = ({
     setClearedEvents([]);
     toast({
       title: "Events restored! 📸",
-      description: "March 7th saved the day~",
+      description: "Lulyssia saved the day~",
     });
   };
 
@@ -384,8 +385,8 @@ export const EventsPage = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* March Confirmation Dialogs */}
-      <MarchConfirmDialog
+      {/* Lulyssia Confirmation Dialogs */}
+      <LulyssiaConfirmDialog
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
         onConfirm={handleClearConfirm}
@@ -394,7 +395,7 @@ export const EventsPage = ({
         confirmText="Yep, clear them!"
         cancelText="Wait, no!"
       />
-      <MarchConfirmDialog
+      <LulyssiaConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
@@ -405,9 +406,12 @@ export const EventsPage = ({
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-events-theme">
-          My Events
-        </h2>
+        <div className="flex items-center gap-3">
+          <PageIcon icon={Calendar} />
+          <h2 className="p5-title w-fit text-2xl">
+            My Events
+          </h2>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {showUndo && (
             <Button 

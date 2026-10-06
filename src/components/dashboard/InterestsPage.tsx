@@ -8,12 +8,13 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Pin, PinOff, Clock, GripVertical, Copy, CheckSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, Pin, PinOff, Clock, GripVertical, Copy, CheckSquare, Heart } from 'lucide-react';
+import { PageIcon } from './PageIcon';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
-import { MarchConfirmDialog } from './MarchConfirmDialog';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 import { SelectionCorners, SelectModeOverlay } from './SelectionCorners';
 import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playPinSound, playUnpinSound, playUpdateSound, playEditSound, playSelectModeSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
@@ -352,7 +353,7 @@ export const InterestsPage = ({
   return (
     <div className="space-y-6 animate-fade-in">
       <SelectModeOverlay visible={isSelecting} />
-      <MarchConfirmDialog
+      <LulyssiaConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
@@ -363,9 +364,12 @@ export const InterestsPage = ({
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-main-focus">
-          My Interests
-        </h2>
+        <div className="flex items-center gap-3">
+          <PageIcon icon={Heart} />
+          <h2 className="p5-title w-fit text-2xl">
+            My Interests
+          </h2>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {!isSelecting && interests.length > 0 && (
             <Button

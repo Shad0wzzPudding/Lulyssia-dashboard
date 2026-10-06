@@ -15,9 +15,9 @@ import { SettingsPage } from '@/components/dashboard/SettingsPage';
 
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
-import march7thCamera from '@/assets/march7th-camera.webp';
+import lulyssiaCamera from '@/assets/lulyssia-camera.webp';
 import { playShutterSound } from '@/lib/sounds';
-import march7thSticker from '@/assets/march7th-camera.webp';
+import lulyssiaSticker from '@/assets/lulyssia-camera.webp';
 import type { User, Session } from '@supabase/supabase-js';
 
 const Index = () => {
@@ -182,11 +182,11 @@ const Index = () => {
       {/* Top Navigation with User Info */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-start h-16">
             <Navigation activePage={activePage} onPageChange={setActivePage} />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user.email} ! <br /> v2.0
+                Welcome, {user.email} !
               </span>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out
@@ -196,7 +196,7 @@ const Index = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-8 pr-24">
+      <div className="container mx-auto px-4 pt-8 pb-28">
         <WelcomeMessage />
         
         <main className="max-w-6xl mx-auto">
@@ -261,14 +261,15 @@ const Index = () => {
       <AnimatePresence>
         {showScrollTop && (
           <>
-            {/* March 7th peeking from right edge */}
+            {/* Lulyssia peeking from left edge */}
             <motion.img
-              src={march7thCamera}
-              alt="March 7th"
-              className="fixed bottom-20 right-0 w-16 h-16 object-contain pointer-events-none z-50"
-              initial={{ x: 60, opacity: 0, scale: 0.8 }}
-              animate={{ x: 8, opacity: 1, scale: 1 }}
-              exit={{ x: 60, opacity: 0, scale: 0.8 }}
+              src={lulyssiaCamera}
+              alt="Lulyssia"
+              className="fixed bottom-20 left-0 w-16 h-16 object-contain pointer-events-none z-50"
+              // Negative scaleX mirrors her so she faces into the page from the left edge
+              initial={{ x: -60, opacity: 0, scaleX: -0.8, scaleY: 0.8 }}
+              animate={{ x: -8, opacity: 1, scaleX: -1, scaleY: 1 }}
+              exit={{ x: -60, opacity: 0, scaleX: -0.8, scaleY: 0.8 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             />
             <motion.div
@@ -276,7 +277,7 @@ const Index = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ duration: 0.3, ease: 'easeOut', delay: 0.15 }}
-              className="fixed bottom-6 right-6 z-50"
+              className="fixed bottom-6 left-6 z-50"
             >
               <Button
                 variant="default"
@@ -287,12 +288,12 @@ const Index = () => {
                   setShowFlash(true);
                   setTimeout(() => setShowFlash(false), 400);
                   const quotes = [
-                    "📸 Photo captured! March 7th saved the moment~",
+                    "📸 Photo captured! Lulyssia saved the moment~",
                     "📸 Click! Another memory for the collection!",
-                    "📸 Perfect shot! March 7th approves~",
+                    "📸 Perfect shot! Lulyssia approves~",
                     "📸 Captured! This one's going in the album!",
                     "📸 Say cheese! ...Wait, you already scrolled~",
-                    "📸 Snapshot saved! March 7th never misses!",
+                    "📸 Snapshot saved! Lulyssia never misses!",
                     "📸 Got it! A picture-perfect moment~",
                     "📸 One more for the scrapbook!",
                   ];
@@ -301,7 +302,7 @@ const Index = () => {
                     toast({
                       description: (
                         <div className="flex items-center gap-3">
-                          <img src={march7thSticker} alt="March 7th" className="w-10 h-10 object-contain" />
+                          <img src={lulyssiaSticker} alt="Lulyssia" className="w-10 h-10 object-contain" />
                           <span className="text-sm font-medium">{quote}</span>
                         </div>
                       ),

@@ -1,4 +1,4 @@
-# March 7th Dashboard
+# Lulyssia Dashboard
 
 A personal dashboard for tasks, events and interests, with a LINE bot that sends a morning digest,
 start reminders and missed-deadline nudges.

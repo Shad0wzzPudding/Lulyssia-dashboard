@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Pencil, Trash2, Check, X, Tag as TagIcon, Pipette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TagChip } from './TagPicker';
-import { MarchConfirmDialog } from './MarchConfirmDialog';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 
 const PALETTE = [
   '#ec4899', '#f43f5e', '#f97316', '#f59e0b', '#eab308',
@@ -150,7 +150,7 @@ export const TagManager = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TagIcon size={18} className="text-pink-500" />
+          <TagIcon size={18} className="text-p5-600" />
           Tag Management
         </CardTitle>
         <CardDescription>
@@ -191,7 +191,7 @@ export const TagManager = () => {
         </div>
       </CardContent>
 
-      <MarchConfirmDialog
+      <LulyssiaConfirmDialog
         open={!!pendingDelete}
         onOpenChange={(o) => !o && setPendingDelete(null)}
         title="Delete this tag?"

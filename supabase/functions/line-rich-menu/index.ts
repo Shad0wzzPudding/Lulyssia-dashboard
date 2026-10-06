@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   const richMenu = {
     size: { width, height },
     selected: true,
-    name: 'March 7th menu',
+    name: 'Lulyssia menu',
     chatBarText: 'Menu 📸',
     areas: labels.map((b, i) => ({
       bounds: { x: i * cell, y: 0, width: cell, height },

@@ -2,81 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Lulyssia Dashboard Design System - Dark Cyan Theme */
+/* Lulyssia Dashboard Design System - Persona 5 style, #3aadd0 instead of red */
 
 @layer base {
   :root {
     /* ========================================
-       Lulyssia Dark Cyan Theme
+       Persona 5 style: black / white / #3aadd0
        ======================================== */
 
-    /* Main background */
-    --background: 207 35% 8%;
-    --foreground: 195 25% 92%;
+    /* Main background (ink black) */
+    --background: 200 20% 4%;
+    --foreground: 0 0% 98%;
 
     /* Cards */
-    --card: 205 25% 12%;
-    --card-foreground: 195 25% 92%;
+    --card: 200 14% 8%;
+    --card-foreground: 0 0% 98%;
 
     /* Popovers */
-    --popover: 205 25% 12%;
-    --popover-foreground: 195 25% 92%;
+    --popover: 200 14% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Lulyssia signature cyan */
-    --primary: 188 73% 53%;
-    --primary-foreground: 0 0% 100%;
+    /* Signature color #3aadd0 (black text on it, like P5's black on red) */
+    --primary: 193 61% 52%;
+    --primary-foreground: 200 20% 4%;
 
     /* Secondary */
-    --secondary: 205 20% 18%;
-    --secondary-foreground: 195 25% 88%;
+    --secondary: 200 10% 14%;
+    --secondary-foreground: 0 0% 95%;
 
     /* Muted */
-    --muted: 205 18% 16%;
-    --muted-foreground: 200 12% 62%;
+    --muted: 200 10% 13%;
+    --muted-foreground: 0 0% 72%;
 
-    /* Cyan accent */
-    --accent: 190 45% 24%;
-    --accent-foreground: 195 25% 92%;
+    /* Accent */
+    --accent: 193 45% 22%;
+    --accent-foreground: 0 0% 98%;
 
     /* Destructive */
-    --destructive: 350 65% 55%;
+    --destructive: 350 75% 58%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders */
-    --border: 205 20% 22%;
-    --input: 205 20% 22%;
-    --ring: 188 73% 53%;
+    --border: 0 0% 24%;
+    --input: 0 0% 28%;
+    --ring: 193 61% 52%;
 
     /* ========================================
        Dashboard Section Colors
        ======================================== */
 
-    --welcome-primary: 190 65% 55%;
-    --welcome-secondary: 202 70% 55%;
-    --main-focus: 190 65% 55%;
-    --upcoming-events: 202 70% 55%;
-    --events-theme: 210 45% 45%;
-    --recent-changes: 215 40% 38%;
+    --welcome-primary: 193 61% 52%;
+    --welcome-secondary: 0 0% 98%;
+    --main-focus: 193 61% 52%;
+    --upcoming-events: 193 61% 52%;
+    --events-theme: 193 61% 52%;
+    --recent-changes: 193 40% 42%;
 
-    --radius: 0.75rem;
+    /* Sharp corners everywhere */
+    --radius: 0rem;
 
     /* ========================================
        Sidebar
        ======================================== */
 
-    --sidebar-background: 207 35% 7%;
-    --sidebar-foreground: 195 25% 90%;
+    --sidebar-background: 200 20% 3%;
+    --sidebar-foreground: 0 0% 95%;
 
     /* Active / primary sidebar item */
-    --sidebar-primary: 188 73% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 193 61% 52%;
+    --sidebar-primary-foreground: 200 20% 4%;
 
     /* Selected / highlighted item */
-    --sidebar-accent: 188 73% 53%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-accent: 193 61% 52%;
+    --sidebar-accent-foreground: 200 20% 4%;
 
-    --sidebar-border: 205 20% 18%;
-    --sidebar-ring: 188 73% 53%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 193 61% 52%;
   }
 }
 
@@ -102,11 +103,39 @@
      * Avoid additional gradients from body.
      */
     background-color: hsl(var(--background));
-    
+
+  }
+
+  /* P5 backdrop: halftone dots plus a diagonal slash, on a fixed layer behind the app */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(hsl(var(--primary) / 0.10) 1px, transparent 1.6px) 0 0 / 14px 14px,
+      linear-gradient(115deg, transparent 58%, hsl(var(--primary) / 0.07) 58%, hsl(var(--primary) / 0.07) 70%, transparent 70%);
   }
 
   #root {
     min-height: 100%;
+  }
+
+  /* P5 headings: heavy italic (Kanit covers Thai and Latin) */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Kanit', ui-sans-serif, system-ui, sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 
   /* ========================================
@@ -292,4 +321,74 @@
   pointer-events: none;
   mix-blend-mode: screen;
   z-index: 0;
+}
+/* ========================================
+   Persona 5 style pieces
+   ======================================== */
+
+/* Page title: black text on a slanted #3aadd0 block with a white offset slab behind it */
+.p5-title {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  padding: 0.15em 0.9em 0.2em 0.7em;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.p5-title::before,
+.p5-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: skewX(-14deg);
+}
+
+.p5-title::before {
+  background: hsl(var(--foreground));
+  translate: 6px 5px;
+}
+
+.p5-title::after {
+  background: hsl(var(--primary));
+}
+
+/* Sidebar active item: jagged, star-like cut */
+.p5-burst {
+  clip-path: polygon(8% 12%, 50% 0%, 92% 8%, 100% 52%, 88% 92%, 46% 100%, 6% 86%, 0% 44%);
+}
+
+/* ========================================
+   Light panel theme (used on the Settings page)
+   Redefines the theme colors for everything inside, so cards, inputs and
+   switches turn whiteish with black text while the page around stays dark.
+   ======================================== */
+
+.theme-light {
+  --background: 0 0% 98%;
+  --foreground: 200 20% 6%;
+  --card: 0 0% 96%;
+  --card-foreground: 200 20% 6%;
+  --popover: 0 0% 98%;
+  --popover-foreground: 200 20% 6%;
+  --primary-foreground: 200 20% 4%;
+  --secondary: 0 0% 89%;
+  --secondary-foreground: 200 20% 8%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 30%;
+  --accent: 193 55% 86%;
+  --accent-foreground: 200 20% 6%;
+  --border: 0 0% 68%;
+  --input: 0 0% 62%;
+
+  /* Text color is inherited as a computed value, so set it again here */
+  color: hsl(var(--foreground));
+  color-scheme: light;
+}
+
+/* Dark picker icons on light fields */
+.theme-light ::-webkit-calendar-picker-indicator {
+  filter: none;
 }

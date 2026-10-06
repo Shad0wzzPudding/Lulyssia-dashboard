@@ -1,43 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
-import march7thExcited from '@/assets/march7th-excited.png';
-import march7thHappy from '@/assets/march7th-happy.png';
-import march7thWinking from '@/assets/march7th-winking.png';
-import march7thCandy from '@/assets/march7th-candy.png';
-import march7thProud from '@/assets/march7th-proud.png';
-import march7thWelcoming from '@/assets/march7th-welcoming.png';
-import march7thConfident from '@/assets/march7th-confident.png';
-import march7thTg04 from '@/assets/march7th-tg-04.webp';
-import march7thTg05 from '@/assets/march7th-tg-05.webp';
-import march7thTg06 from '@/assets/march7th-tg-06.webp';
-import march7thTg07 from '@/assets/march7th-tg-07.webp';
-import march7thTg10 from '@/assets/march7th-tg-10.webp';
-import march7thTg11 from '@/assets/march7th-tg-11.webp';
-import march7thTg12 from '@/assets/march7th-tg-12.webp';
-import march7thTg13 from '@/assets/march7th-tg-13.webp';
+import lulyssiaExcited from '@/assets/lulyssia-excited.png';
+import lulyssiaHappy from '@/assets/lulyssia-happy.png';
+import lulyssiaWinking from '@/assets/lulyssia-winking.png';
+import lulyssiaCandy from '@/assets/lulyssia-candy.png';
+import lulyssiaProud from '@/assets/lulyssia-proud.png';
+import lulyssiaWelcoming from '@/assets/lulyssia-welcoming.png';
+import lulyssiaConfident from '@/assets/lulyssia-confident.png';
+import lulyssiaTg04 from '@/assets/lulyssia-tg-04.webp';
+import lulyssiaTg05 from '@/assets/lulyssia-tg-05.webp';
+import lulyssiaTg06 from '@/assets/lulyssia-tg-06.webp';
+import lulyssiaTg07 from '@/assets/lulyssia-tg-07.webp';
+import lulyssiaTg10 from '@/assets/lulyssia-tg-10.webp';
+import lulyssiaTg11 from '@/assets/lulyssia-tg-11.webp';
+import lulyssiaTg12 from '@/assets/lulyssia-tg-12.webp';
+import lulyssiaTg13 from '@/assets/lulyssia-tg-13.webp';
 
-const march7thGreetings = [
-  { text: "Heyyy Shad0wzz! How's your day going today??", emoji: "😊", sticker: march7thWelcoming },
-  { text: "Welcome back! Ready for another adventure?", emoji: "📸✨", sticker: march7thExcited },
-  { text: "Ooh, perfect timing! I was just organizing some photos!", emoji: "📷", sticker: march7thCandy },
-  { text: "Hi there! Got any exciting plans for today?", emoji: "🌟", sticker: march7thWelcoming },
-  { text: "Yay, you're here! Let's make today super productive!", emoji: "💫", sticker: march7thHappy },
-  { text: "Hello hello! Ready to tackle your tasks like a true Trailblazer?", emoji: "🚀", sticker: march7thProud },
-  { text: "Heya! Time to check what's on your agenda!", emoji: "📝", sticker: march7thWinking },
-  { text: "Welcome! I've been waiting to show you all your updates!", emoji: "✨", sticker: march7thConfident },
-  { text: "Make a wish! Today feels like a celebration!", emoji: "🎂", sticker: march7thTg04 },
-  { text: "Mmm, snack break! Want to share?", emoji: "🍫", sticker: march7thTg05 },
-  { text: "Hmph! Don't keep me waiting too long, okay?", emoji: "💢", sticker: march7thTg06 },
-  { text: "Pretty please? Let's get something done together!", emoji: "🥺", sticker: march7thTg07 },
-  { text: "Ehehe, you caught me! Let's get back to it!", emoji: "😅", sticker: march7thTg10 },
-  { text: "Vacation mode? Or just dreaming about it?", emoji: "🌴", sticker: march7thTg11 },
-  { text: "Waaah, that was scary! Glad you're here now!", emoji: "😭", sticker: march7thTg12 },
-  { text: "Staring contest? Fine, I won't blink first!", emoji: "👀", sticker: march7thTg13 },
+const lulyssiaGreetings = [
+  { text: "Heyyy Shad0wzz! How's your day going today??", emoji: "😊", sticker: lulyssiaWelcoming },
+  { text: "Welcome back! Ready for another adventure?", emoji: "📸✨", sticker: lulyssiaExcited },
+  { text: "Ooh, perfect timing! I was just organizing some photos!", emoji: "📷", sticker: lulyssiaCandy },
+  { text: "Hi there! Got any exciting plans for today?", emoji: "🌟", sticker: lulyssiaWelcoming },
+  { text: "Yay, you're here! Let's make today super productive!", emoji: "💫", sticker: lulyssiaHappy },
+  { text: "Hello hello! Ready to tackle your tasks like a true Trailblazer?", emoji: "🚀", sticker: lulyssiaProud },
+  { text: "Heya! Time to check what's on your agenda!", emoji: "📝", sticker: lulyssiaWinking },
+  { text: "Welcome! I've been waiting to show you all your updates!", emoji: "✨", sticker: lulyssiaConfident },
+  { text: "Make a wish! Today feels like a celebration!", emoji: "🎂", sticker: lulyssiaTg04 },
+  { text: "Mmm, snack break! Want to share?", emoji: "🍫", sticker: lulyssiaTg05 },
+  { text: "Hmph! Don't keep me waiting too long, okay?", emoji: "💢", sticker: lulyssiaTg06 },
+  { text: "Pretty please? Let's get something done together!", emoji: "🥺", sticker: lulyssiaTg07 },
+  { text: "Ehehe, you caught me! Let's get back to it!", emoji: "😅", sticker: lulyssiaTg10 },
+  { text: "Vacation mode? Or just dreaming about it?", emoji: "🌴", sticker: lulyssiaTg11 },
+  { text: "Waaah, that was scary! Glad you're here now!", emoji: "😭", sticker: lulyssiaTg12 },
+  { text: "Staring contest? Fine, I won't blink first!", emoji: "👀", sticker: lulyssiaTg13 },
 ];
 
 export const WelcomeMessage = () => {
   const [greeting] = useState(() => {
-    const randomIndex = Math.floor(Math.random() * march7thGreetings.length);
-    return march7thGreetings[randomIndex];
+    const randomIndex = Math.floor(Math.random() * lulyssiaGreetings.length);
+    return lulyssiaGreetings[randomIndex];
   });
   const [displayedText, setDisplayedText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
@@ -71,7 +71,7 @@ export const WelcomeMessage = () => {
       <div className="flex justify-center mb-4">
         <img 
           src={greeting.sticker} 
-          alt="March 7th" 
+          alt="Lulyssia" 
           className={`w-24 h-24 object-contain transition-all duration-500 ${showEmoji ? 'animate-bounce' : 'opacity-80'}`}
         />
       </div>

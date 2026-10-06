@@ -26,6 +26,14 @@ const buttonVariants = cva(
         icon: "h-10 w-10",
       },
     },
+    compoundVariants: [
+      // Persona 5 style: slanted text buttons, with icons kept upright
+      {
+        variant: ["default", "destructive", "outline", "secondary"],
+        size: ["default", "sm", "lg"],
+        class: "-skew-x-12 font-semibold [&_svg]:skew-x-12",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

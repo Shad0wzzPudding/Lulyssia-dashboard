@@ -2,21 +2,20 @@ import { InstallAppCard } from './InstallAppCard';
 import { TagManager } from './TagManager';
 import { LineSettings } from './LineSettings';
 import { Camera } from 'lucide-react';
+import { PageIcon } from './PageIcon';
 
 export const SettingsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white shadow-md">
-          <Camera size={20} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-sm text-muted-foreground">March 7th's behind-the-scenes controls~</p>
-        </div>
+        <PageIcon icon={Camera} />
+        <h1 className="p5-title w-fit text-2xl">Settings</h1>
       </div>
       <InstallAppCard />
-      <LineSettings />
+      {/* LINE card uses the light panel theme (whiteish background, black text) */}
+      <div className="theme-light">
+        <LineSettings />
+      </div>
       <TagManager />
     </div>
   );
