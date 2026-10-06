@@ -21,7 +21,7 @@ The frontend is hosted on Vercel.
 ## Getting started
 
 ```sh
-npm install          # Lovable installs with Bun (bun install); npm works locally too
+npm install 
 copy .env.example .env     # macOS/Linux: cp .env.example .env
 npm run dev
 ```

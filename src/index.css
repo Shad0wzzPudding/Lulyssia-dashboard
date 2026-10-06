@@ -2,119 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* March 7th Dashboard Design System - Honkai Star Rail Theme */
+/* Lulyssia Dashboard Design System - Dark Cyan Theme */
 
 @layer base {
   :root {
-    /* March 7th mint green background */
-    --background: 120 20% 97%;
-    --foreground: 280 15% 15%;
+    /* ========================================
+       Lulyssia Dark Cyan Theme
+       ======================================== */
 
-    /* Card with subtle tint */
-    --card: 315 100% 98%;
-    --card-foreground: 280 15% 15%;
+    /* Main background */
+    --background: 207 35% 8%;
+    --foreground: 195 25% 92%;
 
-    /* Popover styling */
-    --popover: 315 100% 98%;
-    --popover-foreground: 280 15% 15%;
+    /* Cards */
+    --card: 205 25% 12%;
+    --card-foreground: 195 25% 92%;
 
-    /* March 7th inspired primary colors - soft pink/purple gradient */
-    --primary: 315 70% 70%;
+    /* Popovers */
+    --popover: 205 25% 12%;
+    --popover-foreground: 195 25% 92%;
+
+    /* Lulyssia signature cyan */
+    --primary: 188 73% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft secondary colors */
-    --secondary: 300 30% 95%;
-    --secondary-foreground: 280 15% 25%;
+    /* Secondary */
+    --secondary: 205 20% 18%;
+    --secondary-foreground: 195 25% 88%;
 
-    /* Muted tones */
-    --muted: 310 25% 94%;
-    --muted-foreground: 280 10% 50%;
+    /* Muted */
+    --muted: 205 18% 16%;
+    --muted-foreground: 200 12% 62%;
 
-    /* Accent colors */
-    --accent: 285 60% 85%;
-    --accent-foreground: 280 15% 25%;
+    /* Cyan accent */
+    --accent: 190 45% 24%;
+    --accent-foreground: 195 25% 92%;
 
-    /* Soft destructive */
-    --destructive: 350 70% 65%;
+    /* Destructive */
+    --destructive: 350 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Soft borders */
-    --border: 300 20% 88%;
-    --input: 300 20% 90%;
-    --ring: 315 70% 70%;
+    /* Borders */
+    --border: 205 20% 22%;
+    --input: 205 20% 22%;
+    --ring: 188 73% 53%;
 
-    /* March 7th Section Colors */
-    --welcome-primary: 295 45% 82%;
-    --welcome-secondary: 202 70% 72%;
-    --main-focus: 295 45% 82%;
-    --upcoming-events: 202 70% 72%;
-    --events-theme: 241 30% 60%;
-    --recent-changes: 231 30% 52%;
+    /* ========================================
+       Dashboard Section Colors
+       ======================================== */
+
+    --welcome-primary: 190 65% 55%;
+    --welcome-secondary: 202 70% 55%;
+    --main-focus: 190 65% 55%;
+    --upcoming-events: 202 70% 55%;
+    --events-theme: 210 45% 45%;
+    --recent-changes: 215 40% 38%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* ========================================
+       Sidebar
+       ======================================== */
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-background: 207 35% 7%;
+    --sidebar-foreground: 195 25% 90%;
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    /* Dark mode with warm tones */
-    --background: 280 25% 8%;
-    --foreground: 320 20% 92%;
-
-    /* Dark cards with subtle warmth */
-    --card: 280 20% 12%;
-    --card-foreground: 320 20% 92%;
-
-    /* Dark popover */
-    --popover: 280 20% 12%;
-    --popover-foreground: 320 20% 92%;
-
-    /* Primary in dark mode */
-    --primary: 315 60% 65%;
-    --primary-foreground: 280 25% 8%;
-
-    /* Dark secondary */
-    --secondary: 280 15% 20%;
-    --secondary-foreground: 320 20% 85%;
-
-    /* Dark muted */
-    --muted: 280 15% 18%;
-    --muted-foreground: 300 10% 60%;
-
-    /* Dark accent */
-    --accent: 285 40% 25%;
-    --accent-foreground: 320 20% 85%;
-
-    /* Dark destructive */
-    --destructive: 350 60% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Dark borders */
-    --border: 280 15% 22%;
-    --input: 280 15% 22%;
-    --ring: 315 60% 65%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Active / primary sidebar item */
+    --sidebar-primary: 188 73% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Selected / highlighted item */
+    --sidebar-accent: 188 73% 53%;
+    --sidebar-accent-foreground: 0 0% 100%;
+
+    --sidebar-border: 205 20% 18%;
+    --sidebar-ring: 188 73% 53%;
   }
 }
 
@@ -129,25 +91,43 @@
 
   body {
     @apply bg-background text-foreground min-h-screen;
+
     /* Improve iOS PWA keyboard behavior */
     min-height: 100svh;
     height: -webkit-fill-available;
     -webkit-text-size-adjust: 100%;
-    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(120 25% 95%) 100%);
+
+    /*
+     * Keep the entire page as one solid dark background.
+     * Avoid additional gradients from body.
+     */
+    background-color: hsl(var(--background));
+    
   }
 
   #root {
     min-height: 100%;
   }
 
-  /* Ensure inputs are always focusable and show keyboard on iOS */
-  input, textarea, select {
-    font-size: 16px; /* prevent zoom quirks and help keyboard */
+  /* ========================================
+     Inputs
+     ======================================== */
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
     touch-action: manipulation;
   }
-  button { touch-action: manipulation; }
 
-  /* Normalize native date/time inputs (iOS renders them oversized + centered) */
+  button {
+    touch-action: manipulation;
+  }
+
+  /* ========================================
+     Native Date / Time Inputs
+     ======================================== */
+
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"] {
@@ -179,32 +159,50 @@
     margin-left: auto;
   }
 
-  /* Allow selecting/copying text on touch devices */
-  p, span, h1, h2, h3, h4, li, td, [contenteditable="true"] {
+  /* ========================================
+     Text Selection
+     ======================================== */
+
+  p,
+  span,
+  h1,
+  h2,
+  h3,
+  h4,
+  li,
+  td,
+  [contenteditable="true"] {
     -webkit-user-select: text;
     user-select: text;
     -webkit-touch-callout: default;
   }
 
-  /* Custom scrollbar */
+  /* ========================================
+     Custom Scrollbar
+     ======================================== */
+
   ::-webkit-scrollbar {
     width: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-muted/30;
+    background: hsl(var(--background));
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/30 rounded-full;
+    background: hsl(var(--primary) / 0.30);
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/50;
+    background: hsl(var(--primary) / 0.50);
   }
 }
 
-/* iOS PWA input focus fix: disable transforms/animations in auth */
+/* ========================================
+   iOS PWA Input Focus Fix
+   ======================================== */
+
 @media (display-mode: standalone) {
   .ios-auth-fix *,
   .ios-auth-fix *::before,
@@ -217,18 +215,26 @@
   }
 }
 
-/* ContentEditable placeholder */
+/* ========================================
+   ContentEditable Placeholder
+   ======================================== */
+
 [contenteditable]:empty::before {
   content: attr(data-placeholder);
   color: hsl(var(--muted-foreground));
   pointer-events: none;
 }
-/* Inside the "show all" modal, stack card action buttons under the block name */
+
+/* ========================================
+   Show All Modal
+   ======================================== */
+
 [data-modal-list] [data-card-header] {
   flex-direction: column;
   align-items: stretch;
   gap: 0.5rem;
 }
+
 [data-modal-list] [data-card-actions] {
   order: 1;
   flex-wrap: wrap;
@@ -236,33 +242,42 @@
   padding-top: 0;
 }
 
-/* Subtle pink glass-liquid shimmer */
-@keyframes pink-shimmer {
+/* ========================================
+   Cyan Glass Shimmer
+   ======================================== */
+
+@keyframes cyan-shimmer {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
 }
-.pink-shimmer {
+
+.cyan-shimmer {
   overflow: hidden;
 }
-.pink-shimmer::before {
+
+.cyan-shimmer::before {
   content: '';
   position: absolute;
   inset: 0;
+
   background: linear-gradient(
     115deg,
     transparent 0%,
-    hsl(var(--primary) / 0.05) 30%,
-    hsl(var(--primary) / 0.25) 50%,
-    hsl(var(--primary) / 0.5) 70%,
+    hsl(var(--primary) / 0.04) 30%,
+    hsl(var(--primary) / 0.18) 50%,
+    hsl(var(--primary) / 0.30) 70%,
     transparent 100%
   );
+
   background-size: 200% 100%;
-  animation: pink-shimmer 6s ease-in-out infinite;
+  animation: cyan-shimmer 6s ease-in-out infinite;
+
   pointer-events: none;
-  mix-blend-mode: overlay;
+  mix-blend-mode: screen;
   z-index: 0;
 }
