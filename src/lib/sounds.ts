@@ -19,7 +19,6 @@ const getAudioContext = (): AudioContext => {
   if (!sharedAudioContext) {
     const AudioContextClass = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
     sharedAudioContext = new AudioContextClass();
-    console.log('[sounds] Created shared AudioContext, state:', sharedAudioContext.state);
   }
   
   // Always try to resume (no-op if already running)
@@ -39,7 +38,6 @@ export const unlockAudio = () => {
   source.buffer = buffer;
   source.connect(ctx.destination);
   source.start(0);
-  console.log('[sounds] Audio unlocked, state:', ctx.state);
 };
 
 export const playSuccessSound = () => {
@@ -72,7 +70,7 @@ export const playSuccessSound = () => {
     playTone(783.99, now + 0.16, 0.15); // G5
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -105,7 +103,7 @@ export const playCompletionSound = () => {
     playTone(1318.51, now + 0.06, 0.2); // E6 (higher, bright)
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -138,7 +136,7 @@ export const playLulyssiaSound = () => {
     playTone(880, now + 0.1, 0.2);  // A5
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -173,7 +171,7 @@ export const playConfirmSound = () => {
     playTone(1046.5, now + 0.18, 0.15); // C6
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -212,7 +210,7 @@ export const playCancelSound = async () => {
     playTone(329.63, now + 0.2, 0.18);  // E4
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -251,7 +249,7 @@ export const playDeleteSound = async () => {
     playTone(220, now + 0.12, 0.12);    // A3
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -284,7 +282,7 @@ export const playDuplicateSound = () => {
     playTone(698.46, now + 0.1, 0.08);  // F5 (repeat)
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -322,7 +320,7 @@ export const playPinSound = async () => {
     playTone(900, now + 0.05, 0.1);     // A5 (higher)
     
   } catch (e) {
-    console.log('Audio not available');
+    console.warn('[sounds] Audio not available:', e);
   }
 };
 
@@ -332,7 +330,6 @@ export const playUnpinSound = () => {
     const audioContext = getAudioContext();
     const now = audioContext.currentTime;
     
-    console.log('[playUnpinSound] Using shared context, state:', audioContext.state, 'time:', now);
     
     // First tone - descending
     const osc1 = audioContext.createOscillator();
@@ -358,10 +355,9 @@ export const playUnpinSound = () => {
     osc2.start(now + 0.06);
     osc2.stop(now + 0.15);
     
-    console.log('[playUnpinSound] Tones scheduled');
     
   } catch (e) {
-    console.log('[playUnpinSound] Audio error:', e);
+    console.warn('[playUnpinSound] Audio error:', e);
   }
 };
 
@@ -395,7 +391,7 @@ export const playUpdateSound = () => {
     osc2.stop(now + 0.2);
     
   } catch (e) {
-    console.log('[playUpdateSound] Audio error:', e);
+    console.warn('[playUpdateSound] Audio error:', e);
   }
 };
 
@@ -446,7 +442,7 @@ export const playShutterSound = () => {
     osc2.stop(now + 0.12);
 
   } catch (e) {
-    console.log('[playShutterSound] Audio error:', e);
+    console.warn('[playShutterSound] Audio error:', e);
   }
 };
 
@@ -480,7 +476,7 @@ export const playEditSound = () => {
     osc2.stop(now + 0.14);
     
   } catch (e) {
-    console.log('[playEditSound] Audio error:', e);
+    console.warn('[playEditSound] Audio error:', e);
   }
 };
 
@@ -504,7 +500,7 @@ export const playCollapseSound = () => {
     osc.stop(now + 0.08);
     
   } catch (e) {
-    console.log('[playCollapseSound] Audio error:', e);
+    console.warn('[playCollapseSound] Audio error:', e);
   }
 };
 
@@ -528,7 +524,7 @@ export const playExpandSound = () => {
     osc.stop(now + 0.08);
     
   } catch (e) {
-    console.log('[playExpandSound] Audio error:', e);
+    console.warn('[playExpandSound] Audio error:', e);
   }
 };
 
@@ -551,7 +547,7 @@ export const playNavigationSound = () => {
     osc.stop(now + 0.06);
     
   } catch (e) {
-    console.log('[playNavigationSound] Audio error:', e);
+    console.warn('[playNavigationSound] Audio error:', e);
   }
 };
 
@@ -579,7 +575,7 @@ export const playSelectModeSound = () => {
     playTone(1760, now + 0.09, 0.06);   // A6 (repeat)
 
   } catch (e) {
-    console.log('[playSelectModeSound] Audio error:', e);
+    console.warn('[playSelectModeSound] Audio error:', e);
   }
 };
 
@@ -609,6 +605,6 @@ export const playAddSound = () => {
     playTone(1318.51, now + 0.11, 0.14, 'sine', 0.18);    // E6 sparkle
 
   } catch (e) {
-    console.log('[playAddSound] Audio error:', e);
+    console.warn('[playAddSound] Audio error:', e);
   }
 };

@@ -52,7 +52,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       if (!audioUnlockedRef.current) {
         unlockAudio();
         audioUnlockedRef.current = true;
-        console.log('[HomePage] Audio unlocked on first touch');
       }
     };
     
@@ -221,7 +220,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   // Toggle date visibility in calendar
   const toggleDateVisibility = (date: Date) => {
     const dateKey = format(date, 'yyyy-MM-dd');
-    console.log('[Calendar] toggleDateVisibility for', dateKey);
     setHiddenDates(prev => {
       const newSet = new Set(prev);
       if (newSet.has(dateKey)) {
@@ -229,7 +227,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       } else {
         newSet.add(dateKey);
       }
-      console.log('[Calendar] new hiddenDates set', Array.from(newSet));
       // Save to localStorage
       try {
         localStorage.setItem('hiddenCalendarDates', JSON.stringify(Array.from(newSet)));

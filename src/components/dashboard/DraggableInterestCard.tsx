@@ -79,10 +79,8 @@ export const DraggableInterestCard = ({
   const handleTouchEnd = () => {
     const currentX = translateXRef.current;
     const wasDragging = isHorizontalDragging;
-    console.log('[DraggableInterestCard] TouchEnd - translateX:', currentX, 'threshold:', SWIPE_THRESHOLD, 'wasDragging:', wasDragging);
     
     if (currentX > SWIPE_THRESHOLD) {
-      console.log('[DraggableInterestCard] Threshold exceeded, playing sound');
       // Play sound immediately in touch handler
       playUnpinSound();
       updateTranslateX(300);
@@ -117,7 +115,6 @@ export const DraggableInterestCard = ({
     // Check ref for immediate value (React state may be stale)
     if (isHorizontalDragging && translateXRef.current > SWIPE_THRESHOLD) {
       // Play sound FIRST, before any state updates
-      console.log('[DraggableInterestCard] Mouse swipe threshold reached, playing unpin sound');
       playUnpinSound();
       updateTranslateX(300);
       setIsHorizontalDragging(false);

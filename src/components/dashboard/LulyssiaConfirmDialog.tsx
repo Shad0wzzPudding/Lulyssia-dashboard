@@ -105,7 +105,7 @@ export const LulyssiaConfirmDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/40 dark:to-purple-950/40 border-2 border-pink-200 dark:border-pink-800 max-w-md w-[calc(100vw-2rem)] [&>*]:min-w-0">
+      <AlertDialogContent className="bg-card border-2 border-foreground/80 shadow-[6px_6px_0_0_hsl(var(--primary))] max-w-md w-[calc(100vw-2rem)] [&>*]:min-w-0">
         <AlertDialogHeader className="text-center min-w-0">
           <div className="flex justify-center mb-2">
             <img 
@@ -114,14 +114,14 @@ export const LulyssiaConfirmDialog = ({
               className="w-20 h-20 object-contain animate-bounce"
             />
           </div>
-          <AlertDialogTitle className="text-xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+          <AlertDialogTitle className="text-xl text-primary">
             {fillNames(lulyssiaMessage.text, names)}
           </AlertDialogTitle>
           <div className="py-3 min-w-0 w-full">
-            <p className="text-base font-semibold text-pink-700 dark:text-pink-300 break-all">
+            <p className="text-base font-semibold text-foreground break-all">
               {title}
             </p>
-            <AlertDialogDescription className="text-sm text-pink-600/80 dark:text-pink-400/80 mt-2 break-all max-h-40 overflow-y-auto">
+            <AlertDialogDescription className="text-sm text-muted-foreground mt-2 break-all max-h-40 overflow-y-auto">
               {description}
             </AlertDialogDescription>
           </div>
@@ -131,17 +131,15 @@ export const LulyssiaConfirmDialog = ({
             variant="outline"
             type="button"
             onClick={() => {
-              console.log("Cancel button onClick fired");
               playCancelSound();
               onOpenChange(false);
             }}
             onTouchEnd={(e) => {
               e.preventDefault();
-              console.log("Cancel button onTouchEnd fired");
               playCancelSound();
               onOpenChange(false);
             }}
-            className="w-full sm:w-auto bg-white dark:bg-gray-800 border-pink-200 dark:border-pink-700 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/50"
+            className="w-full sm:w-auto border-foreground/40 hover:border-primary hover:text-primary"
           >
             {cancelText}
           </Button>
@@ -150,7 +148,7 @@ export const LulyssiaConfirmDialog = ({
               justConfirmedRef.current = true;
               handleConfirmClick(onConfirm);
             }}
-            className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold"
+            className="w-full sm:w-auto font-semibold"
           >
             {confirmText}
           </AlertDialogAction>
