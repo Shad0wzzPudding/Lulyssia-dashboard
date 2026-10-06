@@ -19,9 +19,11 @@ import lulyssiaCamera from '@/assets/lulyssia-camera.webp';
 import { playShutterSound } from '@/lib/sounds';
 import lulyssiaSticker from '@/assets/lulyssia-camera.webp';
 import type { User, Session } from '@supabase/supabase-js';
+import { useUserNames } from '@/hooks/useUserNames';
 
 const Index = () => {
   const [activePage, setActivePage] = useState<NavigationPage>('home');
+  const { names } = useUserNames();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -186,7 +188,7 @@ const Index = () => {
             <Navigation activePage={activePage} onPageChange={setActivePage} />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user.email} !
+                Welcome, {names.nickname || user.email} !
               </span>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out

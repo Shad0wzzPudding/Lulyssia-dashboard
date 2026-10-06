@@ -104,6 +104,13 @@ Deno.serve(async (req) => {
       .eq('overdue_enabled', true);
     if (error) throw error;
 
+    // Nicknames set in the dashboard Settings
+    const { data: nameRows } = await supabase
+      .from('user_preferences')
+      .select('user_id, nickname')
+      .in('user_id', (links ?? []).map((l) => l.user_id));
+    const nameByUser = new Map((nameRows ?? []).map((r) => [r.user_id, r.nickname || null]));
+
     const now = new Date();
     const floor = new Date(now.getTime() - 3 * 86400000); // only deadlines missed in the last 3 days
     let sent = 0;
@@ -124,8 +131,9 @@ Deno.serve(async (req) => {
           });
           if (markErr) continue;
           const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ') || '-';
+          const name = nameByUser.get(link.user_id);
           const text = [
-            '⚠️ Missed deadline!', '', '📋 Task',
+            `⚠️ Missed deadline${name ? `, ${name}` : ''}!`, '', '📋 Task',
             `Name : ${t.title}`, 'Detail :', formatDetail(t.description) ?? '-',
             `Deadline was : ${thDateTime(t.deadline)}`, `Tag : ${tagNames}`, '',
             `"${NUDGES[Math.floor(Math.random() * NUDGES.length)]}"`,

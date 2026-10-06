@@ -14,14 +14,16 @@ import lulyssiaTg10 from '@/assets/lulyssia-tg-10.webp';
 import lulyssiaTg11 from '@/assets/lulyssia-tg-11.webp';
 import lulyssiaTg12 from '@/assets/lulyssia-tg-12.webp';
 import lulyssiaTg13 from '@/assets/lulyssia-tg-13.webp';
+import { useUserNames } from '@/hooks/useUserNames';
+import { fillNames } from '@/lib/names';
 
 const lulyssiaGreetings = [
-  { text: "Heyyy Shad0wzz! How's your day going today??", emoji: "😊", sticker: lulyssiaWelcoming },
+  { text: "Heyyy {nickname}! How's your day going today??", emoji: "😊", sticker: lulyssiaWelcoming },
   { text: "Welcome back! Ready for another adventure?", emoji: "📸✨", sticker: lulyssiaExcited },
   { text: "Ooh, perfect timing! I was just organizing some photos!", emoji: "📷", sticker: lulyssiaCandy },
   { text: "Hi there! Got any exciting plans for today?", emoji: "🌟", sticker: lulyssiaWelcoming },
   { text: "Yay, you're here! Let's make today super productive!", emoji: "💫", sticker: lulyssiaHappy },
-  { text: "Hello hello! Ready to tackle your tasks like a true Trailblazer?", emoji: "🚀", sticker: lulyssiaProud },
+  { text: "Hello hello, {nickname}! Ready to tackle your tasks?", emoji: "🚀", sticker: lulyssiaProud },
   { text: "Heya! Time to check what's on your agenda!", emoji: "📝", sticker: lulyssiaWinking },
   { text: "Welcome! I've been waiting to show you all your updates!", emoji: "✨", sticker: lulyssiaConfident },
   { text: "Make a wish! Today feels like a celebration!", emoji: "🎂", sticker: lulyssiaTg04 },
@@ -39,20 +41,23 @@ export const WelcomeMessage = () => {
     const randomIndex = Math.floor(Math.random() * lulyssiaGreetings.length);
     return lulyssiaGreetings[randomIndex];
   });
+  // Wait for the saved names so the greeting is typed out with the right name
+  const { names, isLoading: namesLoading } = useUserNames();
+  const text = fillNames(greeting.text, names);
   const [displayedText, setDisplayedText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
   const typingComplete = useRef(false);
 
   useEffect(() => {
-    if (typingComplete.current) return;
+    if (typingComplete.current || namesLoading) return;
     
     let currentIndex = 0;
     const typingSpeed = 40; // ms per character
 
     const typingInterval = setInterval(() => {
-      if (currentIndex < greeting.text.length) {
-        setDisplayedText(greeting.text.slice(0, currentIndex + 1));
+      if (currentIndex < text.length) {
+        setDisplayedText(text.slice(0, currentIndex + 1));
         currentIndex++;
       } else {
         clearInterval(typingInterval);
@@ -64,7 +69,7 @@ export const WelcomeMessage = () => {
     }, typingSpeed);
 
     return () => clearInterval(typingInterval);
-  }, [greeting.text]);
+  }, [text, namesLoading]);
 
   return (
     <div className="text-center py-8 px-4">

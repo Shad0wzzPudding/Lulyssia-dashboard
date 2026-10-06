@@ -3,6 +3,7 @@ import { TagManager } from './TagManager';
 import { LineSettings } from './LineSettings';
 import { Camera } from 'lucide-react';
 import { PageIcon } from './PageIcon';
+import { NameSettings } from './NameSettings';
 
 export const SettingsPage = () => {
   return (
@@ -11,6 +12,7 @@ export const SettingsPage = () => {
         <PageIcon icon={Camera} />
         <h1 className="p5-title w-fit text-2xl">Settings</h1>
       </div>
+      <NameSettings />
       <InstallAppCard />
       {/* LINE card uses the light panel theme (whiteish background, black text) */}
       <div className="theme-light">

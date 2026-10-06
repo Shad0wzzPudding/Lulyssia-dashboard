@@ -133,6 +133,13 @@ Deno.serve(async (req) => {
     if (linksError) throw linksError;
     if (!links || links.length === 0) return json({ message: 'No linked LINE accounts', sent: 0 });
 
+    // Nicknames set in the dashboard Settings
+    const { data: nameRows } = await supabase
+      .from('user_preferences')
+      .select('user_id, nickname')
+      .in('user_id', links.map((l) => l.user_id));
+    const nameByUser = new Map((nameRows ?? []).map((r) => [r.user_id, r.nickname || null]));
+
     const today = thDateString(new Date());
     let sent = 0;
     const failures: string[] = [];
@@ -236,7 +243,9 @@ Deno.serve(async (req) => {
         ];
         const toast = toasts[Math.floor(Math.random() * toasts.length)];
 
-        const lines: string[] = [`🌅 Good morning! ${today} (Thai time)`, ''];
+        // Fall back to the LINE profile name when no name is set in the dashboard
+        const name = nameByUser.get(link.user_id) || link.display_name || null;
+        const lines: string[] = [`🌅 Good morning${name ? `, ${name}` : ''}! ${today} (Thai time)`, ''];
 
         if (todayTasks.length === 0 && todayEvents.length === 0) {
           lines.push('✨ Your day is clear — no tasks and no events. Enjoy it~ 📸');

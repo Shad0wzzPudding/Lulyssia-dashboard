@@ -162,6 +162,13 @@ Deno.serve(async (req) => {
     if (linksError) throw linksError;
     if (!links || links.length === 0) return json({ message: 'No linked LINE accounts', sent: 0 });
 
+    // Nicknames set in the dashboard Settings
+    const { data: nameRows } = await supabase
+      .from('user_preferences')
+      .select('user_id, nickname')
+      .in('user_id', links.map((l) => l.user_id));
+    const nameByUser = new Map((nameRows ?? []).map((r) => [r.user_id, r.nickname || null]));
+
     const now = new Date();
     const windowStart = new Date(now.getTime() + 10 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + 16 * 60 * 1000);
@@ -250,8 +257,9 @@ Deno.serve(async (req) => {
           if (markErr) continue; // already sent (unique violation) or insert failed
 
           const minsLeft = Math.max(1, Math.round((item.occurrence.getTime() - now.getTime()) / 60000));
+          const name = nameByUser.get(link.user_id);
           const lines = [
-            `⏰ Starting in ${minsLeft} min!`,
+            `⏰ ${name ? `Heads up, ${name}! ` : ''}Starting in ${minsLeft} min!`,
             '',
             `${item.type === 'event' ? '📅 Event' : '📋 Task'}`,
             `Name : ${item.title}`,

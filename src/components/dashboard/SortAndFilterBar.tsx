@@ -8,6 +8,8 @@ import { ArrowUpDown, X, Sparkles, Image as ImageIcon, Search } from 'lucide-rea
 import { toast } from 'sonner';
 import { playSuccessSound } from '@/lib/sounds';
 import type { SortOption } from '@/lib/sortAndFilter';
+import { useUserNames } from '@/hooks/useUserNames';
+import { fillNames } from '@/lib/names';
 
 interface Props {
   sort: SortOption;
@@ -39,6 +41,8 @@ export const SortAndFilterBar = ({
     else onFilterChange([...filterTagIds, id]);
   };
 
+  const { names } = useUserNames();
+
   const lulyssiaMessages = [
     "Lulyssia is on the case! Sorting by what's due soonest~ ❄️",
     "Leave it to me! Lulyssia has rearranged everything by deadline! ✨",
@@ -46,7 +50,7 @@ export const SortAndFilterBar = ({
     "Lulyssia to the rescue! Soonest deadlines first, just for you! 💖",
     "Tada~! Sorted by deadline! You can thank me later~ 📸",
     "Ehehe~ Lulyssia magic! All your urgent stuff is now front and center! ✨",
-    "Ice arrows locked on the deadlines! Sorted and ready, Trailblazer! 🏹❄️",
+    "Ice arrows locked on the deadlines! Sorted and ready, {nickname}! 🏹❄️",
     "Smile~! Lulyssia took a snapshot and rearranged everything by deadline! 📷",
     "Astral Express express delivery! Soonest tasks coming through! 🚂💨",
     "Pom-Pom would be so proud~ Sorted by what's due first! 📦",
@@ -54,14 +58,14 @@ export const SortAndFilterBar = ({
     "Hehe, leave the boring sorting to me! Earliest deadlines on top! 💝",
     "Boop! Lulyssia's deadline radar activated~ ❄️✨",
     "Yoink! Grabbed all your tasks and lined them up by deadline! 🎀",
-    "Don't panic, Trailblazer! Lulyssia has your schedule under control~ 🌟",
+    "Don't panic, {nickname}! Lulyssia has your schedule under control~ 🌟",
   ];
 
   const requestHelp = () => {
     onSortChange('deadline_asc');
     playSuccessSound();
     const msg = lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
-    toast(msg);
+    toast(fillNames(msg, names));
   };
 
   return (

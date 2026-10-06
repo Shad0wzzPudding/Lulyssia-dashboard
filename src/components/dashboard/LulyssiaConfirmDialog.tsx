@@ -25,6 +25,8 @@ import lulyssiaTg11 from '@/assets/lulyssia-tg-11.webp';
 import lulyssiaTg12 from '@/assets/lulyssia-tg-12.webp';
 import lulyssiaTg13 from '@/assets/lulyssia-tg-13.webp';
 import { playLulyssiaSound, playConfirmSound, playCancelSound } from '@/lib/sounds';
+import { useUserNames } from '@/hooks/useUserNames';
+import { fillNames } from '@/lib/names';
 
 interface LulyssiaConfirmDialogProps {
   open: boolean;
@@ -48,7 +50,7 @@ const handleCancelClick = (onOpenChange: (open: boolean) => void) => {
 
 const lulyssiaMessages = [
   { text: "Whoa, wait a second!", sticker: lulyssiaExcited },
-  { text: "Hold up, Trailblazer!", sticker: lulyssiaWinking },
+  { text: "Hold up, {nickname}!", sticker: lulyssiaWinking },
   { text: "Are you really sure??", sticker: lulyssiaExcited },
   { text: "Eep! Think it through, okay?", sticker: lulyssiaHappy },
   { text: "Wait wait wait — sweet treat first?", sticker: lulyssiaCandy },
@@ -77,6 +79,7 @@ export const LulyssiaConfirmDialog = ({
   const [lulyssiaMessage] = useState(() => {
     return lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
   });
+  const { names } = useUserNames();
   const justConfirmedRef = useRef(false);
 
   // Play sound when dialog opens
@@ -112,7 +115,7 @@ export const LulyssiaConfirmDialog = ({
             />
           </div>
           <AlertDialogTitle className="text-xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
-            {lulyssiaMessage.text}
+            {fillNames(lulyssiaMessage.text, names)}
           </AlertDialogTitle>
           <div className="py-3 min-w-0 w-full">
             <p className="text-base font-semibold text-pink-700 dark:text-pink-300 break-all">
