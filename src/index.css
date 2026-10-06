@@ -135,13 +135,17 @@
     appearance: none;
     display: flex;
     align-items: center;
-    width: 100%;
     min-height: 2.5rem;
     height: 2.5rem;
     line-height: normal;
     text-align: left;
     padding-top: 0;
     padding-bottom: 0;
+  }
+
+  /* Zero specificity so width utilities (e.g. w-24) can override it */
+  :where(input[type="date"], input[type="time"], input[type="datetime-local"]) {
+    width: 100%;
   }
 
   input[type="date"]::-webkit-date-and-time-value,
@@ -154,9 +158,17 @@
     margin: 0;
   }
 
+  /* Native picker icon: right-aligned, white on the dark theme, sized to fit narrow fields */
   input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     margin-left: auto;
+    filter: invert(1);
+    width: 1em;
+    height: 1em;
+    padding: 0;
+    flex-shrink: 0;
+    cursor: pointer;
   }
 
   /* ========================================

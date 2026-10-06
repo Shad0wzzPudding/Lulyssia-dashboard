@@ -151,6 +151,10 @@ const Index = () => {
             onUpdateTask={mutations.updateTask.mutate}
             onDeleteTask={mutations.deleteTask.mutate}
             onClearCompleted={mutations.clearCompletedTasks.mutate}
+            dailyTasks={dailyTasks}
+            onCreateDailyTask={mutations.createDailyTask.mutate}
+            onUpdateDailyTask={mutations.updateDailyTask.mutate}
+            onDeleteDailyTask={mutations.deleteDailyTask.mutate}
           />
         );
       case 'events':

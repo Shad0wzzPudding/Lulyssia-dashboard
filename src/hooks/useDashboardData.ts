@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
+import { useLocalToday } from '@/hooks/useLocalToday';
 import { toast } from 'sonner';
 import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
@@ -101,34 +102,35 @@ export const useDashboardData = () => {
     }
   });
 
-  // Daily Tasks
+  // Daily Tasks (the list belongs to the user's local calendar day)
+  const today = useLocalToday();
   const {
     data: dailyTasks = [],
     isLoading: dailyTasksLoading,
     error: dailyTasksError
   } = useQuery({
-    queryKey: ['daily_tasks'],
+    queryKey: ['daily_tasks', today],
     queryFn: async (): Promise<DailyTask[]> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // First, ensure daily tasks exist for today (copies from previous day and resets completion)
+      // First, make sure today's list exists (copies the previous day's list, unchecked, once per day)
       const { error: ensureError } = await supabase.rpc('ensure_daily_tasks_for_today', {
-        p_user_id: user.id
+        p_user_id: user.id,
+        p_today: today
       });
       
       if (ensureError) {
         console.error('Error ensuring daily tasks for today:', ensureError);
       }
 
-      const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-      
       const { data, error } = await supabase
         .from('daily_tasks')
         .select('*')
         .eq('user_id', user.id)
         .eq('task_date', today) // Only fetch today's daily tasks
-        .order('deadline', { ascending: true });
+        .order('deadline', { ascending: true }) // tasks without a time come last
+        .order('created_at', { ascending: true });
       
       if (error) throw error;
       return data || [];
@@ -348,8 +350,6 @@ export const useDashboardData = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-
       const { error } = await supabase
         .from('daily_tasks')
         .insert([{ ...data, user_id: user.id, task_date: today }]);
@@ -358,13 +358,15 @@ export const useDashboardData = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily_tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Daily task created successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to create daily task');
     }
   });
 
   const updateDailyTask = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<DailyTask> & { id: string }) => {
+    mutationFn: async ({ id, __silent, ...data }: Partial<DailyTask> & { id: string; __silent?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -375,11 +377,27 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily_tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+    // Show the change immediately (ticking a box should feel instant), undo it if saving fails
+    onMutate: async ({ id, __silent, ...data }) => {
+      await queryClient.cancelQueries({ queryKey: ['daily_tasks'] });
+      const previous = queryClient.getQueriesData<DailyTask[]>({ queryKey: ['daily_tasks'] });
+      queryClient.setQueriesData<DailyTask[]>({ queryKey: ['daily_tasks'] }, (old) =>
+        old?.map((task) => (task.id === id ? { ...task, ...data } : task))
+      );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      context?.previous.forEach(([key, value]) => queryClient.setQueryData<DailyTask[]>(key, value));
+      toast.error('Failed to update daily task');
+    },
+    onSuccess: ({ __silent }) => {
+      if (__silent) return;
       toast.success('Daily task updated successfully!');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['daily_tasks'] });
     }
   });
 
@@ -398,8 +416,10 @@ export const useDashboardData = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily_tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Daily task deleted successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to delete daily task');
     }
   });
 

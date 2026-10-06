@@ -371,7 +371,7 @@ export type Database = {
     }
     Functions: {
       ensure_daily_tasks_for_today: {
-        Args: { p_user_id: string }
+        Args: { p_today?: string; p_user_id: string }
         Returns: undefined
       }
       reset_daily_tasks_for_new_day: { Args: never; Returns: undefined }

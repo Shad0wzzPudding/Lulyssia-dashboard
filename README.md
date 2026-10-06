@@ -8,6 +8,7 @@ start reminders and missed-deadline nudges.
 - **Tasks** (one-time or recurring, with deadlines), **events** and **interests**
 - Tags, file attachments, drag-to-reorder, sorting, tag filtering and search
 - Activity log with the option to revert a deletion
+- Daily tasks: a collapsible checklist on the Tasks page that comes back unchecked every day
 - "Notice before" option: a heads-up the day before something starts
 - LINE messages: daily digest (08:00 Thai time), start reminders, missed-deadline nudges
 - Installable as an app (PWA)
@@ -61,9 +62,14 @@ Every table has Row Level Security enabled and users can only access their own r
 | `user_preferences` | Per-user settings |
 | `line_links` | Link between an app user and a LINE account |
 | `line_reminders_sent` | De-duplicates LINE reminders |
-| `daily_tasks` | Legacy table, not used by any screen |
+| `daily_tasks` | Daily checklist on the Tasks page (one row per task per day) |
+| `daily_task_days` | Records which days were already set up, so deleted daily tasks never come back |
 
 Attachments are stored in the private `attachments` storage bucket and served with signed URLs.
+
+Daily tasks roll over through the `ensure_daily_tasks_for_today(user, local_date)` function, which the app
+calls on load. The first call each day copies the previous list, unchecked. The day is the user's local
+calendar day, not UTC.
 
 ### Edge functions (`supabase/functions/`)
 

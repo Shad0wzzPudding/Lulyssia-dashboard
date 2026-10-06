@@ -1,6 +1,6 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
-import { Task } from '@/lib/types';
+import { Task, DailyTask } from '@/lib/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import { useSortPreference } from '@/hooks/useSortPreference';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
+import { DailyTasksSection } from './DailyTasksSection';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
@@ -35,6 +36,10 @@ interface TasksPageProps {
   onDeleteTask: (id: string) => void;
   onClearCompleted: () => void;
   onRestoreTasks?: (tasks: Task[]) => void;
+  dailyTasks: DailyTask[];
+  onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => void;
+  onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
+  onDeleteDailyTask: (id: string) => void;
 }
 
 export const TasksPage = ({ 
@@ -42,7 +47,11 @@ export const TasksPage = ({
   onCreateTask, 
   onUpdateTask, 
   onDeleteTask,
-  onClearCompleted
+  onClearCompleted,
+  dailyTasks,
+  onCreateDailyTask,
+  onUpdateDailyTask,
+  onDeleteDailyTask
 }: TasksPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -671,6 +680,12 @@ export const TasksPage = ({
                 {renderSection(overdueTasks, 'overdue')}
               </div>
             )}
+            <DailyTasksSection
+              dailyTasks={dailyTasks}
+              onCreate={onCreateDailyTask}
+              onUpdate={onUpdateDailyTask}
+              onDelete={onDeleteDailyTask}
+            />
             <div>
               <h3 className="text-lg font-semibold text-sky-400 dark:text-sky-300 mb-3">
                 Upcoming Tasks ({upcomingTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
