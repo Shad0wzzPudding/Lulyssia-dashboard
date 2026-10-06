@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +15,9 @@ import { SettingsPage } from '@/components/dashboard/SettingsPage';
 
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
-import lulyssiaCamera from '@/assets/lulyssia-camera.webp';
-import { playShutterSound } from '@/lib/sounds';
-import lulyssiaSticker from '@/assets/lulyssia-camera.webp';
+import lulyssiaChibi from '@/assets/image/lulyssia_trigger_chibi.png';
+import { SkillCutIn, SKILL_CUT_IN_DURATION } from '@/components/dashboard/SkillCutIn';
+import { playTriggerSound, preloadTriggerSound } from '@/lib/sounds';
 import type { User, Session } from '@supabase/supabase-js';
 import { useUserNames } from '@/hooks/useUserNames';
 
@@ -28,7 +28,8 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showFlash, setShowFlash] = useState(false);
+  const [showCutIn, setShowCutIn] = useState(false);
+  const cutInPlaying = useRef(false);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -74,6 +75,10 @@ const Index = () => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    preloadTriggerSound();
   }, []);
 
   const handleSignOut = async () => {
@@ -206,74 +211,40 @@ const Index = () => {
         </main>
       </div>
 
-      {/* Screen flash + viewfinder overlay */}
-      <AnimatePresence>
-        {showFlash && (
-          <>
-            {/* Primary bright flash */}
-            <motion.div
-              className="fixed inset-0 z-[100] pointer-events-none bg-primary/25"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0.6, 0] }}
-              transition={{ duration: 0.5, ease: 'easeOut', times: [0, 0.15, 0.4, 1] }}
-            />
-            {/* Secondary radial wave from bottom-right */}
-            <motion.div
-              className="fixed inset-0 z-[100] pointer-events-none"
-              style={{
-                background: 'radial-gradient(circle at 90% 90%, hsl(var(--primary) / 0.3), transparent 70%)',
-              }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.5, 2] }}
-              transition={{ duration: 0.6, ease: 'easeOut', times: [0, 0.3, 1] }}
-            />
-            {/* Camera viewfinder overlay */}
-            <motion.div
-              className="fixed inset-0 z-[101] pointer-events-none flex items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 0.7, ease: 'easeOut', times: [0, 0.1, 0.5, 1] }}
-            >
-              {/* Viewfinder frame */}
-              <motion.div
-                className="relative"
-                style={{ width: '160px', height: '160px' }}
-                initial={{ scale: 1.4, opacity: 0 }}
-                animate={{ scale: [1.4, 1, 0.95], opacity: [0, 1, 0] }}
-                transition={{ duration: 0.7, ease: 'easeOut', times: [0, 0.2, 1] }}
-              >
-                {/* Corner brackets */}
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary/80 rounded-tl-sm" />
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary/80 rounded-tr-sm" />
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary/80 rounded-bl-sm" />
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary/80 rounded-br-sm" />
-                {/* Center crosshair */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-4 h-[2px] bg-primary/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  <div className="h-4 w-[2px] bg-primary/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                </div>
-                {/* Small circle in center */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-primary/40" />
-              </motion.div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Persona-style skill cut-in when scrolling to top */}
+      <SkillCutIn show={showCutIn} />
 
       <AnimatePresence>
         {showScrollTop && (
           <>
-            {/* Lulyssia peeking from left edge */}
-            <motion.img
-              src={lulyssiaCamera}
-              alt="Lulyssia"
-              className="fixed bottom-20 left-0 w-16 h-16 object-contain pointer-events-none z-50"
-              // Negative scaleX mirrors her so she faces into the page from the left edge
-              initial={{ x: -60, opacity: 0, scaleX: -0.8, scaleY: 0.8 }}
-              animate={{ x: -8, opacity: 1, scaleX: -1, scaleY: 1 }}
-              exit={{ x: -60, opacity: 0, scaleX: -0.8, scaleY: 0.8 }}
+            {/* Chibi Lulyssia peeking from left edge */}
+            <motion.div
+              className="fixed bottom-20 left-0 w-20 h-20 pointer-events-none z-50"
+              initial={{ x: -60, opacity: 0, scale: 0.8 }}
+              animate={{ x: -8, opacity: 1, scale: 1 }}
+              exit={{ x: -60, opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-            />
+            >
+              {/* Mirrored so she faces into the page from the left edge */}
+              <div className="w-full h-full" style={{ transform: 'scaleX(-1)' }}>
+                <motion.img
+                  src={lulyssiaChibi}
+                  alt="Lulyssia"
+                  className="w-full h-full object-contain drop-shadow-[0_0_6px_hsl(var(--primary)/0.7)]"
+                  // Idle float while waiting; a quick "cast" pop when the skill fires
+                  animate={
+                    showCutIn
+                      ? { y: [0, -8, 0], scale: [1, 1.25, 1], rotate: 0 }
+                      : { y: [0, -6, 0], scale: 1, rotate: [0, 3, 0] }
+                  }
+                  transition={
+                    showCutIn
+                      ? { duration: 0.4, ease: 'easeOut' }
+                      : { duration: 2.4, ease: 'easeInOut', repeat: Infinity }
+                  }
+                />
+              </div>
+            </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -286,31 +257,43 @@ const Index = () => {
                 size="icon"
                 className="rounded-full shadow-lg"
                 onClick={() => {
-                  playShutterSound();
-                  setShowFlash(true);
-                  setTimeout(() => setShowFlash(false), 400);
+                  // Ignore extra clicks while the cut-in is still on screen
+                  if (cutInPlaying.current) return;
+                  cutInPlaying.current = true;
+                  playTriggerSound();
+                  setShowCutIn(true);
+                  setTimeout(() => {
+                    setShowCutIn(false);
+                    cutInPlaying.current = false;
+                  }, SKILL_CUT_IN_DURATION);
                   const quotes = [
-                    "📸 Photo captured! Lulyssia saved the moment~",
-                    "📸 Click! Another memory for the collection!",
-                    "📸 Perfect shot! Lulyssia approves~",
-                    "📸 Captured! This one's going in the album!",
-                    "📸 Say cheese! ...Wait, you already scrolled~",
-                    "📸 Snapshot saved! Lulyssia never misses!",
-                    "📸 Got it! A picture-perfect moment~",
-                    "📸 One more for the scrapbook!",
+                    "Back to the top. Don't fall behind~",
+                    "Target locked. Returning to base!",
+                    "Too slow~ I'm already at the top.",
+                    "One strike, and we're back where it started.",
+                    "Showtime's over. Back to the top~",
+                    "Did you see that? Of course you didn't~",
+                    "Path cleared. Lulyssia never misses!",
+                    "Retreat? No. A tactical return~",
                   ];
                   const quote = quotes[Math.floor(Math.random() * quotes.length)];
                   setTimeout(() => {
                     toast({
+                      className: 'border-2 border-primary border-l-[6px] bg-black',
                       description: (
                         <div className="flex items-center gap-3">
-                          <img src={lulyssiaSticker} alt="Lulyssia" className="w-10 h-10 object-contain" />
-                          <span className="text-sm font-medium">{quote}</span>
+                          <img src={lulyssiaChibi} alt="Lulyssia" className="w-11 h-11 object-contain" />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black uppercase italic tracking-widest text-primary">
+                              Trigger activated
+                            </span>
+                            <span className="text-sm font-medium">{quote}</span>
+                          </div>
                         </div>
                       ),
                       duration: 2500,
                     });
-                  }, 500);
+                  }, SKILL_CUT_IN_DURATION);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               >

@@ -1,5 +1,6 @@
 // Sound effects utility using Web Audio API
 import { toast } from "@/hooks/use-toast";
+import triggerEffect from "@/assets/sound/triger_effect.mp3";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -606,5 +607,30 @@ export const playAddSound = () => {
 
   } catch (e) {
     console.warn('[playAddSound] Audio error:', e);
+  }
+};
+
+// Persona-style skill activation sound, used by the scroll-to-top cut-in.
+// Created once so the clip is already loaded the first time the button is pressed
+let triggerAudio: HTMLAudioElement | null = null;
+
+export const playTriggerSound = () => {
+  try {
+    if (!triggerAudio) {
+      triggerAudio = new Audio(triggerEffect);
+      triggerAudio.volume = 0.7;
+    }
+    triggerAudio.currentTime = 0;
+    triggerAudio.play().catch((e) => console.warn('[playTriggerSound] Audio error:', e));
+  } catch (e) {
+    console.warn('[playTriggerSound] Audio error:', e);
+  }
+};
+
+export const preloadTriggerSound = () => {
+  if (!triggerAudio) {
+    triggerAudio = new Audio(triggerEffect);
+    triggerAudio.preload = 'auto';
+    triggerAudio.volume = 0.7;
   }
 };
