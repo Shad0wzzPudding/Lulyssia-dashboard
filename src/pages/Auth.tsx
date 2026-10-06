@@ -20,9 +20,23 @@ const authSchema = z.object({
     .regex(/[0-9]/, { message: "Password must contain at least one number" })
 });
 
+const PASSWORD_MISMATCH = "Passwords don't match";
+
+const passwordsMatch = (data: { password: string; confirmPassword: string }) =>
+  data.password === data.confirmPassword;
+
+const signUpSchema = authSchema
+  .extend({ confirmPassword: z.string() })
+  .refine(passwordsMatch, { message: PASSWORD_MISMATCH, path: ['confirmPassword'] });
+
+const newPasswordSchema = z
+  .object({ password: authSchema.shape.password, confirmPassword: z.string() })
+  .refine(passwordsMatch, { message: PASSWORD_MISMATCH, path: ['confirmPassword'] });
+
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const navigate = useNavigate();
@@ -30,6 +44,7 @@ const Auth = () => {
   const openedFromRecovery = (location.state as { recovery?: boolean } | null)?.recovery === true;
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(openedFromRecovery);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const { isIOS, isStandalone } = usePWA();
   const containerClass = "min-h-[100svh] bg-background p-4 flex items-center justify-center";
@@ -61,7 +76,7 @@ const Auth = () => {
 
     try {
       // Validate input
-      const validatedData = authSchema.parse({ email, password });
+      const validatedData = signUpSchema.parse({ email, password, confirmPassword });
 
       const redirectUrl = `${window.location.origin}/`;
       
@@ -152,9 +167,9 @@ const Auth = () => {
 
     try {
       // Validate password
-      const validatedData = authSchema.parse({ 
-        email: 'dummy@email.com', // Email not needed for password update
-        password: newPassword 
+      const validatedData = newPasswordSchema.parse({
+        password: newPassword,
+        confirmPassword: confirmNewPassword,
       });
 
       const { error } = await supabase.auth.updateUser({
@@ -202,11 +217,31 @@ const Auth = () => {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  enterKeyHint="done"
+                  enterKeyHint="next"
                   required
                   minLength={8}
                   onTouchEnd={(e) => e.currentTarget.focus()}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  placeholder="Re-enter your new password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="done"
+                  required
+                  onTouchEnd={(e) => e.currentTarget.focus()}
+                />
+                {confirmNewPassword && confirmNewPassword !== newPassword && (
+                  <p className="text-xs text-destructive">{PASSWORD_MISMATCH}</p>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Updating password...' : 'Update Password'}
@@ -317,11 +352,31 @@ const Auth = () => {
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
-                    enterKeyHint="done"
+                    enterKeyHint="next"
                     required
                     minLength={8}
                     onTouchEnd={(e) => e.currentTarget.focus()}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                  <Input
+                    id="signup-confirm-password"
+                    type="password"
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="done"
+                    required
+                    onTouchEnd={(e) => e.currentTarget.focus()}
+                  />
+                  {confirmPassword && confirmPassword !== password && (
+                    <p className="text-xs text-destructive">{PASSWORD_MISMATCH}</p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full relative z-30 pointer-events-auto" disabled={loading}>
                   {loading ? 'Creating account...' : 'Sign Up'}
