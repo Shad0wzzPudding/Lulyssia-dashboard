@@ -111,9 +111,6 @@ const toPlainText = (el: HTMLDivElement, stripTrailingNewline = true): string =>
   return text;
 };
 
-const toVisibleText = (text: string): string =>
-  text.replace(/\*+/g, '').replace(/~~/g, '');
-
 /**
  * Count caret position as the number of characters/<br>s in the rendered DOM
  * up to the caret. This mirrors restoreCursor's traversal so save→restore is
@@ -176,6 +173,31 @@ const getSelectionVisibleRange = (el: HTMLElement): { start: number; end: number
   };
 };
 
+/** True when the current selection is inside the editor (not elsewhere on the page). */
+const selectionInside = (el: HTMLElement): boolean => {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  return el.contains(range.startContainer) && el.contains(range.endContainer);
+};
+
+/** Number of visible characters in a raw marker string (escaped markers count as one). */
+const visibleLength = (raw: string): number => {
+  let vi = 0;
+  let ri = 0;
+  while (ri < raw.length) {
+    if (raw[ri] === '\\' && (raw[ri + 1] === '*' || raw[ri + 1] === '~')) { ri += 2; vi += 1; continue; }
+    if (raw[ri] === '*') { ri += 1; continue; }
+    if (raw[ri] === '~' && raw[ri + 1] === '~') { ri += 2; continue; }
+    vi += 1;
+    ri += 1;
+  }
+  return vi;
+};
+
+/** Store literal `*` and `~` escaped, so pasted text isn't turned into formatting. */
+const escapeLiteral = (text: string): string => text.replace(/[*~]/g, '\\$&');
+
 const setCaretAt = (sel: Selection, node: Node, offset: number) => {
   const range = document.createRange();
   range.setStart(node, offset);
@@ -198,30 +220,6 @@ const setCaretAfterNode = (sel: Selection, node: Node) => {
   range.collapse(true);
   sel.removeAllRanges();
   sel.addRange(range);
-};
-
-const placeCursorAfterNthBr = (el: HTMLElement, n: number) => {
-  const sel = window.getSelection();
-  if (!sel) return;
-  let count = 0;
-  const walk = (node: Node): boolean => {
-    if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName.toLowerCase() === 'br') {
-      count++;
-      if (count === n) {
-        setCaretAfterNode(sel, node);
-        return true;
-      }
-    }
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      for (const child of Array.from(node.childNodes)) {
-        if (walk(child)) return true;
-      }
-    }
-    return false;
-  };
-  if (!walk(el)) {
-    setCaretAt(sel, el, el.childNodes.length);
-  }
 };
 
 const restoreCursor = (el: HTMLElement, pos: number) => {
@@ -418,32 +416,30 @@ const toggleStarMarkerAroundSelection = (
   return `${before.slice(0, before.length - leadingStars)}${'*'.repeat(nextStarCount)}${selected}${'*'.repeat(nextStarCount)}${after.slice(trailingStars)}`;
 };
 
+/**
+ * Include the markers around a selection only when they sit on BOTH sides
+ * (e.g. selecting "gone" in "~~gone~~ x"), so toggling removes the formatting.
+ * Expanding just one side made the toggle add a second layer ("~~~~gone~~~~").
+ */
 const expandRawRangeForLineMarkers = (raw: string, start: number, end: number, marker: string) => {
   const markerLength = marker.length;
-  let nextStart = start;
-  let nextEnd = end;
+  const hasLeadingMarker = start >= markerLength && raw.slice(start - markerLength, start) === marker;
+  const hasTrailingMarker = raw.slice(end, end + markerLength) === marker;
 
-  const hasLeadingMarker = nextStart >= markerLength && raw.slice(nextStart - markerLength, nextStart) === marker;
-  const leadingBoundaryIndex = nextStart - markerLength - 1;
-
-  if (hasLeadingMarker && (leadingBoundaryIndex < 0 || raw[leadingBoundaryIndex] === '\n')) {
-    nextStart -= markerLength;
+  if (hasLeadingMarker && hasTrailingMarker) {
+    return { start: start - markerLength, end: end + markerLength };
   }
-
-  const hasTrailingMarker = raw.slice(nextEnd, nextEnd + markerLength) === marker;
-  const trailingBoundaryIndex = nextEnd + markerLength;
-
-  if (hasTrailingMarker && (trailingBoundaryIndex >= raw.length || raw[trailingBoundaryIndex] === '\n')) {
-    nextEnd += markerLength;
-  }
-
-  return { start: nextStart, end: nextEnd };
+  return { start, end };
 };
 
 export const FormattedTextarea = ({ value, onChange, placeholder, className }: FormattedTextareaProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [autoBullet, setAutoBullet] = useState(false);
   const isUpdatingRef = useRef(false);
+  // True while a phone keyboard / input method is composing text
+  const composingRef = useRef(false);
+  // Increases with every input; only the newest input's re-render is applied
+  const renderTokenRef = useRef(0);
   const applyFormatToggleRef = useRef<(marker: string) => void>(() => {});
 
   // Undo/redo history: stack of {value, cursor} snapshots.
@@ -549,23 +545,43 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     }
   }, [value, flushPendingSnapshot]);
 
-  const handleInput = useCallback(() => {
+  const handleInput = useCallback((e?: React.FormEvent<HTMLDivElement>) => {
     const el = editorRef.current;
     if (!el) return;
-    
+    // Phone keyboards and input methods (e.g. Thai) compose text provisionally.
+    // Rewriting the editor mid-composition breaks it (cut-off words, jumping caret),
+    // so wait: handleCompositionEnd runs this again once the text is committed.
+    if (composingRef.current || (e?.nativeEvent as InputEvent | undefined)?.isComposing) return;
+
     isUpdatingRef.current = true;
     const plainText = toPlainText(el);
     const pos = saveCursor(el);
     onChange(plainText);
     scheduleTypingSnapshot(plainText, pos);
-    
-    // Re-render with formatting after a tick
+
+    // Re-render with formatting after a tick. Only the latest input's render runs,
+    // and only when the formatted HTML actually differs, so plain typing leaves the
+    // browser's own text and caret untouched (better for autocorrect on phones).
+    const token = ++renderTokenRef.current;
     requestAnimationFrame(() => {
-      el.innerHTML = toHTML(plainText);
-      restoreCursor(el, pos);
+      if (token !== renderTokenRef.current) return;
+      const html = toHTML(plainText);
+      if (el.innerHTML !== html) {
+        el.innerHTML = html;
+        restoreCursor(el, pos);
+      }
       isUpdatingRef.current = false;
     });
   }, [onChange, scheduleTypingSnapshot]);
+
+  const handleCompositionStart = useCallback(() => {
+    composingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(() => {
+    composingRef.current = false;
+    handleInput();
+  }, [handleInput]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     // Undo / Redo — intercept before the browser's native (broken) undo runs.
@@ -581,13 +597,14 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       return;
     }
 
-    // Keyboard shortcuts for formatting
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'b') {
+    // Keyboard shortcuts for formatting (lowercased so they also work with Caps Lock on)
+    const keyLower = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && keyLower === 'b') {
       e.preventDefault();
       applyFormatToggleRef.current('**');
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'i') {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && keyLower === 'i') {
       e.preventDefault();
       applyFormatToggleRef.current('*');
       return;
@@ -616,8 +633,10 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       const beforeFrag = beforeRange.cloneContents();
       const beforeDiv = document.createElement('div');
       beforeDiv.appendChild(beforeFrag);
-      const textBefore = toPlainText(beforeDiv as HTMLDivElement);
-      
+      // Keep a trailing newline here: when the caret sits on an empty line, that
+      // newline is real text, and dropping it made Enter on an empty line do nothing.
+      const textBefore = toPlainText(beforeDiv as HTMLDivElement, false);
+
       // Clone content after cursor
       const afterRange = document.createRange();
       afterRange.selectNodeContents(el);
@@ -625,54 +644,45 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       const afterFrag = afterRange.cloneContents();
       const afterDiv = document.createElement('div');
       afterDiv.appendChild(afterFrag);
-      const textAfter = toPlainText(afterDiv as HTMLDivElement);
+      // Only the editor's extra cursor-visibility <br> at the very end (added by
+      // toHTML when the text ends with a newline) is not real text; drop just that one.
+      let textAfter = toPlainText(afterDiv as HTMLDivElement, false);
+      if (toPlainText(el, false).endsWith('\n') && textAfter.endsWith('\n')) {
+        textAfter = textAfter.slice(0, -1);
+      }
       
-      // Count newlines in textBefore to find cursor target
-      const newlineCount = (textBefore.match(/\n/g) || []).length;
-      
-      if (autoBullet) {
-        const lastNewline = textBefore.lastIndexOf('\n');
-        const currentLine = textBefore.slice(lastNewline + 1);
-        
-        if (currentLine.trim() === '•') {
-          // Remove empty bullet
-          const newValue = textBefore.slice(0, lastNewline === -1 ? 0 : lastNewline) + '\n' + textAfter;
-          onChange(newValue);
-          pushSnapshotNow(newValue, (lastNewline === -1 ? 0 : lastNewline) + 1);
-          isUpdatingRef.current = true;
-          requestAnimationFrame(() => {
-            el.innerHTML = toHTML(newValue);
-            el.focus();
-            placeCursorAfterNthBr(el, newlineCount);
-            isUpdatingRef.current = false;
-          });
-          return;
-        }
-        
-        const newValue = textBefore + '\n• ' + textAfter;
+      // Re-render and put the caret at a visible offset (markers like ** don't count).
+      // Undo history stores the same visible offset, so undo puts the caret back correctly.
+      const commitEnter = (newValue: string, caretPos: number) => {
         onChange(newValue);
-        pushSnapshotNow(newValue, textBefore.length + 3);
+        pushSnapshotNow(newValue, caretPos);
         isUpdatingRef.current = true;
         requestAnimationFrame(() => {
           el.innerHTML = toHTML(newValue);
           el.focus();
-          placeCursorAfterNthBr(el, newlineCount + 1);
+          restoreCursor(el, caretPos);
           isUpdatingRef.current = false;
         });
+      };
+
+      if (autoBullet) {
+        const lastNewline = textBefore.lastIndexOf('\n');
+        const currentLine = textBefore.slice(lastNewline + 1);
+
+        if (currentLine.trim() === '•') {
+          // Enter on an empty bullet ends the list: drop the bullet, keep a plain new line
+          const kept = textBefore.slice(0, lastNewline === -1 ? 0 : lastNewline);
+          commitEnter(kept + '\n' + textAfter, visibleLength(kept) + 1);
+          return;
+        }
+
+        // New bullet line; the caret goes after the "• " so typing lands in the bullet
+        commitEnter(textBefore + '\n• ' + textAfter, visibleLength(textBefore) + 3);
         return;
       }
-      
-      // Normal enter
-      const newValue = textBefore + '\n' + textAfter;
-      onChange(newValue);
-      pushSnapshotNow(newValue, textBefore.length + 1);
-      isUpdatingRef.current = true;
-      requestAnimationFrame(() => {
-        el.innerHTML = toHTML(newValue);
-        el.focus();
-        placeCursorAfterNthBr(el, newlineCount + 1);
-        isUpdatingRef.current = false;
-      });
+
+      // Normal enter: caret at the start of the new line
+      commitEnter(textBefore + '\n' + textAfter, visibleLength(textBefore) + 1);
     }
   }, [autoBullet, onChange, performRedo, performUndo, pushSnapshotNow]);
 
@@ -680,11 +690,13 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const el = editorRef.current;
     if (!el) return;
     
-    const visCursorPos = saveCursor(el);
-    const cursorPos = visibleToRaw(value, visCursorPos);
+    // If the caret isn't in the editor (e.g. it was never clicked), add the bullet at the end
+    const inEditor = selectionInside(el);
+    const visCursorPos = inEditor ? saveCursor(el) : visibleLength(value);
+    const cursorPos = inEditor ? visibleToRaw(value, visCursorPos) : value.length;
     const textBefore = value.slice(0, cursorPos);
     const textAfter = value.slice(cursorPos);
-    
+
     const lastNewline = textBefore.lastIndexOf('\n');
     const currentLine = textBefore.slice(lastNewline + 1);
     
@@ -743,6 +755,9 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    // Ignore selections elsewhere on the page (e.g. text in a card); using them
+    // here produced garbage offsets and corrupted the text (e.g. "hello****").
+    if (!selectionInside(el)) return;
 
     const visibleRange = getSelectionVisibleRange(el);
     if (!visibleRange || visibleRange.start === visibleRange.end) return;
@@ -839,14 +854,19 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
+    // Normalize Windows/old-Mac line breaks so no stray \r ends up in the text
+    const text = e.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
     const el = editorRef.current;
     if (!el) return;
-    
-    const visCursorPos = saveCursor(el);
-    const rawCursorPos = visibleToRaw(value, visCursorPos);
-    const newValue = value.slice(0, rawCursorPos) + text + value.slice(rawCursorPos);
-    const newPos = visCursorPos + text.length;
+
+    // Replace the selected text (if any); otherwise insert at the caret
+    const visRange = selectionInside(el) ? getSelectionVisibleRange(el) : null;
+    const visStart = visRange ? visRange.start : visibleLength(value);
+    const visEnd = visRange ? visRange.end : visStart;
+    const rawStart = visibleToRaw(value, visStart);
+    const rawEnd = visEnd === visStart ? rawStart : visibleToRaw(value, visEnd, false);
+    const newValue = value.slice(0, rawStart) + escapeLiteral(text) + value.slice(rawEnd);
+    const newPos = visStart + text.length;
     
     onChange(newValue);
     isUpdatingRef.current = true;
@@ -918,6 +938,8 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           data-placeholder={placeholder}

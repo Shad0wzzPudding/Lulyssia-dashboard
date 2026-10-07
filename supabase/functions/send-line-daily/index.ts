@@ -22,12 +22,22 @@ function thTime(iso: string | null): string | null {
   return `${hh}:${mm}`;
 }
 
+// The dashboard editor stores literal * and ~ escaped as \* and \~. Keep those as
+// plain characters (placeholders while stripping), and strip ***bold italic*** too.
+const ESC_STAR = '\u0001';
+const ESC_TILDE = '\u0002';
+
 function stripMarkdown(text: string): string {
   return text
+    .replace(/\\\*/g, ESC_STAR)
+    .replace(/\\~/g, ESC_TILDE)
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/~~(.*?)~~/g, '$1')
     .replace(/==(.*?)==/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
+    .split(ESC_STAR).join('*')
+    .split(ESC_TILDE).join('~')
     .trim();
 }
 
