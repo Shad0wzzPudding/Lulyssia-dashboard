@@ -4,6 +4,7 @@ import { LineSettings } from './LineSettings';
 import { Camera } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { NameSettings } from './NameSettings';
+import { DisplaySettings } from './DisplaySettings';
 
 export const SettingsPage = () => {
   return (
@@ -12,9 +13,13 @@ export const SettingsPage = () => {
         <PageIcon icon={Camera} />
         <h1 className="p5-title w-fit text-2xl">Settings</h1>
       </div>
-      <NameSettings />
+      {/* Cards alternate black / white, starting with black. Install App is hidden once the
+          app is installed; the rest still alternates without it. */}
       <InstallAppCard />
-      {/* LINE card uses the light panel theme (whiteish background, black text) */}
+      <div className="theme-light">
+        <NameSettings />
+      </div>
+      <DisplaySettings />
       <div className="theme-light">
         <LineSettings />
       </div>

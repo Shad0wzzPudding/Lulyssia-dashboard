@@ -355,11 +355,6 @@
   background: hsl(var(--primary));
 }
 
-/* Sidebar active item: jagged, star-like cut */
-.p5-burst {
-  clip-path: polygon(8% 12%, 50% 0%, 92% 8%, 100% 52%, 88% 92%, 46% 100%, 6% 86%, 0% 44%);
-}
-
 /* ========================================
    Light panel theme (used on the Settings page)
    Redefines the theme colors for everything inside, so cards, inputs and

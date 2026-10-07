@@ -17,13 +17,33 @@ import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
 import lulyssiaChibi from '@/assets/image/lulyssia_trigger_chibi.png';
 import { SkillCutIn, SKILL_CUT_IN_DURATION } from '@/components/dashboard/SkillCutIn';
-import { playTriggerSound, preloadTriggerSound } from '@/lib/sounds';
+import { CrowdTransition, CROWD_TRANSITION_MS, CROWD_TRANSITION_DELAY_MS } from '@/components/dashboard/CrowdTransition';
+import { usePageTransitions } from '@/hooks/usePageTransitions';
+import { playTriggerSound, preloadTriggerSound, playTrainSound, preloadTrainSound } from '@/lib/sounds';
 import type { User, Session } from '@supabase/supabase-js';
 import { useUserNames } from '@/hooks/useUserNames';
 
 const Index = () => {
   const [activePage, setActivePage] = useState<NavigationPage>('home');
   const { names } = useUserNames();
+
+  // Page changes play the crowd transition; the page switches while the screen is covered.
+  // It can be turned off per device in Settings > Display.
+  const transitionsEnabled = usePageTransitions();
+  const [pageTransitionId, setPageTransitionId] = useState<number | null>(null);
+  const pendingPage = useRef<NavigationPage | null>(null);
+  const navigateTo = (page: NavigationPage) => {
+    if (page === activePage || pageTransitionId !== null) return;
+    if (!transitionsEnabled) {
+      setActivePage(page);
+      return;
+    }
+    pendingPage.current = page;
+    // Scheduled here, in the click handler, so phones allow the sound.
+    // It starts after the same short delay as the animation, so the tap sound is heard first.
+    playTrainSound(CROWD_TRANSITION_MS, CROWD_TRANSITION_DELAY_MS);
+    setPageTransitionId(Date.now());
+  };
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +99,7 @@ const Index = () => {
 
   useEffect(() => {
     preloadTriggerSound();
+    preloadTrainSound();
   }, []);
 
   const handleSignOut = async () => {
@@ -190,7 +211,7 @@ const Index = () => {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-start h-16">
-            <Navigation activePage={activePage} onPageChange={setActivePage} />
+            <Navigation activePage={activePage} onPageChange={navigateTo} />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 Welcome, {names.nickname || user.email} !
@@ -285,7 +306,7 @@ const Index = () => {
                           <img src={lulyssiaChibi} alt="Lulyssia" className="w-11 h-11 object-contain" />
                           <div className="flex flex-col">
                             <span className="text-xs font-black uppercase italic tracking-widest text-primary">
-                              Trigger activated
+                              Skill activated
                             </span>
                             <span className="text-sm font-medium">{quote}</span>
                           </div>
@@ -303,6 +324,20 @@ const Index = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Crowd page transition (covers the screen, page switches underneath) */}
+      {pageTransitionId !== null && (
+        <CrowdTransition
+          key={pageTransitionId}
+          onCovered={() => {
+            if (pendingPage.current) setActivePage(pendingPage.current);
+          }}
+          onDone={() => {
+            pendingPage.current = null;
+            setPageTransitionId(null);
+          }}
+        />
+      )}
     </div>
   );
 };

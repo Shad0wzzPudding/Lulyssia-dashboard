@@ -1,6 +1,8 @@
 // Sound effects utility using Web Audio API
 import { toast } from "@/hooks/use-toast";
 import triggerEffect from "@/assets/sound/triger_effect.mp3";
+import trainEffect from "@/assets/sound/train_effect.mp3";
+import selectionEffect from "@/assets/sound/selection_effect.mp3";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -632,5 +634,107 @@ export const preloadTriggerSound = () => {
     triggerAudio = new Audio(triggerEffect);
     triggerAudio.preload = 'auto';
     triggerAudio.volume = 0.7;
+  }
+};
+
+// Train sound for the crowd page transition. Played through Web Audio so the start
+// can be scheduled precisely and the fades work on every device (iPhones ignore
+// volume changes on <audio> elements).
+const TRAIN_VOLUME = 0.7;
+const TRAIN_FADE_IN_S = 0.25;
+const TRAIN_FADE_OUT_S = 0.35;
+let trainSource: AudioBufferSourceNode | null = null;
+
+// Sound files decoded once for Web Audio, cached by URL
+const soundBuffers = new Map<string, AudioBuffer>();
+const soundLoading = new Map<string, Promise<AudioBuffer | null>>();
+
+const loadSoundBuffer = (url: string) => {
+  let loading = soundLoading.get(url);
+  if (!loading) {
+    loading = fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((data) => getAudioContext().decodeAudioData(data))
+      .then((buffer) => {
+        soundBuffers.set(url, buffer);
+        return buffer;
+      })
+      .catch((e) => {
+        console.warn('[sounds] Could not load sound:', url, e);
+        soundLoading.delete(url);
+        return null;
+      });
+    soundLoading.set(url, loading);
+  }
+  return loading;
+};
+
+export const preloadTrainSound = () => {
+  void loadSoundBuffer(trainEffect);
+};
+
+// Menu choice sound, played when picking a page from the navigation menu
+const SELECTION_VOLUME = 0.8;
+
+export const preloadSelectionSound = () => {
+  void loadSoundBuffer(selectionEffect);
+};
+
+export const playSelectionSound = () => {
+  const buffer = soundBuffers.get(selectionEffect);
+  if (!buffer) {
+    // Not loaded yet: fall back to the short beep so there is still feedback
+    void loadSoundBuffer(selectionEffect);
+    playNavigationSound();
+    return;
+  }
+  haptic(10);
+  try {
+    const ctx = getAudioContext();
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    source.buffer = buffer;
+    gain.gain.value = SELECTION_VOLUME;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+  } catch (e) {
+    console.warn('[playSelectionSound] Audio error:', e);
+  }
+};
+
+/**
+ * Plays the train sound for `durationMs`, starting after `delayMs`,
+ * with a short fade in and fade out. Call it from the click/tap handler.
+ */
+export const playTrainSound = (durationMs = 2000, delayMs = 0) => {
+  try {
+    const ctx = getAudioContext();
+    const trainBuffer = soundBuffers.get(trainEffect);
+    if (!trainBuffer) {
+      // Not loaded yet (very first click): load it for next time
+      void loadSoundBuffer(trainEffect);
+      return;
+    }
+    trainSource?.stop();
+
+    const start = ctx.currentTime + delayMs / 1000;
+    const end = start + durationMs / 1000;
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    source.buffer = trainBuffer;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(TRAIN_VOLUME, start + TRAIN_FADE_IN_S);
+    gain.gain.setValueAtTime(TRAIN_VOLUME, end - TRAIN_FADE_OUT_S);
+    gain.gain.linearRampToValueAtTime(0, end);
+
+    source.start(start);
+    source.stop(end + 0.05);
+    trainSource = source;
+  } catch (e) {
+    console.warn('[playTrainSound] Audio error:', e);
   }
 };

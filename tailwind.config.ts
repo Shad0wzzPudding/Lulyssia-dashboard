@@ -125,13 +125,24 @@ export default {
 						transform: 'scale(1)',
 						opacity: '1'
 					}
+				},
+				// Page transition crowd: back and front rows drift in opposite directions for depth
+				'crowd-drift-slow': {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(140px)' }
+				},
+				'crowd-drift-fast': {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(-160px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'scale-in': 'scale-in 0.2s ease-out'
+				'scale-in': 'scale-in 0.2s ease-out',
+				'crowd-drift-slow': 'crowd-drift-slow 2s linear forwards',
+				'crowd-drift-fast': 'crowd-drift-fast 2s linear forwards'
 			}
 		}
 	},

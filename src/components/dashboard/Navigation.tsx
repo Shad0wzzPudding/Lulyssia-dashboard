@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { playNavigationSound } from '@/lib/sounds';
+import { playSelectionSound, preloadSelectionSound } from '@/lib/sounds';
+import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
 
 interface NavigationProps {
   activePage: NavigationPage;
@@ -19,10 +20,26 @@ const navigationItems = [
   { page: 'events' as const, icon: Calendar, label: 'Events' },
 ];
 
+// Jagged speech bubble with its tail pointing right (toward the portrait)
+const CHOICE_SHAPE = 'polygon(0% 22%, 5% 0%, 86% 10%, 88% 32%, 100% 52%, 87% 68%, 84% 100%, 2% 86%)';
+const PORTRAIT_SHAPE = 'polygon(14% 0%, 100% 3%, 94% 100%, 0% 93%)';
+// Each choice is tilted and nudged a little differently, like the P5 dialog menu
+const CHOICE_LAYOUT = [
+  { tilt: -3, offset: 20 },
+  { tilt: 2, offset: 0 },
+  { tilt: -2, offset: 28 },
+  { tilt: 3, offset: 6 },
+];
+
 export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load the menu choice sound up front so the first pick plays it instantly
+  useEffect(() => {
+    preloadSelectionSound();
+  }, []);
 
   // Close on a click outside the menu or on Escape
   useEffect(() => {
@@ -43,7 +60,7 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
 
   const handlePageChange = (page: NavigationPage) => {
     if (page !== activePage) {
-      playNavigationSound();
+      playSelectionSound();
       onPageChange(page);
     }
     setOpen(false);
@@ -52,42 +69,79 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
 
   return (
     <div ref={containerRef}>
+      {/* Persona 5 style dialog choices: speech-bubble options pointing at Lulyssia's portrait */}
       <AnimatePresence>
         {open && (
           <motion.nav
             id="main-navigation"
             aria-label="Main navigation"
-            initial={{ opacity: 0, x: 24, y: 12, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 24, y: 12, scale: 0.9 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            style={{ transformOrigin: 'bottom right' }}
-            className="fixed right-6 bottom-24 z-[60] bg-card/95 backdrop-blur-sm border-2 border-foreground/80 p-3 shadow-[5px_5px_0_0_hsl(var(--primary))]"
+            initial="hidden"
+            animate="show"
+            exit="hidden"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+            className="fixed right-3 bottom-24 z-[60] flex items-end sm:right-6"
           >
-            <div className="flex flex-col gap-3">
-              {navigationItems.map(({ page, icon: Icon, label }) => (
-                <Button
-                  key={page}
-                  variant={activePage === page ? "default" : "ghost"}
-                  size="icon"
-                  onClick={() => handlePageChange(page)}
-                  className={cn(
-                    "w-12 h-12 rounded-full transition-all duration-300 group relative",
-                    activePage === page
-                      ? "p5-burst rounded-none bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900 scale-125"
-                      : "hover:bg-accent hover:scale-105"
-                  )}
-                  title={label}
-                >
-                  <Icon size={20} />
+            <motion.ul
+              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } } }}
+              className="relative z-10 -mr-8 mb-10 flex flex-col items-end gap-2.5"
+            >
+              {navigationItems.map(({ page, icon: Icon, label }, i) => {
+                const active = activePage === page;
+                const choice = CHOICE_LAYOUT[i % CHOICE_LAYOUT.length];
+                return (
+                  <motion.li
+                    key={page}
+                    variants={{
+                      hidden: { opacity: 0, x: 60, rotate: choice.tilt + 8 },
+                      show: { opacity: 1, x: 0, rotate: choice.tilt },
+                    }}
+                    transition={{ type: 'spring', stiffness: 520, damping: 30 }}
+                    style={{ marginRight: choice.offset }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handlePageChange(page)}
+                      aria-current={active ? 'page' : undefined}
+                      className="group relative block h-14 w-48 focus-visible:outline-none sm:w-56"
+                    >
+                      {/* White outline, then the fill, both cut to the same jagged bubble */}
+                      <span aria-hidden className="absolute inset-0 bg-foreground" style={{ clipPath: CHOICE_SHAPE }} />
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'absolute inset-[3px] transition-colors',
+                          active ? 'bg-primary' : 'bg-background group-hover:bg-foreground group-focus-visible:bg-foreground'
+                        )}
+                        style={{ clipPath: CHOICE_SHAPE }}
+                      />
+                      <span
+                        className={cn(
+                          "relative flex h-full items-center gap-3 pl-6 pr-12 font-['Kanit',sans-serif] text-lg font-extrabold italic transition-colors",
+                          active
+                            ? 'text-primary-foreground'
+                            : 'text-foreground group-hover:text-background group-focus-visible:text-background'
+                        )}
+                      >
+                        <Icon size={18} className="shrink-0" />
+                        {label}
+                      </span>
+                    </button>
+                  </motion.li>
+                );
+              })}
+            </motion.ul>
 
-                  {/* Tooltip */}
-                  <div className="absolute right-full mr-3 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    {label}
-                  </div>
-                </Button>
-              ))}
-            </div>
+            {/* Lulyssia's portrait in a slanted frame */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, x: 40 }, show: { opacity: 1, x: 0 } }}
+              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+              className="relative h-60 w-44 shrink-0 sm:h-72 sm:w-56"
+            >
+              <span aria-hidden className="absolute inset-0 bg-foreground" style={{ clipPath: PORTRAIT_SHAPE }} />
+              <span className="absolute inset-[5px] overflow-hidden bg-background" style={{ clipPath: PORTRAIT_SHAPE }}>
+                <img src={lulyssiaPortrait} alt="" className="h-full w-full object-cover object-top" />
+              </span>
+            </motion.div>
           </motion.nav>
         )}
       </AnimatePresence>
