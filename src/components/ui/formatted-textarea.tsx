@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { List, Strikethrough, Bold, Italic } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 
 interface FormattedTextareaProps {
   value: string;
@@ -10,112 +11,70 @@ interface FormattedTextareaProps {
   className?: string;
 }
 
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 /**
- * Converts plain text with ~~strikethrough~~ markers into HTML.
+ * Stored text (with **bold**, *italic*, ~~strike~~ markers) -> editor HTML.
+ * Parsing is shared with the cards (src/lib/inlineFormat.ts) so both always agree.
  */
 const toHTML = (text: string): string => {
   if (!text) return '';
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  // Protect escaped markers (\* and \~) so they render literally and are
-  // ignored by the markdown regex below. User-typed markers are escaped in
-  // toPlainText; only button-applied markers stay unescaped.
-  const ESC_STAR = '\u0001';
-  const ESC_TILDE = '\u0002';
-  html = html.replace(/\\\*/g, ESC_STAR).replace(/\\~/g, ESC_TILDE);
-  // Bold+Italic ***text*** (must come before bold and italic)
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong class="font-bold"><em class="italic">$1</em></strong>');
-  // Bold **text** (must come before italic)
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold">$1</strong>');
-  // Italic *text* (not **)
-  html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em class="italic">$1</em>');
-  // Strikethrough ~~text~~
-  html = html.replace(/~~([\s\S]+?)~~/g, '<s class="line-through opacity-60">$1</s>');
-  // Restore escaped markers as literal characters.
-  html = html.split(ESC_STAR).join('*').split(ESC_TILDE).join('~');
-  html = html.replace(/\n/g, '<br>');
-  // Trailing <br> is invisible in contentEditable; add an extra one so the cursor can land there
-  if (html.endsWith('<br>')) {
-    html += '<br>';
-  }
+  const chars = parseChars(text);
+  let html = toSegments(chars)
+    .map((seg) => {
+      let h = escapeHtml(seg.text).replace(/\n/g, '<br>');
+      if (seg.i) h = `<em class="italic">${h}</em>`;
+      if (seg.b) h = `<strong class="font-bold">${h}</strong>`;
+      if (seg.s) h = `<s class="line-through opacity-60">${h}</s>`;
+      return h;
+    })
+    .join('');
+  // A trailing line break is invisible in contentEditable; add an extra one so the caret can land there
+  if (chars.length > 0 && chars[chars.length - 1].ch === '\n') html += '<br>';
   return html;
 };
 
 /**
- * Converts innerHTML back to plain text with ~~ markers.
+ * Read what the editor shows as styled characters (one per visible character,
+ * '\n' per line break). The extra trailing <br> from toHTML is dropped unless
+ * stripTrailingNewline is false.
  */
-const toPlainText = (el: HTMLDivElement, stripTrailingNewline = true): string => {
-  let text = '';
-  const walk = (node: Node) => {
+const domChars = (el: HTMLElement, stripTrailingNewline = true): StyledChar[] => {
+  const out: StyledChar[] = [];
+  const newline = (): StyledChar => ({ ch: '\n', b: false, i: false, s: false });
+  const walk = (node: Node, b: boolean, i: boolean, s: boolean) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      // Escape any literal `*` or `~` typed by the user so they don't get
-      // re-interpreted as markdown markers on the next render. Markers that
-      // originate from toolbar buttons live inside <strong>/<em>/<s> tags
-      // and are re-emitted unescaped by the element branches below.
-      text += (node.textContent || '').replace(/[*~]/g, '\\$&');
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const tag = (node as HTMLElement).tagName.toLowerCase();
-      if (tag === 'br') {
-        text += '\n';
-      } else if (tag === 's') {
-        const before = text.length;
-        const start = text.length;
-        text += '~~';
-        node.childNodes.forEach(walk);
-        // Skip emitting empty markers (e.g. an empty <s> the browser left
-        // behind after pressing Enter inside a strikethrough run), which
-        // would otherwise show as literal `~~~~` on the new line.
-        if (text.length === start + 2) {
-          text = text.slice(0, before);
-        } else {
-          text += '~~';
-        }
-      } else if (tag === 'strong' || tag === 'b') {
-        const before = text.length;
-        const start = text.length;
-        text += '**';
-        node.childNodes.forEach(walk);
-        if (text.length === start + 2) {
-          text = text.slice(0, before);
-        } else {
-          text += '**';
-        }
-      } else if (tag === 'em' || tag === 'i') {
-        const before = text.length;
-        const start = text.length;
-        text += '*';
-        node.childNodes.forEach(walk);
-        if (text.length === start + 1) {
-          text = text.slice(0, before);
-        } else {
-          text += '*';
-        }
-      } else if (tag === 'div' || tag === 'p') {
-        if (text.length > 0 && !text.endsWith('\n')) {
-          text += '\n';
-        }
-        node.childNodes.forEach(walk);
-      } else {
-        node.childNodes.forEach(walk);
-      }
+      // UTF-16 units, matching the caret offsets measured below
+      for (const ch of (node.textContent || '').split('')) out.push({ ch, b, i, s });
+      return;
     }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const tag = (node as HTMLElement).tagName.toLowerCase();
+    if (tag === 'br') {
+      out.push(newline());
+      return;
+    }
+    // Browsers sometimes wrap new lines in <div>/<p>
+    if ((tag === 'div' || tag === 'p') && out.length > 0 && out[out.length - 1].ch !== '\n') {
+      out.push(newline());
+    }
+    const nb = b || tag === 'strong' || tag === 'b';
+    const ni = i || tag === 'em' || tag === 'i';
+    const ns = s || tag === 's' || tag === 'strike' || tag === 'del';
+    node.childNodes.forEach((child) => walk(child, nb, ni, ns));
   };
-  el.childNodes.forEach(walk);
-  // Strip a single trailing newline that comes from the cursor-visibility <br>
-  // appended in toHTML; otherwise deletes accumulate phantom blank lines.
-  // Skip this when measuring cursor position, otherwise a caret sitting on an
-  // empty trailing line collapses back to the end of the previous line.
-  if (stripTrailingNewline && text.endsWith('\n')) text = text.slice(0, -1);
-  return text;
+  el.childNodes.forEach((child) => walk(child, false, false, false));
+  if (stripTrailingNewline && out.length > 0 && out[out.length - 1].ch === '\n') out.pop();
+  return out;
 };
+
+/** Editor contents -> stored text with markers (literal * and ~ escaped). */
+const toPlainText = (el: HTMLElement): string => writeChars(domChars(el));
 
 /**
  * Count caret position as the number of characters/<br>s in the rendered DOM
- * up to the caret. This mirrors restoreCursor's traversal so save→restore is
- * symmetric regardless of whether markdown markers are matched (and thus
- * hidden inside <em>/<strong>/<s>) or unmatched (and rendered as literal `*`).
+ * up to the caret. This mirrors restoreCursor's traversal so save→restore is symmetric.
  */
 const measureDomOffset = (root: Node): number => {
   let count = 0;
@@ -181,23 +140,6 @@ const selectionInside = (el: HTMLElement): boolean => {
   return el.contains(range.startContainer) && el.contains(range.endContainer);
 };
 
-/** Number of visible characters in a raw marker string (escaped markers count as one). */
-const visibleLength = (raw: string): number => {
-  let vi = 0;
-  let ri = 0;
-  while (ri < raw.length) {
-    if (raw[ri] === '\\' && (raw[ri + 1] === '*' || raw[ri + 1] === '~')) { ri += 2; vi += 1; continue; }
-    if (raw[ri] === '*') { ri += 1; continue; }
-    if (raw[ri] === '~' && raw[ri + 1] === '~') { ri += 2; continue; }
-    vi += 1;
-    ri += 1;
-  }
-  return vi;
-};
-
-/** Store literal `*` and `~` escaped, so pasted text isn't turned into formatting. */
-const escapeLiteral = (text: string): string => text.replace(/[*~]/g, '\\$&');
-
 const setCaretAt = (sel: Selection, node: Node, offset: number) => {
   const range = document.createRange();
   range.setStart(node, offset);
@@ -225,7 +167,7 @@ const setCaretAfterNode = (sel: Selection, node: Node) => {
 const restoreCursor = (el: HTMLElement, pos: number) => {
   const sel = window.getSelection();
   if (!sel) return;
-  
+
   let currentPos = 0;
   let lastBreakNode: Node | null = null;
   const walk = (node: Node): boolean => {
@@ -263,7 +205,7 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
 
     return false;
   };
-  
+
   if (walk(el)) return;
 
   if (pos === currentPos && lastBreakNode) {
@@ -274,162 +216,33 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
   setCaretAt(sel, el, el.childNodes.length);
 };
 
-/**
- * Map a visible text offset to the corresponding offset in the raw marker string.
- */
-const visibleToRaw = (raw: string, visiblePos: number, skipTrailingMarkers = true): number => {
-  let vi = 0;
-  let ri = 0;
-  while (ri < raw.length && vi < visiblePos) {
-    // Escaped marker: `\*` or `\~` counts as a single visible character.
-    if (raw[ri] === '\\' && (raw[ri + 1] === '*' || raw[ri + 1] === '~')) {
-      ri += 2;
-      vi += 1;
-      continue;
-    }
-    // Skip any consecutive * markers (*, **, ***)
-    if (raw[ri] === '*') {
-      let j = ri;
-      while (j < raw.length && raw[j] === '*') j++;
-      ri = j;
-      continue;
-    }
-    // Check for ~~
-    if (raw[ri] === '~' && raw[ri + 1] === '~') {
-      ri += 2;
-      continue;
-    }
-    vi++;
-    ri++;
-  }
-  // Only skip trailing markers for start positions, not end positions
-  if (skipTrailingMarkers) {
-    while (ri < raw.length) {
-      if (raw[ri] === '\\' && (raw[ri + 1] === '*' || raw[ri + 1] === '~')) break;
-      if (raw[ri] === '*') {
-        let j = ri;
-        while (j < raw.length && raw[j] === '*') j++;
-        ri = j;
-        continue;
-      }
-      if (raw[ri] === '~' && raw[ri + 1] === '~') { ri += 2; continue; }
-      break;
-    }
-  }
-  return ri;
+const restoreSelection = (el: HTMLElement, visStart: number, visEnd: number) => {
+  const sel = window.getSelection();
+  if (!sel) return;
+
+  // First set cursor at start
+  restoreCursor(el, visStart);
+  if (visStart === visEnd || sel.rangeCount === 0) return;
+
+  const startRange = sel.getRangeAt(0);
+  const startNode = startRange.startContainer;
+  const startOffset = startRange.startOffset;
+
+  // Set cursor at end to find that position
+  restoreCursor(el, visEnd);
+  const endRange = sel.getRangeAt(0);
+
+  const range = document.createRange();
+  range.setStart(startNode, startOffset);
+  range.setEnd(endRange.startContainer, endRange.startOffset);
+  sel.removeAllRanges();
+  sel.addRange(range);
 };
 
-const countEdgeStars = (text: string, side: 'start' | 'end'): number => {
-  let count = 0;
-  if (side === 'start') {
-    for (let i = 0; i < text.length && text[i] === '*'; i++) count++;
-  } else {
-    for (let i = text.length - 1; i >= 0 && text[i] === '*'; i--) {
-      // An escaped star (preceded by `\`) is a literal character, not a marker.
-      if (i > 0 && text[i - 1] === '\\') break;
-      count++;
-    }
-  }
-  return count;
-};
-
-/**
- * Check if text has a specific format applied, distinguishing * from **.
- * italic (*): present when edge star count is odd (1, 3)
- * bold (**): present when edge star count >= 2
- */
-const hasSpecificFormat = (text: string, marker: string): boolean => {
-  const trimmed = text.trim();
-  if (!trimmed) return false;
-
-  if (marker === '~~') {
-    return trimmed.startsWith('~~') && trimmed.endsWith('~~') && trimmed.length > 4;
-  }
-
-  const leading = countEdgeStars(trimmed, 'start');
-  const trailing = countEdgeStars(trimmed, 'end');
-  const minStars = Math.min(leading, trailing);
-  if (trimmed.length <= minStars * 2) return false;
-
-  if (marker === '**') return minStars >= 2;
-  if (marker === '*') return minStars % 2 === 1;
-  return false;
-};
-
-/**
- * Remove the first and last occurrences of a marker from text while preserving
- * any surrounding whitespace. This avoids leaving stray marker characters when
- * the selection includes spaces around the formatted span.
- */
-const stripMarkers = (text: string, marker: string): string => {
-  const start = text.indexOf(marker);
-  const end = text.lastIndexOf(marker);
-  if (start === -1 || end === -1 || end <= start) return text;
-  return (
-    text.slice(0, start) +
-    text.slice(start + marker.length, end) +
-    text.slice(end + marker.length)
-  );
-};
-
-const toggleStarMarkerOnText = (text: string, markerLength: number): string => {
-  const leadingWhitespace = text.match(/^\s*/)?.[0] ?? '';
-  const trailingWhitespace = text.match(/\s*$/)?.[0] ?? '';
-  const core = text.slice(leadingWhitespace.length, text.length - trailingWhitespace.length);
-
-  if (!core) return text;
-
-  const leadingStars = countEdgeStars(core, 'start');
-  const trailingStars = countEdgeStars(core, 'end');
-  const surroundingStars = Math.min(leadingStars, trailingStars);
-  const unwrappedCore = core.slice(leadingStars, core.length - trailingStars);
-
-  const isActive = markerLength === 1
-    ? surroundingStars % 2 === 1
-    : surroundingStars >= 2;
-
-  const nextStarCount = markerLength === 1
-    ? Math.max(0, surroundingStars + (isActive ? -1 : 1))
-    : Math.max(0, surroundingStars + (isActive ? -2 : 2));
-
-  return `${leadingWhitespace}${'*'.repeat(nextStarCount)}${unwrappedCore}${'*'.repeat(nextStarCount)}${trailingWhitespace}`;
-};
-
-const toggleStarMarkerAroundSelection = (
-  before: string,
-  selected: string,
-  after: string,
-  markerLength: number,
-): string => {
-  const leadingStars = countEdgeStars(before, 'end');
-  const trailingStars = countEdgeStars(after, 'start');
-  const surroundingStars = Math.min(leadingStars, trailingStars);
-
-  const isActive = markerLength === 1
-    ? surroundingStars % 2 === 1
-    : surroundingStars >= 2;
-
-  const nextStarCount = markerLength === 1
-    ? Math.max(0, surroundingStars + (isActive ? -1 : 1))
-    : Math.max(0, surroundingStars + (isActive ? -2 : 2));
-
-  return `${before.slice(0, before.length - leadingStars)}${'*'.repeat(nextStarCount)}${selected}${'*'.repeat(nextStarCount)}${after.slice(trailingStars)}`;
-};
-
-/**
- * Include the markers around a selection only when they sit on BOTH sides
- * (e.g. selecting "gone" in "~~gone~~ x"), so toggling removes the formatting.
- * Expanding just one side made the toggle add a second layer ("~~~~gone~~~~").
- */
-const expandRawRangeForLineMarkers = (raw: string, start: number, end: number, marker: string) => {
-  const markerLength = marker.length;
-  const hasLeadingMarker = start >= markerLength && raw.slice(start - markerLength, start) === marker;
-  const hasTrailingMarker = raw.slice(end, end + markerLength) === marker;
-
-  if (hasLeadingMarker && hasTrailingMarker) {
-    return { start: start - markerLength, end: end + markerLength };
-  }
-  return { start, end };
+/** Index just after the last '\n' in chars (start of the current line). */
+const lineStartOf = (chars: StyledChar[]): number => {
+  for (let k = chars.length - 1; k >= 0; k--) if (chars[k].ch === '\n') return k + 1;
+  return 0;
 };
 
 export const FormattedTextarea = ({ value, onChange, placeholder, className }: FormattedTextareaProps) => {
@@ -438,11 +251,11 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   const isUpdatingRef = useRef(false);
   // True while a phone keyboard / input method is composing text
   const composingRef = useRef(false);
-  // Increases with every input; only the newest input's re-render is applied
+  // Increases with every edit; only the newest edit's re-render is applied
   const renderTokenRef = useRef(0);
   const applyFormatToggleRef = useRef<(marker: string) => void>(() => {});
 
-  // Undo/redo history: stack of {value, cursor} snapshots.
+  // Undo/redo history: stack of {value, cursor} snapshots (cursor = visible offset).
   const historyRef = useRef<{ value: string; cursor: number }[]>([{ value, cursor: 0 }]);
   const historyIndexRef = useRef(0);
   const pendingSnapshotTimerRef = useRef<number | null>(null);
@@ -531,7 +344,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   useEffect(() => {
     const el = editorRef.current;
     if (!el || isUpdatingRef.current) return;
-    
+
     const currentText = toPlainText(el);
     if (currentText !== value) {
       const pos = saveCursor(el);
@@ -544,6 +357,26 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       historyIndexRef.current = 0;
     }
   }, [value, flushPendingSnapshot]);
+
+  /**
+   * Save an edit made by a button or key (not typing): report the new text,
+   * record it for undo, then re-render and put the caret/selection back.
+   */
+  const commitEdit = useCallback((newValue: string, selStart: number, selEnd = selStart) => {
+    const el = editorRef.current;
+    if (!el) return;
+    onChange(newValue);
+    pushSnapshotNow(newValue, selEnd);
+    isUpdatingRef.current = true;
+    const token = ++renderTokenRef.current;
+    requestAnimationFrame(() => {
+      if (token !== renderTokenRef.current) return;
+      el.innerHTML = toHTML(newValue);
+      el.focus();
+      restoreSelection(el, selStart, selEnd);
+      isUpdatingRef.current = false;
+    });
+  }, [onChange, pushSnapshotNow]);
 
   const handleInput = useCallback((e?: React.FormEvent<HTMLDivElement>) => {
     const el = editorRef.current;
@@ -559,7 +392,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     onChange(plainText);
     scheduleTypingSnapshot(plainText, pos);
 
-    // Re-render with formatting after a tick. Only the latest input's render runs,
+    // Re-render with formatting after a tick. Only the latest edit's render runs,
     // and only when the formatted HTML actually differs, so plain typing leaves the
     // browser's own text and caret untouched (better for autocorrect on phones).
     const token = ++renderTokenRef.current;
@@ -599,17 +432,17 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
     // Keyboard shortcuts for formatting (lowercased so they also work with Caps Lock on)
     const keyLower = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && keyLower === 'b') {
+    if (mod && !e.shiftKey && keyLower === 'b') {
       e.preventDefault();
       applyFormatToggleRef.current('**');
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && keyLower === 'i') {
+    if (mod && !e.shiftKey && keyLower === 'i') {
       e.preventDefault();
       applyFormatToggleRef.current('*');
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+    if (mod && e.shiftKey && keyLower === 's') {
       e.preventDefault();
       applyFormatToggleRef.current('~~');
       return;
@@ -617,238 +450,75 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
     if (e.key === 'Enter') {
       e.preventDefault();
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      
       const el = editorRef.current;
-      if (!el) return;
-      
-      // Split the DOM at cursor to get before/after text accurately
-      const range = sel.getRangeAt(0);
-      
-      // Clone content before cursor
-      const beforeRange = document.createRange();
-      beforeRange.selectNodeContents(el);
-      beforeRange.setEnd(range.startContainer, range.startOffset);
-      const beforeFrag = beforeRange.cloneContents();
-      const beforeDiv = document.createElement('div');
-      beforeDiv.appendChild(beforeFrag);
-      // Keep a trailing newline here: when the caret sits on an empty line, that
-      // newline is real text, and dropping it made Enter on an empty line do nothing.
-      const textBefore = toPlainText(beforeDiv as HTMLDivElement, false);
+      if (!el || !selectionInside(el)) return;
 
-      // Clone content after cursor
-      const afterRange = document.createRange();
-      afterRange.selectNodeContents(el);
-      afterRange.setStart(range.startContainer, range.startOffset);
-      const afterFrag = afterRange.cloneContents();
-      const afterDiv = document.createElement('div');
-      afterDiv.appendChild(afterFrag);
-      // Only the editor's extra cursor-visibility <br> at the very end (added by
-      // toHTML when the text ends with a newline) is not real text; drop just that one.
-      let textAfter = toPlainText(afterDiv as HTMLDivElement, false);
-      if (toPlainText(el, false).endsWith('\n') && textAfter.endsWith('\n')) {
-        textAfter = textAfter.slice(0, -1);
-      }
-      
-      // Re-render and put the caret at a visible offset (markers like ** don't count).
-      // Undo history stores the same visible offset, so undo puts the caret back correctly.
-      const commitEnter = (newValue: string, caretPos: number) => {
-        onChange(newValue);
-        pushSnapshotNow(newValue, caretPos);
-        isUpdatingRef.current = true;
-        requestAnimationFrame(() => {
-          el.innerHTML = toHTML(newValue);
-          el.focus();
-          restoreCursor(el, caretPos);
-          isUpdatingRef.current = false;
-        });
-      };
+      // Edit the visible characters: replace any selection with the new line.
+      // Characters after the caret keep their styles (e.g. Enter inside bold
+      // gives "**ab**\n**cd**").
+      const chars = domChars(el);
+      const range = getSelectionVisibleRange(el);
+      const start = Math.min(range?.start ?? chars.length, chars.length);
+      const end = Math.min(Math.max(range?.end ?? start, start), chars.length);
+      const before = chars.slice(0, start);
+      const after = chars.slice(end);
 
       if (autoBullet) {
-        const lastNewline = textBefore.lastIndexOf('\n');
-        const currentLine = textBefore.slice(lastNewline + 1);
+        const lineStart = lineStartOf(before);
+        const currentLine = before.slice(lineStart).map((c) => c.ch).join('');
 
         if (currentLine.trim() === '•') {
           // Enter on an empty bullet ends the list: drop the bullet, keep a plain new line
-          const kept = textBefore.slice(0, lastNewline === -1 ? 0 : lastNewline);
-          commitEnter(kept + '\n' + textAfter, visibleLength(kept) + 1);
+          const kept = lineStart === 0 ? plainChars('\n') : before.slice(0, lineStart);
+          commitEdit(writeChars([...kept, ...after]), kept.length);
           return;
         }
 
         // New bullet line; the caret goes after the "• " so typing lands in the bullet
-        commitEnter(textBefore + '\n• ' + textAfter, visibleLength(textBefore) + 3);
+        commitEdit(writeChars([...before, ...plainChars('\n• '), ...after]), before.length + 3);
         return;
       }
 
       // Normal enter: caret at the start of the new line
-      commitEnter(textBefore + '\n' + textAfter, visibleLength(textBefore) + 1);
+      commitEdit(writeChars([...before, ...plainChars('\n'), ...after]), before.length + 1);
     }
-  }, [autoBullet, onChange, performRedo, performUndo, pushSnapshotNow]);
+  }, [autoBullet, commitEdit, performRedo, performUndo]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;
     if (!el) return;
-    
+
     // If the caret isn't in the editor (e.g. it was never clicked), add the bullet at the end
-    const inEditor = selectionInside(el);
-    const visCursorPos = inEditor ? saveCursor(el) : visibleLength(value);
-    const cursorPos = inEditor ? visibleToRaw(value, visCursorPos) : value.length;
-    const textBefore = value.slice(0, cursorPos);
-    const textAfter = value.slice(cursorPos);
+    const chars = domChars(el);
+    const pos = selectionInside(el) ? Math.min(saveCursor(el), chars.length) : chars.length;
+    const atLineStart = pos === 0 || chars[pos - 1].ch === '\n';
+    const inserted = plainChars(atLineStart ? '• ' : '\n• ');
+    commitEdit(writeChars([...chars.slice(0, pos), ...inserted, ...chars.slice(pos)]), pos + inserted.length);
+  }, [commitEdit]);
 
-    const lastNewline = textBefore.lastIndexOf('\n');
-    const currentLine = textBefore.slice(lastNewline + 1);
-    
-    let newValue: string;
-    let newPos: number;
-    
-    if (currentLine.length === 0 || cursorPos === 0) {
-      newValue = textBefore + '• ' + textAfter;
-      newPos = visCursorPos + 2;
-    } else {
-      newValue = textBefore + '\n• ' + textAfter;
-      newPos = visCursorPos + 3;
-    }
-    
-    onChange(newValue);
-    isUpdatingRef.current = true;
-    requestAnimationFrame(() => {
-      el.innerHTML = toHTML(newValue);
-      restoreCursor(el, newPos);
-      el.focus();
-      isUpdatingRef.current = false;
-    });
-    pushSnapshotNow(newValue, newPos);
-  }, [value, onChange, pushSnapshotNow]);
-
-  const restoreSelection = useCallback((el: HTMLElement, visStart: number, visEnd: number) => {
-    const sel = window.getSelection();
-    if (!sel) return;
-    
-    // First set cursor at start
-    restoreCursor(el, visStart);
-    if (visStart === visEnd) return;
-    
-    // Extend selection to end
-    const startRange = sel.getRangeAt(0);
-    const startNode = startRange.startContainer;
-    const startOffset = startRange.startOffset;
-    
-    // Set cursor at end to find that position
-    restoreCursor(el, visEnd);
-    const endRange = sel.getRangeAt(0);
-    const endNode = endRange.startContainer;
-    const endOffset = endRange.startOffset;
-    
-    // Create selection from start to end
-    const range = document.createRange();
-    range.setStart(startNode, startOffset);
-    range.setEnd(endNode, endOffset);
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }, []);
-
+  /**
+   * Bold / italic / strikethrough on the selected characters: turned off if every
+   * selected character already has it, otherwise on. Works on any part of the
+   * text, including half of an already formatted word.
+   */
   const applyFormatToggle = useCallback((marker: string) => {
     const el = editorRef.current;
     if (!el) return;
-    
+
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    // Ignore selections elsewhere on the page (e.g. text in a card); using them
-    // here produced garbage offsets and corrupted the text (e.g. "hello****").
+    // Ignore selections elsewhere on the page (e.g. text in a card)
     if (!selectionInside(el)) return;
 
-    const visibleRange = getSelectionVisibleRange(el);
-    if (!visibleRange || visibleRange.start === visibleRange.end) return;
+    const range = getSelectionVisibleRange(el);
+    if (!range || range.start === range.end) return;
 
-    const visStart = visibleRange.start;
-    const visEnd = visibleRange.end;
-    const mLen = marker.length;
-    
-    const initialRawStart = visibleToRaw(value, visStart);
-    const initialRawEnd = visibleToRaw(value, visEnd, false);
-    let rawStart = initialRawStart;
-    let rawEnd = initialRawEnd;
-    const isMultiLineSelection = value.slice(initialRawStart, initialRawEnd).includes('\n');
-    
-    if (isMultiLineSelection) {
-      // Expand to full line boundaries so we don't cut through existing markers
-      while (rawStart > 0 && value[rawStart - 1] !== '\n') rawStart--;
-      // Only expand rawEnd if we're not already at a line boundary
-      if (rawEnd > 0 && value[rawEnd - 1] !== '\n') {
-        while (rawEnd < value.length && value[rawEnd] !== '\n') rawEnd++;
-      }
-    } else if (marker === '~~') {
-      const expanded = expandRawRangeForLineMarkers(value, initialRawStart, initialRawEnd, marker);
-      rawStart = expanded.start;
-      rawEnd = expanded.end;
-    }
-    
-    const before = value.slice(0, rawStart);
-    const selected = value.slice(rawStart, rawEnd);
-    const after = value.slice(rawEnd);
-    
-    let newValue: string;
-    let newVisEnd: number;
-
-    if (marker === '*' || marker === '**') {
-      if (isMultiLineSelection) {
-        const formattedLines = selected.split('\n').map((line) => {
-          if (!line.trim()) return line;
-          return toggleStarMarkerOnText(line, mLen);
-        });
-
-        newValue = before + formattedLines.join('\n') + after;
-      } else {
-        newValue = toggleStarMarkerAroundSelection(before, selected, after, mLen);
-      }
-      newVisEnd = visEnd;
-    } else {
-      const wrappedOutside = hasSpecificFormat(marker + selected + marker, marker) && before.endsWith(marker) && after.startsWith(marker);
-      const wrappedInside = hasSpecificFormat(selected, marker);
-
-      if (wrappedOutside) {
-        newValue = before.slice(0, -mLen) + selected + after.slice(mLen);
-        newVisEnd = visEnd;
-      } else if (wrappedInside) {
-        newValue = before + stripMarkers(selected, marker) + after;
-        newVisEnd = visEnd;
-      } else {
-        // Apply formatting per-line so multi-line selections work correctly
-        const lines = selected.split('\n');
-        
-        const toggleLine = (line: string) => {
-          if (!line.trim()) return line;
-
-          if (hasSpecificFormat(line, marker)) {
-            // Remove the first/last marker occurrences while preserving whitespace.
-            return stripMarkers(line, marker);
-          }
-
-          return marker + line + marker;
-        };
-
-        if (lines.length > 1) {
-          const formattedLines = lines.map(toggleLine);
-          newValue = before + formattedLines.join('\n') + after;
-        } else {
-          newValue = before + marker + selected + marker + after;
-        }
-        newVisEnd = visEnd;
-      }
-    }
-    
-    onChange(newValue);
-    isUpdatingRef.current = true;
-    requestAnimationFrame(() => {
-      el.innerHTML = toHTML(newValue);
-      restoreSelection(el, visStart, newVisEnd);
-      el.focus();
-      isUpdatingRef.current = false;
-    });
-    pushSnapshotNow(newValue, newVisEnd);
-  }, [value, onChange, restoreSelection, pushSnapshotNow]);
+    const chars = domChars(el);
+    const start = Math.min(range.start, chars.length);
+    const end = Math.min(range.end, chars.length);
+    const attr = marker === '**' ? 'b' : marker === '*' ? 'i' : 's';
+    commitEdit(writeChars(toggleStyle(chars, start, end, attr)), start, end);
+  }, [commitEdit]);
 
   applyFormatToggleRef.current = applyFormatToggle;
 
@@ -859,24 +529,14 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const el = editorRef.current;
     if (!el) return;
 
-    // Replace the selected text (if any); otherwise insert at the caret
-    const visRange = selectionInside(el) ? getSelectionVisibleRange(el) : null;
-    const visStart = visRange ? visRange.start : visibleLength(value);
-    const visEnd = visRange ? visRange.end : visStart;
-    const rawStart = visibleToRaw(value, visStart);
-    const rawEnd = visEnd === visStart ? rawStart : visibleToRaw(value, visEnd, false);
-    const newValue = value.slice(0, rawStart) + escapeLiteral(text) + value.slice(rawEnd);
-    const newPos = visStart + text.length;
-    
-    onChange(newValue);
-    isUpdatingRef.current = true;
-    requestAnimationFrame(() => {
-      el.innerHTML = toHTML(newValue);
-      restoreCursor(el, newPos);
-      isUpdatingRef.current = false;
-    });
-    pushSnapshotNow(newValue, newPos);
-  }, [value, onChange, pushSnapshotNow]);
+    // Replace the selected text (if any); otherwise insert at the caret.
+    // Pasted text is plain: any * or ~ in it stays a literal character.
+    const chars = domChars(el);
+    const range = selectionInside(el) ? getSelectionVisibleRange(el) : null;
+    const start = Math.min(range?.start ?? chars.length, chars.length);
+    const end = Math.min(Math.max(range?.end ?? start, start), chars.length);
+    commitEdit(writeChars([...chars.slice(0, start), ...plainChars(text), ...chars.slice(end)]), start + text.length);
+  }, [commitEdit]);
 
   return (
     <div className="space-y-1">
