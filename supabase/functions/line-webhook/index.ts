@@ -2,6 +2,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
+// Reply for anyone who messages the bot before linking their account (used in several places)
+const NOT_LINKED_TEXT = "You're not linked yet. Send me the link code shown in the app's Settings page to connect your account.";
+
 interface LineEvent {
   type?: string;
   replyToken?: string;
@@ -35,11 +38,13 @@ async function verifySignature(secret: string, body: string, signature: string |
   return diff === 0;
 }
 
-async function reply(token: string, replyToken: string, text: string) {
+// Pass a list to send several chat bubbles in one reply (LINE allows up to 5)
+async function reply(token: string, replyToken: string, text: string | string[]) {
+  const texts = Array.isArray(text) ? text : [text];
   const res = await fetch(`${LINE_API}/message/reply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ replyToken, messages: [{ type: 'text', text }] }),
+    body: JSON.stringify({ replyToken, messages: texts.map((t) => ({ type: 'text', text: t })) }),
   });
   if (!res.ok) console.error('LINE reply failed', res.status, await res.text());
 }
@@ -84,10 +89,21 @@ Deno.serve(async (req) => {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
           body: JSON.stringify({
             replyToken,
-            messages: [{
-              type: 'text',
-              text: 'Hi! 📸 To connect me with your account, open the app\'s Settings page and tap the "Open LINE to link" button — or type your link code here.\nCommands: today / status / stop / start / remind on / remind off / overdue on / overdue off',
-            }],
+            // Greeting and command list arrive as two separate chat bubbles
+            messages: [
+              {
+                type: 'text',
+                text: '🦋 Hello there. To connect me with your account, open the app\'s Settings page and tap the "Open LINE to link" button — or type your link code here.',
+              },
+              {
+                type: 'text',
+                text: 'The available options for you are:\ntoday / status / stop / start / remind on / remind off / overdue on / overdue off',
+              },
+              {
+                type: 'text',
+                text: 'Keep in mind that I\'ll only reply to messages that are in the options above.\nIf you send me anything else, I won\'t reply to that.',
+              }
+            ],
           }),
         });
         continue;
@@ -105,10 +121,10 @@ Deno.serve(async (req) => {
             .eq('line_user_id', lineUserId)
             .maybeSingle();
           if (!data) {
-            await reply(accessToken, replyToken, "You're not linked yet. Send me the link code from the app's Settings page.");
+            await reply(accessToken, replyToken, NOT_LINKED_TEXT);
             continue;
           }
-          await reply(accessToken, replyToken, "Getting today's list for you~ 📸");
+          await reply(accessToken, replyToken, "Alright, I'll relay today's list for you then.\n*swiping sounds...*");
           const cronSecret = Deno.env.get('LINE_CRON_SECRET') ?? Deno.env.get('CRON_SECRET') ?? '';
           fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-line-daily`, {
             method: 'POST',
@@ -129,8 +145,8 @@ Deno.serve(async (req) => {
             accessToken,
             replyToken,
             data
-              ? `You're linked!\nDaily digest: ${data.is_enabled ? 'ON' : 'OFF'} (08:00 Thai time)\nStart reminders: ${data.reminders_enabled ? 'ON' : 'OFF'} (10-15 min before)\nOverdue nudges: ${data.overdue_enabled ? 'ON' : 'OFF'}`
-              : "You're not linked yet. Send me the link code from the app's Settings page.",
+              ? `You're linked now, and here are your settings.\nDaily digest: ${data.is_enabled ? 'ON' : 'OFF'} (08:00 Thai time)\nStart reminders: ${data.reminders_enabled ? 'ON' : 'OFF'} (10-15 min before)\nOverdue nudges: ${data.overdue_enabled ? 'ON' : 'OFF'}`
+              : NOT_LINKED_TEXT,
           );
           continue;
         }
@@ -147,8 +163,8 @@ Deno.serve(async (req) => {
             accessToken,
             replyToken,
             data
-              ? `Overdue nudges turned ${enable ? 'ON' : 'OFF'}~ (sent once when a deadline is missed)`
-              : "You're not linked yet. Send me the link code from the app's Settings page.",
+              ? `*Writing sounds...*\nOverdue nudges turned ${enable ? 'ON' : 'OFF'}\n${enable ? "I'll message you when a deadline is missed." : "I won't send the overdue nudges until you send \"overdue on\"."}`
+              : NOT_LINKED_TEXT,
           );
           continue;
         }
@@ -165,8 +181,8 @@ Deno.serve(async (req) => {
             accessToken,
             replyToken,
             data
-              ? `Start reminders turned ${enable ? 'ON' : 'OFF'}~ (sent 10-15 min before something starts)`
-              : "You're not linked yet. Send me the link code from the app's Settings page.",
+              ? `*Writing sounds...*\nStart reminders turned ${enable ? 'ON' : 'OFF'}\n${enable ? "I'll message you 10-15 minutes before your tasks and events start." : "I won't send the reminders until you send \"remind on\"."}`
+              : NOT_LINKED_TEXT,
           );
           continue;
         }
@@ -183,8 +199,8 @@ Deno.serve(async (req) => {
             accessToken,
             replyToken,
             data
-              ? `Daily digest turned ${enable ? 'ON' : 'OFF'}~`
-              : "You're not linked yet. Send me the link code from the app's Settings page.",
+              ? `*Writing sounds...*\nDaily digest turned ${enable ? 'ON' : 'OFF'}\n${enable ? "I'll message you every morning at 08:00 (Thai time) with your tasks and events." : "I won't send the morning digest until you send \"start\"."}`
+              : NOT_LINKED_TEXT,
           );
           continue;
         }
@@ -200,7 +216,7 @@ Deno.serve(async (req) => {
             await reply(
               accessToken,
               replyToken,
-              'That code is already linked to another LINE account. Tap the refresh button next to the code in Settings to generate a new one.',
+              'That code is already linked to another LINE account. Tap the refresh button next to the code in Settings to generate a new one for me.',
             );
             continue;
           }
@@ -234,17 +250,32 @@ Deno.serve(async (req) => {
             await reply(
               accessToken,
               replyToken,
-              `Linked successfully${displayName ? `, ${displayName}` : ''}! 📸\nI'll message you every morning at 08:00 (Thai time) with your tasks and events.\n\nSend "stop" to pause, "start" to resume, "status" to check.`,
+              `Linked successfully${displayName ? `, ${displayName}` : ''}.\nI'll message you every morning at 08:00 (Thai time) with your tasks and events.\n\nSend "stop" to pause, "start" to resume, "status" to check.\nI'm looking forward to helping you every day! 🦋`,
             );
             continue;
           }
         }
 
-        await reply(
-          accessToken,
-          replyToken,
-          'Hi! Send me the link code shown in the app\'s Settings page to connect your account.\nCommands: today / status / stop / start / remind on / remind off / overdue on / overdue off',
-        );
+        // Anything else: the reply depends on whether this LINE account is linked yet
+        const commandList =
+          'The available options are:\ntoday / status / stop / start / remind on / remind off / overdue on / overdue off';
+        const { data: linked } = await supabase
+          .from('line_links')
+          .select('user_id')
+          .eq('line_user_id', lineUserId)
+          .maybeSingle();
+
+        if (linked) {
+          await reply(accessToken, replyToken, [
+            `*Lulyssia looks at the message*\nI'm not replying to that one.\n\nSend me one of the options below instead, and maybe you'll find what you want.`,
+            commandList,
+          ]);
+        } else {
+          await reply(accessToken, replyToken, [
+            NOT_LINKED_TEXT,
+            commandList,
+          ]);
+        }
       }
     } catch (err) {
       console.error('Error handling LINE event:', err);

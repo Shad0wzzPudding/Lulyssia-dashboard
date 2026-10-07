@@ -108,8 +108,8 @@ export const EventsPage = ({
     setShowUndo(false);
     setClearedEvents([]);
     toast({
-      title: "Events restored! 📸",
-      description: "Lulyssia saved the day~",
+      title: "Events restored! 💠",
+      description: "Lulyssia stole them back~",
     });
   };
 

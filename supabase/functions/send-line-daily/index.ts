@@ -233,22 +233,22 @@ Deno.serve(async (req) => {
         const todayEvents = (events ?? []).filter((e) => matchesToday(e.start_time, e.deadline));
 
         const toasts = [
-          'Have a wonderful day!',
-          "You've got this!",
+          'Have a wonderful day.',
+          "You've got this.",
           'Take it one step at a time.',
-          'Make today count!',
-          'Stay positive and keep going!',
-          'Lulyssia believes in you!',
-          "Let's get things done today!",
+          'Make today count.',
+          'Stay positive and keep going.',
+          'I believe in you.',
+          "Let's get things done today.",
         ];
         const toast = toasts[Math.floor(Math.random() * toasts.length)];
 
         // Fall back to the LINE profile name when no name is set in the dashboard
         const name = nameByUser.get(link.user_id) || link.display_name || null;
-        const lines: string[] = [`🌅 Good morning${name ? `, ${name}` : ''}! ${today} (Thai time)`, ''];
+        const lines: string[] = [`*A mysterious envelope appears out of nowhere*\n🦋 Dear ${name ?? 'friend'}, good morning! ${today} (Thai time)`, ''];
 
         if (todayTasks.length === 0 && todayEvents.length === 0) {
-          lines.push('✨ Your day is clear — no tasks and no events. Enjoy it~ 📸');
+          lines.push('Your day is clear — no tasks and no events. Please enjoy it.');
         } else {
           if (todayEvents.length > 0) {
             lines.push(`📅 Events (${todayEvents.length})`);
@@ -282,7 +282,8 @@ Deno.serve(async (req) => {
           }
         }
 
-        lines.push(`"${toast}"`);
+        // Closing line + signature always arrive as the very last bubble of the run
+        const signOff: LineMessage = { type: 'text', text: `"${toast}"\nFrom Lulyssia Swiftshade🦋` };
 
         const images: LineMessage[] = [];
         for (const item of [...todayEvents, ...todayTasks]) {
@@ -290,11 +291,10 @@ Deno.serve(async (req) => {
           images.push(...(await imageMessages(supabase, (item as Record<string, unknown>).attachments)));
         }
 
-        await pushMessages(accessToken, link.line_user_id as string, [
+        const digest: LineMessage[] = [
           { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
           ...images.slice(0, 4),
-        ]);
-        sent++;
+        ];
 
         // Separate "Notice before" message: items flagged to warn one day ahead.
         const tomorrow = thDateString(new Date(Date.now() + 86400000));
@@ -307,6 +307,15 @@ Deno.serve(async (req) => {
             .filter((t) => t.notice_before && !t.recurrence_unit && (isTomorrow(t.start_date) || isTomorrow(t.deadline)))
             .map((t) => ({ kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids })),
         ];
+        // LINE counts each push as one message (up to 5 bubbles), so the sign-off
+        // joins the last push when there is room instead of costing an extra push
+        if (noticeItems.length === 0 && digest.length < 5) {
+          await pushMessages(accessToken, link.line_user_id as string, [...digest, signOff]);
+        } else {
+          await pushMessages(accessToken, link.line_user_id as string, digest);
+        }
+        sent++;
+
         if (noticeItems.length > 0) {
           const n: string[] = [`🔔 Notice before — coming up tomorrow (${tomorrow})`, ''];
           for (const it of noticeItems) {
@@ -320,10 +329,14 @@ Deno.serve(async (req) => {
             n.push(`Tag : ${formatTags(it.tag_ids).replace(' 🏷 ', '') || '-'}`);
             n.push('');
           }
-          n.push('"Get ready ahead of time~ 📸"');
+  
           await pushMessages(accessToken, link.line_user_id as string, [
             { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
+            signOff,
           ]);
+        } else if (digest.length >= 5) {
+          // Digest was full (text + 4 images): the sign-off needs its own push
+          await pushMessages(accessToken, link.line_user_id as string, [signOff]);
         }
       } catch (err) {
         console.error(`Failed for user ${link.user_id}:`, err);

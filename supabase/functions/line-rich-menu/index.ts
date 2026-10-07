@@ -34,25 +34,44 @@ Deno.serve(async (req) => {
     return json({ error: 'image_base64 is required' }, 400);
   }
 
+  // Large menu: two rows that match docs/line-rich-menu.jpg
+  // (row 1: 3 buttons, row 2: 4 buttons). "Open app" opens the dashboard website.
   const width = 2500;
-  const height = 843;
-  const cell = Math.floor(width / 4);
-  const labels = [
-    { label: 'Today', data: 'today' },
-    { label: 'Status', data: 'status' },
-    { label: 'Remind on', data: 'remind on' },
-    { label: 'Remind off', data: 'remind off' },
+  const height = 1686;
+  const rowHeight = height / 2;
+  const SITE_URL = 'https://personal-dashboard-opal-gamma.vercel.app';
+  const rows: { label: string; data?: string; uri?: string }[][] = [
+    [
+      { label: 'Today', data: 'today' },
+      { label: 'Status', data: 'status' },
+      { label: 'Open app', uri: SITE_URL },
+    ],
+    [
+      { label: 'Remind on', data: 'remind on' },
+      { label: 'Remind off', data: 'remind off' },
+      { label: 'Overdue on', data: 'overdue on' },
+      { label: 'Overdue off', data: 'overdue off' },
+    ],
   ];
 
   const richMenu = {
     size: { width, height },
     selected: true,
     name: 'Lulyssia menu',
-    chatBarText: 'Menu 📸',
-    areas: labels.map((b, i) => ({
-      bounds: { x: i * cell, y: 0, width: cell, height },
-      action: { type: 'postback', label: b.label, data: b.data, displayText: b.label },
-    })),
+    chatBarText: 'Menu 💠',
+    areas: rows.flatMap((row, r) =>
+      row.map((b, i) => {
+        // Rounded column edges so the columns fill the full width with no gaps
+        const x = Math.round((i * width) / row.length);
+        const nextX = Math.round(((i + 1) * width) / row.length);
+        return {
+          bounds: { x, y: r * rowHeight, width: nextX - x, height: rowHeight },
+          action: b.uri
+            ? { type: 'uri', label: b.label, uri: b.uri }
+            : { type: 'postback', label: b.label, data: b.data, displayText: b.label },
+        };
+      })
+    ),
   };
 
   // Remove previous menus so buttons never stack up

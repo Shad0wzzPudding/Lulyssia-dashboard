@@ -44,19 +44,19 @@ export const SortAndFilterBar = ({
   const { names } = useUserNames();
 
   const lulyssiaMessages = [
-    "Lulyssia is on the case! Sorting by what's due soonest~ ❄️",
+    "Lulyssia is on the case! Sorting by what's due soonest~ 💠",
     "Leave it to me! Lulyssia has rearranged everything by deadline! ✨",
-    "Don't worry, I got this! Putting the urgent stuff up top~ 🏹",
+    "Don't worry, I got this! Putting the urgent stuff up top~ 🎭",
     "Lulyssia to the rescue! Soonest deadlines first, just for you! 💖",
-    "Tada~! Sorted by deadline! You can thank me later~ 📸",
+    "Tada~! Sorted by deadline! You can thank me later~ 💠",
     "Ehehe~ Lulyssia magic! All your urgent stuff is now front and center! ✨",
-    "Ice arrows locked on the deadlines! Sorted and ready, {nickname}! 🏹❄️",
-    "Smile~! Lulyssia took a snapshot and rearranged everything by deadline! 📷",
-    "Astral Express express delivery! Soonest tasks coming through! 🚂💨",
-    "Pom-Pom would be so proud~ Sorted by what's due first! 📦",
-    "Trust me, I'm a memory expert! Deadlines first, no time to lose! 💫",
+    "Target locked on the deadlines! Sorted and ready, {nickname}! 🎯",
+    "Calling card sent! Lulyssia rearranged everything by deadline~ 🃏",
+    "Heist complete! The soonest tasks have been stolen to the top! 💨",
+    "Showtime~! Sorted by what's due first! 🎩",
+    "Trust me, I've planned this heist! Deadlines first, no time to lose! 💫",
     "Hehe, leave the boring sorting to me! Earliest deadlines on top! 💝",
-    "Boop! Lulyssia's deadline radar activated~ ❄️✨",
+    "Boop! Lulyssia's deadline radar activated~ 💠✨",
     "Yoink! Grabbed all your tasks and lined them up by deadline! 🎀",
     "Don't panic, {nickname}! Lulyssia has your schedule under control~ 🌟",
   ];

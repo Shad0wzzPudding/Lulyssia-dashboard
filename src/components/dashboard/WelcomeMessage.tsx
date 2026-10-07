@@ -19,8 +19,8 @@ import { fillNames } from '@/lib/names';
 
 const lulyssiaGreetings = [
   { text: "Heyyy {nickname}! How's your day going today??", emoji: "😊", sticker: lulyssiaWelcoming },
-  { text: "Welcome back! Ready for another adventure?", emoji: "📸✨", sticker: lulyssiaExcited },
-  { text: "Ooh, perfect timing! I was just organizing some photos!", emoji: "📷", sticker: lulyssiaCandy },
+  { text: "Welcome back! Ready for another heist?", emoji: "🎭✨", sticker: lulyssiaExcited },
+  { text: "Ooh, perfect timing! I was just planning today's moves!", emoji: "🗺️", sticker: lulyssiaCandy },
   { text: "Hi there! Got any exciting plans for today?", emoji: "🌟", sticker: lulyssiaWelcoming },
   { text: "Yay, you're here! Let's make today super productive!", emoji: "💫", sticker: lulyssiaHappy },
   { text: "Hello hello, {nickname}! Ready to tackle your tasks?", emoji: "🚀", sticker: lulyssiaProud },

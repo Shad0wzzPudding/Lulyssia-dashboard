@@ -71,10 +71,10 @@ async function imageMessages(
 }
 
 const NUDGES = [
-  "Past due, but not past hope! Let's knock it out~ 📸",
-  'This one slipped by — want to finish it now?',
-  "Deadline's gone, but it's still waiting for you!",
-  'Late is better than never. You got this!',
+  "Hey, it's already past due. Want to have a look?",
+  'That one slipped by — want to finish it now?',
+  "Deadline's gone, but maybe you can still catch it.",
+  'I think you need to check on this one.',
 ];
 
 function thDateTime(iso: string): string {

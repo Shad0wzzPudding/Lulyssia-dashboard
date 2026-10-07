@@ -122,8 +122,8 @@ export const TasksPage = ({
     setShowUndo(false);
     setClearedTasks([]);
     toast({
-      title: "Tasks restored! 📸",
-      description: "Lulyssia saved the day~",
+      title: "Tasks restored! 💠",
+      description: "Lulyssia stole them back~",
     });
   };
 
