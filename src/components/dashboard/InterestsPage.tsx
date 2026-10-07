@@ -15,7 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { SelectionCorners, SelectModeOverlay } from './SelectionCorners';
+import { SelectModeOverlay } from './SelectionCorners';
+import { cardSurface } from '@/lib/selectMode';
 import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playPinSound, playUnpinSound, playUpdateSound, playEditSound, playSelectModeSound, playAddSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
@@ -208,11 +209,10 @@ export const InterestsPage = ({
     <Card
       key={interest.id}
       className={`bg-main-focus/20 border-main-focus/40 transition-all relative overflow-visible flex flex-col h-full min-h-[200px] ${
-        isSelecting ? 'cursor-pointer' : ''
+        cardSurface(isSelecting, isSelected(interest.id))
       } ${isSelected(interest.id) ? 'ring-2 ring-main-focus shadow-lg' : ''}`}
       onClick={() => handleCardClick(interest)}
     >
-      <SelectionCorners visible={isSelecting} />
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
@@ -235,12 +235,12 @@ export const InterestsPage = ({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3">
         {interest.description && (
-          <p className="w-full text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{interest.description}</FormattedText></p>
+          <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{interest.description}</FormattedText></p>
         )}
         <AttachmentsImages attachments={interest.attachments} />
         <AttachmentsChips attachments={interest.attachments} />
         {interest.deadline && (
-          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock size={12} />
             {format(parseISO(interest.deadline), 'MMM dd, yyyy HH:mm')}
           </div>
@@ -281,11 +281,10 @@ export const InterestsPage = ({
     <Card
       key={interest.id}
       className={`hover:shadow-md transition-all relative overflow-visible flex flex-col h-full min-h-[200px] ${
-        isSelecting ? 'cursor-pointer' : ''
+        cardSurface(isSelecting, isSelected(interest.id))
       } ${isSelected(interest.id) ? 'ring-2 ring-main-focus shadow-lg' : ''}`}
       onClick={() => handleCardClick(interest)}
     >
-      <SelectionCorners visible={isSelecting} />
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
@@ -352,7 +351,7 @@ export const InterestsPage = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <SelectModeOverlay visible={isSelecting} />
+      <SelectModeOverlay visible={isSelecting} onExit={clearSelection} />
       <LulyssiaConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
@@ -523,7 +522,6 @@ export const InterestsPage = ({
         onDelete={handleBatchDelete}
         onPin={hasSelectedUnpinned ? handleBatchPin : undefined}
         onUnpin={hasSelectedPinned ? handleBatchUnpin : undefined}
-        onCancel={clearSelection}
         onSelectAll={() => selectAll(interests)}
         totalCount={interests.length}
       />

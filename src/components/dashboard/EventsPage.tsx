@@ -14,9 +14,11 @@ import { PageIcon } from './PageIcon';
 import { format, parseISO, isAfter, isBefore, isToday, addHours } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
+import { SelectModeOverlay } from './SelectionCorners';
+import { cardSurface } from '@/lib/selectMode';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
+import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
@@ -229,11 +231,12 @@ export const EventsPage = ({
     return 'past';
   };
 
-  const getStatusColor = (status: string) => {
+  // onLight: the card is white (outside select mode), so use deeper colors that stay readable
+  const getStatusColor = (status: string, onLight = false) => {
     switch (status) {
-      case 'today': return 'text-amber-400 dark:text-amber-300';
-      case 'upcoming': return 'text-sky-400 dark:text-sky-300';
-      default: return 'text-slate-400 dark:text-slate-300';
+      case 'today': return onLight ? 'text-amber-700' : 'text-amber-400 dark:text-amber-300';
+      case 'upcoming': return onLight ? 'text-sky-700' : 'text-sky-400 dark:text-sky-300';
+      default: return onLight ? 'text-slate-600' : 'text-slate-400 dark:text-slate-300';
     }
   };
 
@@ -250,8 +253,8 @@ export const EventsPage = ({
     return (
       <Card 
         key={event.id} 
-        className={`${getBorderColor(status)} transition-all flex flex-col h-full min-h-[200px] ${
-          isSelecting ? 'cursor-pointer' : ''
+        className={`${getBorderColor(status)} relative transition-all flex flex-col h-full min-h-[200px] ${
+          cardSurface(isSelecting, isSelected(event.id))
         } ${isSelected(event.id) ? 'ring-2 ring-events-theme shadow-lg' : ''}`}
         onClick={() => handleCardClick(event)}
       >
@@ -307,7 +310,7 @@ export const EventsPage = ({
                       <AttachmentsChips attachments={event.attachments} />
                     </div>
                   )}
-                  <div className={`flex items-center gap-1 text-sm mt-2 ${getStatusColor(status)}`}>
+                  <div className={`flex items-center gap-1 text-sm mt-2 ${getStatusColor(status, !isSelecting)}`}>
                     <Clock size={12} />
                     {event.start_time ? `${format(parseISO(event.start_time), 'HH:mm')} - Today` : 'No start time'}
                     {event.deadline && (
@@ -344,7 +347,7 @@ export const EventsPage = ({
                )}
               <AttachmentsImages attachments={event.attachments} />
               <AttachmentsChips attachments={event.attachments} />
-              <div className={`flex items-center gap-1 text-sm ${getStatusColor(status)}`}>
+              <div className={`flex items-center gap-1 text-sm ${getStatusColor(status, !isSelecting)}`}>
                 <Clock size={12} />
                 {event.start_time ? format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm') : 'No start time'}
                 {event.deadline && (
@@ -385,6 +388,7 @@ export const EventsPage = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SelectModeOverlay visible={isSelecting} onExit={clearSelection} />
       {/* Lulyssia Confirmation Dialogs */}
       <LulyssiaConfirmDialog
         open={showClearConfirm}
@@ -437,7 +441,7 @@ export const EventsPage = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={enterSelectMode}
+              onClick={() => { playSelectModeSound(); enterSelectMode(); }}
             >
               <CheckSquare size={14} className="mr-2" />
               Select
@@ -634,7 +638,6 @@ export const EventsPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onCancel={clearSelection}
         onSelectAll={() => selectAll(events)}
         totalCount={events.length}
       />

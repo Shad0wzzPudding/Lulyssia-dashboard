@@ -3,6 +3,9 @@ import { toast } from "@/hooks/use-toast";
 import triggerEffect from "@/assets/sound/triger_effect.mp3";
 import trainEffect from "@/assets/sound/train_effect.mp3";
 import selectionEffect from "@/assets/sound/selection_effect.mp3";
+import selectModeOpen from "@/assets/sound/selectmode_open.wav";
+import selectModeClose from "@/assets/sound/selectmode_close.wav";
+import menuOpenEffect from "@/assets/sound/pondering.mp3";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -398,57 +401,6 @@ export const playUpdateSound = () => {
   }
 };
 
-export const playShutterSound = () => {
-  haptic([15, 10, 30]);
-  try {
-    const audioContext = getAudioContext();
-    const now = audioContext.currentTime;
-
-    // White noise burst for the "click" of a shutter
-    const bufferSize = audioContext.sampleRate * 0.06;
-    const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * 0.4;
-    }
-    const noiseSource = audioContext.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-    const noiseGain = audioContext.createGain();
-    noiseSource.connect(noiseGain);
-    noiseGain.connect(audioContext.destination);
-    noiseGain.gain.setValueAtTime(0.3, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
-    noiseSource.start(now);
-
-    // Mechanical "clack" tone
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    osc.frequency.value = 1200;
-    osc.type = 'square';
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
-    osc.start(now);
-    osc.stop(now + 0.03);
-
-    // Soft resonant "ding" after the click
-    const osc2 = audioContext.createOscillator();
-    const gain2 = audioContext.createGain();
-    osc2.connect(gain2);
-    gain2.connect(audioContext.destination);
-    osc2.frequency.value = 2400;
-    osc2.type = 'sine';
-    gain2.gain.setValueAtTime(0.08, now + 0.04);
-    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-    osc2.start(now + 0.04);
-    osc2.stop(now + 0.12);
-
-  } catch (e) {
-    console.warn('[playShutterSound] Audio error:', e);
-  }
-};
-
 export const playEditSound = () => {
   haptic(20);
   try {
@@ -554,13 +506,67 @@ export const playNavigationSound = () => {
   }
 };
 
+// Select mode open/close sounds (selectmode_open.wav / selectmode_close.wav).
+// If a file isn't loaded yet on its very first use, a short code-made tone plays instead.
+const SELECT_MODE_VOLUME = 0.8;
+
+const playSoundFile = (url: string, volume: number, fallback: () => void) => {
+  const buffer = soundBuffers.get(url);
+  if (!buffer) {
+    void loadSoundBuffer(url);
+    fallback();
+    return;
+  }
+  try {
+    const ctx = getAudioContext();
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    source.buffer = buffer;
+    gain.gain.value = volume;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+  } catch (e) {
+    console.warn('[sounds] Audio error:', url, e);
+  }
+};
+
+// Message button: opening the page menu (pondering.mp3)
+const MENU_OPEN_VOLUME = 0.8;
+
+export const preloadMenuOpenSound = () => {
+  void loadSoundBuffer(menuOpenEffect);
+};
+
+/** Opening the message-button menu. Call it from the button's click handler. */
+export const playMenuOpenSound = () => {
+  haptic(10);
+  playSoundFile(menuOpenEffect, MENU_OPEN_VOLUME, playNavigationSound);
+};
+
+export const preloadSelectModeSounds = () => {
+  void loadSoundBuffer(selectModeOpen);
+  void loadSoundBuffer(selectModeClose);
+};
+
+/** Entering select mode. Call it from the Select button's click handler. */
 export const playSelectModeSound = () => {
   haptic([10, 20, 10]);
+  playSoundFile(selectModeOpen, SELECT_MODE_VOLUME, playSelectModeTone);
+};
+
+/** Leaving select mode (X, Esc, last card deselected, or after an action). */
+export const playSelectModeCloseSound = () => {
+  haptic(10);
+  playSoundFile(selectModeClose, SELECT_MODE_VOLUME, playCancelSound);
+};
+
+// Fallback for the open sound: two short high tones
+const playSelectModeTone = () => {
   try {
     const audioContext = getAudioContext();
     const now = audioContext.currentTime;
 
-    // Camera autofocus "beep-beep" — two short high-pitched tones
     const playTone = (freq: number, start: number, dur: number) => {
       const osc = audioContext.createOscillator();
       const gain = audioContext.createGain();
@@ -578,7 +584,7 @@ export const playSelectModeSound = () => {
     playTone(1760, now + 0.09, 0.06);   // A6 (repeat)
 
   } catch (e) {
-    console.warn('[playSelectModeSound] Audio error:', e);
+    console.warn('[playSelectModeTone] Audio error:', e);
   }
 };
 

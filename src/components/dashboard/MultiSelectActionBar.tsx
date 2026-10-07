@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Copy, Trash2, Pin, PinOff, X, CheckSquare } from 'lucide-react';
+import { Copy, Trash2, Pin, PinOff, CheckSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MultiSelectActionBarProps {
@@ -8,7 +8,6 @@ interface MultiSelectActionBarProps {
   onDelete: () => void;
   onPin?: () => void;
   onUnpin?: () => void;
-  onCancel: () => void;
   onSelectAll: () => void;
   totalCount: number;
 }
@@ -19,7 +18,6 @@ export const MultiSelectActionBar = ({
   onDelete,
   onPin,
   onUnpin,
-  onCancel,
   onSelectAll,
   totalCount,
 }: MultiSelectActionBarProps) => {
@@ -31,13 +29,20 @@ export const MultiSelectActionBar = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-6 left-6 z-50 bg-card border border-border shadow-xl rounded-2xl px-4 py-3 flex items-center gap-3"
+          // Centered at the bottom (mx-auto, since framer-motion owns the transform).
+          // Phones: sits above the corner buttons; wider screens: between them.
+          // z-[65]: above the corner sticker and the open menu, below the page transition (z-[70]).
+          // P5 panel: sharp corners, white border, hard cyan offset shadow (like the cards and menu).
+          className="fixed inset-x-0 bottom-24 z-[65] mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-3 overflow-x-auto border-2 border-foreground/80 bg-card px-3 py-2.5 shadow-[5px_5px_0_0_hsl(var(--primary))] sm:bottom-6 sm:max-w-[calc(100vw-12rem)]"
         >
-          <span className="text-sm font-medium text-foreground whitespace-nowrap">
-            {selectedCount} selected
+          {/* Count in a slanted cyan block, like the page titles */}
+          <span className="shrink-0 -skew-x-12 bg-primary px-3 py-1">
+            <span className="block skew-x-12 whitespace-nowrap font-['Kanit',sans-serif] text-sm font-extrabold uppercase italic text-primary-foreground">
+              {selectedCount} selected
+            </span>
           </span>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-0.5 shrink-0 -skew-x-12 bg-foreground/40" />
 
           <Button
             size="sm"
@@ -92,18 +97,6 @@ export const MultiSelectActionBar = ({
           >
             <Trash2 size={14} className="mr-1" />
             Delete
-          </Button>
-
-          <div className="h-6 w-px bg-border" />
-
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onCancel}
-            className="text-xs"
-          >
-            <X size={14} className="mr-1" />
-            Cancel
           </Button>
         </motion.div>
       )}

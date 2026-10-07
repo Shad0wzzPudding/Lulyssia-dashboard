@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { playSelectionSound, preloadSelectionSound } from '@/lib/sounds';
+import { playMenuOpenSound, playSelectionSound, preloadMenuOpenSound, preloadSelectionSound } from '@/lib/sounds';
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
 
 interface NavigationProps {
@@ -39,6 +39,7 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
   // Load the menu choice sound up front so the first pick plays it instantly
   useEffect(() => {
     preloadSelectionSound();
+    preloadMenuOpenSound();
   }, []);
 
   // Close on a click outside the menu or on Escape
@@ -149,7 +150,11 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
       {/* Menu toggle, bottom-right corner */}
       <Button
         size="icon"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          // Sound only when opening; closing the menu stays quiet
+          if (!open) playMenuOpenSound();
+          setOpen(!open);
+        }}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
         aria-controls="main-navigation"

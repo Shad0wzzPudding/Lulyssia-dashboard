@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format, parseISO, isAfter, isBefore, addHours } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
+import { SelectModeOverlay } from './SelectionCorners';
+import { cardSurface } from '@/lib/selectMode';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { playSuccessSound, playCompletionSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound } from '@/lib/sounds';
+import { playSuccessSound, playCompletionSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
 import { TagPicker, TagChip } from './TagPicker';
 import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
@@ -276,11 +278,12 @@ export const TasksPage = ({
     return 'pending';
   };
 
-  const getStatusColor = (status: string) => {
+  // onLight: the card is white (outside select mode), so use deeper colors that stay readable
+  const getStatusColor = (status: string, onLight = false) => {
     switch (status) {
-      case 'completed': return 'text-emerald-400 dark:text-emerald-300';
-      case 'overdue': return 'text-rose-400 dark:text-rose-300';
-      default: return 'text-sky-400 dark:text-sky-300';
+      case 'completed': return onLight ? 'text-emerald-700' : 'text-emerald-400 dark:text-emerald-300';
+      case 'overdue': return onLight ? 'text-rose-600' : 'text-rose-400 dark:text-rose-300';
+      default: return onLight ? 'text-sky-700' : 'text-sky-400 dark:text-sky-300';
     }
   };
 
@@ -297,8 +300,8 @@ export const TasksPage = ({
     return (
       <Card 
         key={task.id} 
-        className={`${getBorderColor(status)} transition-all ${
-          isSelecting ? 'cursor-pointer' : ''
+        className={`${getBorderColor(status)} relative transition-all ${
+          cardSurface(isSelecting, isSelected(task.id))
         } ${isSelected(task.id) ? 'ring-2 ring-upcoming-events shadow-lg' : ''}`}
         onClick={() => handleCardClick(task)}
       >
@@ -373,7 +376,7 @@ export const TasksPage = ({
                        <span>Start: {format(parseISO(task.start_date), 'MMM dd, yyyy HH:mm')}</span>
                      </div>
                    ) : null}
-                   <div className={`flex items-center gap-1 text-sm ${getStatusColor(status)}`}>
+                   <div className={`flex items-center gap-1 text-sm ${getStatusColor(status, !isSelecting)}`}>
                      <CalendarClock size={12} />
                      <span>Due: {task.deadline ? format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm') : 'No deadline'}</span>
                    </div>
@@ -399,6 +402,7 @@ export const TasksPage = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <SelectModeOverlay visible={isSelecting} onExit={clearSelection} />
       {/* Lulyssia Confirmation Dialogs */}
       <LulyssiaConfirmDialog
         open={showClearConfirm}
@@ -451,7 +455,7 @@ export const TasksPage = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={enterSelectMode}
+              onClick={() => { playSelectModeSound(); enterSelectMode(); }}
             >
               <CheckSquare size={14} className="mr-2" />
               Select
@@ -733,7 +737,6 @@ export const TasksPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onCancel={clearSelection}
         onSelectAll={() => selectAll(tasks)}
         totalCount={tasks.length}
       />
