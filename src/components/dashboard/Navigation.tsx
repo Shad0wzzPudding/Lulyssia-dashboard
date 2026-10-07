@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { playMenuOpenSound, playSelectionSound, preloadMenuOpenSound, preloadSelectionSound } from '@/lib/sounds';
+import {
+  playDrawerCloseSound,
+  playDrawerOpenSound,
+  playMenuOpenSound,
+  playSelectionSound,
+  preloadDrawerSounds,
+  preloadMenuOpenSound,
+  preloadSelectionSound,
+} from '@/lib/sounds';
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
 
 interface NavigationProps {
@@ -34,12 +42,21 @@ const CHOICE_LAYOUT = [
 export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
+  // Picking Settings closes it via handlePageChange instead, which already plays the page sounds.
+  const handleDrawerOpenChange = (next: boolean) => {
+    if (next) playDrawerOpenSound();
+    else playDrawerCloseSound();
+    setDrawerOpen(next);
+  };
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Load the menu choice sound up front so the first pick plays it instantly
   useEffect(() => {
     preloadSelectionSound();
     preloadMenuOpenSound();
+    preloadDrawerSounds();
   }, []);
 
   // Close on a click outside the menu or on Escape
@@ -165,7 +182,7 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
       </Button>
 
       {/* Side drawer (opened from a tab on the left edge) with secondary links */}
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Sheet open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
         <SheetTrigger asChild>
           <button
             type="button"

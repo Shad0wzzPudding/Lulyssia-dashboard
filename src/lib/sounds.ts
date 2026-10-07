@@ -6,6 +6,9 @@ import selectionEffect from "@/assets/sound/selection_effect.mp3";
 import selectModeOpen from "@/assets/sound/selectmode_open.wav";
 import selectModeClose from "@/assets/sound/selectmode_close.wav";
 import menuOpenEffect from "@/assets/sound/pondering.mp3";
+import messageOpenEffect from "@/assets/sound/message_open.mp3";
+import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
+import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -510,7 +513,8 @@ export const playNavigationSound = () => {
 // If a file isn't loaded yet on its very first use, a short code-made tone plays instead.
 const SELECT_MODE_VOLUME = 0.8;
 
-const playSoundFile = (url: string, volume: number, fallback: () => void) => {
+/** Plays a loaded sound file, optionally `delayMs` later (scheduled precisely by Web Audio). */
+const playSoundFile = (url: string, volume: number, fallback: () => void, delayMs = 0) => {
   const buffer = soundBuffers.get(url);
   if (!buffer) {
     void loadSoundBuffer(url);
@@ -525,23 +529,45 @@ const playSoundFile = (url: string, volume: number, fallback: () => void) => {
     gain.gain.value = volume;
     source.connect(gain);
     gain.connect(ctx.destination);
-    source.start();
+    source.start(ctx.currentTime + delayMs / 1000);
   } catch (e) {
     console.warn('[sounds] Audio error:', url, e);
   }
 };
 
-// Message button: opening the page menu (pondering.mp3)
+const noSound = () => {};
+
+// Message button: message_open.mp3 right away, then pondering.mp3 a moment later
 const MENU_OPEN_VOLUME = 0.8;
+const PONDERING_DELAY_MS = 150;
 
 export const preloadMenuOpenSound = () => {
+  void loadSoundBuffer(messageOpenEffect);
   void loadSoundBuffer(menuOpenEffect);
 };
 
 /** Opening the message-button menu. Call it from the button's click handler. */
 export const playMenuOpenSound = () => {
   haptic(10);
-  playSoundFile(menuOpenEffect, MENU_OPEN_VOLUME, playNavigationSound);
+  playSoundFile(messageOpenEffect, MENU_OPEN_VOLUME, noSound);
+  playSoundFile(menuOpenEffect, MENU_OPEN_VOLUME, playNavigationSound, PONDERING_DELAY_MS);
+};
+
+// Left drawer (Settings link): open and close sounds
+const DRAWER_VOLUME = 0.8;
+
+export const preloadDrawerSounds = () => {
+  void loadSoundBuffer(drawerOpenEffect);
+  void loadSoundBuffer(drawerCloseEffect);
+};
+
+export const playDrawerOpenSound = () => {
+  haptic(10);
+  playSoundFile(drawerOpenEffect, DRAWER_VOLUME, noSound);
+};
+
+export const playDrawerCloseSound = () => {
+  playSoundFile(drawerCloseEffect, DRAWER_VOLUME, noSound);
 };
 
 export const preloadSelectModeSounds = () => {
