@@ -8,9 +8,11 @@ import { cn } from '@/lib/utils';
 import {
   playDrawerCloseSound,
   playDrawerOpenSound,
+  playMenuCloseSound,
   playMenuOpenSound,
   playSelectionSound,
   preloadDrawerSounds,
+  preloadMenuCloseSounds,
   preloadMenuOpenSound,
   preloadSelectionSound,
 } from '@/lib/sounds';
@@ -56,17 +58,22 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
   useEffect(() => {
     preloadSelectionSound();
     preloadMenuOpenSound();
+    preloadMenuCloseSounds();
     preloadDrawerSounds();
   }, []);
 
-  // Close on a click outside the menu or on Escape
+  // Close on a click outside the menu or on Escape (closing without picking a page plays the close sounds)
   useEffect(() => {
     if (!open) return;
+    const closeMenu = () => {
+      playMenuCloseSound();
+      setOpen(false);
+    };
     const onPointerDown = (e: PointerEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!containerRef.current?.contains(e.target as Node)) closeMenu();
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') closeMenu();
     };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
@@ -169,7 +176,9 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
         size="icon"
         onClick={() => {
           // Sound only when opening; closing the menu stays quiet
+          // Opening and closing (X) each play their own sounds; picking a page plays the page sounds instead
           if (!open) playMenuOpenSound();
+          else playMenuCloseSound();
           setOpen(!open);
         }}
         aria-label={open ? 'Close menu' : 'Open menu'}

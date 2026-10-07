@@ -7,6 +7,8 @@ import selectModeOpen from "@/assets/sound/selectmode_open.wav";
 import selectModeClose from "@/assets/sound/selectmode_close.wav";
 import menuOpenEffect from "@/assets/sound/pondering.mp3";
 import messageOpenEffect from "@/assets/sound/message_open.mp3";
+import messageCloseEffect from "@/assets/sound/message_close.mp3";
+import annoyedCloseEffect from "@/assets/sound/annoyed_close.wav";
 import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 
@@ -551,6 +553,22 @@ export const playMenuOpenSound = () => {
   haptic(10);
   playSoundFile(messageOpenEffect, MENU_OPEN_VOLUME, noSound);
   playSoundFile(menuOpenEffect, MENU_OPEN_VOLUME, playNavigationSound, PONDERING_DELAY_MS);
+};
+
+// Message button: closing the menu without picking a page.
+// annoyed_close.mp3 and message_close.mp3 play together, starting at the same moment.
+// (To play one after the other again, give message_close a delay in milliseconds.)
+const MESSAGE_CLOSE_DELAY_MS = 400;
+
+export const preloadMenuCloseSounds = () => {
+  void loadSoundBuffer(annoyedCloseEffect);
+  void loadSoundBuffer(messageCloseEffect);
+};
+
+/** Closing the message-button menu (X, outside click, Esc). Not used when a page is picked. */
+export const playMenuCloseSound = () => {
+  playSoundFile(annoyedCloseEffect, MENU_OPEN_VOLUME, noSound);
+  playSoundFile(messageCloseEffect, MENU_OPEN_VOLUME, noSound, MESSAGE_CLOSE_DELAY_MS);
 };
 
 // Left drawer (Settings link): open and close sounds
