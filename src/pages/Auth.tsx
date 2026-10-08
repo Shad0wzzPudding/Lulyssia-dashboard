@@ -20,6 +20,14 @@ const authSchema = z.object({
     .regex(/[0-9]/, { message: "Password must contain at least one number" })
 });
 
+// Sign in only checks the email format and that a password was entered: the
+// strength rules above are for new passwords. Applying them here blocked existing
+// accounts whose password doesn't meet them before the server was even asked.
+const signInSchema = z.object({
+  email: authSchema.shape.email,
+  password: z.string().min(1, { message: 'Please enter your password' }),
+});
+
 const PASSWORD_MISMATCH = "Passwords don't match";
 
 const passwordsMatch = (data: { password: string; confirmPassword: string }) =>
@@ -115,7 +123,7 @@ const Auth = () => {
 
     try {
       // Validate input
-      const validatedData = authSchema.parse({ email, password });
+      const validatedData = signInSchema.parse({ email, password });
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validatedData.email,
