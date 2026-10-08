@@ -35,7 +35,7 @@ type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 interface TasksPageProps {
   tasks: Task[];
   onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateTask: (data: Partial<Task> & { id: string }) => void;
+  onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean }) => void;
   onDeleteTask: (id: string) => void;
   onClearCompleted: () => void;
   onRestoreTasks?: (tasks: Task[]) => void;
@@ -269,7 +269,8 @@ export const TasksPage = ({
 
   const handleUserReorder = (orderedIds: string[]) => {
     orderedIds.forEach((id, index) => {
-      onUpdateTask({ id, sort_order: index });
+      // Silent: one save per item, so no "updated" toast for each of them
+      onUpdateTask({ id, sort_order: index, __silent: true });
     });
   };
 

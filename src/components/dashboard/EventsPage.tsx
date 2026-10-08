@@ -31,7 +31,7 @@ import { CollapsiblePreview } from './CollapsiblePreview';
 interface EventsPageProps {
   events: Event[];
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateEvent: (data: Partial<Event> & { id: string }) => void;
+  onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean }) => void;
   onDeleteEvent: (id: string) => void;
   onClearPast: (ids: string[]) => void;
 }
@@ -226,7 +226,8 @@ export const EventsPage = ({
 
   const handleUserReorder = (orderedIds: string[]) => {
     orderedIds.forEach((id, index) => {
-      onUpdateEvent({ id, sort_order: index });
+      // Silent: one save per item, so no "updated" toast for each of them
+      onUpdateEvent({ id, sort_order: index, __silent: true });
     });
   };
 

@@ -211,8 +211,9 @@ export const useDashboardData = () => {
     }
   });
 
+  // __silent skips the success toast (used when reordering, which saves every item)
   const updateInterest = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<Interest> & { id: string }) => {
+    mutationFn: async ({ id, __silent, ...data }: Partial<Interest> & { id: string; __silent?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -225,11 +226,12 @@ export const useDashboardData = () => {
         .single();
       
       if (error) throw error;
-      return result;
+      return { result, __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['interests'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Interest updated successfully!');
     },
     onError: (error) => {
@@ -289,7 +291,7 @@ export const useDashboardData = () => {
   });
 
   const updateTask = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<Task> & { id: string }) => {
+    mutationFn: async ({ id, __silent, ...data }: Partial<Task> & { id: string; __silent?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -300,10 +302,12 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Task updated successfully!');
     },
     onError: (error) => {
@@ -466,7 +470,7 @@ export const useDashboardData = () => {
   });
 
   const updateEvent = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<Event> & { id: string }) => {
+    mutationFn: async ({ id, __silent, ...data }: Partial<Event> & { id: string; __silent?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -477,10 +481,12 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Event updated successfully!');
     },
     onError: (error) => {

@@ -22,7 +22,7 @@ interface HomePageProps {
   tasks: Task[];
   events: Event[];
   activityLog: ActivityLog[];
-  onUpdateInterest?: (data: Partial<Interest> & { id: string }) => void;
+  onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
   onDeleteActivityLog?: (id: string) => void;
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
 }

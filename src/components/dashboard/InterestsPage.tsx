@@ -29,7 +29,7 @@ import { DragReorderList } from './DragReorderList';
 interface InterestsPageProps {
   interests: Interest[];
   onCreateInterest: (data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateInterest: (data: Partial<Interest> & { id: string }) => void;
+  onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
   onDeleteInterest: (id: string) => void;
 }
 
@@ -201,7 +201,8 @@ export const InterestsPage = ({
 
   const handleUserReorder = (orderedIds: string[]) => {
     orderedIds.forEach((id, index) => {
-      onUpdateInterest({ id, sort_order: index });
+      // Silent: one save per item, so no "updated" toast for each of them
+      onUpdateInterest({ id, sort_order: index, __silent: true });
     });
   };
 
