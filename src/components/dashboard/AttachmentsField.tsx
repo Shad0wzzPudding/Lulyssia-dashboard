@@ -81,10 +81,12 @@ export function AttachmentsField({ value, onChange }: AttachmentsFieldProps) {
     }
   };
 
-  const handleRemove = async (a: Attachment) => {
+  // Only takes the file off this item's list. The stored file is NOT deleted here:
+  // the form may still be cancelled (the saved item would then point to a deleted
+  // file), and copied items share the same stored file. Cleaning up files that no
+  // item uses anymore is a backlog item (roadmap.md).
+  const handleRemove = (a: Attachment) => {
     onChange(value.filter((x) => x.path !== a.path));
-    // Best-effort delete from storage
-    await supabase.storage.from('attachments').remove([a.path]);
   };
 
   return (
