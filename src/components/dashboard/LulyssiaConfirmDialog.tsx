@@ -76,9 +76,16 @@ export const LulyssiaConfirmDialog = ({
   confirmText = "Yes, I'm sure!",
   cancelText = "Nevermind~"
 }: LulyssiaConfirmDialogProps) => {
-  const [lulyssiaMessage] = useState(() => {
-    return lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
-  });
+  const pickMessage = () => lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
+  const [lulyssiaMessage, setLulyssiaMessage] = useState(pickMessage);
+  // Pick a new line each time the dialog opens (it used to be picked once per page
+  // load, so every confirmation showed the same line). Done while rendering the
+  // opening, so the previous line never flashes and it doesn't change while closing.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setLulyssiaMessage(pickMessage());
+  }
   const { names } = useUserNames();
   const justConfirmedRef = useRef(false);
 
