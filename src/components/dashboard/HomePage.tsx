@@ -380,16 +380,16 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     return Array.from(itemsMap.values());
   };
   
-  // Today's events and tasks
-  const todayTasks = tasks
-    .filter(task => !task.is_completed && task.deadline && isToday(parseISO(task.deadline)))
-    .slice(0, 3);
-  const todayStartingTasks = tasks
-    .filter(task => !task.is_completed && task.start_date && isToday(parseISO(task.start_date)))
-    .slice(0, 3);
-  const todayEvents = events
-    .filter(event => event.start_time && isToday(parseISO(event.start_time)))
-    .slice(0, 3);
+  // Today's events and tasks. The full lists feed the summary counts; the lists
+  // shown in the Today card are trimmed to 3 items each.
+  const allTodayDueTasks = tasks.filter(task => !task.is_completed && task.deadline && isToday(parseISO(task.deadline)));
+  const allTodayStartingTasks = tasks.filter(task => !task.is_completed && task.start_date && isToday(parseISO(task.start_date)));
+  const allTodayEvents = events.filter(event => event.start_time && isToday(parseISO(event.start_time)));
+  const todayTasks = allTodayDueTasks.slice(0, 3);
+  const todayStartingTasks = allTodayStartingTasks.slice(0, 3);
+  const todayEvents = allTodayEvents.slice(0, 3);
+  // Each task counted once, even if it both starts and is due today
+  const todayTaskCount = new Set([...allTodayDueTasks, ...allTodayStartingTasks].map(task => task.id)).size;
   
   // Overdue tasks and events
   const now = new Date();
@@ -420,9 +420,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const summaryItems = {
-    todayTasks: { value: todayTasks.length + todayStartingTasks.length, label: "Today's Tasks", colorClass: "text-p5-600 dark:text-p5-400" },
+    todayTasks: { value: todayTaskCount, label: "Today's Tasks", colorClass: "text-p5-600 dark:text-p5-400" },
     completed: { value: tasks.filter(task => task.is_completed && task.deadline && isToday(parseISO(task.deadline))).length, label: "Completed", colorClass: "text-green-600 dark:text-green-400" },
-    todayEvents: { value: todayEvents.length, label: "Today's Events", colorClass: "text-orange-600 dark:text-orange-400" },
+    todayEvents: { value: allTodayEvents.length, label: "Today's Events", colorClass: "text-orange-600 dark:text-orange-400" },
     overdueTasks: { value: overdueTasks.length, label: "Overdue Tasks", colorClass: "text-red-600 dark:text-red-400" },
   };
 
