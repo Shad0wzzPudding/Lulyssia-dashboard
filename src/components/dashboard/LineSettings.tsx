@@ -112,7 +112,12 @@ export const LineSettings = () => {
     } else if ((data as { sent?: number })?.sent) {
       toast({ title: 'Sent!', description: "Check your LINE chat~" });
     } else {
-      toast({ title: 'Nothing sent', description: 'Link your LINE account first.', variant: 'destructive' });
+      // The digest only goes to links with the daily message on, so say which step is missing
+      toast({
+        title: 'Nothing sent',
+        description: link?.line_user_id ? 'Turn on "Daily message" first.' : 'Link your LINE account first.',
+        variant: 'destructive',
+      });
     }
   };
 
