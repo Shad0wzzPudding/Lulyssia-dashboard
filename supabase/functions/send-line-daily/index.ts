@@ -132,12 +132,13 @@ Deno.serve(async (req) => {
     }
 
 
+    // "Daily message" only controls the scheduled 08:00 run; asking for the list
+    // (LINE "today" or the Settings test button) always sends it
     let query = supabase
       .from('line_links')
       .select('user_id, line_user_id, display_name')
-      .not('line_user_id', 'is', null)
-      .eq('is_enabled', true);
-    if (targetUserId) query = query.eq('user_id', targetUserId);
+      .not('line_user_id', 'is', null);
+    query = targetUserId ? query.eq('user_id', targetUserId) : query.eq('is_enabled', true);
 
     const { data: links, error: linksError } = await query;
     if (linksError) throw linksError;
