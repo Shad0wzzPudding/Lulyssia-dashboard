@@ -26,11 +26,12 @@ export const usePWA = () => {
       setIsInstalled(isStandaloneMode);
     };
 
-    // Check if iOS device
+    // Check if iOS device (iPhone/iPod/iPad, and iPadOS which reports itself as a
+    // touch-screen Mac). No generic "Safari + Mobile" check: Android Chrome's user agent
+    // contains both words, which made Android show the iPhone install instructions.
     const checkIOS = () => {
       const userAgent = window.navigator.userAgent;
-      const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || 
-                         /Safari/.test(userAgent) && /Mobile/.test(userAgent) ||
+      const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) ||
                          /iPhone OS|iOS/.test(userAgent) ||
                          /Macintosh/.test(userAgent) && 'ontouchend' in document;
       setIsIOS(isIOSDevice);
