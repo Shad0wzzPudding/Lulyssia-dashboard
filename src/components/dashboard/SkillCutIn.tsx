@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import lulyssiaTrigger from '@/assets/image/lulyssia_trigger.png';
+import lulyssiaTrigger from '@/assets/image/lulyssia_trigger.webp';
 
 // How long the cut-in stays on screen (ms). The sound keeps playing after it clears.
 export const SKILL_CUT_IN_DURATION = 1600;

@@ -17,4 +17,4 @@
 - [x] Switching pages keeps the scroll position, so a page picked while scrolled down opens part way down. Suggest: scroll to the top while the transition covers the screen
 - [x] Remove `SwipeableInterestCard` (imported on Home but never shown)
 - [x] Bundle was about 980 kB in one file: libraries now load as separate cached files (largest file 236 kB)
-- [ ] Images: `lulyssia_trigger_chibi.png` (1.9 MB, shown at 80px) and `lulyssia_trigger.png` (1.6 MB) could be WebP like the other art to load much faster
+- [x] Images: `lulyssia_trigger_chibi.png` (1.9 MB, shown at 80px) and `lulyssia_trigger.png` (1.6 MB) could be WebP like the other art to load much faster
