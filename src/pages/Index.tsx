@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -52,6 +53,7 @@ const Index = () => {
   const [showCutIn, setShowCutIn] = useState(false);
   const cutInPlaying = useRef(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   useEffect(() => {
     // Set up auth state listener
@@ -62,6 +64,9 @@ const Index = () => {
         setLoading(false);
         
         if (!session) {
+          // Signed out (here or in another tab): drop the cached data so the next
+          // account on this browser never sees the previous one's items
+          queryClient.clear();
           navigate('/auth');
         }
       }
@@ -79,7 +84,7 @@ const Index = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, queryClient]);
   
   const { 
     interests, 
@@ -106,6 +111,7 @@ const Index = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
+      queryClient.clear();
       navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
