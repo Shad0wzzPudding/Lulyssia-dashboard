@@ -16,4 +16,5 @@
 - [ ] Drag to reorder ("User sort") while a search or tag filter is on renumbers only the visible items from 0, so they collide with the hidden ones and the full order is mixed up once the filter is cleared. Fix needs a change in how order numbers are given out (e.g. reuse the items' existing numbers)
 - [ ] Switching pages keeps the scroll position, so a page picked while scrolled down opens part way down. Suggest: scroll to the top while the transition covers the screen
 - [x] Remove `SwipeableInterestCard` (imported on Home but never shown)
-- [ ] Bundle is about 950 kB in one file: split pages (Settings, About, transitions) into separately loaded chunks
+- [x] Bundle was about 980 kB in one file: libraries now load as separate cached files (largest file 236 kB)
+- [ ] Images: `lulyssia_trigger_chibi.png` (1.9 MB, shown at 80px) and `lulyssia_trigger.png` (1.6 MB) could be WebP like the other art to load much faster
