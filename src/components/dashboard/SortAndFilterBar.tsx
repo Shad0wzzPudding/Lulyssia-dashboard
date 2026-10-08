@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTags } from '@/hooks/useTags';
 import { TagChip } from './TagPicker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,7 +35,15 @@ export const SortAndFilterBar = ({
   onSearchChange,
   searchPlaceholder = 'Search…',
 }: Props) => {
-  const { tags } = useTags();
+  const { tags, isLoading: tagsLoading } = useTags();
+
+  // Drop a deleted tag from the filter. Otherwise filtering by it hid every item, and
+  // with no tags left the filter button (and its Clear) was gone too.
+  useEffect(() => {
+    if (tagsLoading || filterTagIds.length === 0) return;
+    const kept = filterTagIds.filter((id) => tags.some((t) => t.id === id));
+    if (kept.length !== filterTagIds.length) onFilterChange(kept);
+  }, [tags, tagsLoading, filterTagIds, onFilterChange]);
 
   const toggleTag = (id: string) => {
     if (filterTagIds.includes(id)) onFilterChange(filterTagIds.filter((x) => x !== id));
