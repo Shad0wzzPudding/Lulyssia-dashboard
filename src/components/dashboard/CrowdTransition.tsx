@@ -110,6 +110,7 @@ export const CrowdTransition = ({ onCovered, onDone }: CrowdTransitionProps) => 
 
   useEffect(() => {
     let cancelled = false;
+    let finished = false;
     (async () => {
       // Panel is 140vw wide with slanted edges; -18vw is the position where it covers the whole screen
       await new Promise((r) => setTimeout(r, CROWD_TRANSITION_DELAY_MS));
@@ -132,10 +133,17 @@ export const CrowdTransition = ({ onCovered, onDone }: CrowdTransitionProps) => 
           opacity: { duration: FADE_S, delay: SLIDE_OUT_S - FADE_S },
         },
       });
-      if (!cancelled) callbacks.current.onDone();
+      if (!cancelled) {
+        finished = true;
+        callbacks.current.onDone();
+      }
     })();
     return () => {
       cancelled = true;
+      // Removed before it finished (e.g. the dashboard briefly showed its error screen):
+      // still report done, so the page-change lock is released. Otherwise every later
+      // menu pick was silently ignored until a reload.
+      if (!finished) callbacks.current.onDone();
     };
   }, [controls]);
 
