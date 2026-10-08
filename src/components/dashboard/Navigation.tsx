@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavigationPage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight } from 'lucide-react';
+import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight, LogOut, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
@@ -17,10 +17,14 @@ import {
   preloadSelectionSound,
 } from '@/lib/sounds';
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
+import { DrawerScene } from './DrawerScene';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 
 interface NavigationProps {
   activePage: NavigationPage;
   onPageChange: (page: NavigationPage) => void;
+  /** Signs the user out (asked to confirm first, from the side drawer). */
+  onSignOut: () => void;
 }
 
 const navigationItems = [
@@ -41,9 +45,10 @@ const CHOICE_LAYOUT = [
   { tilt: 3, offset: 6 },
 ];
 
-export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
+export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationProps) => {
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
   // Picking Settings closes it via handlePageChange instead, which already plays the page sounds.
@@ -191,6 +196,8 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
       </Button>
 
       {/* Side drawer (opened from a tab on the left edge) with secondary links */}
+      {/* Decorative scene (Lulyssia, bubbles, butterflies...) while the drawer is open */}
+      <DrawerScene open={drawerOpen} />
       <Sheet open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
         <SheetTrigger asChild>
           <button
@@ -202,8 +209,10 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
             <PanelLeftOpen size={18} />
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 border-r-2 border-foreground/80 bg-card p-5">
-          <SheetHeader className="mb-6 text-left">
+        {/* Transparent layer above DrawerScene (which draws the dark panel behind Lulyssia),
+            so these items always stay readable and clickable on top of her art */}
+        <SheetContent side="left" className="z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none">
+          <SheetHeader className="mb-3 text-left">
             <SheetTitle className="p5-title w-fit text-xl">Menu</SheetTitle>
             <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
           </SheetHeader>
@@ -212,7 +221,7 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
             onClick={() => handlePageChange('settings')}
             aria-current={activePage === 'settings' ? 'page' : undefined}
             className={cn(
-              'group flex w-full -skew-x-6 items-center gap-3 border-2 px-3 py-2.5 text-left font-semibold transition-colors',
+              'group flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors',
               activePage === 'settings'
                 ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
                 : 'border-foreground/30 hover:border-primary hover:text-primary'
@@ -222,8 +231,46 @@ export const Navigation = ({ activePage, onPageChange }: NavigationProps) => {
             <span className="flex-1 skew-x-6">Settings</span>
             <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
           </button>
+          {/* Sign out: closes the drawer, then asks to confirm */}
+          <button
+            type="button"
+            onClick={() => {
+              setDrawerOpen(false);
+              setSignOutConfirmOpen(true);
+            }}
+            className="group flex w-full -skew-x-6 items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors hover:border-destructive hover:text-destructive"
+          >
+            <LogOut size={18} className="skew-x-6" />
+            <span className="flex-1 skew-x-6">Sign out</span>
+            <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
+          </button>
+          {/* About Lulyssia: opens the About page (profile card + her art) */}
+          <button
+            type="button"
+            onClick={() => handlePageChange('about')}
+            aria-current={activePage === 'about' ? 'page' : undefined}
+            className={cn(
+              'group flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors',
+              activePage === 'about'
+                ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
+                : 'border-foreground/30 hover:border-primary hover:text-primary'
+            )}
+          >
+            <Info size={18} className="skew-x-6" />
+            <span className="flex-1 skew-x-6">About Lulyssia</span>
+            <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
+          </button>
         </SheetContent>
       </Sheet>
+
+      <LulyssiaConfirmDialog
+        open={signOutConfirmOpen}
+        onOpenChange={setSignOutConfirmOpen}
+        onConfirm={onSignOut}
+        title="Sign out"
+        description="You will need to log in again to see your dashboard."
+        confirmText="Sign out"
+      />
     </div>
   );
 };

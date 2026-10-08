@@ -12,6 +12,7 @@ import { InterestsPage } from '@/components/dashboard/InterestsPage';
 import { TasksPage } from '@/components/dashboard/TasksPage';
 import { EventsPage } from '@/components/dashboard/EventsPage';
 import { SettingsPage } from '@/components/dashboard/SettingsPage';
+import { AboutPage } from '@/components/dashboard/AboutPage';
 
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
@@ -197,6 +198,8 @@ const Index = () => {
         );
       case 'settings':
         return <SettingsPage />;
+      case 'about':
+        return <AboutPage />;
       default:
         return null;
     }
@@ -211,14 +214,11 @@ const Index = () => {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-start h-16">
-            <Navigation activePage={activePage} onPageChange={navigateTo} />
+            <Navigation activePage={activePage} onPageChange={navigateTo} onSignOut={handleSignOut} />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 Welcome, {names.nickname || user.email} !
               </span>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                Sign Out
-              </Button>
             </div>
           </div>
         </div>

@@ -134,6 +134,39 @@ export default {
 				'crowd-drift-fast': {
 					from: { transform: 'translateX(0)' },
 					to: { transform: 'translateX(-160px)' }
+				},
+				// Drawer scene: bubbles drift, wings flap, Lulyssia floats, sparkles twinkle
+				'bubble-float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-14px)' }
+				},
+				'butterfly-flap': {
+					'0%, 100%': { transform: 'scaleX(1)' },
+					'50%': { transform: 'scaleX(0.25)' }
+				},
+				'character-float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'sparkle-twinkle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.2' }
+				},
+				// Water on the cyan band: each dot layer rises by a whole number of its own
+				// tiles (18, 11 and 31 px), so the loop is seamless; layers move at different speeds
+				'water-rise': {
+					from: { backgroundPosition: '0 0, 5px 7px, 12px 3px, 0 0' },
+					to: { backgroundPosition: '0 -180px, 5px -103px, 12px -307px, 0 0' }
+				},
+				// Light pulse along the neon wave (one full dash pattern = 100 path units)
+				'wave-flow': {
+					from: { strokeDashoffset: '0' },
+					to: { strokeDashoffset: '-100' }
+				},
+				// KEEP OUT text sliding along the tape by exactly one of its two copies
+				'tape-scroll': {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(-50%)' }
 				}
 			},
 			animation: {
@@ -142,7 +175,14 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
 				'crowd-drift-slow': 'crowd-drift-slow 2s linear forwards',
-				'crowd-drift-fast': 'crowd-drift-fast 2s linear forwards'
+				'crowd-drift-fast': 'crowd-drift-fast 2s linear forwards',
+				'bubble-float': 'bubble-float 5s ease-in-out infinite',
+				'butterfly-flap': 'butterfly-flap 1.2s ease-in-out infinite',
+				'character-float': 'character-float 4s ease-in-out infinite',
+				'sparkle-twinkle': 'sparkle-twinkle 1.8s ease-in-out infinite',
+				'water-rise': 'water-rise 14s linear infinite',
+				'wave-flow': 'wave-flow 8s linear infinite',
+				'tape-scroll': 'tape-scroll 20s linear infinite'
 			}
 		}
 	},
