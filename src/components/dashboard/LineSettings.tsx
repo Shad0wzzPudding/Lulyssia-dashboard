@@ -231,7 +231,7 @@ export const LineSettings = () => {
               <div>
                 <p className="text-sm font-medium">Missed-deadline nudges</p>
                 <p className="text-xs text-muted-foreground">
-                  One message when an unfinished task or event passes its deadline
+                  One message when an unfinished task passes its deadline
                 </p>
               </div>
               <Switch
