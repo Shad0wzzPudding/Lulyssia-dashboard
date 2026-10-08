@@ -281,6 +281,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       if (meta?.__silent) return;
       toast.success(meta?.__duplicate ? 'Task duplicated!' : 'Task created successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to create task:', error);
+      toast.error('Failed to create task. Please try again.');
     }
   });
 
@@ -301,6 +305,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Task updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to update task:', error);
+      toast.error('Failed to update task. Please try again.');
     }
   });
 
@@ -321,6 +329,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Task deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task. Please try again.');
     }
   });
 
@@ -341,6 +353,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Completed tasks cleared!');
+    },
+    onError: (error) => {
+      console.error('Failed to clear completed tasks:', error);
+      toast.error('Failed to clear completed tasks. Please try again.');
     }
   });
 
@@ -442,6 +458,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       if (meta?.__silent) return;
       toast.success(meta?.__duplicate ? 'Event duplicated!' : 'Event created successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to create event:', error);
+      toast.error('Failed to create event. Please try again.');
     }
   });
 
@@ -462,6 +482,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Event updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to update event:', error);
+      toast.error('Failed to update event. Please try again.');
     }
   });
 
@@ -482,6 +506,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Event deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Failed to delete event:', error);
+      toast.error('Failed to delete event. Please try again.');
     }
   });
 
@@ -506,6 +534,10 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
       toast.success('Past events cleared!');
+    },
+    onError: (error) => {
+      console.error('Failed to clear past events:', error);
+      toast.error('Failed to clear past events. Please try again.');
     }
   });
 
