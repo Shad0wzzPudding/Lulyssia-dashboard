@@ -71,34 +71,37 @@ export const LineSettings = () => {
   const regenerate = async () => {
     if (!link) return;
     setBusy(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('line_links')
       .update({ link_code: generateCode(), line_user_id: null, display_name: null, linked_at: null })
       .eq('id', link.id)
       .select(LINK_FIELDS)
       .maybeSingle();
-    if (data) setLink(data as LineLink);
     setBusy(false);
+    if (error || !data) {
+      toast({ title: 'Could not generate a new code', description: 'Please try again.', variant: 'destructive' });
+      return;
+    }
+    setLink(data as LineLink);
     toast({ title: 'New code generated', description: 'Send it to the bot to link again.' });
   };
 
-  const toggleEnabled = async (value: boolean) => {
+  // Switches update right away, then save. Each one changes only its own field
+  // (so quick flips of different switches can't undo each other), and it flips
+  // back with an error message if saving fails.
+  const setLinkFlag = async (field: 'is_enabled' | 'reminders_enabled' | 'overdue_enabled', value: boolean) => {
     if (!link) return;
-    setLink({ ...link, is_enabled: value });
-    await supabase.from('line_links').update({ is_enabled: value }).eq('id', link.id);
+    setLink((prev) => (prev ? { ...prev, [field]: value } : prev));
+    const { error } = await supabase.from('line_links').update({ [field]: value }).eq('id', link.id);
+    if (error) {
+      setLink((prev) => (prev ? { ...prev, [field]: !value } : prev));
+      toast({ title: 'Could not save that setting', description: 'Please try again.', variant: 'destructive' });
+    }
   };
 
-  const toggleReminders = async (value: boolean) => {
-    if (!link) return;
-    setLink({ ...link, reminders_enabled: value });
-    await supabase.from('line_links').update({ reminders_enabled: value }).eq('id', link.id);
-  };
-
-  const toggleOverdue = async (value: boolean) => {
-    if (!link) return;
-    setLink({ ...link, overdue_enabled: value });
-    await supabase.from('line_links').update({ overdue_enabled: value }).eq('id', link.id);
-  };
+  const toggleEnabled = (value: boolean) => setLinkFlag('is_enabled', value);
+  const toggleReminders = (value: boolean) => setLinkFlag('reminders_enabled', value);
+  const toggleOverdue = (value: boolean) => setLinkFlag('overdue_enabled', value);
 
   const sendTest = async () => {
     setBusy(true);
@@ -113,10 +116,21 @@ export const LineSettings = () => {
     }
   };
 
-  const copyCode = () => {
+  // The clipboard only exists on secure pages (https or localhost); on a local network
+  // address like http://192.168.x.x it is missing, so check before claiming success.
+  const copyCode = async () => {
     if (!link) return;
-    navigator.clipboard.writeText(link.link_code);
-    toast({ title: 'Copied', description: 'Link code copied to clipboard.' });
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(link.link_code);
+      toast({ title: 'Copied', description: 'Link code copied to clipboard.' });
+    } catch {
+      toast({
+        title: 'Could not copy',
+        description: 'Select the code and copy it manually.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
