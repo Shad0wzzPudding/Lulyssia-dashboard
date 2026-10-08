@@ -33,7 +33,7 @@ interface EventsPageProps {
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateEvent: (data: Partial<Event> & { id: string }) => void;
   onDeleteEvent: (id: string) => void;
-  onClearPast: () => void;
+  onClearPast: (ids: string[]) => void;
 }
 
 export const EventsPage = ({ 
@@ -72,7 +72,12 @@ export const EventsPage = ({
     () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById),
     [events, filterTagIds, search, sort, tagsById]
   );
-  const pastEvents = visibleEvents.filter(event => event.start_time && isBefore(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time)));
+  const isPastEvent = (event: Event) =>
+    !!event.start_time && isBefore(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time));
+  // Past events shown on the page (respects search and tag filters)
+  const pastEvents = visibleEvents.filter(isPastEvent);
+  // All past events, ignoring search/filters: what "Clear past events" deletes and Undo restores
+  const allPastEvents = events.filter(isPastEvent);
 
   // Hide undo button after 10 seconds
   useEffect(() => {
@@ -86,8 +91,8 @@ export const EventsPage = ({
   }, [showUndo]);
 
   const handleClearConfirm = () => {
-    setClearedEvents(pastEvents);
-    onClearPast();
+    setClearedEvents(allPastEvents);
+    onClearPast(allPastEvents.map((event) => event.id));
     setShowClearConfirm(false);
     setShowUndo(true);
     toast({
@@ -103,6 +108,7 @@ export const EventsPage = ({
         description: event.description,
         start_time: event.start_time,
         deadline: event.deadline,
+        tag_ids: event.tag_ids || [],
         attachments: event.attachments || [],
         notice_before: !!event.notice_before,
       });

@@ -485,18 +485,21 @@ export const useDashboardData = () => {
     }
   });
 
+  // Deletes exactly the events the Events page lists as past (it passes their ids).
+  // Deleting by "start_time < now" also removed today's events that had already
+  // started, which the page shows under Today and its Undo could not restore.
   const clearPastEvents = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (ids: string[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      if (ids.length === 0) return;
 
-      const now = new Date().toISOString();
       const { error } = await supabase
         .from('events')
         .delete()
         .eq('user_id', user.id)
-        .lt('start_time', now);
-      
+        .in('id', ids);
+
       if (error) throw error;
     },
     onSuccess: () => {
