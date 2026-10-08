@@ -227,7 +227,8 @@ Deno.serve(async (req) => {
         const formatTags = (tagIds: string[] | null) => {
           if (!tagIds || tagIds.length === 0) return '';
           const names = tagIds.map((id) => tagMap.get(id)).filter(Boolean) as string[];
-          return names.length > 0 ? ` 🏷 ${names.join(', ')}` : '';
+          // Plain names after "Tag :" (an extra 🏷 prefix doubled up the label)
+          return names.join(', ');
         };
 
         const todayTasks = (tasks ?? []).filter((t) => {
@@ -336,7 +337,7 @@ Deno.serve(async (req) => {
             n.push('Detail :');
             n.push(formatDetail(it.description) ?? '-');
             n.push(`Start time - deadline: ${startStr ?? '-'} - ${dueStr ?? '-'}`);
-            n.push(`Tag : ${formatTags(it.tag_ids).replace(' 🏷 ', '') || '-'}`);
+            n.push(`Tag : ${formatTags(it.tag_ids) || '-'}`);
             n.push('');
           }
   
