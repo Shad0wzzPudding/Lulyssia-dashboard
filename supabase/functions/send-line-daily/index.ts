@@ -1,4 +1,4 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -73,7 +73,7 @@ async function pushMessage(token: string, to: string, text: string) {
 
 // Signed https URLs for image attachments LINE can fetch (JPEG/PNG only).
 async function imageMessages(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   attachments: unknown,
 ): Promise<LineMessage[]> {
   const list = Array.isArray(attachments) ? attachments : [];
