@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
 import { useLocalToday } from '@/hooks/useLocalToday';
@@ -118,6 +118,10 @@ export const useDashboardData = () => {
     error: dailyTasksError
   } = useQuery({
     queryKey: ['daily_tasks', today],
+    // At midnight the key changes; keep showing the current list while the new day's
+    // list loads, instead of the whole dashboard switching to the loading screen
+    // (which also threw away anything typed into an open form).
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<DailyTask[]> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
