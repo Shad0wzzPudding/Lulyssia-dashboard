@@ -2,6 +2,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
+// Provided by the Supabase Edge Runtime: keeps the function alive until the promise settles
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 // Reply for anyone who messages the bot before linking their account (used in several places)
 const NOT_LINKED_TEXT = "You're not linked yet. Send me the link code shown in the app's Settings page to connect your account.";
 
@@ -126,11 +129,15 @@ Deno.serve(async (req) => {
           }
           await reply(accessToken, replyToken, "Alright, I'll relay today's list for you then.\n*swiping sounds...*");
           const cronSecret = Deno.env.get('LINE_CRON_SECRET') ?? Deno.env.get('CRON_SECRET') ?? '';
-          fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-line-daily`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-cron-secret': cronSecret },
-            body: JSON.stringify({ user_id: data.user_id }),
-          }).catch((e) => console.error('digest trigger failed', e));
+          // Not awaited so LINE gets its reply quickly, but kept alive until the
+          // request is out (otherwise the function can stop before sending it)
+          EdgeRuntime.waitUntil(
+            fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-line-daily`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-cron-secret': cronSecret },
+              body: JSON.stringify({ user_id: data.user_id }),
+            }).catch((e) => console.error('digest trigger failed', e))
+          );
           continue;
         }
 
