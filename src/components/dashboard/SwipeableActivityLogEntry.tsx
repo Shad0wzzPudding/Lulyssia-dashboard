@@ -18,6 +18,7 @@ export const SwipeableActivityLogEntry = ({
   const [isDragging, setIsDragging] = useState(false);
   const translateXRef = useRef(0);
   const startXRef = useRef(0);
+  const startYRef = useRef(0);
 
   const SWIPE_THRESHOLD = 80;
 
@@ -28,12 +29,21 @@ export const SwipeableActivityLogEntry = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
+    startYRef.current = e.touches[0].clientY;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     const diff = startXRef.current - e.touches[0].clientX;
+    // A mostly up/down movement is a page scroll, not a swipe: stop tracking it, so a
+    // scroll that drifts sideways can't trigger the undo (which reverts the change)
+    const vertical = Math.abs(startYRef.current - e.touches[0].clientY);
+    if (vertical > Math.abs(diff) && translateXRef.current < 10) {
+      setIsDragging(false);
+      updateTranslateX(0);
+      return;
+    }
     // Only allow left swipe (negative translateX)
     if (diff > 0) {
       updateTranslateX(Math.min(diff, 150));
