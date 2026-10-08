@@ -140,7 +140,8 @@ export const EventsPage = ({
     const submissionData = {
       ...formData,
       start_time: formData.start_time ? new Date(formData.start_time).toISOString() : null,
-      deadline: formData.deadline ? new Date(formData.deadline).toISOString() : undefined,
+      // null (not undefined) so clearing the deadline while editing really removes it
+      deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
     };
 
     if (editingEvent) {

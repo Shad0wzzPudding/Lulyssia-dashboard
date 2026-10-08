@@ -11,7 +11,7 @@ export interface Interest {
   user_id: string;
   title: string;
   description?: string;
-  deadline?: string;
+  deadline?: string | null;
   is_pinned: boolean;
   sort_order: number;
   tag_ids?: string[];
@@ -25,8 +25,8 @@ export interface Task {
   user_id: string;
   title: string;
   description?: string;
-  start_date?: string;
-  deadline?: string;
+  start_date?: string | null;
+  deadline?: string | null;
   is_completed: boolean;
   tag_ids?: string[];
   recurrence_unit?: string | null;
@@ -57,7 +57,7 @@ export interface Event {
   description?: string;
   start_time?: string | null;
   notice_before?: boolean;
-  deadline?: string;
+  deadline?: string | null;
   tag_ids?: string[];
   sort_order?: number;
   attachments?: Attachment[];
