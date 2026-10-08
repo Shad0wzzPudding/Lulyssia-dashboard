@@ -511,7 +511,7 @@ export const InterestsPage = ({
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground mb-4">No interests yet! Add your first interest to get started.</p>
-            <Button onClick={() => { playAddSound(); setIsCreateOpen(true); }}>
+            <Button onClick={() => { playAddSound(); resetForm(); setIsCreateOpen(true); }}>
               <Plus size={16} className="mr-2" />
               Add Your First Interest
             </Button>

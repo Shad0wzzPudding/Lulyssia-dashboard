@@ -729,7 +729,7 @@ export const TasksPage = ({
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground mb-4">No tasks yet! Add your first task to get started.</p>
-            <Button onClick={() => { playAddSound(); setIsCreateOpen(true); }}>
+            <Button onClick={() => { playAddSound(); resetForm(); setIsCreateOpen(true); }}>
               <Plus size={16} className="mr-2" />
               Add Your First Task
             </Button>
