@@ -1,6 +1,7 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Task, DailyTask } from '@/lib/types';
+import type { DeleteTarget } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +37,7 @@ interface TasksPageProps {
   tasks: Task[];
   onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean }) => void;
-  onDeleteTask: (id: string) => void;
+  onDeleteTask: (target: DeleteTarget) => void;
   onClearCompleted: () => void;
   onRestoreTasks?: (tasks: Task[]) => void;
   dailyTasks: DailyTask[];
@@ -243,7 +244,8 @@ export const TasksPage = ({
   };
 
   const confirmBatchDelete = () => {
-    selectedIds.forEach(id => onDeleteTask(id));
+    // Silent: the summary toast below replaces one toast per item
+    selectedIds.forEach(id => onDeleteTask({ id, __silent: true }));
     playDeleteSound();
     toast({ title: `${selectedCount} task(s) deleted` });
     clearSelection();

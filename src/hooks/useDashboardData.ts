@@ -37,6 +37,14 @@ const renewRecurringTask = (task: Task): Partial<Task> | null => {
   return { deadline, start_date: start, is_completed: false };
 };
 
+/**
+ * What to delete: an id, or { id, __silent } to skip the success toast
+ * (batch deletes show one summary toast of their own instead).
+ */
+export type DeleteTarget = string | { id: string; __silent?: boolean };
+const deleteArgs = (target: DeleteTarget) =>
+  typeof target === 'string' ? { id: target, __silent: false } : { id: target.id, __silent: !!target.__silent };
+
 export const useDashboardData = () => {
   const queryClient = useQueryClient();
 
@@ -241,7 +249,8 @@ export const useDashboardData = () => {
   });
 
   const deleteInterest = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (target: DeleteTarget) => {
+      const { id, __silent } = deleteArgs(target);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -252,10 +261,12 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['interests'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Interest deleted successfully!');
     },
     onError: (error) => {
@@ -317,7 +328,8 @@ export const useDashboardData = () => {
   });
 
   const deleteTask = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (target: DeleteTarget) => {
+      const { id, __silent } = deleteArgs(target);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -328,10 +340,12 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Task deleted successfully!');
     },
     onError: (error) => {
@@ -496,7 +510,8 @@ export const useDashboardData = () => {
   });
 
   const deleteEvent = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (target: DeleteTarget) => {
+      const { id, __silent } = deleteArgs(target);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -507,10 +522,12 @@ export const useDashboardData = () => {
         .eq('user_id', user.id);
       
       if (error) throw error;
+      return { __silent };
     },
-    onSuccess: () => {
+    onSuccess: ({ __silent }) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      if (__silent) return;
       toast.success('Event deleted successfully!');
     },
     onError: (error) => {

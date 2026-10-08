@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Interest } from '@/lib/types';
+import type { DeleteTarget } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,7 @@ interface InterestsPageProps {
   interests: Interest[];
   onCreateInterest: (data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
-  onDeleteInterest: (id: string) => void;
+  onDeleteInterest: (target: DeleteTarget) => void;
 }
 
 export const InterestsPage = ({ 
@@ -159,7 +160,8 @@ export const InterestsPage = ({
   };
 
   const confirmBatchDelete = () => {
-    selectedIds.forEach(id => onDeleteInterest(id));
+    // Silent: the summary toast below replaces one toast per item
+    selectedIds.forEach(id => onDeleteInterest({ id, __silent: true }));
     playDeleteSound();
     toast({ title: `${selectedCount} interest(s) deleted` });
     clearSelection();
@@ -169,7 +171,7 @@ export const InterestsPage = ({
   const handleBatchPin = () => {
     const selected = interests.filter(i => selectedIds.has(i.id) && !i.is_pinned);
     selected.forEach(interest => {
-      onUpdateInterest({ id: interest.id, is_pinned: true });
+      onUpdateInterest({ id: interest.id, is_pinned: true, __silent: true });
     });
     playPinSound();
     toast({ title: `${selected.length} interest(s) pinned` });
@@ -179,7 +181,7 @@ export const InterestsPage = ({
   const handleBatchUnpin = () => {
     const selected = interests.filter(i => selectedIds.has(i.id) && i.is_pinned);
     selected.forEach(interest => {
-      onUpdateInterest({ id: interest.id, is_pinned: false });
+      onUpdateInterest({ id: interest.id, is_pinned: false, __silent: true });
     });
     playUnpinSound();
     toast({ title: `${selected.length} interest(s) unpinned` });

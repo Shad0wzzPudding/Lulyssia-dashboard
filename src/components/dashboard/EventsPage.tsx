@@ -1,6 +1,7 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Event } from '@/lib/types';
+import type { DeleteTarget } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +33,7 @@ interface EventsPageProps {
   events: Event[];
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean }) => void;
-  onDeleteEvent: (id: string) => void;
+  onDeleteEvent: (target: DeleteTarget) => void;
   onClearPast: (ids: string[]) => void;
 }
 
@@ -208,7 +209,8 @@ export const EventsPage = ({
   };
 
   const confirmBatchDelete = () => {
-    selectedIds.forEach(id => onDeleteEvent(id));
+    // Silent: the summary toast below replaces one toast per item
+    selectedIds.forEach(id => onDeleteEvent({ id, __silent: true }));
     playDeleteSound();
     toast({ title: `${selectedCount} event(s) deleted` });
     clearSelection();
