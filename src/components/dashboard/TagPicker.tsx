@@ -32,7 +32,13 @@ export const TagPicker = ({ selected, onChange }: TagPickerProps) => {
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
-    const tag = await createTag.mutateAsync({ name: newName.trim(), color: newColor });
+    // A failed create already shows an error toast; keep the typed name so it can be retried
+    let tag: Tag | undefined;
+    try {
+      tag = await createTag.mutateAsync({ name: newName.trim(), color: newColor });
+    } catch {
+      return;
+    }
     if (tag) onChange([...selected, tag.id]);
     setNewName('');
   };
