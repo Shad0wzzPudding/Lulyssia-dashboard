@@ -81,6 +81,7 @@ calendar day, not UTC.
 | `send-line-daily` | Daily digest and "notice before" message | Cron secret, or a signed-in user (test button) |
 | `send-line-reminders` | Start reminders | Cron secret, or a signed-in user |
 | `send-line-overdue` | Missed-deadline nudges | Cron secret |
+| `cleanup-attachments` | Deletes stored attachment files nothing uses anymore | Cron secret |
 
 Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 
@@ -94,13 +95,15 @@ Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 
 ### Scheduled jobs
 
-Jobs are created by migration `20261005000003_line_cron_vault.sql` using pg_cron and pg_net.
+Jobs are created by migrations `20261005000003_line_cron_vault.sql` and
+`20261008000001_cleanup_unused_attachments.sql` using pg_cron and pg_net.
 
 | Job | Schedule (UTC) | Meaning | Calls |
 | --- | --- | --- | --- |
 | `line-daily-digest-8am-bangkok` | `0 1 * * *` | 08:00 Thai time | `send-line-daily` |
 | `line-overdue-nudges` | `0 * * * *` | Every hour | `send-line-overdue` |
 | `line-start-reminders` | `*/5 * * * *` | Every 5 minutes | `send-line-reminders` |
+| `attachments-cleanup` | `0 20 * * *` | 03:00 Thai time | `cleanup-attachments` |
 
 The shared secret is **never stored in this repository**. The jobs read it from Supabase Vault at run
 time, from a secret named `line_cron_secret`. To set it up for the first time, or to rotate it:
