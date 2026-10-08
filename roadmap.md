@@ -15,5 +15,5 @@
 - [ ] Missed-deadline nudges: Settings says "an unfinished task or event", but only tasks get nudged. Either add events to `send-line-overdue` or change the Settings text
 - [ ] Drag to reorder ("User sort") while a search or tag filter is on renumbers only the visible items from 0, so they collide with the hidden ones and the full order is mixed up once the filter is cleared. Fix needs a change in how order numbers are given out (e.g. reuse the items' existing numbers)
 - [ ] Switching pages keeps the scroll position, so a page picked while scrolled down opens part way down. Suggest: scroll to the top while the transition covers the screen
-- [ ] Remove `SwipeableInterestCard` (imported on Home but never shown)
+- [x] Remove `SwipeableInterestCard` (imported on Home but never shown)
 - [ ] Bundle is about 950 kB in one file: split pages (Settings, About, transitions) into separately loaded chunks

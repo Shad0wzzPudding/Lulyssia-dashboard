@@ -9,7 +9,6 @@ import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, pa
 import { Interest, Task, Event, ActivityLog } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InstallAppCard } from "./InstallAppCard";
-import { SwipeableInterestCard } from "./SwipeableInterestCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
 import { DraggableSummaryItem } from "./DraggableSummaryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
