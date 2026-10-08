@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Interest } from '@/lib/types';
-import type { DeleteTarget } from '@/hooks/useDashboardData';
+import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ interface InterestsPageProps {
   interests: Interest[];
   onCreateInterest: (data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
+  onReorder: (args: ReorderArgs) => void;
   onDeleteInterest: (target: DeleteTarget) => void;
 }
 
@@ -38,6 +39,7 @@ export const InterestsPage = ({
   interests, 
   onCreateInterest, 
   onUpdateInterest, 
+  onReorder,
   onDeleteInterest 
 }: InterestsPageProps) => {
   const { toast } = useToast();
@@ -201,11 +203,8 @@ export const InterestsPage = ({
   const pinnedInterests = visibleInterests.filter(i => i.is_pinned);
   const unpinnedInterests = visibleInterests.filter(i => !i.is_pinned);
 
-  const handleUserReorder = (orderedIds: string[]) => {
-    orderedIds.forEach((id, index) => {
-      // Silent: one save per item, so no "updated" toast for each of them
-      onUpdateInterest({ id, sort_order: index, __silent: true });
-    });
+  const handleUserReorder = (orderedIds: string[], movedId: string) => {
+    onReorder({ table: 'interests', orderedIds, movedId });
   };
 
   const renderPinnedCard = (interest: Interest) => (

@@ -5,7 +5,8 @@ interface DragReorderListProps<T> {
   items: T[];
   getId: (item: T) => string;
   renderItem: (item: T) => ReactNode;
-  onReorder: (orderedIds: string[]) => void;
+  /** New order of the list, and the id of the item that was dragged */
+  onReorder: (orderedIds: string[], movedId: string) => void;
   className?: string;
 }
 
@@ -28,7 +29,7 @@ export function DragReorderList<T>({
     const next = [...items];
     const [moved] = next.splice(dragIndex, 1);
     next.splice(toIndex, 0, moved);
-    onReorder(next.map(getId));
+    onReorder(next.map(getId), getId(moved));
     setDragIndex(null);
     setOverIndex(null);
   };

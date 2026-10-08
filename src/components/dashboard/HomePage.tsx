@@ -120,6 +120,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     // Check if the log entry has the data needed for revert
     const canRevert = (log.action_type === 'created' && log.item_id) ||
                       (log.action_type === 'updated' && log.previous_data && log.item_id) ||
+                      (log.action_type === 'reordered' && log.previous_data) ||
                       (log.action_type === 'deleted' && log.previous_data);
 
     setPendingDeleteIds(prev => new Set(prev).add(id));

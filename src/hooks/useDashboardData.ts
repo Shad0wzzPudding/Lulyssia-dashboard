@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tansta
 import { supabase } from '@/integrations/supabase/client';
 import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
 import { useLocalToday } from '@/hooks/useLocalToday';
+import { sortItems } from '@/lib/sortAndFilter';
 import { toast } from 'sonner';
 import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
@@ -44,6 +45,13 @@ const renewRecurringTask = (task: Task): Partial<Task> | null => {
 export type DeleteTarget = string | { id: string; __silent?: boolean };
 const deleteArgs = (target: DeleteTarget) =>
   typeof target === 'string' ? { id: target, __silent: false } : { id: target.id, __silent: !!target.__silent };
+
+/** One drag in "User sort": the list's new order and the item that was dragged */
+export interface ReorderArgs {
+  table: 'interests' | 'tasks' | 'events';
+  orderedIds: string[];
+  movedId: string;
+}
 
 export const useDashboardData = () => {
   const queryClient = useQueryClient();
@@ -223,7 +231,7 @@ export const useDashboardData = () => {
     }
   });
 
-  // __silent skips the success toast (used when reordering, which saves every item)
+  // __silent skips the success toast (used by batch pin/unpin, which shows one summary)
   const updateInterest = useMutation({
     mutationFn: async ({ id, __silent, ...data }: Partial<Interest> & { id: string; __silent?: boolean }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -568,6 +576,63 @@ export const useDashboardData = () => {
     }
   });
 
+  // Saves only the items whose number changes, then logs the drag once
+  // (the log trigger skips updates that only change sort_order)
+  const reorderItems = useMutation({
+    mutationFn: async ({ table, orderedIds, movedId }: ReorderArgs) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const items = queryClient.getQueryData<{ id: string; title: string; created_at: string; sort_order?: number }[]>([table]) ?? [];
+      const byId = new Map(items.map(item => [item.id, item]));
+
+      // The dragged list may be only part of the whole (a search or tag filter,
+      // or one section of the page). Put it back into the full list in its new
+      // order and number the full list, so the other items keep their places.
+      const dragged = orderedIds.filter(id => byId.has(id));
+      const draggedSet = new Set(dragged);
+      let next = 0;
+      const fullOrder = sortItems(items, 'user').map(item => (draggedSet.has(item.id) ? dragged[next++] : item.id));
+      const changed = fullOrder
+        .map((id, index) => ({ id, from: byId.get(id)?.sort_order, to: index }))
+        .filter(c => c.from !== c.to);
+      if (changed.length === 0) return;
+
+      const results = await Promise.all(
+        changed.map(c =>
+          supabase
+            .from(table)
+            .update({ sort_order: c.to })
+            .eq('id', c.id)
+            .eq('user_id', user.id)
+        )
+      );
+      const failed = results.find(r => r.error);
+      if (failed) throw failed.error;
+
+      // Old numbers are kept so undo can put the whole list back
+      const { error } = await supabase
+        .from('activity_log')
+        .insert({
+          user_id: user.id,
+          action_type: 'reordered',
+          item_type: table,
+          item_title: byId.get(movedId)?.title ?? 'Item',
+          item_id: movedId,
+          previous_data: { sort_orders: changed.map(c => ({ id: c.id, sort_order: c.from ?? 0 })) },
+        });
+      if (error) throw error;
+    },
+    onSettled: (_data, _error, { table }) => {
+      queryClient.invalidateQueries({ queryKey: [table] });
+      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+    },
+    onError: (error) => {
+      console.error('Failed to save new order:', error);
+      toast.error('Failed to save the new order. Please try again.');
+    }
+  });
+
   const deleteActivityLog = useMutation({
     mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -610,6 +675,20 @@ export const useDashboardData = () => {
           .eq('id', log.item_id)
           .eq('user_id', user.id);
         if (error) throw error;
+      } else if (log.action_type === 'reordered' && Array.isArray(log.previous_data?.sort_orders)) {
+        // Undo reorder → put back every number the drag changed
+        const orders = log.previous_data.sort_orders as { id: string; sort_order: number }[];
+        const results = await Promise.all(
+          orders.map(o =>
+            supabase
+              .from(tableName)
+              .update({ sort_order: o.sort_order })
+              .eq('id', o.id)
+              .eq('user_id', user.id)
+          )
+        );
+        const failed = results.find(r => r.error);
+        if (failed) throw failed.error;
       } else if (log.action_type === 'deleted' && log.previous_data) {
         // Undo delete → re-insert the item
         const { error } = await supabase
@@ -665,6 +744,7 @@ export const useDashboardData = () => {
       updateEvent,
       deleteEvent,
       clearPastEvents,
+      reorderItems,
       deleteActivityLog,
       revertActivityLog,
     }

@@ -175,6 +175,7 @@ const Index = () => {
             interests={interests}
             onCreateInterest={mutations.createInterest.mutate}
             onUpdateInterest={mutations.updateInterest.mutate}
+            onReorder={mutations.reorderItems.mutate}
             onDeleteInterest={mutations.deleteInterest.mutate}
           />
         );
@@ -184,6 +185,7 @@ const Index = () => {
             tasks={tasks}
             onCreateTask={mutations.createTask.mutate}
             onUpdateTask={mutations.updateTask.mutate}
+            onReorder={mutations.reorderItems.mutate}
             onDeleteTask={mutations.deleteTask.mutate}
             onClearCompleted={mutations.clearCompletedTasks.mutate}
             dailyTasks={dailyTasks}
@@ -198,6 +200,7 @@ const Index = () => {
             events={events}
             onCreateEvent={mutations.createEvent.mutate}
             onUpdateEvent={mutations.updateEvent.mutate}
+            onReorder={mutations.reorderItems.mutate}
             onDeleteEvent={mutations.deleteEvent.mutate}
             onClearPast={mutations.clearPastEvents.mutate}
           />

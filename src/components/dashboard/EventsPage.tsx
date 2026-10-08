@@ -1,7 +1,7 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Event } from '@/lib/types';
-import type { DeleteTarget } from '@/hooks/useDashboardData';
+import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ interface EventsPageProps {
   events: Event[];
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean }) => void;
+  onReorder: (args: ReorderArgs) => void;
   onDeleteEvent: (target: DeleteTarget) => void;
   onClearPast: (ids: string[]) => void;
 }
@@ -41,6 +42,7 @@ export const EventsPage = ({
   events, 
   onCreateEvent, 
   onUpdateEvent, 
+  onReorder,
   onDeleteEvent,
   onClearPast
 }: EventsPageProps) => {
@@ -226,11 +228,8 @@ export const EventsPage = ({
   const todayEvents = visibleEvents.filter(event => event.start_time && isToday(parseISO(event.start_time)));
   const upcomingEvents = visibleEvents.filter(event => !event.start_time || (isAfter(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time))));
 
-  const handleUserReorder = (orderedIds: string[]) => {
-    orderedIds.forEach((id, index) => {
-      // Silent: one save per item, so no "updated" toast for each of them
-      onUpdateEvent({ id, sort_order: index, __silent: true });
-    });
+  const handleUserReorder = (orderedIds: string[], movedId: string) => {
+    onReorder({ table: 'events', orderedIds, movedId });
   };
 
   const getEventStatus = (event: Event) => {

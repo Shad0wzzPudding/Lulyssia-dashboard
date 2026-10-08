@@ -1,7 +1,7 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo } from 'react';
 import { Task, DailyTask } from '@/lib/types';
-import type { DeleteTarget } from '@/hooks/useDashboardData';
+import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,7 @@ interface TasksPageProps {
   tasks: Task[];
   onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
   onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean }) => void;
+  onReorder: (args: ReorderArgs) => void;
   onDeleteTask: (target: DeleteTarget) => void;
   onClearCompleted: () => void;
   onRestoreTasks?: (tasks: Task[]) => void;
@@ -50,6 +51,7 @@ export const TasksPage = ({
   tasks, 
   onCreateTask, 
   onUpdateTask, 
+  onReorder,
   onDeleteTask,
   onClearCompleted,
   dailyTasks,
@@ -269,11 +271,8 @@ export const TasksPage = ({
   const overdueTasks = pendingTasks.filter(task => task.deadline && isBefore(parseISO(task.deadline), now));
   const upcomingTasks = pendingTasks.filter(task => !task.deadline || isAfter(parseISO(task.deadline), now));
 
-  const handleUserReorder = (orderedIds: string[]) => {
-    orderedIds.forEach((id, index) => {
-      // Silent: one save per item, so no "updated" toast for each of them
-      onUpdateTask({ id, sort_order: index, __silent: true });
-    });
+  const handleUserReorder = (orderedIds: string[], movedId: string) => {
+    onReorder({ table: 'tasks', orderedIds, movedId });
   };
 
   const getTaskStatus = (task: Task) => {

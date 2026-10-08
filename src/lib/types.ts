@@ -68,7 +68,7 @@ export interface Event {
 export interface ActivityLog {
   id: string;
   user_id: string;
-  action_type: 'created' | 'updated' | 'deleted';
+  action_type: 'created' | 'updated' | 'deleted' | 'reordered';
   item_type: 'interests' | 'tasks' | 'events';
   item_title: string;
   item_id?: string;

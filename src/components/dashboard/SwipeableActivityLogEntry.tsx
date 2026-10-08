@@ -129,6 +129,8 @@ export const SwipeableActivityLogEntry = ({
                 ? "default"
                 : log.action_type === "updated"
                 ? "secondary"
+                : log.action_type === "reordered"
+                ? "outline"
                 : "destructive"
             }
             className="text-xs"
