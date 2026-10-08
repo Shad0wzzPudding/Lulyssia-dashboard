@@ -34,10 +34,15 @@ const Index = () => {
   const transitionsEnabled = usePageTransitions();
   const [pageTransitionId, setPageTransitionId] = useState<number | null>(null);
   const pendingPage = useRef<NavigationPage | null>(null);
+  // A new page always opens at the top (instant, not the smooth scroll-to-top button)
+  const showPage = (page: NavigationPage) => {
+    setActivePage(page);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
   const navigateTo = (page: NavigationPage) => {
     if (page === activePage || pageTransitionId !== null) return;
     if (!transitionsEnabled) {
-      setActivePage(page);
+      showPage(page);
       return;
     }
     pendingPage.current = page;
@@ -339,7 +344,7 @@ const Index = () => {
         <CrowdTransition
           key={pageTransitionId}
           onCovered={() => {
-            if (pendingPage.current) setActivePage(pendingPage.current);
+            if (pendingPage.current) showPage(pendingPage.current);
           }}
           onDone={() => {
             pendingPage.current = null;
