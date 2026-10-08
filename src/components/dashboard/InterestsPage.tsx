@@ -524,7 +524,7 @@ export const InterestsPage = ({
         onDelete={handleBatchDelete}
         onPin={hasSelectedUnpinned ? handleBatchPin : undefined}
         onUnpin={hasSelectedPinned ? handleBatchUnpin : undefined}
-        onSelectAll={() => selectAll(interests)}
+        onSelectAll={() => selectAll(visibleInterests)}
         totalCount={interests.length}
       />
     </div>

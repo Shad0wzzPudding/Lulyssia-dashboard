@@ -740,7 +740,7 @@ export const TasksPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onSelectAll={() => selectAll(tasks)}
+        onSelectAll={() => selectAll(visibleTasks)}
         totalCount={tasks.length}
       />
     </div>

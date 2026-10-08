@@ -647,7 +647,7 @@ export const EventsPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onSelectAll={() => selectAll(events)}
+        onSelectAll={() => selectAll(visibleEvents)}
         totalCount={events.length}
       />
     </div>
