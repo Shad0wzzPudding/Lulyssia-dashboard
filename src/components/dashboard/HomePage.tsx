@@ -380,22 +380,22 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     return Array.from(itemsMap.values());
   };
   
+  // A task is overdue as soon as its deadline passes, even earlier today
+  // (same rule as the Tasks page), and then it no longer counts as today's
+  const now = new Date();
+  const isOverdue = (task: Task) => !task.is_completed && !!task.deadline && isBefore(parseISO(task.deadline), now);
+  const overdueTasks = tasks.filter(isOverdue);
+
   // Today's events and tasks. The full lists feed the summary counts; the lists
   // shown in the Today card are trimmed to 3 items each.
-  const allTodayDueTasks = tasks.filter(task => !task.is_completed && task.deadline && isToday(parseISO(task.deadline)));
-  const allTodayStartingTasks = tasks.filter(task => !task.is_completed && task.start_date && isToday(parseISO(task.start_date)));
+  const allTodayDueTasks = tasks.filter(task => !task.is_completed && task.deadline && isToday(parseISO(task.deadline)) && !isOverdue(task));
+  const allTodayStartingTasks = tasks.filter(task => !task.is_completed && task.start_date && isToday(parseISO(task.start_date)) && !isOverdue(task));
   const allTodayEvents = events.filter(event => event.start_time && isToday(parseISO(event.start_time)));
   const todayTasks = allTodayDueTasks.slice(0, 3);
   const todayStartingTasks = allTodayStartingTasks.slice(0, 3);
   const todayEvents = allTodayEvents.slice(0, 3);
   // Each task counted once, even if it both starts and is due today
   const todayTaskCount = new Set([...allTodayDueTasks, ...allTodayStartingTasks].map(task => task.id)).size;
-  
-  // Overdue tasks and events
-  const now = new Date();
-  const overdueTasks = tasks.filter(task => 
-    !task.is_completed && task.deadline && isBefore(parseISO(task.deadline), now) && !isToday(parseISO(task.deadline))
-  );
   
   // Upcoming events and tasks (excluding today)
   const upcomingTasks = tasks
