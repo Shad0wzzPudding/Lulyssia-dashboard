@@ -100,6 +100,9 @@ export const useTags = () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       toast.success('Tag deleted');
     },
+    onError: () => {
+      toast.error('Failed to delete tag');
+    },
   });
 
   return { tags, isLoading, createTag, updateTag, deleteTag };

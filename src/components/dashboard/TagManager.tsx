@@ -64,8 +64,13 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
 
   const save = async () => {
     if (!name.trim()) return;
-    await updateTag.mutateAsync({ id: tag.id, name: name.trim(), color });
-    setEditing(false);
+    try {
+      await updateTag.mutateAsync({ id: tag.id, name: name.trim(), color });
+      setEditing(false);
+    } catch {
+      // The hook already shows "Tag already exists" / "Failed to update tag";
+      // keep the row open so the name can be fixed.
+    }
   };
 
   const cancel = () => {
