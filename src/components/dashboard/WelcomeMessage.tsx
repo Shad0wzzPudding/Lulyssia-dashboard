@@ -22,11 +22,20 @@ const lulyssiaGreetings = [
   { text: "Skipping your tasks today? No. Absolutely not.", emoji: "🙅", sticker: STICKERS.no },
 ];
 
+// Last greeting shown, so a page change never repeats it
+let lastGreeting: (typeof lulyssiaGreetings)[number] | null = null;
+
+const pickGreeting = () => {
+  const choices = lulyssiaGreetings.filter((g) => g !== lastGreeting);
+  return choices[Math.floor(Math.random() * choices.length)];
+};
+
 export const WelcomeMessage = () => {
-  const [greeting] = useState(() => {
-    const randomIndex = Math.floor(Math.random() * lulyssiaGreetings.length);
-    return lulyssiaGreetings[randomIndex];
-  });
+  const [greeting] = useState(pickGreeting);
+  // Remembered once shown (not while picking, which React may run twice in dev)
+  useEffect(() => {
+    lastGreeting = greeting;
+  }, [greeting]);
   // Wait for the saved names so the greeting is typed out with the right name
   const { names, isLoading: namesLoading } = useUserNames();
   const text = fillNames(greeting.text, names);

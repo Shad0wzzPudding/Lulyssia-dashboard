@@ -239,7 +239,8 @@ const Index = () => {
       </div>
       
       <div className="container mx-auto px-4 pt-8 pb-28">
-        <WelcomeMessage />
+        {/* New greeting on every page change (under the crowd transition when it plays) */}
+        <WelcomeMessage key={activePage} />
         
         <main className="max-w-6xl mx-auto">
           {renderActivePage()}
