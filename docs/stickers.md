@@ -1,6 +1,6 @@
 # Lulyssia stickers
 
-Lulyssia's sticker set and every place it appears in the dashboard. The images are in `src/assets/emote/` (lossless WebP, 512px max), and the toast lines are in `src/lib/stickers.ts`.
+Lulyssia's sticker set and every place it appears in the dashboard. The images are in `src/assets/emote/` (lossless WebP, 512px max), their original PNGs in `art-source/emote/`, and the toast lines are in `src/lib/stickers.ts`.
 
 ## Where stickers appear
 
@@ -155,6 +155,7 @@ How a toast looks with her added. The **bold** text is the app's own message; th
 
 ## Adding a sticker or line
 
-1. Convert the art to a lossless WebP in `src/assets/emote/`: `cwebp -lossless -z 9 in.png -o lulyssia_name.webp (add -resize 512 0 when the art is bigger than 512px)`
+1. Put the original PNG in `art-source/emote/`, then convert it to a lossless WebP in `src/assets/emote/` (add `-resize 512 0` when the art is bigger than 512px):
+   `cwebp -lossless -z 9 art-source/emote/lulyssia_name.png -o src/assets/emote/lulyssia_name.webp`
 2. Add it to `STICKERS` in `src/lib/stickers.ts`.
 3. Use it in `TOAST_LINES` (success / error / info), in the greetings in `WelcomeMessage.tsx`, or in the dialog lines in `LulyssiaConfirmDialog.tsx`. `{nickname}` is replaced with the user's saved nickname.
