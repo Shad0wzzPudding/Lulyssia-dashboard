@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
 import { useLocalToday } from '@/hooks/useLocalToday';
 import { sortItems } from '@/lib/sortAndFilter';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
 const advanceDate = (iso: string, unit: string, interval: number): string => {

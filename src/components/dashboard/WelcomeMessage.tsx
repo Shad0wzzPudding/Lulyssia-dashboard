@@ -1,39 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import lulyssiaExcited from '@/assets/lulyssia-excited.png';
-import lulyssiaHappy from '@/assets/lulyssia-happy.png';
-import lulyssiaWinking from '@/assets/lulyssia-winking.png';
-import lulyssiaCandy from '@/assets/lulyssia-candy.png';
-import lulyssiaProud from '@/assets/lulyssia-proud.png';
-import lulyssiaWelcoming from '@/assets/lulyssia-welcoming.png';
-import lulyssiaConfident from '@/assets/lulyssia-confident.png';
-import lulyssiaTg04 from '@/assets/lulyssia-tg-04.webp';
-import lulyssiaTg05 from '@/assets/lulyssia-tg-05.webp';
-import lulyssiaTg06 from '@/assets/lulyssia-tg-06.webp';
-import lulyssiaTg07 from '@/assets/lulyssia-tg-07.webp';
-import lulyssiaTg10 from '@/assets/lulyssia-tg-10.webp';
-import lulyssiaTg11 from '@/assets/lulyssia-tg-11.webp';
-import lulyssiaTg12 from '@/assets/lulyssia-tg-12.webp';
-import lulyssiaTg13 from '@/assets/lulyssia-tg-13.webp';
+import { STICKERS } from '@/lib/stickers';
 import { useUserNames } from '@/hooks/useUserNames';
 import { fillNames } from '@/lib/names';
 
 const lulyssiaGreetings = [
-  { text: "Heyyy {nickname}! How's your day going today??", emoji: "😊", sticker: lulyssiaWelcoming },
-  { text: "Welcome back! Ready for another heist?", emoji: "🎭✨", sticker: lulyssiaExcited },
-  { text: "Ooh, perfect timing! I was just planning today's moves!", emoji: "🗺️", sticker: lulyssiaCandy },
-  { text: "Hi there! Got any exciting plans for today?", emoji: "🌟", sticker: lulyssiaWelcoming },
-  { text: "Yay, you're here! Let's make today super productive!", emoji: "💫", sticker: lulyssiaHappy },
-  { text: "Hello hello, {nickname}! Ready to tackle your tasks?", emoji: "🚀", sticker: lulyssiaProud },
-  { text: "Heya! Time to check what's on your agenda!", emoji: "📝", sticker: lulyssiaWinking },
-  { text: "Welcome! I've been waiting to show you all your updates!", emoji: "✨", sticker: lulyssiaConfident },
-  { text: "Make a wish! Today feels like a celebration!", emoji: "🎂", sticker: lulyssiaTg04 },
-  { text: "Mmm, snack break! Want to share?", emoji: "🍫", sticker: lulyssiaTg05 },
-  { text: "Hmph! Don't keep me waiting too long, okay?", emoji: "💢", sticker: lulyssiaTg06 },
-  { text: "Pretty please? Let's get something done together!", emoji: "🥺", sticker: lulyssiaTg07 },
-  { text: "Ehehe, you caught me! Let's get back to it!", emoji: "😅", sticker: lulyssiaTg10 },
-  { text: "Vacation mode? Or just dreaming about it?", emoji: "🌴", sticker: lulyssiaTg11 },
-  { text: "Waaah, that was scary! Glad you're here now!", emoji: "😭", sticker: lulyssiaTg12 },
-  { text: "Staring contest? Fine, I won't blink first!", emoji: "👀", sticker: lulyssiaTg13 },
+  { text: "Oh, {nickname}. Right on time, as I expected.", emoji: "🦋", sticker: STICKERS.yes },
+  { text: "Welcome back. I've already looked over today's case.", emoji: "🔍", sticker: STICKERS.contemplate },
+  { text: "Coffee's ready. So is your agenda.", emoji: "☕", sticker: STICKERS.coffee },
+  { text: "Mm... oh, you're here. I was only resting my eyes.", emoji: "💤", sticker: STICKERS.sleep },
+  { text: "Hmm... you look like you're hiding an unfinished task.", emoji: "👀", sticker: STICKERS.suspicious },
+  { text: "There you are! Your tasks won't finish themselves, you know.", emoji: "👉", sticker: STICKERS.restPointing },
+  { text: "Back already? Hmhm~ couldn't stay away?", emoji: "😏", sticker: STICKERS.mocking },
+  { text: "I took a snapshot of your progress. Let's add to it.", emoji: "📸", sticker: STICKERS.polaroid },
+  { text: "Hold on, the files are almost sorted... there. Welcome back.", emoji: "📜", sticker: STICKERS.ritualing },
+  { text: "Too many deadlines in my head... help me clear a few, {nickname}?", emoji: "💭", sticker: STICKERS.notSoChill },
+  { text: "Wha-! Oh, it's just you. Hi, {nickname}.", emoji: "❗", sticker: STICKERS.startle },
+  { text: "Objection! You said you'd come back earlier.", emoji: "💢", sticker: STICKERS.objection },
+  { text: "Five more minutes... fine. Let's get to work.", emoji: "😤", sticker: STICKERS.sleepAnnoyed },
+  { text: "Taking it slow today? I don't mind keeping you company.", emoji: "🌙", sticker: STICKERS.resting },
+  { text: "Um... I think I planned today well? Take a look.", emoji: "😥", sticker: STICKERS.unconfident },
+  { text: "Skipping your tasks today? No. Absolutely not.", emoji: "🙅", sticker: STICKERS.no },
 ];
 
 export const WelcomeMessage = () => {
@@ -77,7 +63,7 @@ export const WelcomeMessage = () => {
         <img 
           src={greeting.sticker} 
           alt="Lulyssia" 
-          className={`w-24 h-24 object-contain transition-all duration-500 ${showEmoji ? 'animate-bounce' : 'opacity-80'}`}
+          className={`w-36 h-36 md:w-44 md:h-44 object-contain transition-all duration-500 ${showEmoji ? 'animate-bounce' : 'opacity-80'}`}
         />
       </div>
       <h1 className="text-3xl md:text-5xl font-bold mb-4 flex flex-wrap items-center justify-center gap-2 min-h-[2.5em]">

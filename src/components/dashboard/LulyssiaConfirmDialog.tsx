@@ -9,21 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import lulyssiaExcited from '@/assets/lulyssia-excited.png';
-import lulyssiaWinking from '@/assets/lulyssia-winking.png';
-import lulyssiaHappy from '@/assets/lulyssia-happy.png';
-import lulyssiaCandy from '@/assets/lulyssia-candy.png';
-import lulyssiaProud from '@/assets/lulyssia-proud.png';
-import lulyssiaWelcoming from '@/assets/lulyssia-welcoming.png';
-import lulyssiaConfident from '@/assets/lulyssia-confident.png';
-import lulyssiaTg04 from '@/assets/lulyssia-tg-04.webp';
-import lulyssiaTg05 from '@/assets/lulyssia-tg-05.webp';
-import lulyssiaTg06 from '@/assets/lulyssia-tg-06.webp';
-import lulyssiaTg07 from '@/assets/lulyssia-tg-07.webp';
-import lulyssiaTg10 from '@/assets/lulyssia-tg-10.webp';
-import lulyssiaTg11 from '@/assets/lulyssia-tg-11.webp';
-import lulyssiaTg12 from '@/assets/lulyssia-tg-12.webp';
-import lulyssiaTg13 from '@/assets/lulyssia-tg-13.webp';
+import { STICKERS, pickRandom } from '@/lib/stickers';
 import { playLulyssiaSound, playConfirmSound, playCancelSound } from '@/lib/sounds';
 import { useUserNames } from '@/hooks/useUserNames';
 import { fillNames } from '@/lib/names';
@@ -49,22 +35,18 @@ const handleCancelClick = (onOpenChange: (open: boolean) => void) => {
 };
 
 const lulyssiaMessages = [
-  { text: "Whoa, wait a second!", sticker: lulyssiaExcited },
-  { text: "Hold up, {nickname}!", sticker: lulyssiaWinking },
-  { text: "Are you really sure??", sticker: lulyssiaExcited },
-  { text: "Eep! Think it through, okay?", sticker: lulyssiaHappy },
-  { text: "Wait wait wait — sweet treat first?", sticker: lulyssiaCandy },
-  { text: "Trust me, double-check this one!", sticker: lulyssiaProud },
-  { text: "Heyy, are we really doing this?", sticker: lulyssiaWelcoming },
-  { text: "Hmph, I hope you know what you're doing!", sticker: lulyssiaConfident },
-  { text: "Make a wish before you decide~", sticker: lulyssiaTg04 },
-  { text: "Snack break first? ...No? Okay then!", sticker: lulyssiaTg05 },
-  { text: "Hmph! Don't blame me if you regret it!", sticker: lulyssiaTg06 },
-  { text: "Pretty please, think it over again?", sticker: lulyssiaTg07 },
-  { text: "Ehehe, last chance to back out!", sticker: lulyssiaTg10 },
-  { text: "Vacation later — decide first!", sticker: lulyssiaTg11 },
-  { text: "Waaah, this is a scary choice!", sticker: lulyssiaTg12 },
-  { text: "Staring at you... are you sure?", sticker: lulyssiaTg13 },
+  { text: "Objection! Think this through first.", sticker: STICKERS.objection },
+  { text: "Hold on, {nickname}.", sticker: STICKERS.restPointing },
+  { text: "Are you really sure about this?", sticker: STICKERS.suspicious },
+  { text: "Hmm... let me consider this for a moment.", sticker: STICKERS.contemplate },
+  { text: "Wha-! You're doing what?", sticker: STICKERS.startle },
+  { text: "I'd rather you didn't... but it's your call.", sticker: STICKERS.no },
+  { text: "Um... are we sure this is a good idea?", sticker: STICKERS.unconfident },
+  { text: "Let me take a picture first, just in case.", sticker: STICKERS.polaroid },
+  { text: "Hmhm~ hope you won't regret this.", sticker: STICKERS.mocking },
+  { text: "Let me finish my coffee before you decide.", sticker: STICKERS.coffee },
+  { text: "You woke me up for this? Fine, decide.", sticker: STICKERS.sleepAnnoyed },
+  { text: "Too many choices... just confirm it, okay?", sticker: STICKERS.notSoChill },
 ];
 
 export const LulyssiaConfirmDialog = ({
@@ -76,7 +58,7 @@ export const LulyssiaConfirmDialog = ({
   confirmText = "Yes, I'm sure!",
   cancelText = "Nevermind~"
 }: LulyssiaConfirmDialogProps) => {
-  const pickMessage = () => lulyssiaMessages[Math.floor(Math.random() * lulyssiaMessages.length)];
+  const pickMessage = () => pickRandom(lulyssiaMessages);
   const [lulyssiaMessage, setLulyssiaMessage] = useState(pickMessage);
   // Pick a new line each time the dialog opens (it used to be picked once per page
   // load, so every confirmation showed the same line). Done while rendering the

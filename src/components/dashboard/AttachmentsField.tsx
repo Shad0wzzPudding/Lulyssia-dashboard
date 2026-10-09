@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Attachment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Paperclip, X, Loader2, FileText, Image as ImageIcon, Download, Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 

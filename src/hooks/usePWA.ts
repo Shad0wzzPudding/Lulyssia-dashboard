@@ -71,7 +71,7 @@ export const usePWA = () => {
         toast({
           title: "Install on iOS",
           description: "Tap the share button in Safari, then 'Add to Home Screen'.",
-          variant: "default"
+          mood: "info"
         });
       } else {
         toast({

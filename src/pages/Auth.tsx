@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { z } from 'zod';
 import { usePWA } from '@/hooks/usePWA';
 

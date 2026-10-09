@@ -4,6 +4,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import type { ToastMood } from "@/lib/stickers"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -13,6 +14,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  /** Which Lulyssia sticker and line to show; by default from the variant, false for none */
+  mood?: ToastMood | false
 }
 
 const actionTypes = {

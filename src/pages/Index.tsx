@@ -17,7 +17,7 @@ import { AboutPage } from '@/components/dashboard/AboutPage';
 
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
-import lulyssiaChibi from '@/assets/image/lulyssia_trigger_chibi.webp';
+import lulyssiaChibi from '@/assets/emote/lulyssia_trigger_chibi.webp';
 import { SkillCutIn, SKILL_CUT_IN_DURATION } from '@/components/dashboard/SkillCutIn';
 import { CrowdTransition, CROWD_TRANSITION_MS, CROWD_TRANSITION_DELAY_MS } from '@/components/dashboard/CrowdTransition';
 import { usePageTransitions } from '@/hooks/usePageTransitions';
@@ -314,6 +314,7 @@ const Index = () => {
                   const quote = quotes[Math.floor(Math.random() * quotes.length)];
                   setTimeout(() => {
                     toast({
+                      mood: false, // has its own chibi art
                       className: 'border-2 border-primary border-l-[6px] bg-black',
                       description: (
                         <div className="flex items-center gap-3">

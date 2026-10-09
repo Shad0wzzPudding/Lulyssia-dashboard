@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tag } from '@/lib/types';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const DUPLICATE_TAG_MESSAGE = 'Tag already exists';
 

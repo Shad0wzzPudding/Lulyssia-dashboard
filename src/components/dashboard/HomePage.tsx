@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
-import lulyssiaPout from '@/assets/lulyssia-tg-06.webp';
+import { STICKERS } from '@/lib/stickers';
 interface HomePageProps {
   interests: Interest[];
   tasks: Task[];
@@ -825,7 +825,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       onClick={(e) => e.stopPropagation()}
                     >
                       <img
-                        src={lulyssiaPout}
+                        src={STICKERS.no}
                         alt="Lulyssia pouting"
                         className="w-20 h-20 object-contain drop-shadow-md -mt-2 flex-shrink-0"
                       />

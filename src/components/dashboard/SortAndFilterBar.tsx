@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { ArrowUpDown, X, Sparkles, Image as ImageIcon, Search } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { playSuccessSound } from '@/lib/sounds';
 import type { SortOption } from '@/lib/sortAndFilter';
 import { useUserNames } from '@/hooks/useUserNames';
