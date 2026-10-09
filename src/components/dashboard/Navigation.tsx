@@ -146,7 +146,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
                       />
                       <span
                         className={cn(
-                          "relative flex h-full items-center gap-3 pl-6 pr-12 font-['Kanit',sans-serif] text-lg font-extrabold italic transition-colors",
+                          "relative flex h-full items-center gap-3 pl-6 pr-12 font-display text-lg font-extrabold italic transition-colors",
                           active
                             ? 'text-primary-foreground'
                             : 'text-foreground group-hover:text-background group-focus-visible:text-background'

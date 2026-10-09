@@ -37,7 +37,7 @@ export const MultiSelectActionBar = ({
         >
           {/* Count in a slanted cyan block, like the page titles */}
           <span className="shrink-0 -skew-x-12 bg-primary px-3 py-1">
-            <span className="block skew-x-12 whitespace-nowrap font-['Kanit',sans-serif] text-sm font-extrabold uppercase italic text-primary-foreground">
+            <span className="block skew-x-12 whitespace-nowrap font-display text-sm font-extrabold uppercase italic text-primary-foreground">
               {selectedCount} selected
             </span>
           </span>

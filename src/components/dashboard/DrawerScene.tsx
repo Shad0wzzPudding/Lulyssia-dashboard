@@ -113,7 +113,7 @@ const KeepOutTape = ({ className, style, reverse = false }: { className?: string
   const row = (copy: number) => (
     <div className="flex shrink-0 items-center gap-8 pr-8" aria-hidden={copy > 0}>
       {Array.from({ length: 10 }, (_, k) => (
-        <span key={k} className="font-['Kanit',sans-serif] text-xl font-extrabold uppercase italic tracking-wider text-black">
+        <span key={k} className="font-display text-xl font-extrabold uppercase italic tracking-wider text-black">
           Keep out
         </span>
       ))}

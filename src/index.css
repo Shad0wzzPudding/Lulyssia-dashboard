@@ -122,12 +122,13 @@
     min-height: 100%;
   }
 
-  /* P5 headings: heavy italic (Kanit covers Thai and Latin) */
+  /* P5 headings: heavy italic. Asap Condensed has no Thai, so Thai text falls back to Kanit
+     (the browser only downloads Kanit's Thai file when a page actually shows Thai). */
   h1,
   h2,
   h3,
   h4 {
-    font-family: 'Kanit', ui-sans-serif, system-ui, sans-serif;
+    @apply font-display;
     font-style: italic;
     font-weight: 800;
     letter-spacing: -0.01em;
