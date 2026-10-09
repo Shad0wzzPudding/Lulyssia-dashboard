@@ -18,3 +18,25 @@
 - [x] Remove `SwipeableInterestCard` (imported on Home but never shown)
 - [x] Bundle was about 980 kB in one file: libraries now load as separate cached files (largest file 236 kB)
 - [x] Images: `lulyssia_trigger_chibi.png` (1.9 MB, shown at 80px) and `lulyssia_trigger.png` (1.6 MB) could be WebP like the other art to load much faster
+
+## Persona theme polish (menu and drawer)
+Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
+
+1. More real choices in the side drawer, so the scene has more to show than one link
+   - [x] Sign out (moved from the header)
+   - [x] About Lulyssia link (opens the About page)
+   - [ ] Quick "Animating menu" on/off switch
+   - [ ] LINE status (linked / not linked, daily message on or off)
+   - [ ] Bigger, bolder items in the same slanted bubble style as the message menu choices
+2. Game-style cursor in the message menu and the drawer
+   - [ ] Up/Down arrow keys move between choices, Enter picks one
+   - [ ] A highlight that slides from choice to choice
+   - [ ] A soft tick sound on each move or hover
+3. [ ] More dramatic drawer opening: a fast diagonal slash wipe (about 0.3 s), then the items snap into place, instead of the current fade-in scene and plain slide-in panel
+4. Less clutter in the drawer scene (about eight effects at once now)
+   - [ ] Fewer bubbles: 4 or 5 instead of 8
+   - [ ] Check that the crossed dotted wedge looks intentional and not like a glitch
+   - [ ] Keep the KEEP OUT tape as the only yellow accent
+5. [ ] A calm Persona 3 touch: a slow light ripple moving across the drawer's water
+6. [ ] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
+7. [ ] Readability: a solid backing behind the drawer items, so Lulyssia's art never sits behind them on short screens
