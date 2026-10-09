@@ -110,9 +110,9 @@ export const SkillCutIn = ({ show }: { show: boolean }) => (
           }}
           transition={{ duration: seconds, times: [0, 0.2, 0.28, 0.82, 1], ease: 'easeOut' }}
         >
-          <span className="p5-title text-4xl italic sm:text-6xl">Skill Activates!</span>
+          <span className="p5-title text-4xl italic sm:text-6xl">Ritual Casting!</span>
           <span className="-skew-x-12 bg-black px-3 text-xs font-extrabold uppercase italic tracking-[0.12em] text-white sm:text-sm">
-            Lulyssia · Return to top
+            Lulyssia · Binding to the top
           </span>
         </motion.div>
       </motion.div>
