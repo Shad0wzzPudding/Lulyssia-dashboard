@@ -333,7 +333,22 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
         >
           <motion.div {...snapIn(0, 0)}>
             <SheetHeader className="mb-3 text-left">
-              <SheetTitle className="p5-title w-fit text-xl">Menu</SheetTitle>
+              {/* "MENU" in ransom-note cut-out letters (styles in index.css). With the slash, the
+                  block snaps in like the rows, then the letters drop onto it one by one */}
+              <SheetTitle className="w-fit">
+                <span className="sr-only">Menu</span>
+                <span
+                  aria-hidden
+                  className={cn('menu-ransom', !noSlash && 'menu-ransom-drop')}
+                  style={{ '--drop-start': `${SLASH_DURATION * 0.6 + 0.12}s` } as React.CSSProperties}
+                >
+                  {[...'MENU'].map((letter, i) => (
+                    <span key={letter} style={{ '--i': i } as React.CSSProperties}>
+                      {letter}
+                    </span>
+                  ))}
+                </span>
+              </SheetTitle>
               <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
             </SheetHeader>
           </motion.div>

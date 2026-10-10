@@ -396,3 +396,75 @@
   -webkit-backdrop-filter: blur(3px) saturate(2.1) brightness(1.45);
   backdrop-filter: blur(3px) saturate(2.1) brightness(1.45);
 }
+
+/* Drawer title: "MENU" in ransom-note cut-out letters, Persona 5 style (our own lettering).
+   Each letter has its own face, block and tilt, on a black backing with a cyan shadow.
+   Faces: Asap Condensed and Kanit (loaded in index.html), plus the system serif and mono. */
+.menu-ransom {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 4px 6px 4px 2px;
+}
+.menu-ransom::before {
+  content: '';
+  position: absolute;
+  inset: 6px -4px -3px 2px;
+  z-index: -1;
+  background: #05090b;
+  transform: skewX(-14deg);
+  box-shadow: 5px 4px 0 hsl(var(--primary));
+}
+.menu-ransom > span {
+  display: inline-grid;
+  place-items: center;
+  padding: 0.08em 0.16em 0.1em;
+  line-height: 1;
+  transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
+}
+.menu-ransom > span:nth-child(1) {
+  --r: -6deg;
+  font: italic 900 30px 'Asap Condensed', 'Arial Narrow', sans-serif;
+  background: #f4f8f9;
+  color: #05090b;
+}
+.menu-ransom > span:nth-child(2) {
+  --r: 5deg;
+  --y: -3px;
+  font: 800 21px 'Kanit', system-ui, sans-serif;
+  background: #05090b;
+  color: #f4f8f9;
+  border: 2px solid #f4f8f9;
+}
+.menu-ransom > span:nth-child(3) {
+  --r: -3deg;
+  --y: 1px;
+  font: italic 700 25px Georgia, 'Times New Roman', serif;
+  background: hsl(var(--primary));
+  color: #05090b;
+}
+.menu-ransom > span:nth-child(4) {
+  --r: 8deg;
+  --y: -6px;
+  font: 800 19px ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  background: #f4f8f9;
+  color: #05090b;
+  outline: 2px solid #05090b;
+}
+/* With the opening slash: the letters drop in one by one, 0.06s apart, from --drop-start */
+.menu-ransom-drop > span {
+  animation: menu-letter-drop 0.42s cubic-bezier(0.25, 1.5, 0.45, 1) both;
+  animation-delay: calc(var(--drop-start, 0s) + var(--i, 0) * 0.06s);
+}
+@keyframes menu-letter-drop {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) rotate(calc(var(--r, 0deg) - 18deg)) translateY(var(--y, 0px)) scale(1.4);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
+  }
+}
