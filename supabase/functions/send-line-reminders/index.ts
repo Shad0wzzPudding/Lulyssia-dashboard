@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -47,7 +48,44 @@ function formatDetail(text: string | null): string | null {
 
 type LineMessage =
   | { type: 'text'; text: string }
-  | { type: 'image'; originalContentUrl: string; previewImageUrl: string };
+  | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
+  | FlexMessage;
+
+/** The "Starting soon" card: who it's for and how long, the item, its times, detail and tags. */
+function startingSoonCard(opts: {
+  name: string | undefined;
+  minsLeft: number;
+  kind: 'event' | 'task';
+  title: string;
+  start: string | null;
+  deadline: string | null;
+  detail: string | null;
+  tags: string;
+}): FlexMessage {
+  const { name, minsLeft, kind, title, start, deadline, detail, tags } = opts;
+  const heads = `⏰ ${name ? `Heads up, ${name}! ` : ''}Starting in ${minsLeft} min`;
+  return lineCard({
+    banner: 'starting-soon',
+    altText: `⏰ Starting in ${minsLeft} min: ${title}`,
+    button: 'Open in dashboard',
+    body: [
+      flexText(heads, { size: 'sm', weight: 'bold', color: CARD.neon }),
+      flexText(kind === 'event' ? '📅 EVENT' : '📋 TASK', { size: 'xs', weight: 'bold', color: CARD.date }),
+      flexText(title, { size: 'xl', weight: 'bold', color: CARD.ink }),
+      {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'xs',
+        contents: [
+          ...(start ? [labelRow('Starts', start)] : []),
+          ...(deadline ? [labelRow('Deadline', deadline)] : []),
+        ],
+      },
+      ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
+      ...(tags ? [tagChip(tags)] : []),
+    ],
+  });
+}
 
 async function pushMessages(token: string, to: string, messages: LineMessage[]) {
   const res = await fetch(`${LINE_API}/message/push`, {
@@ -280,11 +318,27 @@ Deno.serve(async (req) => {
             ...(tagStr ? [`🏷 Tag : ${tagStr}`] : []),
           ];
 
-          const images = await imageMessages(supabase, item.attachments);
-          await pushMessages(accessToken, link.line_user_id as string, [
-            { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
-            ...images.slice(0, 4),
-          ]);
+          const card = startingSoonCard({
+            name,
+            minsLeft,
+            kind: item.type,
+            title: item.title,
+            start: thTime(occurrenceIso),
+            deadline: thTime(item.deadline),
+            detail: formatDetail(item.description),
+            tags: tagStr,
+          });
+          const images = (await imageMessages(supabase, item.attachments)).slice(0, 4);
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, [card, ...images]);
+          } catch (err) {
+            // If LINE rejects the card, send the same reminder as plain text
+            console.error(`Starting-soon card rejected for user ${link.user_id}, sending text instead:`, err);
+            await pushMessages(accessToken, link.line_user_id as string, [
+              { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
+              ...images,
+            ]);
+          }
           sent++;
         }
       } catch (err) {

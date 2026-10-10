@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { CARD, CARD_MAX_CHARS, SITE_URL, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -51,49 +52,22 @@ function formatDetail(text: string | null): string | null {
   return [...lines.slice(0, 5), '...'].join('\n');
 }
 
-type FlexComponent = Record<string, unknown>;
 type LineMessage =
   | { type: 'text'; text: string }
   | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
-  | { type: 'flex'; altText: string; contents: FlexComponent };
+  | FlexMessage;
 
 // Lulyssia's sticker art (PNGs up to 832px in the web app's public/line-stickers/), sent as an image
 // after the sign-off. Bots can only send LINE's own sticker packs, not a custom set.
-const SITE_URL = 'https://personal-dashboard-opal-gamma.vercel.app';
 const stickerImage = (name: string): LineMessage => {
   const url = `${SITE_URL}/line-stickers/${name}.png`;
   return { type: 'image', originalContentUrl: url, previewImageUrl: url };
 };
 
 // ---- Morning letter card (LINE Flex Message) ----
-// Dark card with the "Morning letter" banner (public/line-cards/, drawn from
-// art-source/line-cards/banners.html), the day's events and tasks, and an "Open dashboard" button.
-const CARD = {
-  bg: '#10171C',
-  item: '#18232A',
-  ink: '#EAF6F9',
-  muted: '#A9C3CC',
-  detail: '#C9DBE1',
-  date: '#8FB3BF',
-  neon: '#5EE3F0',
-  cyan: '#3AADD0',
-  dark: '#04131A',
-  chip: '#BFEEF7',
-};
-// LINE limits one card's layout to about 30 KB; stay well under it
-const CARD_MAX_CHARS = 24000;
+// Built from the shared card pieces in ../_shared/lineCard.ts
 
 type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string };
-
-const flexText = (text: string, extra: FlexComponent = {}): FlexComponent => ({ type: 'text', text, wrap: true, ...extra });
-
-/** "🕒 16:00 – 18:00", "🕒 Starts 08:00", "🕒 Due 23:59", or null when the item has no times. */
-function timeRange(start: string | null, due: string | null): string | null {
-  if (start && due) return `🕒 ${start} – ${due}`;
-  if (start) return `🕒 Starts ${start}`;
-  if (due) return `🕒 Due ${due}`;
-  return null;
-}
 
 /** One event or task: a coloured edge, then its name, time, detail and tags. */
 const cardItem = ({ title, time, detail, tags, edge }: CardItem): FlexComponent => ({
@@ -113,22 +87,7 @@ const cardItem = ({ title, time, detail, tags, edge }: CardItem): FlexComponent 
         flexText(title, { size: 'md', weight: 'bold', color: CARD.ink }),
         ...(time ? [flexText(time, { size: 'sm', color: CARD.muted })] : []),
         ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
-        ...(tags
-          ? [{
-              type: 'box',
-              layout: 'horizontal',
-              contents: [{
-                type: 'box',
-                layout: 'vertical',
-                flex: 0,
-                backgroundColor: CARD.chip,
-                cornerRadius: '4px',
-                paddingStart: '6px',
-                paddingEnd: '6px',
-                contents: [flexText(`🏷 ${tags}`, { size: 'xs', weight: 'bold', color: CARD.dark })],
-              }],
-            }]
-          : []),
+        ...(tags ? [tagChip(tags)] : []),
       ],
     },
   ],
@@ -166,7 +125,7 @@ const cardSection = (label: string, count: number, items: FlexComponent[]): Flex
 function morningLetterCard(opts: { name: string; date: string; events: CardItem[]; tasks: CardItem[] }): LineMessage {
   const { name, date, events, tasks } = opts;
   const total = events.length + tasks.length;
-  const build = (keep: number): FlexComponent => {
+  const build = (keep: number): FlexComponent[] => {
     const shownEvents = events.slice(0, keep);
     const shownTasks = tasks.slice(0, Math.max(0, keep - shownEvents.length));
     const hidden = total - shownEvents.length - shownTasks.length;
@@ -178,44 +137,25 @@ function morningLetterCard(opts: { name: string; date: string; events: CardItem[
       body.push(flexText('Your day is clear — no tasks and no events. Please enjoy it.', { size: 'sm', color: CARD.detail }));
     }
     if (events.length > 0) body.push(cardSection('📅 EVENTS', events.length, shownEvents.map(cardItem)));
-    if (events.length > 0 && tasks.length > 0) body.push({ type: 'separator', color: '#24323A' });
+    if (events.length > 0 && tasks.length > 0) body.push({ type: 'separator', color: CARD.line });
     if (tasks.length > 0) body.push(cardSection('📋 TASKS', tasks.length, shownTasks.map(cardItem)));
     if (hidden > 0) {
       body.push(flexText(`+${hidden} more in the dashboard`, { size: 'sm', weight: 'bold', color: CARD.neon }));
     }
-    return {
-      type: 'bubble',
-      size: 'mega',
-      hero: {
-        type: 'image',
-        url: `${SITE_URL}/line-cards/morning-letter.png`,
-        size: 'full',
-        aspectRatio: '26:10',
-        aspectMode: 'cover',
-        action: { type: 'uri', uri: SITE_URL },
-      },
-      body: { type: 'box', layout: 'vertical', backgroundColor: CARD.bg, paddingAll: '14px', spacing: 'md', contents: body },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        backgroundColor: CARD.bg,
-        paddingAll: '14px',
-        paddingTop: '0px',
-        contents: [{ type: 'button', style: 'primary', color: CARD.cyan, height: 'sm', action: { type: 'uri', label: 'Open dashboard', uri: SITE_URL } }],
-      },
-    };
+    return body;
   };
-  let keep = total;
-  let contents = build(keep);
-  while (keep > 0 && JSON.stringify(contents).length > CARD_MAX_CHARS) {
-    keep -= 1;
-    contents = build(keep);
-  }
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const altText = total === 0
     ? 'Morning letter: your day is clear'
     : `Morning letter: ${plural(events.length, 'event')}, ${plural(tasks.length, 'task')}`;
-  return { type: 'flex', altText, contents };
+  const card = (keep: number) => lineCard({ banner: 'morning-letter', altText, body: build(keep), button: 'Open dashboard' });
+  let keep = total;
+  let message = card(keep);
+  while (keep > 0 && JSON.stringify(message.contents).length > CARD_MAX_CHARS) {
+    keep -= 1;
+    message = card(keep);
+  }
+  return message;
 }
 
 /** "Sun 11 Oct 2026" from a YYYY-MM-DD date. */

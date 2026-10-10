@@ -1,0 +1,156 @@
+{
+  "type": "bubble",
+  "size": "mega",
+  "hero": {
+    "type": "image",
+    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/starting-soon.png",
+    "size": "full",
+    "aspectRatio": "26:10",
+    "aspectMode": "cover",
+    "action": {
+      "type": "uri",
+      "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+    }
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "backgroundColor": "#10171C",
+    "paddingAll": "14px",
+    "spacing": "md",
+    "contents": [
+      {
+        "type": "text",
+        "text": "⏰ Heads up, Shadow! Starting in 15 min",
+        "wrap": true,
+        "size": "sm",
+        "weight": "bold",
+        "color": "#5EE3F0"
+      },
+      {
+        "type": "text",
+        "text": "📅 EVENT",
+        "wrap": true,
+        "size": "xs",
+        "weight": "bold",
+        "color": "#8FB3BF"
+      },
+      {
+        "type": "text",
+        "text": "Club meeting",
+        "wrap": true,
+        "size": "xl",
+        "weight": "bold",
+        "color": "#EAF6F9"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "xs",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Starts",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "16:00",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#EAF6F9",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Deadline",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "18:00",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#EAF6F9",
+                "flex": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "text": "Bring the printed poster drafts",
+        "wrap": true,
+        "size": "sm",
+        "color": "#C9DBE1",
+        "maxLines": 5
+      },
+      {
+        "type": "box",
+        "layout": "horizontal",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "flex": 0,
+            "backgroundColor": "#BFEEF7",
+            "cornerRadius": "4px",
+            "paddingStart": "6px",
+            "paddingEnd": "6px",
+            "contents": [
+              {
+                "type": "text",
+                "text": "🏷 School",
+                "wrap": true,
+                "size": "xs",
+                "weight": "bold",
+                "color": "#04131A"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "backgroundColor": "#10171C",
+    "paddingAll": "14px",
+    "paddingTop": "0px",
+    "contents": [
+      {
+        "type": "button",
+        "style": "primary",
+        "color": "#3AADD0",
+        "height": "sm",
+        "action": {
+          "type": "uri",
+          "label": "Open in dashboard",
+          "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+        }
+      }
+    ]
+  }
+}
