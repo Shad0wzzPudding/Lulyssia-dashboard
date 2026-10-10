@@ -4,7 +4,8 @@
 
 ## Backlog
 - [x] LINE stickers: send a real LINE sticker with Lulyssia's sign-off (sticker message after the daily digest). Done as Lulyssia's own sticker art sent as an image: bots can only send LINE's official sticker packs
-- [ ] LINE Flex Messages: show the daily digest, reminders and overdue nudges as Persona 5 styled cards instead of plain text
+- [x] LINE Flex Messages: show the daily digest, reminders and overdue nudges as Persona 5 styled cards instead of plain text
+- [ ] LINE notice-before message as a card too: the morning letter's layout (sections, item boxes, tag chips) with its own "Tomorrow" banner
 
 ## Backlog from the bug hunt (need a decision before changing)
 - [x] Clean up unused attachment files: removing an attachment no longer deletes the file (it could still be used by a copy or an undo), so add a server-side job that deletes stored files no task, event or interest points to anymore

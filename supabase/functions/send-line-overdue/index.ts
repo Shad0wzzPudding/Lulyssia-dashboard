@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -47,7 +48,8 @@ function formatDetail(text: string | null): string | null {
 
 type LineMessage =
   | { type: 'text'; text: string }
-  | { type: 'image'; originalContentUrl: string; previewImageUrl: string };
+  | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
+  | FlexMessage;
 
 async function pushMessages(token: string, to: string, messages: LineMessage[]) {
   const res = await fetch(`${LINE_API}/message/push`, {
@@ -86,6 +88,41 @@ const NUDGES = [
   "Deadline's gone, but maybe you can still catch it.",
   'I think you need to check on this one.',
 ];
+
+/** "Fri 9 Oct, 23:59" in Thai time, for the card. */
+function cardDateTime(iso: string): string {
+  const s = new Date(new Date(iso).getTime() + TH_OFFSET_MS);
+  const day = s.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${day}, ${p(s.getUTCHours())}:${p(s.getUTCMinutes())}`;
+}
+
+/** The "Missed deadline" card: the task, when it was due, detail, tags and her nudge. */
+function missedDeadlineCard(opts: {
+  name: string | undefined;
+  title: string;
+  deadline: string;
+  detail: string | null;
+  tags: string;
+  nudge: string;
+}): FlexMessage {
+  const { name, title, deadline, detail, tags, nudge } = opts;
+  return lineCard({
+    banner: 'missed-deadline',
+    altText: `⚠️ Missed deadline: ${title}`,
+    button: 'Open in dashboard',
+    body: [
+      flexText(`⚠️ Missed deadline${name ? `, ${name}` : ''}!`, { size: 'sm', weight: 'bold', color: CARD.warn }),
+      flexText('📋 TASK', { size: 'xs', weight: 'bold', color: CARD.date }),
+      flexText(title, { size: 'xl', weight: 'bold', color: CARD.ink }),
+      labelRow('Was due', cardDateTime(deadline), CARD.warn),
+      ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
+      ...(tags ? [tagChip(tags)] : []),
+      { type: 'separator', color: CARD.line },
+      flexText(`"${nudge}"`, { size: 'sm', style: 'italic', color: CARD.detail }),
+    ],
+  });
+}
 
 function thDateTime(iso: string): string {
   const s = new Date(new Date(iso).getTime() + TH_OFFSET_MS);
@@ -142,13 +179,28 @@ Deno.serve(async (req) => {
           if (markErr) continue;
           const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ');
           const name = nameByUser.get(link.user_id);
+          const nudge = NUDGES[Math.floor(Math.random() * NUDGES.length)];
           const text = [
             `⚠️ Missed deadline${name ? `, ${name}` : ''}!`, '', '📋 Task',
             `Name : ${t.title}`, 'Detail :', formatDetail(t.description) ?? '-',
             `Deadline was : ${thDateTime(t.deadline)}`, ...(tagNames ? [`🏷 Tag : ${tagNames}`] : []), '',
-            `"${NUDGES[Math.floor(Math.random() * NUDGES.length)]}"`,
+            `"${nudge}"`,
           ].join('\n');
-          await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: text.slice(0, 4900) }]);
+          const card = missedDeadlineCard({
+            name,
+            title: t.title,
+            deadline: t.deadline,
+            detail: formatDetail(t.description),
+            tags: tagNames,
+            nudge,
+          });
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, [card]);
+          } catch (err) {
+            // If LINE rejects the card, send the same nudge as plain text
+            console.error(`Missed-deadline card rejected for user ${link.user_id}, sending text instead:`, err);
+            await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: text.slice(0, 4900) }]);
+          }
           sent++;
         }
       } catch (err) {
