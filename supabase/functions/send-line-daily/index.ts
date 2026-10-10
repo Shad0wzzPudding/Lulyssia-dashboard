@@ -57,7 +57,7 @@ type LineMessage =
   | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
   | { type: 'flex'; altText: string; contents: FlexComponent };
 
-// Lulyssia's sticker art (512px PNGs in the web app's public/line-stickers/), sent as an image
+// Lulyssia's sticker art (PNGs up to 832px in the web app's public/line-stickers/), sent as an image
 // after the sign-off. Bots can only send LINE's own sticker packs, not a custom set.
 const SITE_URL = 'https://personal-dashboard-opal-gamma.vercel.app';
 const stickerImage = (name: string): LineMessage => {
