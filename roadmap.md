@@ -3,7 +3,7 @@
 - [x] Notice before option + separate day-before message
 
 ## Backlog
-- [ ] LINE stickers: send a real LINE sticker with Lulyssia's sign-off (sticker message after the daily digest)
+- [x] LINE stickers: send a real LINE sticker with Lulyssia's sign-off (sticker message after the daily digest). Done as Lulyssia's own sticker art sent as an image: bots can only send LINE's official sticker packs
 - [ ] LINE Flex Messages: show the daily digest, reminders and overdue nudges as Persona 5 styled cards instead of plain text
 
 ## Backlog from the bug hunt (need a decision before changing)

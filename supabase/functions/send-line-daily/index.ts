@@ -55,6 +55,14 @@ type LineMessage =
   | { type: 'text'; text: string }
   | { type: 'image'; originalContentUrl: string; previewImageUrl: string };
 
+// Lulyssia's sticker art (512px PNGs in the web app's public/line-stickers/), sent as an image
+// after the sign-off. Bots can only send LINE's own sticker packs, not a custom set.
+const SITE_URL = 'https://personal-dashboard-opal-gamma.vercel.app';
+const stickerImage = (name: string): LineMessage => {
+  const url = `${SITE_URL}/line-stickers/${name}.png`;
+  return { type: 'image', originalContentUrl: url, previewImageUrl: url };
+};
+
 async function pushMessages(token: string, to: string, messages: LineMessage[]) {
   const res = await fetch(`${LINE_API}/message/push`, {
     method: 'POST',
@@ -244,14 +252,15 @@ Deno.serve(async (req) => {
 
         const todayEvents = (events ?? []).filter((e) => matchesToday(e.start_time, e.deadline));
 
+        // Sign-off lines, each with the sticker that follows it
         const toasts = [
-          'Have a wonderful day.',
-          "You've got this.",
-          'Take it one step at a time.',
-          'Make today count.',
-          'Stay positive and keep going.',
-          'I believe in you.',
-          "Let's get things done today.",
+          { line: 'Have a wonderful day.', sticker: 'coffee' },
+          { line: "You've got this.", sticker: 'yes' },
+          { line: 'Take it one step at a time.', sticker: 'contemplate' },
+          { line: 'Make today count.', sticker: 'polaroid' },
+          { line: 'Stay positive and keep going.', sticker: 'restpointing' },
+          { line: 'I believe in you.', sticker: 'resting' },
+          { line: "Let's get things done today.", sticker: 'objection' },
         ];
         const toast = toasts[Math.floor(Math.random() * toasts.length)];
 
@@ -295,7 +304,11 @@ Deno.serve(async (req) => {
         }
 
         // Closing line + signature always arrive as the very last bubble of the run
-        const signOff: LineMessage = { type: 'text', text: `"${toast}"\nFrom Lulyssia Swiftshade🦋` };
+        // Sign-off text + its sticker: always the last two bubbles of the run, together
+        const signOff: LineMessage[] = [
+          { type: 'text', text: `"${toast.line}"\nFrom Lulyssia Swiftshade🦋` },
+          stickerImage(toast.sticker),
+        ];
 
         const images: LineMessage[] = [];
         for (const item of [...todayEvents, ...todayTasks]) {
@@ -319,10 +332,11 @@ Deno.serve(async (req) => {
             .filter((t) => t.notice_before && !t.recurrence_unit && (isTomorrow(t.start_date) || isTomorrow(t.deadline)))
             .map((t) => ({ kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids })),
         ];
-        // LINE counts each push as one message (up to 5 bubbles), so the sign-off
-        // joins the last push when there is room instead of costing an extra push
-        if (noticeItems.length === 0 && digest.length < 5) {
-          await pushMessages(accessToken, link.line_user_id as string, [...digest, signOff]);
+        // LINE counts each push as one message (up to 5 bubbles), so the sign-off and sticker
+        // join the last push when there is room instead of costing an extra push
+        const signOffFits = digest.length + signOff.length <= 5;
+        if (noticeItems.length === 0 && signOffFits) {
+          await pushMessages(accessToken, link.line_user_id as string, [...digest, ...signOff]);
         } else {
           await pushMessages(accessToken, link.line_user_id as string, digest);
         }
@@ -345,11 +359,11 @@ Deno.serve(async (req) => {
   
           await pushMessages(accessToken, link.line_user_id as string, [
             { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
-            signOff,
+            ...signOff,
           ]);
-        } else if (digest.length >= 5) {
-          // Digest was full (text + 4 images): the sign-off needs its own push
-          await pushMessages(accessToken, link.line_user_id as string, [signOff]);
+        } else if (!signOffFits) {
+          // Digest had no room left (text + 3 or 4 images): the sign-off and sticker get their own push
+          await pushMessages(accessToken, link.line_user_id as string, signOff);
         }
       } catch (err) {
         console.error(`Failed for user ${link.user_id}:`, err);

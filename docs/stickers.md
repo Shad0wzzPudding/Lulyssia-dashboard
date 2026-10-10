@@ -13,6 +13,7 @@ Lulyssia's sticker set and every place it appears in the dashboard. The images a
 | Toasts: info / plain | A sticker from the **info** set. A plain toast that is already in her voice gets the sticker only. | same |
 | "Collapse all" with nothing open | Always `no` | `HomePage.tsx` |
 | Back-to-top skill toast | Always `trigger_chibi` (its own layout) | `Index.tsx` |
+| LINE daily digest | Sent as an image right after the sign-off line; each of the 7 sign-off lines has its own sticker (coffee, yes, contemplate, polaroid, restpointing, resting, objection). The 512px PNGs are in `public/line-stickers/` | `send-line-daily` |
 
 Toasts that already have a description (for example "Select the code and copy it manually.") keep that text and get only the sticker, so useful information is never replaced.
 
