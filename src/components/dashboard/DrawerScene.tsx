@@ -523,10 +523,10 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
         transition={{ duration: 0.3 }}
         className="pointer-events-none fixed inset-0 z-[61] overflow-hidden"
       >
-          {/* Lulyssia, floating across the drawer edge */}
-          <motion.img
-            src={lulyssiaFloating}
-            alt=""
+          {/* Lulyssia, floating across the drawer edge. The drift-in and the float loop are on
+              separate layers: on one element the float's CSS animation overrode the drift's
+              transform, so she only faded in. */}
+          <motion.div
             initial={{ x: -120, opacity: 0, rotate: -4 }}
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -120, opacity: 0 }}
@@ -534,9 +534,15 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
             // Sized by both width and height (vh cap) so she stays below MENU/Settings on
             // shorter screens like laptops and iPads; anchored partly below the bottom edge.
             // Left edge: -4vw, shifted right by 15% of her own width (same width formula as w-[...]).
-            className={`absolute -bottom-[10vh] left-[calc(-4vw_+_min(95vw,520px,70vh)*0.15)] w-[min(95vw,520px,70vh)] select-none ${animate ? 'animate-character-float' : ''} sm:left-[calc(-4vw_+_min(62vw,760px,80vh)*0.15)] sm:w-[min(62vw,760px,80vh)]`}
-            draggable={false}
-          />
+            className="absolute -bottom-[10vh] left-[calc(-4vw_+_min(95vw,520px,70vh)*0.15)] w-[min(95vw,520px,70vh)] sm:left-[calc(-4vw_+_min(62vw,760px,80vh)*0.15)] sm:w-[min(62vw,760px,80vh)]"
+          >
+            <img
+              src={lulyssiaFloating}
+              alt=""
+              className={`block w-full select-none ${animate ? 'animate-character-float' : ''}`}
+              draggable={false}
+            />
+          </motion.div>
       </motion.div>
     )}
   </AnimatePresence>
