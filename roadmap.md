@@ -25,7 +25,7 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 1. More real choices in the side drawer, so the scene has more to show than one link
    - [x] Sign out (moved from the header)
    - [x] About Lulyssia link (opens the About page)
-   - [ ] Quick "Animating menu" on/off switch
+   - [x] ~~Quick "Animating menu" on/off switch~~ dropped: tried as a 4th row and as a header chip, both crowd the drawer and Lulyssia's art covers the buttons; the switch stays in Settings
    - [ ] LINE status (linked / not linked, daily message on or off)
    - [ ] Bigger, bolder items in the same slanted bubble style as the message menu choices
 2. Game-style cursor in the message menu and the drawer
@@ -39,4 +39,4 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
    - [ ] Keep the KEEP OUT tape as the only yellow accent
 5. [ ] A calm Persona 3 touch: a slow light ripple moving across the drawer's water
 6. [ ] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
-7. [ ] Readability: a solid backing behind the drawer items, so Lulyssia's art never sits behind them on short screens
+7. [ ] Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them
