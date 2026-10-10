@@ -21,8 +21,8 @@ export const AboutPage = () => {
       </div>
 
       {/* Lulyssia's art (max 42rem wide, no height limit).
-          Phones, tablets and narrow windows (under 1280px): in the page, below the card.
-          Wide screens (xl, 1280px+, the first width where she clears the card): anchored to the top right of the content area in Index (so she starts
+          Phones: in the page, below the card.
+          Wider screens: anchored to the top right of the content area in Index (so she starts
           just below the top bar, over the welcome greeting) and scrolls with the page, floating
           over it, so it takes no space and the page stays only as tall as the card.
           Whatever reaches past the bottom of the page is cut off there (Index clips it), so
@@ -30,7 +30,7 @@ export const AboutPage = () => {
       <img
         src={lulyssiaSitting}
         alt="Lulyssia sitting on a case surrounded by evidence and butterflies"
-        className={`mx-auto w-full max-w-[42rem] select-none xl:pointer-events-none xl:absolute xl:right-4 xl:top-8 xl:z-10 xl:mx-0 xl:mt-0 xl:w-[min(42rem,48vw)] ${
+        className={`mx-auto w-full max-w-[42rem] select-none md:pointer-events-none md:absolute md:right-4 md:top-8 md:z-10 md:mx-0 md:mt-0 md:w-[min(42rem,48vw)] ${
           animate ? 'animate-character-float' : ''
         }`}
         draggable={false}
