@@ -222,12 +222,12 @@ const Index = () => {
 
 
 
-  // On the About page, Lulyssia's art hangs past the bottom of the page on wider screens:
+  // On the About page, Lulyssia's art hangs past the bottom of the page on wide screens (1280px+):
   // cut it off at the page's bottom edge instead of making the page scroll further
   const isAbout = activePage === 'about';
 
   return (
-    <div className={`min-h-screen ${isAbout ? 'md:overflow-y-clip' : ''}`}>
+    <div className={`min-h-screen ${isAbout ? 'xl:overflow-y-clip' : ''}`}>
       {/* Top Navigation with User Info */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4">
@@ -243,7 +243,7 @@ const Index = () => {
       </div>
       
       {/* On the About page this is where Lulyssia's art is anchored (over the greeting) */}
-      <div className={`container mx-auto px-4 pt-8 pb-28 ${isAbout ? 'md:relative' : ''}`}>
+      <div className={`container mx-auto px-4 pt-8 pb-28 ${isAbout ? 'xl:relative' : ''}`}>
         {/* New greeting on every page change (under the crowd transition when it plays) */}
         <WelcomeMessage key={activePage} />
         
