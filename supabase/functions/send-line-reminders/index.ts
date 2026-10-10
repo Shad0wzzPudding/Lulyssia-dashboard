@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
         const tagMap = new Map((tags ?? []).map((t) => [t.id, t.name]));
         const formatTags = (ids: string[] | null) => {
           const names = (ids ?? []).map((id) => tagMap.get(id)).filter(Boolean) as string[];
-          return names.length ? names.join(', ') : '-';
+          return names.join(', ');
         };
 
         type Due = {
@@ -268,6 +268,7 @@ Deno.serve(async (req) => {
 
           const minsLeft = Math.max(1, Math.round((item.occurrence.getTime() - now.getTime()) / 60000));
           const name = nameByUser.get(link.user_id);
+          const tagStr = formatTags(item.tag_ids);
           const lines = [
             `⏰ ${name ? `Heads up, ${name}! ` : ''}Starting in ${minsLeft} min!`,
             '',
@@ -276,7 +277,7 @@ Deno.serve(async (req) => {
             'Detail :',
             formatDetail(item.description) ?? '-',
             `Start time - deadline: ${thTime(occurrenceIso) ?? '-'} - ${thTime(item.deadline) ?? '-'}`,
-            `Tag : ${formatTags(item.tag_ids)}`,
+            ...(tagStr ? [`🏷 Tag : ${tagStr}`] : []),
           ];
 
           const images = await imageMessages(supabase, item.attachments);

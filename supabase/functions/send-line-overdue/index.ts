@@ -140,12 +140,12 @@ Deno.serve(async (req) => {
             user_id: link.user_id, item_type: 'task_overdue', item_id: t.id, occurrence_at: t.deadline,
           });
           if (markErr) continue;
-          const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ') || '-';
+          const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ');
           const name = nameByUser.get(link.user_id);
           const text = [
             `⚠️ Missed deadline${name ? `, ${name}` : ''}!`, '', '📋 Task',
             `Name : ${t.title}`, 'Detail :', formatDetail(t.description) ?? '-',
-            `Deadline was : ${thDateTime(t.deadline)}`, `Tag : ${tagNames}`, '',
+            `Deadline was : ${thDateTime(t.deadline)}`, ...(tagNames ? [`🏷 Tag : ${tagNames}`] : []), '',
             `"${NUDGES[Math.floor(Math.random() * NUDGES.length)]}"`,
           ].join('\n');
           await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: text.slice(0, 4900) }]);

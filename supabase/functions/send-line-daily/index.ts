@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
         const formatTags = (tagIds: string[] | null) => {
           if (!tagIds || tagIds.length === 0) return '';
           const names = tagIds.map((id) => tagMap.get(id)).filter(Boolean) as string[];
-          // Plain names after "Tag :" (an extra 🏷 prefix doubled up the label)
+          // Plain names; the 🏷 sits before "Tag :", and the line is left out when there are no tags
           return names.join(', ');
         };
 
@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
               lines.push(`Start time - deadline: ${start ?? '-'} - ${due ?? '-'}`);
-              lines.push(`Tag : ${tagStr || '-'}`);
+              if (tagStr) lines.push(`🏷 Tag : ${tagStr}`);
               lines.push('');
             }
           }
@@ -288,7 +288,7 @@ Deno.serve(async (req) => {
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
               lines.push(`Start time - deadline: ${start ?? '-'} - ${due ?? '-'}`);
-              lines.push(`Tag : ${tagStr || '-'}`);
+              if (tagStr) lines.push(`🏷 Tag : ${tagStr}`);
               lines.push('');
             }
           }
@@ -338,7 +338,8 @@ Deno.serve(async (req) => {
             n.push('Detail :');
             n.push(formatDetail(it.description) ?? '-');
             n.push(`Start time - deadline: ${startStr ?? '-'} - ${dueStr ?? '-'}`);
-            n.push(`Tag : ${formatTags(it.tag_ids) || '-'}`);
+            const tagStr = formatTags(it.tag_ids);
+            if (tagStr) n.push(`🏷 Tag : ${tagStr}`);
             n.push('');
           }
   
