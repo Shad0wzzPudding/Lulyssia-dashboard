@@ -1,5 +1,5 @@
-import { useId } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useId, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import lulyssiaFloating from '@/assets/image/lulyssia_floating.webp';
 import { useMenuAnimations } from '@/hooks/usePageTransitions';
 
@@ -202,28 +202,71 @@ const BUTTERFLIES = [
   { top: '18%', left: '96%', size: 40, rotate: -30, delay: 0.5, speed: 1.0, phone: false },
 ];
 
+// Opening slash: a slanted line sweeps left to right across the screen and the scene is cut
+// open behind it. `p` is where the line meets the top edge (% of the width); it meets the
+// bottom edge SLASH_SLANT% further left. 0 = before the left edge, 130 = past the right edge.
+const SLASH_SLANT = 30;
+const SLASH_WIDTH = 20.2;
+const SLASH_DURATION = 0.3;
+const SLASH_EASE = [0.6, 0, 0.3, 1] as const;
+/** Everything left of the slash line. */
+const revealedBy = (p: number) => `polygon(0% 0%, ${p}% 0%, ${p - SLASH_SLANT}% 100%, 0% 100%)`;
+/** A thin strip along the slash line. */
+const slashStrip = (p: number) =>
+  `polygon(${p - SLASH_WIDTH}% 0%, ${p}% 0%, ${p - SLASH_SLANT}% 100%, ${p - SLASH_SLANT - SLASH_WIDTH}% 100%)`;
+
 export const DrawerScene = ({ open }: { open: boolean }) => {
   // "Animating menu" setting (Settings > Display): when off, everything here holds still
   const animate = useMenuAnimations();
+  // Reduced motion: the scene just fades in, with no slash
+  const reduceMotion = useReducedMotion();
+  // Each opening gets its own keys, so reopening while the close fade is still running starts a
+  // fresh slash and reveal (with the same keys the closing copies would come back already finished)
+  const [openCount, setOpenCount] = useState(open ? 1 : 0);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setOpenCount((n) => n + 1);
+  }
   return (
   <AnimatePresence>
+    {/* Opening slash: white with a cyan glow, above everything, gone once it has crossed */}
+    {open && !reduceMotion && (
+      <motion.div
+        key={`drawer-slash-${openCount}`}
+        aria-hidden
+        exit={{ opacity: 0, transition: { duration: 0 } }}
+        className="pointer-events-none fixed inset-0 z-[62] [filter:drop-shadow(0_0_6px_#5ee3f0)_drop-shadow(0_0_18px_#3aadd0)]"
+      >
+        <motion.div
+          className="absolute inset-0 bg-white"
+          initial={{ clipPath: slashStrip(0), opacity: 1 }}
+          animate={{ clipPath: slashStrip(130 + SLASH_WIDTH), opacity: [1, 1, 0] }}
+          transition={{
+            clipPath: { duration: SLASH_DURATION, ease: SLASH_EASE },
+            opacity: { duration: SLASH_DURATION + 0.1, times: [0, 0.75, 1] },
+          }}
+        />
+      </motion.div>
+    )}
     {open && (
       <motion.div
-        key="drawer-scene"
+        key={`drawer-scene-${openCount}`}
         aria-hidden
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        // Cut open behind the slash (same timing, so the edge follows the line); fades out on close
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 1, clipPath: revealedBy(0) }}
+        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, clipPath: revealedBy(130) }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={reduceMotion ? { duration: 0.3 } : { duration: SLASH_DURATION, ease: SLASH_EASE }}
         // Blurs the page behind the drawer; everything drawn in this scene stays sharp
         className="pointer-events-none fixed inset-0 z-[55] overflow-hidden backdrop-blur-[6px]"
       >
         {/* The drawer's dark panel, drawn here at the very back so Lulyssia can float in front
             of it, while the drawer's items (a transparent layer above this scene) stay on top.
-            Slides at the same speed as the drawer (0.5s in, 0.3s out). */}
+            Revealed by the slash with the rest of the scene; slides out with the drawer (0.3s). */}
         <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: 0, transition: { duration: 0.5, ease: 'easeOut' } }}
+          initial={{ x: 0 }}
+          animate={{ x: 0 }}
           exit={{ x: '-100%', transition: { duration: 0.3, ease: 'easeIn' } }}
           className="absolute inset-y-0 left-0 w-72 border-r-2 border-foreground/80 bg-card shadow-lg"
         />
@@ -391,7 +434,7 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
         Clicks pass through her, so the buttons under her still work. */}
     {open && (
       <motion.div
-        key="drawer-character"
+        key={`drawer-character-${openCount}`}
         aria-hidden
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -406,7 +449,7 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
             initial={{ x: -120, opacity: 0, rotate: -4 }}
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: 0.1 }}
+            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: reduceMotion ? 0.1 : 0.2 }}
             // Sized by both width and height (vh cap) so she stays below MENU/Settings on
             // shorter screens like laptops and iPads; anchored partly below the bottom edge.
             // Left edge: -4vw, shifted right by 15% of her own width (same width formula as w-[...]).

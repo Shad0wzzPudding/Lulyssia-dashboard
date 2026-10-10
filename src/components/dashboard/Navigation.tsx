@@ -114,6 +114,16 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
       />
     );
 
+  /** Drawer rows slam in one after another just after the opening slash, settling at their slant. */
+  const snapIn = (i: number, skew = -6) =>
+    reduceMotion
+      ? { initial: false as const, animate: { skewX: skew } }
+      : {
+          initial: { x: -90, opacity: 0, skewX: skew - 20 },
+          animate: { x: 0, opacity: 1, skewX: skew },
+          transition: { type: 'spring' as const, stiffness: 700, damping: 24, delay: 0.18 + i * 0.05 },
+        };
+
   const menuStart = Math.max(0, navigationItems.findIndex((item) => item.page === activePage));
   const drawerStart = Math.max(0, DRAWER_PAGES.indexOf(activePage));
 
@@ -295,7 +305,11 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
         <SheetContent
           ref={drawerContentRef}
           side="left"
-          className="z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none focus:outline-none"
+          // The slash in DrawerScene opens it, so the sheet's own slide-in is turned off (slide-out stays)
+          className={cn(
+            'z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none focus:outline-none',
+            !reduceMotion && 'data-[state=open]:!animate-none'
+          )}
           // Opened with the mouse: no cursor until it moves; opened with the keyboard: on the current page
           onOpenAutoFocus={(e) => {
             e.preventDefault();
@@ -308,17 +322,20 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             moveCursorTo(drawerItemRefs, drawerCursor, stepCursor(drawerCursor, e.key, DRAWER_PAGES.length, drawerStart));
           }}
         >
-          <SheetHeader className="mb-3 text-left">
-            <SheetTitle className="p5-title w-fit text-xl">Menu</SheetTitle>
-            <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
-          </SheetHeader>
-          <button
+          <motion.div {...snapIn(0, 0)}>
+            <SheetHeader className="mb-3 text-left">
+              <SheetTitle className="p5-title w-fit text-xl">Menu</SheetTitle>
+              <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
+            </SheetHeader>
+          </motion.div>
+          <motion.button
             type="button"
             {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 0)}
+            {...snapIn(1)}
             onClick={() => handlePageChange('settings')}
             aria-current={activePage === 'settings' ? 'page' : undefined}
             className={cn(
-              'relative flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
+              'relative flex w-full items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
               activePage === 'settings'
                 ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
                 : cn('border-foreground/30', drawerCursor === 0 && 'text-primary')
@@ -328,17 +345,18 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             <Camera size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">Settings</span>
             <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 0 && 'translate-x-0.5')} />
-          </button>
+          </motion.button>
           {/* Sign out: closes the drawer, then asks to confirm */}
-          <button
+          <motion.button
             type="button"
             {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 1)}
+            {...snapIn(2)}
             onClick={() => {
               setDrawerOpen(false);
               setSignOutConfirmOpen(true);
             }}
             className={cn(
-              'relative flex w-full -skew-x-6 items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
+              'relative flex w-full items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
               drawerCursor === 1 && 'text-destructive'
             )}
           >
@@ -346,15 +364,16 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             <LogOut size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">Sign out</span>
             <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 1 && 'translate-x-0.5')} />
-          </button>
+          </motion.button>
           {/* About Lulyssia: opens the About page (profile card + her art) */}
-          <button
+          <motion.button
             type="button"
             {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 2)}
+            {...snapIn(3)}
             onClick={() => handlePageChange('about')}
             aria-current={activePage === 'about' ? 'page' : undefined}
             className={cn(
-              'relative flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
+              'relative flex w-full items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
               activePage === 'about'
                 ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
                 : cn('border-foreground/30', drawerCursor === 2 && 'text-primary')
@@ -364,7 +383,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             <Info size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">About Lulyssia</span>
             <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 2 && 'translate-x-0.5')} />
-          </button>
+          </motion.button>
         </SheetContent>
       </Sheet>
 
