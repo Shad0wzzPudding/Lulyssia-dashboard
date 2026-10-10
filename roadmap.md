@@ -36,4 +36,4 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 4. [x] ~~Less clutter in the drawer scene (about eight effects at once now)~~ kept as is: the drawer scene looks right as it is (bubbles, dotted wedge and KEEP OUT tape stay)
 5. [x] ~~A calm Persona 3 touch: a slow light ripple moving across the drawer's water~~ dropped: a light sweep was tried, but the drawer is busy enough that it was barely noticeable
 6. [x] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
-7. [ ] Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them
+7. [x] Not needed (checked on a laptop and a phone: the rows stay readable over her art). Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them

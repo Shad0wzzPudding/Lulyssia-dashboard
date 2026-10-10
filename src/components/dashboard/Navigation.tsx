@@ -316,7 +316,8 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
           side="left"
           // The slash in DrawerScene opens it, so the sheet's own slide-in is turned off (slide-out stays)
           className={cn(
-            'z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none focus:outline-none',
+            // pt: leaves room for a phone's status bar (0 on laptops) when the app runs from the Home Screen
+            'z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 pt-[calc(1.25rem+env(safe-area-inset-top))] shadow-none focus:outline-none',
             !noSlash && 'data-[state=open]:!animate-none'
           )}
           // Opened with the mouse: no cursor until it moves; opened with the keyboard: on the current page
