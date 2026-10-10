@@ -468,3 +468,25 @@
     transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
   }
 }
+
+/* Drawer close X: spins in after the drawer rows (with the opening slash; Navigation adds
+   .drawer-close-spin and --close-delay), and turns a quarter on hover. The entrance animates
+   `transform` and the hover uses `rotate`, so the two never fight. */
+.sheet-close {
+  transition: rotate 0.25s ease, opacity 0.15s;
+}
+.sheet-close:hover,
+.sheet-close:focus-visible {
+  rotate: 90deg;
+}
+.drawer-close-spin .sheet-close {
+  animation: drawer-close-spin 0.5s cubic-bezier(0.25, 1.5, 0.45, 1) var(--close-delay, 0s) both;
+}
+@keyframes drawer-close-spin {
+  from {
+    transform: rotate(-270deg) scale(0);
+  }
+  to {
+    transform: none;
+  }
+}
