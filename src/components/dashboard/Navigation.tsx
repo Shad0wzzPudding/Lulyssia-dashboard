@@ -19,7 +19,7 @@ import {
   preloadTickSound,
 } from '@/lib/sounds';
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
-import { DrawerScene } from './DrawerScene';
+import { DrawerScene, SLASH_DURATION } from './DrawerScene';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 
 interface NavigationProps {
@@ -114,14 +114,20 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
       />
     );
 
-  /** Drawer rows slam in one after another just after the opening slash, settling at their slant. */
+  /** Drawer rows slam in one after another as the opening slash passes, settling at their slant:
+      MENU at 60% of the slash, then the rows from 77%, 0.05s apart. */
   const snapIn = (i: number, skew = -6) =>
     reduceMotion
       ? { initial: false as const, animate: { skewX: skew } }
       : {
           initial: { x: -90, opacity: 0, skewX: skew - 20 },
           animate: { x: 0, opacity: 1, skewX: skew },
-          transition: { type: 'spring' as const, stiffness: 700, damping: 24, delay: 0.18 + i * 0.05 },
+          transition: {
+            type: 'spring' as const,
+            stiffness: 700,
+            damping: 24,
+            delay: i === 0 ? SLASH_DURATION * 0.6 : SLASH_DURATION * 0.77 + (i - 1) * 0.05,
+          },
         };
 
   const menuStart = Math.max(0, navigationItems.findIndex((item) => item.page === activePage));

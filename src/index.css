@@ -388,3 +388,11 @@
 .theme-light ::-webkit-calendar-picker-indicator {
   filter: none;
 }
+
+/* Glass strip in the drawer's opening slash: frosts (3px blur), brightens and saturates what is
+   behind it, with a cyan-white tint. (No live bend: it cost too much per frame.) */
+.drawer-liquid-glass {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.24), rgba(94, 227, 240, 0.2) 45%, rgba(255, 255, 255, 0.32));
+  -webkit-backdrop-filter: blur(3px) saturate(2.1) brightness(1.45);
+  backdrop-filter: blur(3px) saturate(2.1) brightness(1.45);
+}

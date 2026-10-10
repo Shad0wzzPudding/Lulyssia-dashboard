@@ -1,5 +1,5 @@
-import { useId, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { AnimatePresence, animate as animateValue, motion, motionValue, useReducedMotion, type MotionValue } from 'framer-motion';
 import lulyssiaFloating from '@/assets/image/lulyssia_floating.webp';
 import { useMenuAnimations } from '@/hooks/usePageTransitions';
 
@@ -202,18 +202,71 @@ const BUTTERFLIES = [
   { top: '18%', left: '96%', size: 40, rotate: -30, delay: 0.5, speed: 1.0, phone: false },
 ];
 
-// Opening slash: a slanted line sweeps left to right across the screen and the scene is cut
-// open behind it. `p` is where the line meets the top edge (% of the width); it meets the
-// bottom edge SLASH_SLANT% further left. 0 = before the left edge, 130 = past the right edge.
+// Opening slash: a double slash sweeps left to right across the screen and the scene is cut
+// open behind it. A bright front line and a thin back line travel together with a strip of
+// liquid glass between them. `p` is where the front line meets the top edge (% of the width);
+// every edge meets the bottom edge SLASH_SLANT% further left. p = 0 is before the left edge,
+// and SLASH_END is far enough that the back line has cleared the right edge too.
 const SLASH_SLANT = 30;
-const SLASH_WIDTH = 20.2;
-const SLASH_DURATION = 0.3;
+const SLASH_WIDTH = 2.2; // front line
+const SLASH_TAIL_WIDTH = 0.9; // back line
+const GLASS_GAP = 16; // glass between the two lines
+const SLASH_END = 130 + SLASH_WIDTH + GLASS_GAP + SLASH_TAIL_WIDTH;
+/** How long the slash takes to cross; the drawer rows (Navigation) time their snap from it. */
+export const SLASH_DURATION = 1;
 const SLASH_EASE = [0.6, 0, 0.3, 1] as const;
-/** Everything left of the slash line. */
+/** Everything left of the front line. */
 const revealedBy = (p: number) => `polygon(0% 0%, ${p}% 0%, ${p - SLASH_SLANT}% 100%, 0% 100%)`;
-/** A thin strip along the slash line. */
-const slashStrip = (p: number) =>
-  `polygon(${p - SLASH_WIDTH}% 0%, ${p}% 0%, ${p - SLASH_SLANT}% 100%, ${p - SLASH_SLANT - SLASH_WIDTH}% 100%)`;
+/**
+ * The slash parts keep a fixed shape and only slide (a transform the graphics card handles),
+ * instead of being reshaped on every frame. Each part sits in its own box, placed for p = 0 and
+ * moved right by p% of the screen width. Box and strip positions are in % of the screen width.
+ */
+const slashBox = (left: number, width: number) => ({ left: `${left}vw`, width: `${width}vw` });
+/** Clip shape (in % of its box) of a slanted strip whose right edge meets the top at `right`. */
+const stripIn = (boxLeft: number, boxWidth: number, right: number, width: number) => {
+  const x = (v: number) => `${((v - boxLeft) / boxWidth) * 100}%`;
+  return `polygon(${x(right - width)} 0%, ${x(right)} 0%, ${x(right - SLASH_SLANT)} 100%, ${x(right - SLASH_SLANT - width)} 100%)`;
+};
+// Both lines share one box (front line at p, back line behind the glass), so one glow covers them
+const LINES_RIGHT = 0;
+const BACK_RIGHT = LINES_RIGHT - SLASH_WIDTH - GLASS_GAP;
+const LINES_LEFT = BACK_RIGHT - SLASH_TAIL_WIDTH - SLASH_SLANT;
+const LINES_BOX = slashBox(LINES_LEFT, LINES_RIGHT - LINES_LEFT);
+const FRONT_SHAPE = stripIn(LINES_LEFT, LINES_RIGHT - LINES_LEFT, LINES_RIGHT, SLASH_WIDTH);
+const BACK_SHAPE = stripIn(LINES_LEFT, LINES_RIGHT - LINES_LEFT, BACK_RIGHT, SLASH_TAIL_WIDTH);
+// The glass fills the gap between the lines
+const GLASS_RIGHT = LINES_RIGHT - SLASH_WIDTH;
+const GLASS_LEFT = GLASS_RIGHT - GLASS_GAP - SLASH_SLANT;
+const GLASS_BOX = slashBox(GLASS_LEFT, GLASS_RIGHT - GLASS_LEFT);
+const GLASS_SHAPE = stripIn(GLASS_LEFT, GLASS_RIGHT - GLASS_LEFT, GLASS_RIGHT, GLASS_GAP);
+// Shine inside the glass, just behind the front line, like light catching the edge of a pane:
+// a soft wide sheen with a thin bright streak in it
+const GLASS_SHEEN = stripIn(GLASS_LEFT, GLASS_RIGHT - GLASS_LEFT, GLASS_RIGHT - 0.8, 3);
+const GLASS_STREAK = stripIn(GLASS_LEFT, GLASS_RIGHT - GLASS_LEFT, GLASS_RIGHT - 1.6, 0.5);
+
+/** A value that follows another one through `fn`. */
+const follow = <T,>(source: MotionValue<number>, fn: (v: number) => T) => {
+  const value = motionValue(fn(source.get()));
+  source.on('change', (v) => value.set(fn(v)));
+  return value;
+};
+
+/**
+ * One opening's slash: a single position `p` (and fade) that every part reads from, so the lines,
+ * the glass and the scene cut always move in step. Values are set as plain styles on every frame;
+ * handing clip-path animations to the browser made Chrome drop the cut for a frame or two at the
+ * start (the whole scene flashed in uncut).
+ */
+const createSlash = () => {
+  const p = motionValue(0);
+  return {
+    p,
+    fade: motionValue(1),
+    reveal: follow(p, revealedBy),
+    shift: follow(p, (v) => `${v}vw`),
+  };
+};
 
 export const DrawerScene = ({ open }: { open: boolean }) => {
   // "Animating menu" setting (Settings > Display): when off, everything here holds still
@@ -228,36 +281,64 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
     setWasOpen(open);
     if (open) setOpenCount((n) => n + 1);
   }
+  // Decode Lulyssia's art ahead of time, so the first opening doesn't stall on it
+  useEffect(() => {
+    const img = new Image();
+    img.src = lulyssiaFloating;
+    img.decode?.().catch(() => {});
+  }, []);
+  // A fresh slash for each opening, starting at p = 0 (a closing copy keeps its own)
+  const slash = useMemo(createSlash, [openCount]);
+  useEffect(() => {
+    if (!open || reduceMotion) return;
+    const move = animateValue(slash.p, SLASH_END, { duration: SLASH_DURATION, ease: SLASH_EASE });
+    const fade = animateValue(slash.fade, [1, 1, 0], { duration: SLASH_DURATION + 0.1, times: [0, 0.75, 1] });
+    return () => {
+      move.stop();
+      fade.stop();
+    };
+    // Runs once per opening (a new slash); closing leaves the running slash alone
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slash, reduceMotion]);
   return (
   <AnimatePresence>
-    {/* Opening slash: white with a cyan glow, above everything, gone once it has crossed */}
+    {/* Opening slash, above everything, gone once it has crossed: the liquid glass strip, then
+        the two white lines with a cyan glow. The glass sits outside the glowing layer, because a
+        filter on a parent would stop the glass from seeing the page behind it. */}
     {open && !reduceMotion && (
       <motion.div
         key={`drawer-slash-${openCount}`}
         aria-hidden
         exit={{ opacity: 0, transition: { duration: 0 } }}
-        className="pointer-events-none fixed inset-0 z-[62] [filter:drop-shadow(0_0_6px_#5ee3f0)_drop-shadow(0_0_18px_#3aadd0)]"
+        className="pointer-events-none fixed inset-0 z-[62]"
       >
         <motion.div
-          className="absolute inset-0 bg-white"
-          initial={{ clipPath: slashStrip(0), opacity: 1 }}
-          animate={{ clipPath: slashStrip(130 + SLASH_WIDTH), opacity: [1, 1, 0] }}
-          transition={{
-            clipPath: { duration: SLASH_DURATION, ease: SLASH_EASE },
-            opacity: { duration: SLASH_DURATION + 0.1, times: [0, 0.75, 1] },
-          }}
-        />
+          className="drawer-liquid-glass absolute inset-y-0 will-change-transform"
+          style={{ ...GLASS_BOX, x: slash.shift, opacity: slash.fade, clipPath: GLASS_SHAPE }}
+        >
+          <div className="absolute inset-0 bg-white/15" style={{ clipPath: GLASS_SHEEN }} />
+          <div className="absolute inset-0 bg-white/60" style={{ clipPath: GLASS_STREAK }} />
+        </motion.div>
+        {/* The glow is drawn once on the still lines and then only slides with them */}
+        <motion.div
+          className="absolute inset-y-0 will-change-transform [filter:drop-shadow(0_0_6px_#5ee3f0)_drop-shadow(0_0_18px_#3aadd0)]"
+          style={{ ...LINES_BOX, x: slash.shift, opacity: slash.fade }}
+        >
+          <div className="absolute inset-0 bg-white" style={{ clipPath: FRONT_SHAPE }} />
+          <div className="absolute inset-0 bg-white opacity-75" style={{ clipPath: BACK_SHAPE }} />
+        </motion.div>
       </motion.div>
     )}
     {open && (
       <motion.div
         key={`drawer-scene-${openCount}`}
         aria-hidden
-        // Cut open behind the slash (same timing, so the edge follows the line); fades out on close
-        initial={reduceMotion ? { opacity: 0 } : { opacity: 1, clipPath: revealedBy(0) }}
-        animate={reduceMotion ? { opacity: 1 } : { opacity: 1, clipPath: revealedBy(130) }}
+        // Cut open behind the front line (reads the same slash position); fades out on close
+        initial={{ opacity: reduceMotion ? 0 : 1 }}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={reduceMotion ? { duration: 0.3 } : { duration: SLASH_DURATION, ease: SLASH_EASE }}
+        transition={{ duration: 0.3 }}
+        style={reduceMotion ? undefined : { clipPath: slash.reveal }}
         // Blurs the page behind the drawer; everything drawn in this scene stays sharp
         className="pointer-events-none fixed inset-0 z-[55] overflow-hidden backdrop-blur-[6px]"
       >
@@ -449,7 +530,7 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
             initial={{ x: -120, opacity: 0, rotate: -4 }}
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: reduceMotion ? 0.1 : 0.2 }}
+            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: reduceMotion ? 0.1 : SLASH_DURATION * 0.67 }}
             // Sized by both width and height (vh cap) so she stays below MENU/Settings on
             // shorter screens like laptops and iPads; anchored partly below the bottom edge.
             // Left edge: -4vw, shifted right by 15% of her own width (same width formula as w-[...]).
