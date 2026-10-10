@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight, LogOut, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { useReduceFlashing } from '@/hooks/usePageTransitions';
 import {
   playDrawerCloseSound,
   playDrawerOpenSound,
@@ -78,6 +79,8 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
   const menuOpenedByKeyboard = useRef(false);
   const drawerOpenedByKeyboard = useRef(false);
   const reduceMotion = useReducedMotion();
+  // "Reduce flashing": no opening slash, so the drawer rows don't wait for it or snap in either
+  const noSlash = useReduceFlashing();
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -117,7 +120,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
   /** Drawer rows slam in one after another as the opening slash passes, settling at their slant:
       MENU at 60% of the slash, then the rows from 77%, 0.05s apart. */
   const snapIn = (i: number, skew = -6) =>
-    reduceMotion
+    noSlash
       ? { initial: false as const, animate: { skewX: skew } }
       : {
           initial: { x: -90, opacity: 0, skewX: skew - 20 },
@@ -314,7 +317,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
           // The slash in DrawerScene opens it, so the sheet's own slide-in is turned off (slide-out stays)
           className={cn(
             'z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none focus:outline-none',
-            !reduceMotion && 'data-[state=open]:!animate-none'
+            !noSlash && 'data-[state=open]:!animate-none'
           )}
           // Opened with the mouse: no cursor until it moves; opened with the keyboard: on the current page
           onOpenAutoFocus={(e) => {

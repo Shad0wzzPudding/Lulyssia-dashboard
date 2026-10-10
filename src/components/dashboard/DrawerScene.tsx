@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { AnimatePresence, animate as animateValue, motion, motionValue, useReducedMotion, type MotionValue } from 'framer-motion';
+import { AnimatePresence, animate as animateValue, motion, motionValue, type MotionValue } from 'framer-motion';
 import lulyssiaFloating from '@/assets/image/lulyssia_floating.webp';
-import { useMenuAnimations } from '@/hooks/usePageTransitions';
+import { useMenuAnimations, useReduceFlashing } from '@/hooks/usePageTransitions';
 
 /**
  * Decorative scene shown while the left drawer is open: Lulyssia floating over the
@@ -271,8 +271,8 @@ const createSlash = () => {
 export const DrawerScene = ({ open }: { open: boolean }) => {
   // "Animating menu" setting (Settings > Display): when off, everything here holds still
   const animate = useMenuAnimations();
-  // Reduced motion: the scene just fades in, with no slash
-  const reduceMotion = useReducedMotion();
+  // "Reduce flashing" (or the device's reduced motion): the scene just fades in, with no slash
+  const noSlash = useReduceFlashing();
   // Each opening gets its own keys, so reopening while the close fade is still running starts a
   // fresh slash and reveal (with the same keys the closing copies would come back already finished)
   const [openCount, setOpenCount] = useState(open ? 1 : 0);
@@ -290,7 +290,7 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
   // A fresh slash for each opening, starting at p = 0 (a closing copy keeps its own)
   const slash = useMemo(createSlash, [openCount]);
   useEffect(() => {
-    if (!open || reduceMotion) return;
+    if (!open || noSlash) return;
     const move = animateValue(slash.p, SLASH_END, { duration: SLASH_DURATION, ease: SLASH_EASE });
     const fade = animateValue(slash.fade, [1, 1, 0], { duration: SLASH_DURATION + 0.1, times: [0, 0.75, 1] });
     return () => {
@@ -299,13 +299,13 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
     };
     // Runs once per opening (a new slash); closing leaves the running slash alone
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slash, reduceMotion]);
+  }, [slash, noSlash]);
   return (
   <AnimatePresence>
     {/* Opening slash, above everything, gone once it has crossed: the liquid glass strip, then
         the two white lines with a cyan glow. The glass sits outside the glowing layer, because a
         filter on a parent would stop the glass from seeing the page behind it. */}
-    {open && !reduceMotion && (
+    {open && !noSlash && (
       <motion.div
         key={`drawer-slash-${openCount}`}
         aria-hidden
@@ -334,11 +334,11 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
         key={`drawer-scene-${openCount}`}
         aria-hidden
         // Cut open behind the front line (reads the same slash position); fades out on close
-        initial={{ opacity: reduceMotion ? 0 : 1 }}
+        initial={{ opacity: noSlash ? 0 : 1 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        style={reduceMotion ? undefined : { clipPath: slash.reveal }}
+        style={noSlash ? undefined : { clipPath: slash.reveal }}
         // Blurs the page behind the drawer; everything drawn in this scene stays sharp
         className="pointer-events-none fixed inset-0 z-[55] overflow-hidden backdrop-blur-[6px]"
       >
@@ -530,7 +530,7 @@ export const DrawerScene = ({ open }: { open: boolean }) => {
             initial={{ x: -120, opacity: 0, rotate: -4 }}
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: reduceMotion ? 0.1 : SLASH_DURATION * 0.67 }}
+            transition={{ type: 'spring', stiffness: 120, damping: 18, delay: noSlash ? 0.1 : SLASH_DURATION * 0.67 }}
             // Sized by both width and height (vh cap) so she stays below MENU/Settings on
             // shorter screens like laptops and iPads; anchored partly below the bottom edge.
             // Left edge: -4vw, shifted right by 15% of her own width (same width formula as w-[...]).

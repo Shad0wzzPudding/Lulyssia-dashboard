@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import lulyssiaTrigger from '@/assets/image/lulyssia_trigger.webp';
+import { useReduceFlashing } from '@/hooks/usePageTransitions';
 
 // How long the cut-in stays on screen (ms). The sound keeps playing after it clears.
 export const SKILL_CUT_IN_DURATION = 1600;
@@ -16,9 +17,11 @@ const SPEED_LINES =
  * Persona-style "skill activation" cut-in: the screen darkens, a halftone cyan
  * slash band tears across the middle with speed lines, Lulyssia's eyes slam in
  * from the right and the skill name card slams in under them, both drift for a
- * beat, then everything zips off.
+ * beat, then everything zips off. With "Reduce flashing" on, there is no white flash or shake.
  */
-export const SkillCutIn = ({ show }: { show: boolean }) => (
+export const SkillCutIn = ({ show }: { show: boolean }) => {
+  const calm = useReduceFlashing();
+  return (
   <AnimatePresence>
     {show && (
       <motion.div
@@ -26,7 +29,7 @@ export const SkillCutIn = ({ show }: { show: boolean }) => (
         className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
         // Small screen shake on impact
         initial={{ x: 0, y: 0 }}
-        animate={{ x: [0, -10, 8, -5, 3, 0], y: [0, 6, -5, 3, -1, 0] }}
+        animate={calm ? { x: 0, y: 0 } : { x: [0, -10, 8, -5, 3, 0], y: [0, 6, -5, 3, -1, 0] }}
         transition={{ duration: 0.35, delay: 0.12, ease: 'easeOut' }}
       >
         {/* Dark backdrop */}
@@ -74,12 +77,14 @@ export const SkillCutIn = ({ show }: { show: boolean }) => (
         />
 
         {/* White flash on impact */}
-        <motion.div
-          className="absolute inset-0 bg-white"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.7, 0] }}
-          transition={{ duration: 0.25, delay: 0.1 }}
-        />
+        {!calm && (
+          <motion.div
+            className="absolute inset-0 bg-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.7, 0] }}
+            transition={{ duration: 0.25, delay: 0.1 }}
+          />
+        )}
 
         {/* The portrait: slam in, slow drift, zip out */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -118,4 +123,5 @@ export const SkillCutIn = ({ show }: { show: boolean }) => (
       </motion.div>
     )}
   </AnimatePresence>
-);
+  );
+};
