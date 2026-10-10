@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800;1,900&family=Kanit:wght@800&display=block">
+<style>
+/* LINE card banners, 520x200 CSS px (rendered at 2x = 1040x400). Which one shows is picked by #hash. */
+:root { --cyan: #3aadd0; --tape: #facc15; }
+html, body { margin: 0; width: 520px; height: 200px; overflow: hidden; background: #070b0e; }
+.hero { position: relative; width: 520px; height: 200px; overflow: hidden; background: #070b0e; display: none; }
+.hero.on { display: block; }
+.letter::before { content: ""; position: absolute; inset: 0; background:
+  linear-gradient(115deg, transparent 0 62%, #fff 62% 63.4%, transparent 63.4%),
+  linear-gradient(115deg, transparent 0 63.4%, var(--cyan) 63.4%); }
+.letter .dots { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(4,19,26,.35) 32%, transparent 36%); background-size: 13px 13px;
+  -webkit-mask-image: linear-gradient(115deg, transparent 0 63.4%, black 63.4%); }
+.remind::before { content: ""; position: absolute; inset: 0; background:
+  linear-gradient(115deg, transparent 0 66%, #fff 66% 74%, transparent 74%),
+  linear-gradient(115deg, transparent 0 75.5%, var(--cyan) 75.5%); }
+.alert::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(-32deg, var(--tape) 0 30px, #0b0b0b 30px 60px); }
+.chibi { position: absolute; right: 12px; bottom: -12px; width: 186px; height: 186px; object-fit: contain; z-index: 1; transform: rotate(6deg); filter: drop-shadow(4px 5px 0 rgba(4,19,26,.55)); }
+.kicker { position: absolute; left: 20px; top: 20px; z-index: 2; font: 900 italic 19px/1 "Asap Condensed", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #fff; }
+.alert .kicker { background: #0b0b0b; color: var(--tape); padding: 5px 10px; }
+.ransom-title { position: absolute; left: 18px; bottom: 18px; z-index: 2; display: grid; gap: 7px; }
+.rline { display: flex; gap: 3px; align-items: flex-end; }
+.rl { display: inline-grid; place-items: center; line-height: 1; padding: 3px 5px 5px; transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px)); text-transform: uppercase; }
+.rl.gap { width: 10px; padding: 0; }
+.rl.s0 { font: 900 italic 33px "Asap Condensed", "Arial Narrow", sans-serif; background: #f4f8f9; color: #05090b; }
+.rl.s1 { font: 800 24px "Kanit", system-ui, sans-serif; background: #05090b; color: #f4f8f9; outline: 2.5px solid #f4f8f9; outline-offset: -2.5px; }
+.rl.s2 { font: 700 italic 29px Georgia, "Times New Roman", serif; background: var(--cyan); color: #05090b; }
+.rl.s3 { font: 800 23px Menlo, ui-monospace, monospace; background: #f4f8f9; color: #05090b; outline: 2.5px solid #05090b; outline-offset: -2.5px; }
+</style></head>
+<body>
+<div class="hero letter" id="letter"><span class="dots"></span><span class="kicker">A mysterious envelope</span><span class="ransom-title" data-title="Morning|Letter"></span><img class="chibi" src="letter.png" alt=""></div>
+<div class="hero remind" id="remind"><span class="kicker">Heads up</span><span class="ransom-title" data-title="Starting|soon"></span><img class="chibi" src="remind.png" alt=""></div>
+<div class="hero alert" id="alert"><span class="kicker">Caution</span><span class="ransom-title" data-title="Missed|Deadline"></span><img class="chibi" src="alert.png" alt=""></div>
+<script>
+const tilts = [-6, 5, -3, 8, -4, 6, -7, 3, -2, 7, -5, 4];
+const lifts = [0, -3, 2, -6, 0, -2, 3, -4, 0, -3, 2, -1];
+document.querySelectorAll('.ransom-title').forEach((title) => {
+  let n = 0;
+  title.dataset.title.split('|').forEach((line) => {
+    const row = document.createElement('span'); row.className = 'rline';
+    for (const ch of line) {
+      const l = document.createElement('span');
+      if (ch === ' ') { l.className = 'rl gap'; row.appendChild(l); continue; }
+      l.className = `rl s${n % 4}`;
+      l.style.setProperty('--r', `${tilts[n % tilts.length]}deg`);
+      l.style.setProperty('--y', `${lifts[n % lifts.length]}px`);
+      l.textContent = ch; row.appendChild(l); n += 1;
+    }
+    title.appendChild(row);
+  });
+});
+document.getElementById((location.hash || '#letter').slice(1)).classList.add('on');
+</script>
+</body></html>

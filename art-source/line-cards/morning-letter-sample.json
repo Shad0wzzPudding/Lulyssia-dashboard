@@ -1,0 +1,324 @@
+{
+  "type": "bubble",
+  "size": "mega",
+  "hero": {
+    "type": "image",
+    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/morning-letter.png",
+    "size": "full",
+    "aspectRatio": "26:10",
+    "aspectMode": "cover",
+    "action": {
+      "type": "uri",
+      "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+    }
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "backgroundColor": "#10171C",
+    "paddingAll": "14px",
+    "spacing": "md",
+    "contents": [
+      {
+        "type": "text",
+        "text": "Sun, 11 Oct 2026 · Thai time",
+        "wrap": true,
+        "size": "xs",
+        "color": "#8FB3BF"
+      },
+      {
+        "type": "text",
+        "text": "🦋 Dear Shadow, good morning!",
+        "wrap": true,
+        "size": "md",
+        "weight": "bold",
+        "color": "#EAF6F9"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "alignItems": "center",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📅 EVENTS",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#5EE3F0",
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 0,
+                "backgroundColor": "#5EE3F0",
+                "cornerRadius": "xxl",
+                "paddingStart": "8px",
+                "paddingEnd": "8px",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "1",
+                    "wrap": true,
+                    "size": "xs",
+                    "weight": "bold",
+                    "color": "#04131A",
+                    "align": "center"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "backgroundColor": "#18232A",
+            "cornerRadius": "8px",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "width": "4px",
+                "backgroundColor": "#3AADD0",
+                "contents": []
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 1,
+                "paddingAll": "10px",
+                "spacing": "xs",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "Club meeting",
+                    "wrap": true,
+                    "size": "md",
+                    "weight": "bold",
+                    "color": "#EAF6F9"
+                  },
+                  {
+                    "type": "text",
+                    "text": "🕒 16:00 – 18:00",
+                    "wrap": true,
+                    "size": "sm",
+                    "color": "#A9C3CC"
+                  },
+                  {
+                    "type": "text",
+                    "text": "Bring the printed poster drafts",
+                    "wrap": true,
+                    "size": "sm",
+                    "color": "#C9DBE1",
+                    "maxLines": 5
+                  },
+                  {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                      {
+                        "type": "box",
+                        "layout": "vertical",
+                        "flex": 0,
+                        "backgroundColor": "#BFEEF7",
+                        "cornerRadius": "4px",
+                        "paddingStart": "6px",
+                        "paddingEnd": "6px",
+                        "contents": [
+                          {
+                            "type": "text",
+                            "text": "🏷 School",
+                            "wrap": true,
+                            "size": "xs",
+                            "weight": "bold",
+                            "color": "#04131A"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "separator",
+        "color": "#24323A"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "alignItems": "center",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📋 TASKS",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#5EE3F0",
+                "flex": 1
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 0,
+                "backgroundColor": "#5EE3F0",
+                "cornerRadius": "xxl",
+                "paddingStart": "8px",
+                "paddingEnd": "8px",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "2",
+                    "wrap": true,
+                    "size": "xs",
+                    "weight": "bold",
+                    "color": "#04131A",
+                    "align": "center"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "backgroundColor": "#18232A",
+            "cornerRadius": "8px",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "width": "4px",
+                "backgroundColor": "#FFFFFF",
+                "contents": []
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 1,
+                "paddingAll": "10px",
+                "spacing": "xs",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "Math worksheet 4",
+                    "wrap": true,
+                    "size": "md",
+                    "weight": "bold",
+                    "color": "#EAF6F9"
+                  },
+                  {
+                    "type": "text",
+                    "text": "🕒 Due 23:59",
+                    "wrap": true,
+                    "size": "sm",
+                    "color": "#A9C3CC"
+                  },
+                  {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                      {
+                        "type": "box",
+                        "layout": "vertical",
+                        "flex": 0,
+                        "backgroundColor": "#BFEEF7",
+                        "cornerRadius": "4px",
+                        "paddingStart": "6px",
+                        "paddingEnd": "6px",
+                        "contents": [
+                          {
+                            "type": "text",
+                            "text": "🏷 School, Homework",
+                            "wrap": true,
+                            "size": "xs",
+                            "weight": "bold",
+                            "color": "#04131A"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "backgroundColor": "#18232A",
+            "cornerRadius": "8px",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "width": "4px",
+                "backgroundColor": "#FFFFFF",
+                "contents": []
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 1,
+                "paddingAll": "10px",
+                "spacing": "xs",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "Water the plants",
+                    "wrap": true,
+                    "size": "md",
+                    "weight": "bold",
+                    "color": "#EAF6F9"
+                  },
+                  {
+                    "type": "text",
+                    "text": "🕒 Starts 08:00",
+                    "wrap": true,
+                    "size": "sm",
+                    "color": "#A9C3CC"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "backgroundColor": "#10171C",
+    "paddingAll": "14px",
+    "paddingTop": "0px",
+    "contents": [
+      {
+        "type": "button",
+        "style": "primary",
+        "color": "#3AADD0",
+        "height": "sm",
+        "action": {
+          "type": "uri",
+          "label": "Open dashboard",
+          "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+        }
+      }
+    ]
+  }
+}

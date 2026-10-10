@@ -51,9 +51,11 @@ function formatDetail(text: string | null): string | null {
   return [...lines.slice(0, 5), '...'].join('\n');
 }
 
+type FlexComponent = Record<string, unknown>;
 type LineMessage =
   | { type: 'text'; text: string }
-  | { type: 'image'; originalContentUrl: string; previewImageUrl: string };
+  | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
+  | { type: 'flex'; altText: string; contents: FlexComponent };
 
 // Lulyssia's sticker art (512px PNGs in the web app's public/line-stickers/), sent as an image
 // after the sign-off. Bots can only send LINE's own sticker packs, not a custom set.
@@ -62,6 +64,167 @@ const stickerImage = (name: string): LineMessage => {
   const url = `${SITE_URL}/line-stickers/${name}.png`;
   return { type: 'image', originalContentUrl: url, previewImageUrl: url };
 };
+
+// ---- Morning letter card (LINE Flex Message) ----
+// Dark card with the "Morning letter" banner (public/line-cards/, drawn from
+// art-source/line-cards/banners.html), the day's events and tasks, and an "Open dashboard" button.
+const CARD = {
+  bg: '#10171C',
+  item: '#18232A',
+  ink: '#EAF6F9',
+  muted: '#A9C3CC',
+  detail: '#C9DBE1',
+  date: '#8FB3BF',
+  neon: '#5EE3F0',
+  cyan: '#3AADD0',
+  dark: '#04131A',
+  chip: '#BFEEF7',
+};
+// LINE limits one card's layout to about 30 KB; stay well under it
+const CARD_MAX_CHARS = 24000;
+
+type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string };
+
+const flexText = (text: string, extra: FlexComponent = {}): FlexComponent => ({ type: 'text', text, wrap: true, ...extra });
+
+/** "🕒 16:00 – 18:00", "🕒 Starts 08:00", "🕒 Due 23:59", or null when the item has no times. */
+function timeRange(start: string | null, due: string | null): string | null {
+  if (start && due) return `🕒 ${start} – ${due}`;
+  if (start) return `🕒 Starts ${start}`;
+  if (due) return `🕒 Due ${due}`;
+  return null;
+}
+
+/** One event or task: a coloured edge, then its name, time, detail and tags. */
+const cardItem = ({ title, time, detail, tags, edge }: CardItem): FlexComponent => ({
+  type: 'box',
+  layout: 'horizontal',
+  backgroundColor: CARD.item,
+  cornerRadius: '8px',
+  contents: [
+    { type: 'box', layout: 'vertical', width: '4px', backgroundColor: edge, contents: [] },
+    {
+      type: 'box',
+      layout: 'vertical',
+      flex: 1,
+      paddingAll: '10px',
+      spacing: 'xs',
+      contents: [
+        flexText(title, { size: 'md', weight: 'bold', color: CARD.ink }),
+        ...(time ? [flexText(time, { size: 'sm', color: CARD.muted })] : []),
+        ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
+        ...(tags
+          ? [{
+              type: 'box',
+              layout: 'horizontal',
+              contents: [{
+                type: 'box',
+                layout: 'vertical',
+                flex: 0,
+                backgroundColor: CARD.chip,
+                cornerRadius: '4px',
+                paddingStart: '6px',
+                paddingEnd: '6px',
+                contents: [flexText(`🏷 ${tags}`, { size: 'xs', weight: 'bold', color: CARD.dark })],
+              }],
+            }]
+          : []),
+      ],
+    },
+  ],
+});
+
+/** "📅 EVENTS" with its count badge, then the items. */
+const cardSection = (label: string, count: number, items: FlexComponent[]): FlexComponent => ({
+  type: 'box',
+  layout: 'vertical',
+  spacing: 'sm',
+  contents: [
+    {
+      type: 'box',
+      layout: 'horizontal',
+      alignItems: 'center',
+      contents: [
+        flexText(label, { size: 'sm', weight: 'bold', color: CARD.neon, flex: 1 }),
+        {
+          type: 'box',
+          layout: 'vertical',
+          flex: 0,
+          backgroundColor: CARD.neon,
+          cornerRadius: 'xxl',
+          paddingStart: '8px',
+          paddingEnd: '8px',
+          contents: [flexText(String(count), { size: 'xs', weight: 'bold', color: CARD.dark, align: 'center' })],
+        },
+      ],
+    },
+    ...items,
+  ],
+});
+
+/** The whole morning letter card. Drops items from the end (with a "+N more" line) if it gets too big. */
+function morningLetterCard(opts: { name: string; date: string; events: CardItem[]; tasks: CardItem[] }): LineMessage {
+  const { name, date, events, tasks } = opts;
+  const total = events.length + tasks.length;
+  const build = (keep: number): FlexComponent => {
+    const shownEvents = events.slice(0, keep);
+    const shownTasks = tasks.slice(0, Math.max(0, keep - shownEvents.length));
+    const hidden = total - shownEvents.length - shownTasks.length;
+    const body: FlexComponent[] = [
+      flexText(`${date} · Thai time`, { size: 'xs', color: CARD.date }),
+      flexText(`🦋 Dear ${name}, good morning!`, { size: 'md', weight: 'bold', color: CARD.ink }),
+    ];
+    if (total === 0) {
+      body.push(flexText('Your day is clear — no tasks and no events. Please enjoy it.', { size: 'sm', color: CARD.detail }));
+    }
+    if (events.length > 0) body.push(cardSection('📅 EVENTS', events.length, shownEvents.map(cardItem)));
+    if (events.length > 0 && tasks.length > 0) body.push({ type: 'separator', color: '#24323A' });
+    if (tasks.length > 0) body.push(cardSection('📋 TASKS', tasks.length, shownTasks.map(cardItem)));
+    if (hidden > 0) {
+      body.push(flexText(`+${hidden} more in the dashboard`, { size: 'sm', weight: 'bold', color: CARD.neon }));
+    }
+    return {
+      type: 'bubble',
+      size: 'mega',
+      hero: {
+        type: 'image',
+        url: `${SITE_URL}/line-cards/morning-letter.png`,
+        size: 'full',
+        aspectRatio: '26:10',
+        aspectMode: 'cover',
+        action: { type: 'uri', uri: SITE_URL },
+      },
+      body: { type: 'box', layout: 'vertical', backgroundColor: CARD.bg, paddingAll: '14px', spacing: 'md', contents: body },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: CARD.bg,
+        paddingAll: '14px',
+        paddingTop: '0px',
+        contents: [{ type: 'button', style: 'primary', color: CARD.cyan, height: 'sm', action: { type: 'uri', label: 'Open dashboard', uri: SITE_URL } }],
+      },
+    };
+  };
+  let keep = total;
+  let contents = build(keep);
+  while (keep > 0 && JSON.stringify(contents).length > CARD_MAX_CHARS) {
+    keep -= 1;
+    contents = build(keep);
+  }
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const altText = total === 0
+    ? 'Morning letter: your day is clear'
+    : `Morning letter: ${plural(events.length, 'event')}, ${plural(tasks.length, 'task')}`;
+  return { type: 'flex', altText, contents };
+}
+
+/** "Sun 11 Oct 2026" from a YYYY-MM-DD date. */
+function cardDate(ymd: string): string {
+  const d = new Date(`${ymd}T00:00:00Z`);
+  return isNaN(d.getTime())
+    ? ymd
+    : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
 
 async function pushMessages(token: string, to: string, messages: LineMessage[]) {
   const res = await fetch(`${LINE_API}/message/push`, {
@@ -303,7 +466,26 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Closing line + signature always arrive as the very last bubble of the run
+        // The morning letter card; the plain text above stays as its fallback
+        const letterCard = morningLetterCard({
+          name: name ?? 'friend',
+          date: cardDate(today),
+          events: todayEvents.map((e) => ({
+            title: e.title,
+            time: timeRange(thTime(e.start_time), thTime(e.deadline)),
+            detail: formatDetail(e.description),
+            tags: formatTags(e.tag_ids),
+            edge: CARD.cyan,
+          })),
+          tasks: todayTasks.map((t) => ({
+            title: t.title,
+            time: timeRange(thTime(t.start_date), thTime(t.deadline)),
+            detail: formatDetail(t.description),
+            tags: formatTags(t.tag_ids),
+            edge: '#FFFFFF',
+          })),
+        });
+
         // Sign-off text + its sticker: always the last two bubbles of the run, together
         const signOff: LineMessage[] = [
           { type: 'text', text: `"${toast.line}"\nFrom Lulyssia Swiftshade🦋` },
@@ -316,10 +498,17 @@ Deno.serve(async (req) => {
           images.push(...(await imageMessages(supabase, (item as Record<string, unknown>).attachments)));
         }
 
-        const digest: LineMessage[] = [
-          { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
-          ...images.slice(0, 4),
-        ];
+        const digest: LineMessage[] = [letterCard, ...images.slice(0, 4)];
+        // If LINE ever rejects the card, the same push goes again with the plain-text letter
+        const digestText: LineMessage = { type: 'text', text: lines.join('\n').trim().slice(0, 4900) };
+        const pushDigest = async (messages: LineMessage[]) => {
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, messages);
+          } catch (err) {
+            console.error(`Morning letter card rejected for user ${link.user_id}, sending text instead:`, err);
+            await pushMessages(accessToken, link.line_user_id as string, messages.map((m) => (m === letterCard ? digestText : m)));
+          }
+        };
 
         // Separate "Notice before" message: items flagged to warn one day ahead.
         const tomorrow = thDateString(new Date(Date.now() + 86400000));
@@ -336,9 +525,9 @@ Deno.serve(async (req) => {
         // join the last push when there is room instead of costing an extra push
         const signOffFits = digest.length + signOff.length <= 5;
         if (noticeItems.length === 0 && signOffFits) {
-          await pushMessages(accessToken, link.line_user_id as string, [...digest, ...signOff]);
+          await pushDigest([...digest, ...signOff]);
         } else {
-          await pushMessages(accessToken, link.line_user_id as string, digest);
+          await pushDigest(digest);
         }
         sent++;
 
