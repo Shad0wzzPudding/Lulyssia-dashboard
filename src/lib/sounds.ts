@@ -10,6 +10,7 @@ import messageCloseEffect from "@/assets/sound/message_close.mp3";
 import annoyedCloseEffect from "@/assets/sound/annoyed_close.wav";
 import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
+import slidingEffect from "@/assets/sound/sliding.wav";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -512,6 +513,28 @@ export const playNavigationSound = () => {
   }
 };
 
+// Code-made click, used for the menu cursor until sliding.wav has loaded
+const playCodeTick = () => {
+  try {
+    const audioContext = getAudioContext();
+    const now = audioContext.currentTime;
+
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.03);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } catch (e) {
+    console.warn('[playCodeTick] Audio error:', e);
+  }
+};
+
 // Select mode open/close sounds (selectmode_open.wav / selectmode_close.wav).
 // If a file isn't loaded yet on its very first use, a short code-made tone plays instead.
 const SELECT_MODE_VOLUME = 0.8;
@@ -751,6 +774,38 @@ export const playSelectionSound = () => {
     source.start();
   } catch (e) {
     console.warn('[playSelectionSound] Audio error:', e);
+  }
+};
+
+// Menu cursor sound (sliding.wav), played when the cursor moves to another choice.
+// A new move cuts off the previous one, so quick moves don't pile up.
+const TICK_VOLUME = 0.8;
+let tickSource: AudioBufferSourceNode | null = null;
+
+export const preloadTickSound = () => {
+  void loadSoundBuffer(slidingEffect);
+};
+
+export const playTickSound = () => {
+  const buffer = soundBuffers.get(slidingEffect);
+  if (!buffer) {
+    void loadSoundBuffer(slidingEffect);
+    playCodeTick();
+    return;
+  }
+  try {
+    const ctx = getAudioContext();
+    tickSource?.stop();
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    source.buffer = buffer;
+    gain.gain.value = TICK_VOLUME;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+    tickSource = source;
+  } catch (e) {
+    console.warn('[playTickSound] Audio error:', e);
   }
 };
 

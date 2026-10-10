@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { NavigationPage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight, LogOut, Info } from 'lucide-react';
@@ -15,6 +15,8 @@ import {
   preloadMenuCloseSounds,
   preloadMenuOpenSound,
   preloadSelectionSound,
+  playTickSound,
+  preloadTickSound,
 } from '@/lib/sounds';
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
 import { DrawerScene } from './DrawerScene';
@@ -45,19 +47,80 @@ const CHOICE_LAYOUT = [
   { tilt: 3, offset: 6 },
 ];
 
+// Drawer items in screen order (the cursor moves through them with the arrow keys)
+const DRAWER_PAGES: (NavigationPage | null)[] = ['settings', null, 'about'];
+
+type ChoiceRefs = React.MutableRefObject<(HTMLButtonElement | null)[]>;
+
+/** Moves a menu cursor to choice `index` by focusing it; ticks when it lands on a different choice. */
+const moveCursorTo = (refs: ChoiceRefs, current: number | null, index: number) => {
+  if (index !== current) playTickSound();
+  refs.current[index]?.focus({ preventScroll: true });
+};
+
+/** Next cursor index for an Up/Down key (wrapping), or `start` when there is no cursor yet. */
+const stepCursor = (current: number | null, key: string, count: number, start: number) =>
+  current === null ? start : (current + (key === 'ArrowDown' ? 1 : -1) + count) % count;
+
 export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationProps) => {
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
 
+  // Game-style cursor in the message menu and the drawer: the choice under the arrow keys or
+  // the mouse (null until it is moved). The cursor is the focused choice, so Enter picks it.
+  const [menuCursor, setMenuCursor] = useState<number | null>(null);
+  const [drawerCursor, setDrawerCursor] = useState<number | null>(null);
+  const menuChoiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const drawerItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const drawerContentRef = useRef<HTMLDivElement>(null);
+  // Opened from the keyboard: the cursor starts on a choice right away
+  const menuOpenedByKeyboard = useRef(false);
+  const drawerOpenedByKeyboard = useRef(false);
+  const reduceMotion = useReducedMotion();
+  const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
+
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
   // Picking Settings closes it via handlePageChange instead, which already plays the page sounds.
   const handleDrawerOpenChange = (next: boolean) => {
-    if (next) playDrawerOpenSound();
-    else playDrawerCloseSound();
+    if (next) {
+      playDrawerOpenSound();
+      setDrawerCursor(null);
+    } else playDrawerCloseSound();
     setDrawerOpen(next);
   };
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Props shared by every choice: cursor follows focus, and a mouse hover moves the cursor (with a tick).
+  // Touch taps don't move it, so on phones only the page sound plays.
+  const cursorProps = (refs: ChoiceRefs, cursor: number | null, setCursor: (i: number) => void, i: number) => ({
+    ref: (el: HTMLButtonElement | null) => {
+      refs.current[i] = el;
+    },
+    onFocus: () => setCursor(i),
+    onPointerEnter: (e: React.PointerEvent) => {
+      if (e.pointerType === 'mouse') moveCursorTo(refs, cursor, i);
+    },
+  });
+
+  /** Drawer cursor: an outline that slides from item to item (in the item's own accent color). */
+  const drawerCursorMark = (i: number, borderColor: string) =>
+    drawerCursor === i && (
+      <motion.span
+        layoutId="drawer-cursor"
+        aria-hidden
+        transition={cursorTransition}
+        className={cn('pointer-events-none absolute -inset-[2px] border-2', borderColor)}
+      />
+    );
+
+  const menuStart = Math.max(0, navigationItems.findIndex((item) => item.page === activePage));
+  const drawerStart = Math.max(0, DRAWER_PAGES.indexOf(activePage));
+
+  // Opened with the keyboard: put the cursor on the current page right away
+  useEffect(() => {
+    if (open && menuOpenedByKeyboard.current) menuChoiceRefs.current[menuStart]?.focus({ preventScroll: true });
+  }, [open, menuStart]);
 
   // Load the menu choice sound up front so the first pick plays it instantly
   useEffect(() => {
@@ -65,6 +128,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
     preloadMenuOpenSound();
     preloadMenuCloseSounds();
     preloadDrawerSounds();
+    preloadTickSound();
   }, []);
 
   // Close on a click outside the menu or on Escape (closing without picking a page plays the close sounds)
@@ -79,6 +143,11 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeMenu();
+      // Up/Down move the cursor (skipped when the drawer already used the key)
+      else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.defaultPrevented) {
+        e.preventDefault();
+        moveCursorTo(menuChoiceRefs, menuCursor, stepCursor(menuCursor, e.key, navigationItems.length, menuStart));
+      }
     };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
@@ -86,7 +155,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [open]);
+  }, [open, menuCursor, menuStart]);
 
   const handlePageChange = (page: NavigationPage) => {
     if (page !== activePage) {
@@ -117,6 +186,7 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             >
               {navigationItems.map(({ page, icon: Icon, label }, i) => {
                 const active = activePage === page;
+                const onCursor = menuCursor === i;
                 const choice = CHOICE_LAYOUT[i % CHOICE_LAYOUT.length];
                 return (
                   <motion.li
@@ -130,26 +200,32 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
                   >
                     <button
                       type="button"
+                      {...cursorProps(menuChoiceRefs, menuCursor, setMenuCursor, i)}
                       onClick={() => handlePageChange(page)}
                       aria-current={active ? 'page' : undefined}
-                      className="group relative block h-14 w-48 focus-visible:outline-none sm:w-56"
+                      className="relative block h-14 w-48 focus-visible:outline-none sm:w-56"
                     >
                       {/* White outline, then the fill, both cut to the same jagged bubble */}
                       <span aria-hidden className="absolute inset-0 bg-foreground" style={{ clipPath: CHOICE_SHAPE }} />
                       <span
                         aria-hidden
-                        className={cn(
-                          'absolute inset-[3px] transition-colors',
-                          active ? 'bg-primary' : 'bg-background group-hover:bg-foreground group-focus-visible:bg-foreground'
-                        )}
+                        className={cn('absolute inset-[3px]', active ? 'bg-primary' : 'bg-background')}
                         style={{ clipPath: CHOICE_SHAPE }}
                       />
+                      {/* Cursor: one white fill that slides from choice to choice */}
+                      {onCursor && (
+                        <motion.span
+                          layoutId="menu-cursor"
+                          aria-hidden
+                          transition={cursorTransition}
+                          className="pointer-events-none absolute inset-[3px] bg-foreground"
+                          style={{ clipPath: CHOICE_SHAPE }}
+                        />
+                      )}
                       <span
                         className={cn(
                           "relative flex h-full items-center gap-3 pl-6 pr-12 font-display text-lg font-extrabold italic transition-colors",
-                          active
-                            ? 'text-primary-foreground'
-                            : 'text-foreground group-hover:text-background group-focus-visible:text-background'
+                          onCursor ? 'text-background' : active ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
                         <Icon size={18} className="shrink-0" />
@@ -179,11 +255,13 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
       {/* Menu toggle, bottom-right corner */}
       <Button
         size="icon"
-        onClick={() => {
-          // Sound only when opening; closing the menu stays quiet
+        onClick={(e) => {
           // Opening and closing (X) each play their own sounds; picking a page plays the page sounds instead
-          if (!open) playMenuOpenSound();
-          else playMenuCloseSound();
+          if (!open) {
+            playMenuOpenSound();
+            setMenuCursor(null);
+            menuOpenedByKeyboard.current = e.detail === 0;
+          } else playMenuCloseSound();
           setOpen(!open);
         }}
         aria-label={open ? 'Close menu' : 'Open menu'}
@@ -204,6 +282,9 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             type="button"
             aria-label="Open drawer"
             title="More"
+            onClick={(e) => {
+              drawerOpenedByKeyboard.current = e.detail === 0;
+            }}
             className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex h-14 w-9 items-center justify-center border-2 border-l-0 border-foreground/80 bg-card/95 text-foreground backdrop-blur-sm shadow-[4px_4px_0_0_hsl(var(--primary))] transition-[width,color] hover:w-11 hover:text-primary"
           >
             <PanelLeftOpen size={18} />
@@ -211,54 +292,78 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
         </SheetTrigger>
         {/* Transparent layer above DrawerScene (which draws the dark panel behind Lulyssia),
             so these items always stay readable and clickable on top of her art */}
-        <SheetContent side="left" className="z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none">
+        <SheetContent
+          ref={drawerContentRef}
+          side="left"
+          className="z-[60] flex w-72 flex-col gap-3 border-r-0 bg-transparent p-5 shadow-none focus:outline-none"
+          // Opened with the mouse: no cursor until it moves; opened with the keyboard: on the current page
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            if (drawerOpenedByKeyboard.current) drawerItemRefs.current[drawerStart]?.focus();
+            else drawerContentRef.current?.focus();
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            e.preventDefault();
+            moveCursorTo(drawerItemRefs, drawerCursor, stepCursor(drawerCursor, e.key, DRAWER_PAGES.length, drawerStart));
+          }}
+        >
           <SheetHeader className="mb-3 text-left">
             <SheetTitle className="p5-title w-fit text-xl">Menu</SheetTitle>
             <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
           </SheetHeader>
           <button
             type="button"
+            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 0)}
             onClick={() => handlePageChange('settings')}
             aria-current={activePage === 'settings' ? 'page' : undefined}
             className={cn(
-              'group flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors',
+              'relative flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
               activePage === 'settings'
                 ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
-                : 'border-foreground/30 hover:border-primary hover:text-primary'
+                : cn('border-foreground/30', drawerCursor === 0 && 'text-primary')
             )}
           >
+            {drawerCursorMark(0, 'border-primary')}
             <Camera size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">Settings</span>
-            <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 0 && 'translate-x-0.5')} />
           </button>
           {/* Sign out: closes the drawer, then asks to confirm */}
           <button
             type="button"
+            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 1)}
             onClick={() => {
               setDrawerOpen(false);
               setSignOutConfirmOpen(true);
             }}
-            className="group flex w-full -skew-x-6 items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors hover:border-destructive hover:text-destructive"
+            className={cn(
+              'relative flex w-full -skew-x-6 items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
+              drawerCursor === 1 && 'text-destructive'
+            )}
           >
+            {drawerCursorMark(1, 'border-destructive')}
             <LogOut size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">Sign out</span>
-            <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 1 && 'translate-x-0.5')} />
           </button>
           {/* About Lulyssia: opens the About page (profile card + her art) */}
           <button
             type="button"
+            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 2)}
             onClick={() => handlePageChange('about')}
             aria-current={activePage === 'about' ? 'page' : undefined}
             className={cn(
-              'group flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors',
+              'relative flex w-full -skew-x-6 items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
               activePage === 'about'
                 ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
-                : 'border-foreground/30 hover:border-primary hover:text-primary'
+                : cn('border-foreground/30', drawerCursor === 2 && 'text-primary')
             )}
           >
+            {drawerCursorMark(2, 'border-primary')}
             <Info size={18} className="skew-x-6" />
             <span className="flex-1 skew-x-6">About Lulyssia</span>
-            <ChevronRight size={16} className="skew-x-6 opacity-60 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 2 && 'translate-x-0.5')} />
           </button>
         </SheetContent>
       </Sheet>

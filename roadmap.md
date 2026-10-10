@@ -29,9 +29,9 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
    - [ ] LINE status (linked / not linked, daily message on or off)
    - [ ] Bigger, bolder items in the same slanted bubble style as the message menu choices
 2. Game-style cursor in the message menu and the drawer
-   - [ ] Up/Down arrow keys move between choices, Enter picks one
-   - [ ] A highlight that slides from choice to choice
-   - [ ] A soft tick sound on each move or hover
+   - [x] Up/Down arrow keys move between choices, Enter picks one
+   - [x] A highlight that slides from choice to choice
+   - [x] A soft tick sound on each move or hover
 3. [ ] More dramatic drawer opening: a fast diagonal slash wipe (about 0.3 s), then the items snap into place, instead of the current fade-in scene and plain slide-in panel
 4. Less clutter in the drawer scene (about eight effects at once now)
    - [ ] Fewer bubbles: 4 or 5 instead of 8
