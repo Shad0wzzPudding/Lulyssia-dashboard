@@ -33,10 +33,7 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
    - [x] A highlight that slides from choice to choice
    - [x] A soft tick sound on each move or hover
 3. [ ] More dramatic drawer opening: a fast diagonal slash wipe (about 0.3 s), then the items snap into place, instead of the current fade-in scene and plain slide-in panel
-4. Less clutter in the drawer scene (about eight effects at once now)
-   - [ ] Fewer bubbles: 4 or 5 instead of 8
-   - [ ] Check that the crossed dotted wedge looks intentional and not like a glitch
-   - [ ] Keep the KEEP OUT tape as the only yellow accent
+4. [x] ~~Less clutter in the drawer scene (about eight effects at once now)~~ kept as is: the drawer scene looks right as it is (bubbles, dotted wedge and KEEP OUT tape stay)
 5. [ ] A calm Persona 3 touch: a slow light ripple moving across the drawer's water
 6. [ ] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
 7. [ ] Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them
