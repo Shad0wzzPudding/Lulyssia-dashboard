@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react';
 import { BellRing } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useLineLinked } from '@/hooks/useLineLinked';
 import { Switch } from '@/components/ui/switch';
-
-let cachedLinked: boolean | null = null;
 
 /** "Notice before" switch — only shown once the account is linked with LINE. */
 export const NoticeBeforeToggle = ({
@@ -13,26 +10,7 @@ export const NoticeBeforeToggle = ({
   checked: boolean;
   onChange: (value: boolean) => void;
 }) => {
-  const [linked, setLinked] = useState<boolean>(cachedLinked ?? false);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const uid = userData.user?.id;
-      if (!uid) return;
-      const { data } = await supabase
-        .from('line_links')
-        .select('line_user_id')
-        .eq('user_id', uid)
-        .maybeSingle();
-      cachedLinked = !!data?.line_user_id;
-      if (active) setLinked(cachedLinked);
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+  const linked = useLineLinked();
 
   if (!linked) return null;
 
