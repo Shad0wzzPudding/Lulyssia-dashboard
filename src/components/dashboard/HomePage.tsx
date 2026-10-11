@@ -459,19 +459,20 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         {/* Main Focus Section */}
       </div>
       
-      {/* Daily Overview */}
+      {/* Today Events */}
       <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-p5-700 dark:text-p5-300">
             <AlertCircle size={20} />
-            <span className="font-bold">Today's Summary</span>
+            <span className="font-bold">Today Events</span>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full ml-auto">
               <GripVertical size={12} />
               <span>Drag to reorder</span>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-5">
+          {/* Today's counts (drag to reorder; the order is saved) */}
           <div className="flex flex-wrap justify-center gap-3">
             {summaryOrder.map((key, index) => {
               const item = summaryItems[key as keyof typeof summaryItems];
@@ -493,18 +494,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               );
             })}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Today Events */}
-      <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-p5-700 dark:text-p5-300">
-            <AlertCircle size={20} />
-            <span className="font-bold">Today Events</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             {/* Today's Tasks */}
             <div>
@@ -780,6 +770,60 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         </CardContent>
       </Card>
 
+      {/* Upcoming Events */}
+      <Card className="bg-upcoming-events/20 border-upcoming-events/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-upcoming-events">
+            <Clock size={20} />
+            <span className="font-bold">Upcoming Events!</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* From Tasks */}
+            <div>
+              <h4 className="font-semibold text-sm text-upcoming-events mb-2">From Tasks</h4>
+              {upcomingTasks.length > 0 ? (
+                <div className="space-y-2">
+                  {upcomingTasks.map(task => (
+                    <div key={task.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
+                      <p className="font-medium text-sm">{task.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Due: {format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">No upcoming tasks</p>
+              )}
+            </div>
+
+            {/* From Events */}
+            <div>
+              <h4 className="font-semibold text-sm text-upcoming-events mb-2">From Events</h4>
+              {upcomingEvents.length > 0 ? (
+                <div className="space-y-2">
+                  {upcomingEvents.map(event => (
+                    <div key={event.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
+                      <p className="font-medium text-sm">{event.title}</p>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                        <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
+                        {event.deadline && (
+                          <p>Deadline: {format(parseISO(event.deadline), 'MMM dd, yyyy HH:mm')}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">No upcoming events</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Pinned Interests */}
       <Card className="bg-main-focus/20 border-main-focus/40">
         <CardHeader>
@@ -914,60 +958,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm">No pinned interests yet! Pin some from the Interests page to see them here.</p>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Upcoming Events */}
-      <Card className="bg-upcoming-events/20 border-upcoming-events/40">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-upcoming-events">
-            <Clock size={20} />
-            <span className="font-bold">Upcoming Events!</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* From Tasks */}
-            <div>
-              <h4 className="font-semibold text-sm text-upcoming-events mb-2">From Tasks</h4>
-              {upcomingTasks.length > 0 ? (
-                <div className="space-y-2">
-                  {upcomingTasks.map(task => (
-                    <div key={task.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm">{task.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Due: {format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400">No upcoming tasks</p>
-              )}
-            </div>
-
-            {/* From Events */}
-            <div>
-              <h4 className="font-semibold text-sm text-upcoming-events mb-2">From Events</h4>
-              {upcomingEvents.length > 0 ? (
-                <div className="space-y-2">
-                  {upcomingEvents.map(event => (
-                    <div key={event.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm">{event.title}</p>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
-                        <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
-                        {event.deadline && (
-                          <p>Deadline: {format(parseISO(event.deadline), 'MMM dd, yyyy HH:mm')}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400">No upcoming events</p>
-              )}
-            </div>
-          </div>
         </CardContent>
       </Card>
 
