@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@0,900;1,900&family=Kanit:ital,wght@0,900;1,900&family=Anton&family=Bangers&display=block">
+<style>
+/* "BE PREPARED" in ransom-note letters over the calling card (1447x867), our own lettering in the
+   calling-card style: black letters in mixed faces and sizes, a few in boxes, one white outline. */
+html, body { margin: 0; width: 1447px; height: 867px; overflow: hidden; background: #000; }
+.card { position: relative; width: 1447px; height: 867px; background: url(../../src/assets/callingcard.png) center / cover; }
+.words { position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%) rotate(-4deg);
+  display: flex; align-items: flex-end; gap: 6px;
+  /* one thick white outline around the whole cluster, then a thin black edge */
+  filter: drop-shadow(7px 0 0 #fff) drop-shadow(-7px 0 0 #fff) drop-shadow(0 7px 0 #fff) drop-shadow(0 -7px 0 #fff)
+          drop-shadow(3px 0 0 #000) drop-shadow(-3px 0 0 #000) drop-shadow(0 3px 0 #000) drop-shadow(0 -3px 0 #000)
+          drop-shadow(8px 10px 0 rgba(0,0,0,.55)); }
+.gap { width: 34px; }
+.l { display: inline-grid; place-items: center; line-height: .9; color: #05090b; transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px)); }
+.l.box { background: #f4f8f9; padding: 4px 10px 8px; outline: 5px solid #05090b; outline-offset: -5px; }
+.l.cyan { background: #3aadd0; padding: 4px 10px 8px; }
+.l.ink { background: #05090b; color: #f4f8f9; padding: 4px 10px 8px; }
+.f1 { font: 900 132px "Kanit", sans-serif; }
+.f2 { font: 400 150px "Anton", sans-serif; }
+.f3 { font: 900 italic 128px "Asap Condensed", sans-serif; }
+.f4 { font: 400 142px "Bangers", sans-serif; }
+.f5 { font: 700 italic 112px Georgia, serif; }
+</style></head>
+<body><div class="card">
+  <div class="words">
+    <span class="l f2" style="--r:-5deg">B</span>
+    <span class="l f5 box" style="--r:6deg;--y:-14px">e</span>
+    <span class="gap"></span>
+    <span class="l f4" style="--r:-3deg;--y:4px">P</span>
+    <span class="l f1 cyan" style="--r:5deg;--y:-10px">R</span>
+    <span class="l f3" style="--r:-6deg">E</span>
+    <span class="l f2" style="--r:3deg;--y:-6px">p</span>
+    <span class="l f1 ink" style="--r:-4deg;--y:-2px">A</span>
+    <span class="l f4" style="--r:7deg;--y:-12px">R</span>
+    <span class="l f5 box" style="--r:-5deg;--y:2px">e</span>
+    <span class="l f2" style="--r:4deg;--y:-4px">D</span>
+  </div>
+</div></body></html>
