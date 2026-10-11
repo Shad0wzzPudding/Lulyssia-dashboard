@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import { CARD, CARD_MAX_CHARS, SITE_URL, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
+import { CARD, CARD_MAX_CHARS, assetUrl, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -60,7 +60,7 @@ type LineMessage =
 // Lulyssia's sticker art (PNGs up to 832px in the web app's public/line-stickers/), sent as an image
 // after the sign-off. Bots can only send LINE's own sticker packs, not a custom set.
 const stickerImage = (name: string): LineMessage => {
-  const url = `${SITE_URL}/line-stickers/${name}.png`;
+  const url = assetUrl(`line-stickers/${name}.png`);
   return { type: 'image', originalContentUrl: url, previewImageUrl: url };
 };
 

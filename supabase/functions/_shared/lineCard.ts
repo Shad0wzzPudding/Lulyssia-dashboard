@@ -4,6 +4,14 @@
 
 export const SITE_URL = 'https://personal-dashboard-opal-gamma.vercel.app';
 
+// LINE caches images by their address, so a changed banner or sticker at the same address keeps
+// showing the old picture. Bump this whenever an image in public/line-cards/ or
+// public/line-stickers/ changes; LINE then sees new addresses and fetches the new files.
+export const ASSET_VERSION = '2';
+
+/** Address of an image on the site, with the asset version LINE caches by. */
+export const assetUrl = (path: string) => `${SITE_URL}/${path}?v=${ASSET_VERSION}`;
+
 export type FlexComponent = Record<string, unknown>;
 export type FlexMessage = { type: 'flex'; altText: string; contents: FlexComponent };
 
@@ -85,7 +93,7 @@ export function lineCard(opts: {
       size: opts.size ?? 'mega',
       hero: {
         type: 'image',
-        url: `${SITE_URL}/line-cards/${opts.banner}.png`,
+        url: assetUrl(`line-cards/${opts.banner}.png`),
         size: 'full',
         aspectRatio: opts.aspectRatio ?? '26:10',
         aspectMode: 'cover',
