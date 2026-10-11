@@ -7,6 +7,9 @@
 - [x] LINE Flex Messages: show the daily digest, reminders and overdue nudges as Persona 5 styled cards instead of plain text
 - [x] LINE notice-before message as a card too: the morning letter's layout (sections, item boxes, tag chips) with its own "Tomorrow" banner
 - [ ] "Done" button on the missed-deadline card: marks the task finished straight from LINE (a postback the LINE webhook handles), then Lulyssia confirms in the chat
+- [ ] Home page: remove the separate "Today's Summary" section and show its counts (today's tasks, completed, today's events, overdue) inside the "Today Events" section instead
+- [ ] Home page: move the Upcoming Events section up into the Interests section's place, and move Interests down below it
+- [ ] Home page: new "In progress..." section under "Today Events", listing the tasks and events that have already started and run longer than one day (started before today and not finished yet)
 
 ## Backlog from the bug hunt (need a decision before changing)
 - [x] Clean up unused attachment files: removing an attachment no longer deletes the file (it could still be used by a copy or an undo), so add a server-side job that deletes stored files no task, event or interest points to anymore
