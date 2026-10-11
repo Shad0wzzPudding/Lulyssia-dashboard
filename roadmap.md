@@ -6,7 +6,7 @@
 - [x] LINE stickers: send a real LINE sticker with Lulyssia's sign-off (sticker message after the daily digest). Done as Lulyssia's own sticker art sent as an image: bots can only send LINE's official sticker packs
 - [x] LINE Flex Messages: show the daily digest, reminders and overdue nudges as Persona 5 styled cards instead of plain text
 - [x] LINE notice-before message as a card too: the morning letter's layout (sections, item boxes, tag chips) with its own "Tomorrow" banner
-- [ ] "Done" button on the missed-deadline card: marks the task finished straight from LINE (a postback the LINE webhook handles), then Lulyssia confirms in the chat
+- [x] "Done" button on the missed-deadline card: marks the task finished straight from LINE (a postback the LINE webhook handles), then Lulyssia confirms in the chat
 - [ ] Home page: remove the separate "Today's Summary" section and show its counts (today's tasks, completed, today's events, overdue) inside the "Today Events" section instead
 - [ ] Home page: move the Upcoming Events section up into the Interests section's place, and move Interests down below it
 - [ ] Home page: new "In progress..." section under "Today Events", listing the tasks and events that have already started and run longer than one day (started before today and not finished yet)

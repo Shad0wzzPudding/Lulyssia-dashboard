@@ -3,7 +3,7 @@
   "size": "mega",
   "hero": {
     "type": "image",
-    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/missed-deadline.png",
+    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/missed-deadline.png?v=3",
     "size": "full",
     "aspectRatio": "26:10",
     "aspectMode": "cover",
@@ -112,7 +112,20 @@
     "backgroundColor": "#10171C",
     "paddingAll": "14px",
     "paddingTop": "0px",
+    "spacing": "sm",
     "contents": [
+      {
+        "type": "button",
+        "style": "secondary",
+        "color": "#BFEEF7",
+        "height": "sm",
+        "action": {
+          "type": "postback",
+          "label": "✓ Mark as done",
+          "data": "done:3f2b6c1e-8a4d-4c2b-9e1f-0a1b2c3d4e5f",
+          "displayText": "Mark \"Math worksheet 4\" as done"
+        }
+      },
       {
         "type": "button",
         "style": "primary",

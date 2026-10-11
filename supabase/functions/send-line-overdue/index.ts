@@ -100,17 +100,31 @@ function cardDateTime(iso: string): string {
 /** The "Missed deadline" card: the task, when it was due, detail, tags and her nudge. */
 function missedDeadlineCard(opts: {
   name: string | undefined;
+  taskId: string;
   title: string;
   deadline: string;
   detail: string | null;
   tags: string;
   nudge: string;
 }): FlexMessage {
-  const { name, title, deadline, detail, tags, nudge } = opts;
+  const { name, taskId, title, deadline, detail, tags, nudge } = opts;
   return lineCard({
     banner: 'missed-deadline',
     altText: `⚠️ Missed deadline: ${title}`,
     button: 'Open in dashboard',
+    // Tapping it sends "done:<task id>" to line-webhook, which marks the task finished
+    actions: [{
+      type: 'button',
+      style: 'secondary',
+      color: CARD.chip,
+      height: 'sm',
+      action: {
+        type: 'postback',
+        label: '✓ Mark as done',
+        data: `done:${taskId}`,
+        displayText: `Mark "${title.slice(0, 200)}" as done`,
+      },
+    }],
     body: [
       flexText(`⚠️ Missed deadline${name ? `, ${name}` : ''}!`, { size: 'sm', weight: 'bold', color: CARD.warn }),
       flexText('📋 TASK', { size: 'xs', weight: 'bold', color: CARD.date }),
@@ -188,6 +202,7 @@ Deno.serve(async (req) => {
           ].join('\n');
           const card = missedDeadlineCard({
             name,
+            taskId: t.id,
             title: t.title,
             deadline: t.deadline,
             detail: formatDetail(t.description),

@@ -84,6 +84,8 @@ export function lineCard(opts: {
   button: string;
   size?: 'kilo' | 'mega';
   aspectRatio?: string;
+  /** Buttons shown above the main "open" button (e.g. "Mark as done") */
+  actions?: FlexComponent[];
 }): FlexMessage {
   return {
     type: 'flex',
@@ -113,7 +115,8 @@ export function lineCard(opts: {
         backgroundColor: CARD.bg,
         paddingAll: '14px',
         paddingTop: '0px',
-        contents: [{
+        spacing: 'sm',
+        contents: [...(opts.actions ?? []), {
           type: 'button',
           style: 'primary',
           color: CARD.cyan,

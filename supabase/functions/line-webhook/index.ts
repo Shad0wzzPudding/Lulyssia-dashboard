@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { assetUrl } from '../_shared/lineCard.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
@@ -42,15 +43,23 @@ async function verifySignature(secret: string, body: string, signature: string |
 }
 
 // Pass a list to send several chat bubbles in one reply (LINE allows up to 5)
-async function reply(token: string, replyToken: string, text: string | string[]) {
+async function reply(token: string, replyToken: string, text: string | string[], sticker?: string) {
   const texts = Array.isArray(text) ? text : [text];
+  const messages: Record<string, string>[] = texts.map((t) => ({ type: 'text', text: t }));
+  if (sticker) {
+    // Lulyssia's sticker art from the site (same files as the daily sign-off)
+    const url = assetUrl(`line-stickers/${sticker}.png`);
+    messages.push({ type: 'image', originalContentUrl: url, previewImageUrl: url });
+  }
   const res = await fetch(`${LINE_API}/message/reply`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ replyToken, messages: texts.map((t) => ({ type: 'text', text: t })) }),
+    body: JSON.stringify({ replyToken, messages }),
   });
   if (!res.ok) console.error('LINE reply failed', res.status, await res.text());
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -116,6 +125,56 @@ Deno.serve(async (req) => {
       if ((isPostback || (event.type === 'message' && event.message?.type === 'text')) && lineUserId && replyToken) {
         const text = String((isPostback ? event.postback?.data : event.message?.text) ?? '').trim();
         const code = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        // "Mark as done" on a missed-deadline card. Only a button tap (postback, signed by LINE)
+        // can do this, and only for a task that belongs to the account linked to this LINE user.
+        if (isPostback && text.startsWith('done:')) {
+          const taskId = text.slice('done:'.length);
+          const { data: link } = await supabase
+            .from('line_links')
+            .select('user_id')
+            .eq('line_user_id', lineUserId)
+            .maybeSingle();
+          if (!link) {
+            await reply(accessToken, replyToken, NOT_LINKED_TEXT);
+            continue;
+          }
+          if (!UUID.test(taskId)) {
+            await reply(accessToken, replyToken, "Hmm... I couldn't read which task that was.");
+            continue;
+          }
+          const { data: done, error } = await supabase
+            .from('tasks')
+            .update({ is_completed: true })
+            .eq('id', taskId)
+            .eq('user_id', link.user_id)
+            .eq('is_completed', false)
+            .select('title');
+          if (error) {
+            console.error('Mark as done failed', error);
+            await reply(accessToken, replyToken, 'Suspicious... that should have worked. Please try again from the dashboard.');
+            continue;
+          }
+          if (done && done.length > 0) {
+            await reply(accessToken, replyToken, `*Stamps the file*\n"${done[0].title}" is done. Late, but filed all the same.🦋`, 'yes');
+            continue;
+          }
+          // Nothing changed: already finished, or gone
+          const { data: existing } = await supabase
+            .from('tasks')
+            .select('title')
+            .eq('id', taskId)
+            .eq('user_id', link.user_id)
+            .maybeSingle();
+          await reply(
+            accessToken,
+            replyToken,
+            existing
+              ? `"${existing.title}" is already marked as done. Nothing more to file.`
+              : "I can't find that task anymore. Maybe it was deleted from the dashboard.",
+          );
+          continue;
+        }
 
         if (/^(TODAY|DIGEST NOW|TODAY'?S LIST)$/i.test(text)) {
           const { data } = await supabase
