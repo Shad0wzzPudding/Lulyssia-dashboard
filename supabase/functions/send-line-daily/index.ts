@@ -122,20 +122,29 @@ const cardSection = (label: string, count: number, items: FlexComponent[]): Flex
 });
 
 /** The whole morning letter card. Drops items from the end (with a "+N more" line) if it gets too big. */
-function morningLetterCard(opts: { name: string; date: string; events: CardItem[]; tasks: CardItem[] }): LineMessage {
-  const { name, date, events, tasks } = opts;
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+/**
+ * A card listing events then tasks under `header` lines (the morning letter and the notice-before
+ * card). Drops items from the end (with a "+N more" line) if it gets too big for LINE.
+ */
+function itemsCard(opts: {
+  banner: string;
+  aspectRatio?: string;
+  altText: string;
+  header: FlexComponent[];
+  empty?: string;
+  events: CardItem[];
+  tasks: CardItem[];
+}): FlexMessage {
+  const { events, tasks } = opts;
   const total = events.length + tasks.length;
   const build = (keep: number): FlexComponent[] => {
     const shownEvents = events.slice(0, keep);
     const shownTasks = tasks.slice(0, Math.max(0, keep - shownEvents.length));
     const hidden = total - shownEvents.length - shownTasks.length;
-    const body: FlexComponent[] = [
-      flexText(`${date} · Thai time`, { size: 'xs', color: CARD.date }),
-      flexText(`🦋 Dear ${name}, good morning!`, { size: 'md', weight: 'bold', color: CARD.ink }),
-    ];
-    if (total === 0) {
-      body.push(flexText('Your day is clear — no tasks and no events. Please enjoy it.', { size: 'sm', color: CARD.detail }));
-    }
+    const body: FlexComponent[] = [...opts.header];
+    if (total === 0 && opts.empty) body.push(flexText(opts.empty, { size: 'sm', color: CARD.detail }));
     if (events.length > 0) body.push(cardSection('📅 EVENTS', events.length, shownEvents.map(cardItem)));
     if (events.length > 0 && tasks.length > 0) body.push({ type: 'separator', color: CARD.line });
     if (tasks.length > 0) body.push(cardSection('📋 TASKS', tasks.length, shownTasks.map(cardItem)));
@@ -144,11 +153,8 @@ function morningLetterCard(opts: { name: string; date: string; events: CardItem[
     }
     return body;
   };
-  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  const altText = total === 0
-    ? 'Morning letter: your day is clear'
-    : `Morning letter: ${plural(events.length, 'event')}, ${plural(tasks.length, 'task')}`;
-  const card = (keep: number) => lineCard({ banner: 'morning-letter', altText, body: build(keep), button: 'Open dashboard' });
+  const card = (keep: number) =>
+    lineCard({ banner: opts.banner, aspectRatio: opts.aspectRatio, altText: opts.altText, body: build(keep), button: 'Open dashboard' });
   let keep = total;
   let message = card(keep);
   while (keep > 0 && JSON.stringify(message.contents).length > CARD_MAX_CHARS) {
@@ -156,6 +162,40 @@ function morningLetterCard(opts: { name: string; date: string; events: CardItem[
     message = card(keep);
   }
   return message;
+}
+
+/** The morning letter: today's events and tasks. */
+function morningLetterCard(opts: { name: string; date: string; events: CardItem[]; tasks: CardItem[] }): FlexMessage {
+  const { name, date, events, tasks } = opts;
+  return itemsCard({
+    banner: 'morning-letter',
+    altText: events.length + tasks.length === 0
+      ? 'Morning letter: your day is clear'
+      : `Morning letter: ${plural(events.length, 'event')}, ${plural(tasks.length, 'task')}`,
+    header: [
+      flexText(`${date} · Thai time`, { size: 'xs', color: CARD.date }),
+      flexText(`🦋 Dear ${name}, good morning!`, { size: 'md', weight: 'bold', color: CARD.ink }),
+    ],
+    empty: 'Your day is clear — no tasks and no events. Please enjoy it.',
+    events,
+    tasks,
+  });
+}
+
+/** The notice-before card ("calling card" banner): items flagged to warn a day ahead. */
+function noticeBeforeCard(opts: { date: string; events: CardItem[]; tasks: CardItem[] }): FlexMessage {
+  const { date, events, tasks } = opts;
+  return itemsCard({
+    banner: 'calling-card',
+    aspectRatio: '5:3',
+    altText: `🔔 Coming up tomorrow: ${plural(events.length, 'event')}, ${plural(tasks.length, 'task')}`,
+    header: [
+      flexText('🔔 NOTICE BEFORE', { size: 'xs', weight: 'bold', color: CARD.neon }),
+      flexText(`Coming up tomorrow · ${date}`, { size: 'md', weight: 'bold', color: CARD.ink }),
+    ],
+    events,
+    tasks,
+  });
 }
 
 /** "Sun 11 Oct 2026" from a YYYY-MM-DD date. */
@@ -486,10 +526,28 @@ Deno.serve(async (req) => {
             n.push('');
           }
   
-          await pushMessages(accessToken, link.line_user_id as string, [
-            { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
-            ...signOff,
-          ]);
+          const toItem = (it: (typeof noticeItems)[number]): CardItem => ({
+            title: it.title,
+            time: timeRange(isTomorrow(it.start) ? thTime(it.start) : null, isTomorrow(it.deadline) ? thTime(it.deadline) : null),
+            detail: formatDetail(it.description),
+            tags: formatTags(it.tag_ids),
+            edge: it.kind === '📅 Event' ? CARD.cyan : '#FFFFFF',
+          });
+          const noticeCard = noticeBeforeCard({
+            date: cardDate(tomorrow),
+            events: noticeItems.filter((it) => it.kind === '📅 Event').map(toItem),
+            tasks: noticeItems.filter((it) => it.kind !== '📅 Event').map(toItem),
+          });
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, [noticeCard, ...signOff]);
+          } catch (err) {
+            // If LINE rejects the card, send the same notice as plain text
+            console.error(`Notice-before card rejected for user ${link.user_id}, sending text instead:`, err);
+            await pushMessages(accessToken, link.line_user_id as string, [
+              { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
+              ...signOff,
+            ]);
+          }
         } else if (!signOffFits) {
           // Digest had no room left (text + 3 or 4 images): the sign-off and sticker get their own push
           await pushMessages(accessToken, link.line_user_id as string, signOff);

@@ -67,13 +67,15 @@ export const labelRow = (label: string, value: string, valueColor: string = CARD
   ],
 });
 
-/** A full card: banner on top (tapping it opens the dashboard), dark body, one button. */
+/** A full card: banner on top (tapping it opens the dashboard), dark body, one button.
+    Banners are 26:10 unless `aspectRatio` says otherwise (the calling card is 5:3). */
 export function lineCard(opts: {
   banner: string;
   altText: string;
   body: FlexComponent[];
   button: string;
   size?: 'kilo' | 'mega';
+  aspectRatio?: string;
 }): FlexMessage {
   return {
     type: 'flex',
@@ -85,7 +87,7 @@ export function lineCard(opts: {
         type: 'image',
         url: `${SITE_URL}/line-cards/${opts.banner}.png`,
         size: 'full',
-        aspectRatio: '26:10',
+        aspectRatio: opts.aspectRatio ?? '26:10',
         aspectMode: 'cover',
         action: { type: 'uri', uri: SITE_URL },
       },
