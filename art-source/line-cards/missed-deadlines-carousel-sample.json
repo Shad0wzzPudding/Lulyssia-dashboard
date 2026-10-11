@@ -1,0 +1,486 @@
+{
+  "type": "carousel",
+  "contents": [
+    {
+      "type": "bubble",
+      "size": "mega",
+      "hero": {
+        "type": "image",
+        "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/missed-deadline.png?v=3",
+        "size": "full",
+        "aspectRatio": "26:10",
+        "aspectMode": "cover",
+        "action": {
+          "type": "uri",
+          "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+        }
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "spacing": "md",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ Missed deadline, Shadow!",
+            "wrap": true,
+            "size": "sm",
+            "weight": "bold",
+            "color": "#FACC15"
+          },
+          {
+            "type": "text",
+            "text": "📋 TASK",
+            "wrap": true,
+            "size": "xs",
+            "weight": "bold",
+            "color": "#8FB3BF"
+          },
+          {
+            "type": "text",
+            "text": "Task 1",
+            "wrap": true,
+            "size": "xl",
+            "weight": "bold",
+            "color": "#EAF6F9"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Was due",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "Fri 9 Oct, 23:59",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Overdue",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "2 days",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "Chapter 4 exercises",
+            "wrap": true,
+            "size": "sm",
+            "color": "#C9DBE1",
+            "maxLines": 5
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 0,
+                "backgroundColor": "#BFEEF7",
+                "cornerRadius": "4px",
+                "paddingStart": "6px",
+                "paddingEnd": "6px",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "🏷 School",
+                    "wrap": true,
+                    "size": "xs",
+                    "weight": "bold",
+                    "color": "#04131A"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "color": "#24323A"
+          },
+          {
+            "type": "text",
+            "text": "\"I think you need to check on this one.\"",
+            "wrap": true,
+            "size": "sm",
+            "style": "italic",
+            "color": "#C9DBE1"
+          }
+        ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "paddingTop": "0px",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "secondary",
+            "color": "#BFEEF7",
+            "height": "sm",
+            "action": {
+              "type": "postback",
+              "label": "✓ Mark as done",
+              "data": "done:8d6a5366-68ce-4abb-8316-a5d601263ffb",
+              "displayText": "Mark \"Task 1\" as done"
+            }
+          },
+          {
+            "type": "button",
+            "style": "primary",
+            "color": "#3AADD0",
+            "height": "sm",
+            "action": {
+              "type": "uri",
+              "label": "Open in dashboard",
+              "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "bubble",
+      "size": "mega",
+      "hero": {
+        "type": "image",
+        "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/missed-deadline.png?v=3",
+        "size": "full",
+        "aspectRatio": "26:10",
+        "aspectMode": "cover",
+        "action": {
+          "type": "uri",
+          "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+        }
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "spacing": "md",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ Missed deadline, Shadow!",
+            "wrap": true,
+            "size": "sm",
+            "weight": "bold",
+            "color": "#FACC15"
+          },
+          {
+            "type": "text",
+            "text": "📋 TASK",
+            "wrap": true,
+            "size": "xs",
+            "weight": "bold",
+            "color": "#8FB3BF"
+          },
+          {
+            "type": "text",
+            "text": "Task 2",
+            "wrap": true,
+            "size": "xl",
+            "weight": "bold",
+            "color": "#EAF6F9"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Was due",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "Fri 9 Oct, 23:59",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Overdue",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "2 days",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "color": "#24323A"
+          },
+          {
+            "type": "text",
+            "text": "\"Deadline's gone, but maybe you can still catch it.\"",
+            "wrap": true,
+            "size": "sm",
+            "style": "italic",
+            "color": "#C9DBE1"
+          }
+        ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "paddingTop": "0px",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "secondary",
+            "color": "#BFEEF7",
+            "height": "sm",
+            "action": {
+              "type": "postback",
+              "label": "✓ Mark as done",
+              "data": "done:c8d1f861-ea79-43e0-89f3-a354e018d249",
+              "displayText": "Mark \"Task 2\" as done"
+            }
+          },
+          {
+            "type": "button",
+            "style": "primary",
+            "color": "#3AADD0",
+            "height": "sm",
+            "action": {
+              "type": "uri",
+              "label": "Open in dashboard",
+              "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "bubble",
+      "size": "mega",
+      "hero": {
+        "type": "image",
+        "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/missed-deadline.png?v=3",
+        "size": "full",
+        "aspectRatio": "26:10",
+        "aspectMode": "cover",
+        "action": {
+          "type": "uri",
+          "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+        }
+      },
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "spacing": "md",
+        "contents": [
+          {
+            "type": "text",
+            "text": "⚠️ Missed deadline, Shadow!",
+            "wrap": true,
+            "size": "sm",
+            "weight": "bold",
+            "color": "#FACC15"
+          },
+          {
+            "type": "text",
+            "text": "📋 TASK",
+            "wrap": true,
+            "size": "xs",
+            "weight": "bold",
+            "color": "#8FB3BF"
+          },
+          {
+            "type": "text",
+            "text": "Task 3",
+            "wrap": true,
+            "size": "xl",
+            "weight": "bold",
+            "color": "#EAF6F9"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Was due",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "Fri 9 Oct, 23:59",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "md",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Overdue",
+                "wrap": true,
+                "size": "sm",
+                "color": "#8FB3BF",
+                "flex": 0
+              },
+              {
+                "type": "text",
+                "text": "1 day",
+                "wrap": true,
+                "size": "sm",
+                "weight": "bold",
+                "color": "#FACC15",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "flex": 0,
+                "backgroundColor": "#BFEEF7",
+                "cornerRadius": "4px",
+                "paddingStart": "6px",
+                "paddingEnd": "6px",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "🏷 School",
+                    "wrap": true,
+                    "size": "xs",
+                    "weight": "bold",
+                    "color": "#04131A"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator",
+            "color": "#24323A"
+          },
+          {
+            "type": "text",
+            "text": "\"Deadline's gone, but maybe you can still catch it.\"",
+            "wrap": true,
+            "size": "sm",
+            "style": "italic",
+            "color": "#C9DBE1"
+          }
+        ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#10171C",
+        "paddingAll": "14px",
+        "paddingTop": "0px",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "style": "secondary",
+            "color": "#BFEEF7",
+            "height": "sm",
+            "action": {
+              "type": "postback",
+              "label": "✓ Mark as done",
+              "data": "done:8692e53c-0c2a-48ea-94a4-0c6b793b1051",
+              "displayText": "Mark \"Task 3\" as done"
+            }
+          },
+          {
+            "type": "button",
+            "style": "primary",
+            "color": "#3AADD0",
+            "height": "sm",
+            "action": {
+              "type": "uri",
+              "label": "Open in dashboard",
+              "uri": "https://personal-dashboard-opal-gamma.vercel.app"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

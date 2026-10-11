@@ -3,7 +3,7 @@
   "size": "mega",
   "hero": {
     "type": "image",
-    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/morning-letter.png",
+    "url": "https://personal-dashboard-opal-gamma.vercel.app/line-cards/morning-letter.png?v=3",
     "size": "full",
     "aspectRatio": "26:10",
     "aspectMode": "cover",
@@ -307,6 +307,7 @@
     "backgroundColor": "#10171C",
     "paddingAll": "14px",
     "paddingTop": "0px",
+    "spacing": "sm",
     "contents": [
       {
         "type": "button",

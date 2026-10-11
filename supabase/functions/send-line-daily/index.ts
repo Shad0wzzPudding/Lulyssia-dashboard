@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, CARD_MAX_CHARS, assetUrl, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
+import { MAX_NUDGES_PER_MESSAGE, daysSince, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -67,16 +68,17 @@ const stickerImage = (name: string): LineMessage => {
 // ---- Morning letter card (LINE Flex Message) ----
 // Built from the shared card pieces in ../_shared/lineCard.ts
 
-type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string };
+type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string; overdue?: boolean };
 
-/** One event or task: a coloured edge, then its name, time, detail and tags. */
-const cardItem = ({ title, time, detail, tags, edge }: CardItem): FlexComponent => ({
+/** One event or task: a coloured edge, then its name, time, detail and tags. An overdue task gets a
+    yellow edge and an "⚠️ OVERDUE" chip under its name. */
+const cardItem = ({ title, time, detail, tags, edge, overdue }: CardItem): FlexComponent => ({
   type: 'box',
   layout: 'horizontal',
   backgroundColor: CARD.item,
   cornerRadius: '8px',
   contents: [
-    { type: 'box', layout: 'vertical', width: '4px', backgroundColor: edge, contents: [] },
+    { type: 'box', layout: 'vertical', width: '4px', backgroundColor: overdue ? CARD.warn : edge, contents: [] },
     {
       type: 'box',
       layout: 'vertical',
@@ -85,6 +87,22 @@ const cardItem = ({ title, time, detail, tags, edge }: CardItem): FlexComponent 
       spacing: 'xs',
       contents: [
         flexText(title, { size: 'md', weight: 'bold', color: CARD.ink }),
+        ...(overdue
+          ? [{
+              type: 'box',
+              layout: 'horizontal',
+              contents: [{
+                type: 'box',
+                layout: 'vertical',
+                flex: 0,
+                backgroundColor: CARD.warn,
+                cornerRadius: '4px',
+                paddingStart: '6px',
+                paddingEnd: '6px',
+                contents: [flexText('⚠️ OVERDUE', { size: 'xs', weight: 'bold', color: CARD.dark })],
+              }],
+            }]
+          : []),
         ...(time ? [flexText(time, { size: 'sm', color: CARD.muted })] : []),
         ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
         ...(tags ? [tagChip(tags)] : []),
@@ -287,7 +305,7 @@ Deno.serve(async (req) => {
     // (LINE "today" or the Settings test button) always sends it
     let query = supabase
       .from('line_links')
-      .select('user_id, line_user_id, display_name')
+      .select('user_id, line_user_id, display_name, overdue_enabled')
       .not('line_user_id', 'is', null);
     query = targetUserId ? query.eq('user_id', targetUserId) : query.eq('is_enabled', true);
 
@@ -383,6 +401,11 @@ Deno.serve(async (req) => {
           return names.join(', ');
         };
 
+        // A one-off task whose deadline has already passed (repeating tasks aren't marked, like the nudges)
+        const nowMs = Date.now();
+        const isOverdue = (t: { deadline: string | null; recurrence_unit: string | null }) =>
+          !t.recurrence_unit && !!t.deadline && new Date(t.deadline).getTime() < nowMs;
+
         const todayTasks = (tasks ?? []).filter((t) => {
           if (t.recurrence_unit) {
             return (
@@ -436,7 +459,7 @@ Deno.serve(async (req) => {
               const due = thTime(t.deadline);
               const tagStr = formatTags(t.tag_ids);
               const detail = formatDetail(t.description);
-              lines.push(`Name : ${t.title}`);
+              lines.push(`Name : ${t.title}${isOverdue(t) ? ' (overdue)' : ''}`);
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
               lines.push(`Start time - deadline: ${start ?? '-'} - ${due ?? '-'}`);
@@ -463,6 +486,7 @@ Deno.serve(async (req) => {
             detail: formatDetail(t.description),
             tags: formatTags(t.tag_ids),
             edge: '#FFFFFF',
+            overdue: isOverdue(t),
           })),
         });
 
@@ -481,14 +505,6 @@ Deno.serve(async (req) => {
         const digest: LineMessage[] = [letterCard, ...images.slice(0, 4)];
         // If LINE ever rejects the card, the same push goes again with the plain-text letter
         const digestText: LineMessage = { type: 'text', text: lines.join('\n').trim().slice(0, 4900) };
-        const pushDigest = async (messages: LineMessage[]) => {
-          try {
-            await pushMessages(accessToken, link.line_user_id as string, messages);
-          } catch (err) {
-            console.error(`Morning letter card rejected for user ${link.user_id}, sending text instead:`, err);
-            await pushMessages(accessToken, link.line_user_id as string, messages.map((m) => (m === letterCard ? digestText : m)));
-          }
-        };
 
         // Separate "Notice before" message: items flagged to warn one day ahead.
         const tomorrow = thDateString(new Date(Date.now() + 86400000));
@@ -501,16 +517,9 @@ Deno.serve(async (req) => {
             .filter((t) => t.notice_before && !t.recurrence_unit && (isTomorrow(t.start_date) || isTomorrow(t.deadline)))
             .map((t) => ({ kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids })),
         ];
-        // LINE counts each push as one message (up to 5 bubbles), so the sign-off and sticker
-        // join the last push when there is room instead of costing an extra push
-        const signOffFits = digest.length + signOff.length <= 5;
-        if (noticeItems.length === 0 && signOffFits) {
-          await pushDigest([...digest, ...signOff]);
-        } else {
-          await pushDigest(digest);
-        }
-        sent++;
-
+        // Notice-before card (plain text as its fallback)
+        let noticeCard: LineMessage | null = null;
+        let noticeText: LineMessage | null = null;
         if (noticeItems.length > 0) {
           const n: string[] = [`🔔 Notice before — coming up tomorrow (${tomorrow})`, ''];
           for (const it of noticeItems) {
@@ -525,7 +534,7 @@ Deno.serve(async (req) => {
             if (tagStr) n.push(`🏷 Tag : ${tagStr}`);
             n.push('');
           }
-  
+          noticeText = { type: 'text', text: n.join('\n').trim().slice(0, 4900) };
           const toItem = (it: (typeof noticeItems)[number]): CardItem => ({
             title: it.title,
             time: timeRange(isTomorrow(it.start) ? thTime(it.start) : null, isTomorrow(it.deadline) ? thTime(it.deadline) : null),
@@ -533,25 +542,85 @@ Deno.serve(async (req) => {
             tags: formatTags(it.tag_ids),
             edge: it.kind === '📅 Event' ? CARD.cyan : '#FFFFFF',
           });
-          const noticeCard = noticeBeforeCard({
+          noticeCard = noticeBeforeCard({
             date: cardDate(tomorrow),
             events: noticeItems.filter((it) => it.kind === '📅 Event').map(toItem),
             tasks: noticeItems.filter((it) => it.kind !== '📅 Event').map(toItem),
           });
-          try {
-            await pushMessages(accessToken, link.line_user_id as string, [noticeCard, ...signOff]);
-          } catch (err) {
-            // If LINE rejects the card, send the same notice as plain text
-            console.error(`Notice-before card rejected for user ${link.user_id}, sending text instead:`, err);
-            await pushMessages(accessToken, link.line_user_id as string, [
-              { type: 'text', text: n.join('\n').trim().slice(0, 4900) },
-              ...signOff,
-            ]);
-          }
-        } else if (!signOffFits) {
-          // Digest had no room left (text + 3 or 4 images): the sign-off and sticker get their own push
-          await pushMessages(accessToken, link.line_user_id as string, signOff);
         }
+
+        // Missed-deadline repeats: tasks still not done whose deadline was on an earlier day (within
+        // the last 3 days) get one more nudge each morning, all in one message. The first nudge came
+        // from send-line-overdue just after the deadline.
+        let overdueCards: LineMessage | null = null;
+        let overdueText: LineMessage | null = null;
+        if (link.overdue_enabled) {
+          const startOfToday = new Date(`${today}T00:00:00+07:00`);
+          const { data: late } = await supabase
+            .from('tasks')
+            .select('id, title, description, deadline, tag_ids')
+            .eq('user_id', link.user_id)
+            .eq('is_completed', false)
+            .is('recurrence_unit', null)
+            .lt('deadline', startOfToday.toISOString())
+            .gte('deadline', new Date(Date.now() - 3 * 86400000).toISOString())
+            .order('deadline', { ascending: true });
+          const repeats: MissedTask[] = [];
+          for (const t of late ?? []) {
+            if (repeats.length >= MAX_NUDGES_PER_MESSAGE) break;
+            // Once a day per task: the day's start is the key
+            const { error: markErr } = await supabase.from('line_reminders_sent').insert({
+              user_id: link.user_id, item_type: 'task_overdue_repeat', item_id: t.id, occurrence_at: startOfToday.toISOString(),
+            });
+            if (markErr) continue;
+            repeats.push({
+              id: t.id,
+              title: t.title,
+              deadline: t.deadline as string,
+              detail: formatDetail(t.description),
+              tags: formatTags(t.tag_ids),
+              daysOverdue: Math.max(1, daysSince(t.deadline as string)),
+            });
+          }
+          if (repeats.length > 0) {
+            overdueCards = missedDeadlinesMessage(name ?? undefined, repeats);
+            overdueText = { type: 'text', text: missedDeadlinesText(name ?? undefined, repeats) };
+          }
+        }
+
+        // Send in order: the letter (+ photos), the notice, the missed deadlines, then the sign-off
+        // and sticker together at the very end. LINE counts each push as one message (up to 5
+        // bubbles), so they are packed into as few pushes as possible.
+        const fallback = new Map<LineMessage, LineMessage>([[letterCard, digestText]]);
+        const ordered: LineMessage[] = [...digest];
+        if (noticeCard && noticeText) {
+          ordered.push(noticeCard);
+          fallback.set(noticeCard, noticeText);
+        }
+        if (overdueCards && overdueText) {
+          ordered.push(overdueCards);
+          fallback.set(overdueCards, overdueText);
+        }
+        const pushes: LineMessage[][] = [];
+        for (const m of ordered) {
+          const last = pushes[pushes.length - 1];
+          if (last && last.length < 5) last.push(m);
+          else pushes.push([m]);
+        }
+        const last = pushes[pushes.length - 1];
+        if (last.length + signOff.length <= 5) last.push(...signOff);
+        else pushes.push([...signOff]);
+
+        for (const batch of pushes) {
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, batch);
+          } catch (err) {
+            // If LINE rejects a card, send the same push again with the plain-text versions
+            console.error(`LINE cards rejected for user ${link.user_id}, sending text instead:`, err);
+            await pushMessages(accessToken, link.line_user_id as string, batch.map((m) => fallback.get(m) ?? m));
+          }
+        }
+        sent++;
       } catch (err) {
         console.error(`Failed for user ${link.user_id}:`, err);
         failures.push(String(err));

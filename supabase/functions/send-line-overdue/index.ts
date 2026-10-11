@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
+import { type FlexMessage } from '../_shared/lineCard.ts';
+import { MAX_NUDGES_PER_MESSAGE, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -82,68 +83,6 @@ async function imageMessages(
   return out;
 }
 
-const NUDGES = [
-  "Hey, it's already past due. Want to have a look?",
-  'That one slipped by — want to finish it now?',
-  "Deadline's gone, but maybe you can still catch it.",
-  'I think you need to check on this one.',
-];
-
-/** "Fri 9 Oct, 23:59" in Thai time, for the card. */
-function cardDateTime(iso: string): string {
-  const s = new Date(new Date(iso).getTime() + TH_OFFSET_MS);
-  const day = s.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${day}, ${p(s.getUTCHours())}:${p(s.getUTCMinutes())}`;
-}
-
-/** The "Missed deadline" card: the task, when it was due, detail, tags and her nudge. */
-function missedDeadlineCard(opts: {
-  name: string | undefined;
-  taskId: string;
-  title: string;
-  deadline: string;
-  detail: string | null;
-  tags: string;
-  nudge: string;
-}): FlexMessage {
-  const { name, taskId, title, deadline, detail, tags, nudge } = opts;
-  return lineCard({
-    banner: 'missed-deadline',
-    altText: `⚠️ Missed deadline: ${title}`,
-    button: 'Open in dashboard',
-    // Tapping it sends "done:<task id>" to line-webhook, which marks the task finished
-    actions: [{
-      type: 'button',
-      style: 'secondary',
-      color: CARD.chip,
-      height: 'sm',
-      action: {
-        type: 'postback',
-        label: '✓ Mark as done',
-        data: `done:${taskId}`,
-        displayText: `Mark "${title.slice(0, 200)}" as done`,
-      },
-    }],
-    body: [
-      flexText(`⚠️ Missed deadline${name ? `, ${name}` : ''}!`, { size: 'sm', weight: 'bold', color: CARD.warn }),
-      flexText('📋 TASK', { size: 'xs', weight: 'bold', color: CARD.date }),
-      flexText(title, { size: 'xl', weight: 'bold', color: CARD.ink }),
-      labelRow('Was due', cardDateTime(deadline), CARD.warn),
-      ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
-      ...(tags ? [tagChip(tags)] : []),
-      { type: 'separator', color: CARD.line },
-      flexText(`"${nudge}"`, { size: 'sm', style: 'italic', color: CARD.detail }),
-    ],
-  });
-}
-
-function thDateTime(iso: string): string {
-  const s = new Date(new Date(iso).getTime() + TH_OFFSET_MS);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${p(s.getUTCDate())}/${p(s.getUTCMonth() + 1)} ${p(s.getUTCHours())}:${p(s.getUTCMinutes())}`;
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   const json = (body: unknown, status = 200) =>
@@ -186,38 +125,34 @@ Deno.serve(async (req) => {
         const { data: tags } = await supabase.from('tags').select('id, name').eq('user_id', link.user_id);
         const tagMap = new Map((tags ?? []).map((t) => [t.id, t.name]));
 
+        // Every task that just missed its deadline goes out in ONE message (a carousel for 2+).
+        // Up to 12 per run: any more are picked up by the next check, 5 minutes later.
+        const missed: MissedTask[] = [];
         for (const t of tasks ?? []) {
+          if (missed.length >= MAX_NUDGES_PER_MESSAGE) break;
           const { error: markErr } = await supabase.from('line_reminders_sent').insert({
             user_id: link.user_id, item_type: 'task_overdue', item_id: t.id, occurrence_at: t.deadline,
           });
-          if (markErr) continue;
-          const tagNames = (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', ');
-          const name = nameByUser.get(link.user_id);
-          const nudge = NUDGES[Math.floor(Math.random() * NUDGES.length)];
-          const text = [
-            `⚠️ Missed deadline${name ? `, ${name}` : ''}!`, '', '📋 Task',
-            `Name : ${t.title}`, 'Detail :', formatDetail(t.description) ?? '-',
-            `Deadline was : ${thDateTime(t.deadline)}`, ...(tagNames ? [`🏷 Tag : ${tagNames}`] : []), '',
-            `"${nudge}"`,
-          ].join('\n');
-          const card = missedDeadlineCard({
-            name,
-            taskId: t.id,
+          if (markErr) continue; // already nudged for this deadline
+          missed.push({
+            id: t.id,
             title: t.title,
             deadline: t.deadline,
             detail: formatDetail(t.description),
-            tags: tagNames,
-            nudge,
+            tags: (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', '),
+            daysOverdue: 0,
           });
-          try {
-            await pushMessages(accessToken, link.line_user_id as string, [card]);
-          } catch (err) {
-            // If LINE rejects the card, send the same nudge as plain text
-            console.error(`Missed-deadline card rejected for user ${link.user_id}, sending text instead:`, err);
-            await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: text.slice(0, 4900) }]);
-          }
-          sent++;
         }
+        if (missed.length === 0) continue;
+        const name = nameByUser.get(link.user_id) ?? undefined;
+        try {
+          await pushMessages(accessToken, link.line_user_id as string, [missedDeadlinesMessage(name, missed)]);
+        } catch (err) {
+          // If LINE rejects the cards, send the same nudge as plain text
+          console.error(`Missed-deadline cards rejected for user ${link.user_id}, sending text instead:`, err);
+          await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: missedDeadlinesText(name, missed) }]);
+        }
+        sent += missed.length;
       } catch (err) {
         console.error(`Overdue nudge failed for ${link.user_id}:`, err);
         failures.push(String(err));
