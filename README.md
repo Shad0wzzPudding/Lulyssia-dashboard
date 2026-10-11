@@ -101,7 +101,7 @@ Jobs are created by migrations `20261005000003_line_cron_vault.sql` and
 | Job | Schedule (UTC) | Meaning | Calls |
 | --- | --- | --- | --- |
 | `line-daily-digest-8am-bangkok` | `0 1 * * *` | 08:00 Thai time | `send-line-daily` |
-| `line-overdue-nudges` | `0 * * * *` | Every hour | `send-line-overdue` |
+| `line-overdue-nudges` | `*/5 * * * *` | Every 5 minutes | `send-line-overdue` |
 | `line-start-reminders` | `*/5 * * * *` | Every 5 minutes | `send-line-reminders` |
 | `attachments-cleanup` | `0 20 * * *` | 03:00 Thai time | `cleanup-attachments` |
 
