@@ -124,6 +124,7 @@ export const TasksPage = ({
         tag_ids: task.tag_ids || [],
         recurrence_unit: task.recurrence_unit || null,
         recurrence_interval: task.recurrence_interval || 1,
+        recurrence_anchor: task.recurrence_anchor ?? null,
         attachments: task.attachments || [],
         notice_before: !!task.notice_before,
       });
@@ -155,13 +156,24 @@ export const TasksPage = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
+    const recurrenceUnit = formData.recurrence_unit || null;
+    const recurrenceInterval = formData.recurrence_unit ? Math.max(1, Number(formData.recurrence_interval) || 1) : 1;
+    // A repeating task counts its repeats from its first deadline. Editing keeps that anchor
+    // unless the deadline (to the minute) or the repeat setting changed.
+    const minute = (iso?: string | null) => (iso ? Math.floor(new Date(iso).getTime() / 60000) : null);
+    const keepAnchor = !!editingTask?.recurrence_anchor
+      && minute(editingTask.deadline) === minute(deadline)
+      && editingTask.recurrence_unit === recurrenceUnit
+      && (editingTask.recurrence_interval || 1) === recurrenceInterval;
     const submissionData = {
       ...formData,
       // null (not undefined) so clearing a date while editing really removes it
       start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
-      deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
-      recurrence_unit: formData.recurrence_unit || null,
-      recurrence_interval: formData.recurrence_unit ? Math.max(1, Number(formData.recurrence_interval) || 1) : 1,
+      deadline,
+      recurrence_unit: recurrenceUnit,
+      recurrence_interval: recurrenceInterval,
+      recurrence_anchor: !recurrenceUnit ? null : keepAnchor ? (editingTask?.recurrence_anchor ?? deadline) : deadline,
     };
 
     if (editingTask) {
@@ -217,6 +229,7 @@ export const TasksPage = ({
       tag_ids: task.tag_ids || [],
       recurrence_unit: task.recurrence_unit || null,
       recurrence_interval: task.recurrence_interval || 1,
+      recurrence_anchor: task.recurrence_anchor ?? null,
       attachments: task.attachments || [],
       notice_before: !!task.notice_before,
       __duplicate: true,
@@ -237,6 +250,7 @@ export const TasksPage = ({
         tag_ids: task.tag_ids || [],
         recurrence_unit: task.recurrence_unit || null,
         recurrence_interval: task.recurrence_interval || 1,
+        recurrence_anchor: task.recurrence_anchor ?? null,
         attachments: task.attachments || [],
         notice_before: !!task.notice_before,
         __duplicate: true,

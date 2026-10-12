@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, CARD_MAX_CHARS, assetUrl, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
 import { MAX_NUDGES_PER_MESSAGE, daysSince, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
 import { formatDetail } from '../_shared/lineText.ts';
+import { repeatAnchors, repeatOn } from '../_shared/recurrence.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -304,7 +305,7 @@ Deno.serve(async (req) => {
       try {
         const { data: tasks } = await supabase
           .from('tasks')
-          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, tag_ids, attachments, notice_before')
+          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, recurrence_anchor, tag_ids, attachments, notice_before')
           .eq('user_id', link.user_id)
           .eq('is_completed', false);
 
@@ -326,49 +327,6 @@ Deno.serve(async (req) => {
           return s === today || e === today;
         };
 
-        // For recurring tasks, check whether a specific anchor date (start or deadline)
-        // recurs on today's date.
-        const recurrenceHitsToday = (
-          anchorIso: string | null,
-          unit: string | null,
-          intervalRaw: number | null,
-        ) => {
-          if (!anchorIso || !unit) return false;
-          const interval = Math.max(1, intervalRaw ?? 1);
-          const anchor = new Date(new Date(anchorIso).getTime() + TH_OFFSET_MS);
-          const now = new Date(new Date().getTime() + TH_OFFSET_MS);
-          const anchorDay = Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), anchor.getUTCDate());
-          const todayDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-          if (todayDay < anchorDay) return false;
-          const dayDiff = Math.round((todayDay - anchorDay) / 86400000);
-          switch (unit) {
-            case 'day':
-            case 'days':
-              return dayDiff % interval === 0;
-            case 'week':
-            case 'weeks':
-              return dayDiff % (7 * interval) === 0;
-            case 'month':
-            case 'months': {
-              const months =
-                (now.getUTCFullYear() - anchor.getUTCFullYear()) * 12 + (now.getUTCMonth() - anchor.getUTCMonth());
-              return months >= 0 && months % interval === 0 && now.getUTCDate() === anchor.getUTCDate();
-            }
-            case 'year':
-            case 'years': {
-              const years = now.getUTCFullYear() - anchor.getUTCFullYear();
-              return (
-                years >= 0 &&
-                years % interval === 0 &&
-                now.getUTCMonth() === anchor.getUTCMonth() &&
-                now.getUTCDate() === anchor.getUTCDate()
-              );
-            }
-            default:
-              return false;
-          }
-        };
-
         const tagMap = new Map((tags ?? []).map((tag) => [tag.id, tag.name]));
         const formatTags = (tagIds: string[] | null) => {
           if (!tagIds || tagIds.length === 0) return '';
@@ -384,9 +342,12 @@ Deno.serve(async (req) => {
 
         const todayTasks = (tasks ?? []).filter((t) => {
           if (t.recurrence_unit) {
+            // A repeat that starts or is due today (counted from the first deadline)
+            const anchors = repeatAnchors(t);
+            const now = new Date();
             return (
-              recurrenceHitsToday(t.start_date, t.recurrence_unit, t.recurrence_interval) ||
-              recurrenceHitsToday(t.deadline, t.recurrence_unit, t.recurrence_interval)
+              !!repeatOn(anchors.start, t.recurrence_unit, t.recurrence_interval, now) ||
+              !!repeatOn(anchors.deadline, t.recurrence_unit, t.recurrence_interval, now)
             );
           }
           return matchesToday(t.start_date, t.deadline);

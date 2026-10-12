@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
 import { formatDetail } from '../_shared/lineText.ts';
+import { repeatAnchors, repeatOn } from '../_shared/recurrence.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -94,57 +95,6 @@ async function imageMessages(
   return out;
 }
 
-// Does a recurring anchor fall on the given TH day, and if so at what UTC instant?
-function recurrenceOccurrenceToday(
-  anchorIso: string | null,
-  unit: string | null,
-  intervalRaw: number | null,
-  nowUtc: Date,
-): Date | null {
-  if (!anchorIso || !unit) return null;
-  const interval = Math.max(1, intervalRaw ?? 1);
-  const anchor = new Date(anchorIso);
-  if (isNaN(anchor.getTime())) return null;
-  const anchorTh = new Date(anchor.getTime() + TH_OFFSET_MS);
-  const nowTh = new Date(nowUtc.getTime() + TH_OFFSET_MS);
-  const anchorDay = Date.UTC(anchorTh.getUTCFullYear(), anchorTh.getUTCMonth(), anchorTh.getUTCDate());
-  const todayDay = Date.UTC(nowTh.getUTCFullYear(), nowTh.getUTCMonth(), nowTh.getUTCDate());
-  if (todayDay < anchorDay) return null;
-  const dayDiff = Math.round((todayDay - anchorDay) / 86400000);
-
-  let hit = false;
-  switch (unit) {
-    case 'day':
-    case 'days':
-      hit = dayDiff % interval === 0;
-      break;
-    case 'week':
-    case 'weeks':
-      hit = dayDiff % (7 * interval) === 0;
-      break;
-    case 'month':
-    case 'months': {
-      const months =
-        (nowTh.getUTCFullYear() - anchorTh.getUTCFullYear()) * 12 + (nowTh.getUTCMonth() - anchorTh.getUTCMonth());
-      hit = months >= 0 && months % interval === 0 && nowTh.getUTCDate() === anchorTh.getUTCDate();
-      break;
-    }
-    case 'year':
-    case 'years': {
-      const years = nowTh.getUTCFullYear() - anchorTh.getUTCFullYear();
-      hit =
-        years >= 0 &&
-        years % interval === 0 &&
-        nowTh.getUTCMonth() === anchorTh.getUTCMonth() &&
-        nowTh.getUTCDate() === anchorTh.getUTCDate();
-      break;
-    }
-  }
-  if (!hit) return null;
-  // Same clock time as the anchor, but on today's TH date.
-  return new Date(anchor.getTime() + (todayDay - anchorDay));
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -205,7 +155,7 @@ Deno.serve(async (req) => {
       try {
         const { data: tasks } = await supabase
           .from('tasks')
-          .select('id, title, description, start_date, deadline, recurrence_unit, recurrence_interval, tag_ids, attachments')
+          .select('id, title, description, start_date, deadline, recurrence_unit, recurrence_interval, recurrence_anchor, tag_ids, attachments')
           .eq('user_id', link.user_id)
           .eq('is_completed', false);
 
@@ -238,8 +188,9 @@ Deno.serve(async (req) => {
           if (t.recurrence_unit) {
             // Just before midnight (Thai time) the window reaches into the next day, so look for
             // the repeat on both days it touches
+            const { start } = repeatAnchors(t);
             occ = [now, windowEnd]
-              .map((day) => recurrenceOccurrenceToday(t.start_date, t.recurrence_unit, t.recurrence_interval, day))
+              .map((day) => repeatOn(start, t.recurrence_unit, t.recurrence_interval, day))
               .find(inWindow) ?? null;
           } else if (t.start_date) {
             occ = new Date(t.start_date);

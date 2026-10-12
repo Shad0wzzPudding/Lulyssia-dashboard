@@ -21,21 +21,26 @@ const advanceDate = (iso: string, unit: string, interval: number): string => {
 
 const renewRecurringTask = (task: Task): Partial<Task> | null => {
   if (!task.recurrence_unit || !task.deadline) return null;
-  const interval = task.recurrence_interval || 1;
-  let deadline = task.deadline;
-  let start = task.start_date || undefined;
-  let advanced = false;
   const now = Date.now();
+  if (new Date(task.deadline).getTime() > now) return null;
+  const interval = Math.max(1, task.recurrence_interval || 1);
+  // Every repeat is counted from the first deadline, so a monthly task due on the 31st comes
+  // back on the 31st (or the month's last day), instead of staying on the 28th after February.
+  // Tasks from before the anchor existed start counting from their current deadline.
+  const anchor = task.recurrence_anchor || task.deadline;
+  // The start keeps the same distance before the deadline
+  const startOffset = task.start_date ? new Date(task.deadline).getTime() - new Date(task.start_date).getTime() : null;
   // Advance until the deadline is in the future
-  let guard = 0;
-  while (new Date(deadline).getTime() <= now && guard < 1000) {
-    deadline = advanceDate(deadline, task.recurrence_unit, interval);
-    if (start) start = advanceDate(start, task.recurrence_unit, interval);
-    advanced = true;
-    guard++;
+  let deadline = task.deadline;
+  for (let step = 1; new Date(deadline).getTime() <= now && step < 100000; step++) {
+    deadline = advanceDate(anchor, task.recurrence_unit, interval * step);
   }
-  if (!advanced) return null;
-  return { deadline, start_date: start, is_completed: false };
+  return {
+    deadline,
+    start_date: startOffset === null ? undefined : new Date(new Date(deadline).getTime() - startOffset).toISOString(),
+    recurrence_anchor: anchor,
+    is_completed: false,
+  };
 };
 
 /**

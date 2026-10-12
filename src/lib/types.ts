@@ -31,6 +31,8 @@ export interface Task {
   tag_ids?: string[];
   recurrence_unit?: string | null;
   recurrence_interval?: number;
+  /** First deadline of a repeating task; each repeat is counted from it */
+  recurrence_anchor?: string | null;
   notice_before?: boolean;
   sort_order?: number;
   attachments?: Attachment[];

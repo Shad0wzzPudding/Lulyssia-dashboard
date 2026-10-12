@@ -299,6 +299,7 @@ export type Database = {
           id: string
           is_completed: boolean
           notice_before: boolean
+          recurrence_anchor: string | null
           recurrence_interval: number
           recurrence_unit: string | null
           sort_order: number
@@ -316,6 +317,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           notice_before?: boolean
+          recurrence_anchor?: string | null
           recurrence_interval?: number
           recurrence_unit?: string | null
           sort_order?: number
@@ -333,6 +335,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           notice_before?: boolean
+          recurrence_anchor?: string | null
           recurrence_interval?: number
           recurrence_unit?: string | null
           sort_order?: number
