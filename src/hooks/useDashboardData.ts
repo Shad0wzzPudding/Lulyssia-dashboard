@@ -390,7 +390,9 @@ export const useDashboardData = () => {
         .from('tasks')
         .delete()
         .eq('user_id', user.id)
-        .eq('is_completed', true);
+        .eq('is_completed', true)
+        // Ticked repeating tasks stay: they come back on their next round
+        .is('recurrence_unit', null);
       
       if (error) throw error;
     },

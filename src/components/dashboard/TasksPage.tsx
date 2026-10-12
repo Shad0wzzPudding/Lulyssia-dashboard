@@ -101,8 +101,11 @@ export const TasksPage = ({
     }
   }, [showUndo]);
 
+  // What "Clear Completed" deletes: finished one-time tasks (repeating ones come back next round)
+  const clearableTasks = tasks.filter(task => task.is_completed && !task.recurrence_unit);
+
   const handleClearConfirm = () => {
-    const completed = tasks.filter(task => task.is_completed);
+    const completed = clearableTasks;
     setClearedTasks(completed);
     onClearCompleted();
     setShowClearConfirm(false);
@@ -431,8 +434,8 @@ export const TasksPage = ({
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
         onConfirm={handleClearConfirm}
-        title="Clear all completed tasks?"
-        description="This will permanently delete all your completed tasks. But don't worry, you'll have 10 seconds to undo!"
+        title="Clear completed one-time tasks?"
+        description="This will permanently delete all your completed one-time tasks. Repeating tasks stay and come back on their next round. But don't worry, you'll have 10 seconds to undo!"
         confirmText="Yep, clear them!"
         cancelText="Wait, no!"
       />
@@ -464,7 +467,7 @@ export const TasksPage = ({
               Undo Clear
             </Button>
           )}
-          {completedTasks.length > 0 && !showUndo && (
+          {clearableTasks.length > 0 && !showUndo && (
             <Button 
               variant="outline"
               onClick={() => setShowClearConfirm(true)}
