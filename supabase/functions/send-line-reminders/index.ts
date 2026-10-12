@@ -96,15 +96,19 @@ async function pushMessages(token: string, to: string, messages: LineMessage[]) 
   if (!res.ok) throw new Error(`LINE push failed ${res.status}: ${await res.text()}`);
 }
 
-// Signed https URLs for image attachments LINE can fetch (JPEG/PNG only).
+// Signed https URLs for image attachments LINE can fetch (JPEG/PNG only). Only files in the
+// owner's own folder: the stored path is user data, and this signs with full access.
 async function imageMessages(
   supabase: SupabaseClient,
   attachments: unknown,
+  userId: string,
 ): Promise<LineMessage[]> {
   const list = Array.isArray(attachments) ? attachments : [];
   const images = list.filter(
     (a: Record<string, unknown>) =>
-      typeof a?.type === 'string' && /^image\/(jpeg|jpg|png)$/i.test(a.type as string) && typeof a?.path === 'string',
+      typeof a?.type === 'string' && /^image\/(jpeg|jpg|png)$/i.test(a.type as string) &&
+      typeof a?.path === 'string' && (a.path as string).startsWith(`${userId}/`) &&
+      !(a.path as string).split('/').includes('..'),
   );
   const out: LineMessage[] = [];
   for (const img of images) {
@@ -332,7 +336,7 @@ Deno.serve(async (req) => {
             detail: formatDetail(item.description),
             tags: tagStr,
           });
-          const images = (await imageMessages(supabase, item.attachments)).slice(0, 4);
+          const images = (await imageMessages(supabase, item.attachments, link.user_id)).slice(0, 4);
           try {
             await pushMessages(accessToken, link.line_user_id as string, [card, ...images]);
           } catch (err) {
