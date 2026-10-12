@@ -47,7 +47,8 @@ export function useTouchReorder<T extends HTMLElement>(callbacks: TouchReorderCa
     let overIndex: number | null = null;
     let picked = false;
     let start = { x: 0, y: 0 };
-    let lastY = 0;
+    // Where the finger is now (the edge scrolling and the drop target follow it)
+    let last = { x: 0, y: 0 };
 
     const indexAt = (x: number, y: number) => {
       const el = document.elementFromPoint(x, y)?.closest(`[${REORDER_INDEX_ATTR}]`);
@@ -61,9 +62,23 @@ export function useTouchReorder<T extends HTMLElement>(callbacks: TouchReorderCa
       edgeFrame = undefined;
     };
 
+    // The item under the finger becomes the drop target
+    const updateOver = () => {
+      const i = indexAt(last.x, last.y);
+      if (i !== null && i !== overIndex) {
+        overIndex = i;
+        callbacksRef.current.onOver(i);
+      }
+    };
+
+    // Runs from the first drag move until the item is let go
     const edgeScroll = () => {
-      if (lastY < EDGE_PX) window.scrollBy(0, -EDGE_SCROLL_PX);
-      else if (lastY > window.innerHeight - EDGE_PX) window.scrollBy(0, EDGE_SCROLL_PX);
+      const scroll = last.y < EDGE_PX ? -EDGE_SCROLL_PX : last.y > window.innerHeight - EDGE_PX ? EDGE_SCROLL_PX : 0;
+      if (scroll !== 0) {
+        window.scrollBy(0, scroll);
+        // The page moved under a still finger: the target changes with it
+        updateOver();
+      }
       edgeFrame = requestAnimationFrame(edgeScroll);
     };
 
@@ -83,14 +98,13 @@ export function useTouchReorder<T extends HTMLElement>(callbacks: TouchReorderCa
       pressedIndex = Number(el.getAttribute(REORDER_INDEX_ATTR));
       if (Number.isNaN(pressedIndex)) return reset();
       start = { x: touch.clientX, y: touch.clientY };
-      lastY = touch.clientY;
+      last = start;
       holdTimer = window.setTimeout(() => {
         if (pressedIndex === null) return;
         picked = true;
         overIndex = pressedIndex;
         navigator.vibrate?.(15);
         callbacksRef.current.onPickUp(pressedIndex);
-        edgeFrame = requestAnimationFrame(edgeScroll);
       }, HOLD_MS);
     };
 
@@ -104,12 +118,10 @@ export function useTouchReorder<T extends HTMLElement>(callbacks: TouchReorderCa
       }
       // Holding an item: the finger moves the item, not the page
       e.preventDefault();
-      lastY = touch.clientY;
-      const i = indexAt(touch.clientX, touch.clientY);
-      if (i !== null && i !== overIndex) {
-        overIndex = i;
-        callbacksRef.current.onOver(i);
-      }
+      last = { x: touch.clientX, y: touch.clientY };
+      updateOver();
+      // Scroll along near the screen edges, only once the item is actually being dragged
+      if (edgeFrame === undefined) edgeFrame = requestAnimationFrame(edgeScroll);
     };
 
     const onTouchEnd = (e: TouchEvent) => {
