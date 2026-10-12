@@ -7,10 +7,11 @@ start reminders and missed-deadline nudges.
 
 - **Tasks** (one-time or recurring, with deadlines), **events** and **interests**
 - Tags, file attachments, drag-to-reorder, sorting, tag filtering and search
-- Activity log with the option to revert a deletion
+- Recent Changes (activity log, kept for 30 days) with undo
 - Daily tasks: a collapsible checklist on the Tasks page that comes back unchecked every day
-- "Notice before" option: a heads-up the day before something starts
-- LINE messages: daily digest (08:00 Thai time), start reminders, missed-deadline nudges
+- "Notice before" option: a heads-up the day before something starts or is due
+- LINE messages: morning letter (08:00 Thai time), day-before notice, start reminders and
+  missed-deadline nudges, each with its own on/off
 - Installable as an app (PWA)
 
 ## Tech stack
@@ -71,17 +72,23 @@ Daily tasks roll over through the `ensure_daily_tasks_for_today(user, local_date
 calls on load. The first call each day copies the previous list, unchecked. The day is the user's local
 calendar day, not UTC.
 
+Repeating tasks move to their next round through `renew_recurring_tasks()`: the app calls it for the
+signed-in user on load (`renew_my_recurring_tasks()`), and a scheduled job runs it every 5 minutes for
+LINE users so their messages stay right when the app isn't open. Rounds are counted from the first
+deadline (`tasks.recurrence_anchor`), so a monthly task due on the 31st comes back on the 31st, or the
+month's last day. These routine changes are not added to Recent Changes.
+
 ### Edge functions (`supabase/functions/`)
 
 | Function | Purpose | Who can call it |
 | --- | --- | --- |
-| `line-webhook` | LINE webhook: account linking by code and chat commands | LINE only (verifies the request signature) |
+| `line-webhook` | LINE webhook: account linking by code, chat commands, "Mark as done" on nudges; unlinks an account that blocks the bot | LINE only (verifies the request signature) |
 | `line-bot-info` | Returns the bot ID for the "Open LINE" button | Signed-in users |
 | `line-rich-menu` | Creates the LINE rich menu from an uploaded image | Cron secret |
-| `send-line-daily` | Daily digest and "notice before" message | Cron secret, or a signed-in user (test button) |
+| `send-line-daily` | 08:00 run: morning letter, day-before notice and missed-deadline repeats, each by its own switch | Cron secret, or a signed-in user (test button) |
 | `send-line-reminders` | Start reminders | Cron secret, or a signed-in user |
 | `send-line-overdue` | Missed-deadline nudges | Cron secret |
-| `cleanup-attachments` | Deletes stored attachment files nothing uses anymore | Cron secret |
+| `cleanup-attachments` | Trims Recent Changes to 30 days, then deletes stored attachment files nothing uses anymore | Cron secret |
 
 Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 
@@ -95,8 +102,9 @@ Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 
 ### Scheduled jobs
 
-Jobs are created by migrations `20261005000003_line_cron_vault.sql` and
-`20261008000001_cleanup_unused_attachments.sql` using pg_cron and pg_net.
+Jobs are created by migrations `20261005000003_line_cron_vault.sql`,
+`20261008000001_cleanup_unused_attachments.sql` and `20261013000000_renew_recurring_tasks.sql` using
+pg_cron and pg_net.
 
 | Job | Schedule (UTC) | Meaning | Calls |
 | --- | --- | --- | --- |
@@ -104,6 +112,7 @@ Jobs are created by migrations `20261005000003_line_cron_vault.sql` and
 | `line-overdue-nudges` | `*/5 * * * *` | Every 5 minutes | `send-line-overdue` |
 | `line-start-reminders` | `*/5 * * * *` | Every 5 minutes | `send-line-reminders` |
 | `attachments-cleanup` | `0 20 * * *` | 03:00 Thai time | `cleanup-attachments` |
+| `renew-recurring-tasks` | `*/5 * * * *` | Every 5 minutes | `renew_recurring_tasks()` (SQL, no secret) |
 
 The shared secret is **never stored in this repository**. The jobs read it from Supabase Vault at run
 time, from a secret named `line_cron_secret`. To set it up for the first time, or to rotate it:
