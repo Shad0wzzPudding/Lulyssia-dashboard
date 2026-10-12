@@ -1,7 +1,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-// Deletes stored attachment files that nothing uses anymore (see the
-// unused_attachment_paths SQL function). Send { "dry_run": true } to only list them.
+// Nightly clean-up: trims Recent Changes (activity_log) to its last 30 days, then deletes stored
+// attachment files that nothing uses anymore (see the trim_activity_log and
+// unused_attachment_paths SQL functions). Send { "dry_run": true } to only count and list them.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,11 +26,17 @@ Deno.serve(async (req) => {
     const dryRun = body?.dry_run === true;
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    // First, so files only old entries pointed to count as unused
+    const { data: trimmed, error: trimError } = await supabase.rpc('trim_activity_log', { p_dry_run: dryRun });
+    if (trimError) throw trimError;
+
     const { data, error } = await supabase.rpc('unused_attachment_paths');
     if (error) throw error;
     const paths = (data ?? []) as string[];
 
-    if (dryRun) return json({ message: 'Dry run: nothing deleted', count: paths.length, paths });
+    if (dryRun) {
+      return json({ message: 'Dry run: nothing deleted', old_log_entries: trimmed, count: paths.length, paths });
+    }
 
     let deleted = 0;
     const failures: string[] = [];
@@ -43,7 +50,7 @@ Deno.serve(async (req) => {
       }
       deleted += removed?.length ?? 0;
     }
-    return json({ message: 'Unused attachments cleaned up', deleted, failures });
+    return json({ message: 'Recent Changes trimmed, unused attachments cleaned up', log_entries_removed: trimmed, deleted, failures });
   } catch (error) {
     console.error('cleanup-attachments error:', error);
     return json({ error: (error as Error).message }, 500);
