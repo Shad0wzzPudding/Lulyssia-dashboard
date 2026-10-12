@@ -8,3 +8,18 @@ verify_jwt = false
 
 [functions.cleanup-attachments]
 verify_jwt = false
+
+# Cron jobs call these with the x-cron-secret header and no login token; they check the secret themselves
+[functions.send-line-overdue]
+verify_jwt = false
+
+[functions.send-line-reminders]
+verify_jwt = false
+
+# Only returns the bot's public LINE id and name (Settings' "Open LINE" button)
+[functions.line-bot-info]
+verify_jwt = false
+
+# One-off rich menu setup, guarded by the cron secret
+[functions.line-rich-menu]
+verify_jwt = false
