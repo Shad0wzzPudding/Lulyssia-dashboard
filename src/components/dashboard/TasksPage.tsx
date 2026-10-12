@@ -214,6 +214,7 @@ export const TasksPage = ({
       recurrence_unit: task.recurrence_unit || null,
       recurrence_interval: task.recurrence_interval || 1,
       attachments: task.attachments || [],
+      notice_before: !!task.notice_before,
       __duplicate: true,
     });
     playDuplicateSound();
@@ -233,6 +234,7 @@ export const TasksPage = ({
         recurrence_unit: task.recurrence_unit || null,
         recurrence_interval: task.recurrence_interval || 1,
         attachments: task.attachments || [],
+        notice_before: !!task.notice_before,
         __duplicate: true,
         __silent: idx !== selected.length - 1,
       });

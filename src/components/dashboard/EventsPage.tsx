@@ -182,6 +182,7 @@ export const EventsPage = ({
       deadline: event.deadline,
       tag_ids: event.tag_ids || [],
       attachments: event.attachments || [],
+      notice_before: !!event.notice_before,
       __duplicate: true,
     });
     playDuplicateSound();
@@ -198,6 +199,7 @@ export const EventsPage = ({
         deadline: event.deadline,
         tag_ids: event.tag_ids || [],
         attachments: event.attachments || [],
+        notice_before: !!event.notice_before,
         __duplicate: true,
         __silent: idx !== selected.length - 1,
       });
