@@ -60,22 +60,29 @@ export const useDashboardData = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // First, move repeating tasks whose deadline has passed to their next round. The database
-      // does it (renew_my_recurring_tasks), with the same rule as the scheduled job, and keeps
-      // these routine changes out of Recent Changes.
+      const loadTasks = async () => {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('deadline', { ascending: true });
+        if (error) throw error;
+        return (data || []) as unknown as Task[];
+      };
+      const tasks = await loadTasks();
+
+      // Repeating tasks whose deadline has passed move to their next round. The database does it
+      // (renew_my_recurring_tasks), with the same rule as the scheduled job, and keeps these
+      // routine changes out of Recent Changes. Only asked when one is actually due.
+      const now = Date.now();
+      const renewalDue = tasks.some((t) => t.recurrence_unit && t.deadline && new Date(t.deadline).getTime() <= now);
+      if (!renewalDue) return tasks;
       const { error: renewError } = await supabase.rpc('renew_my_recurring_tasks');
       if (renewError) {
         console.error('Error renewing repeating tasks:', renewError);
+        return tasks;
       }
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('deadline', { ascending: true });
-      
-      if (error) throw error;
-      return (data || []) as unknown as Task[];
+      return loadTasks();
     }
   });
 
