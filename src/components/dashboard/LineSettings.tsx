@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { MessageCircle, Copy, RefreshCw, Send } from 'lucide-react';
+import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 
 interface LineLink {
   id: string;
@@ -29,6 +30,7 @@ export const LineSettings = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [botId, setBotId] = useState<string | null>(null);
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
 
   const load = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -66,6 +68,19 @@ export const LineSettings = () => {
         if (id) setBotId(id);
       })
       .catch(() => { /* bot info unavailable — hide shortcut button */ });
+  }, []);
+
+  // Linking happens in LINE, so check again when coming back to the app (no reload needed)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, []);
 
   const regenerate = async () => {
@@ -135,6 +150,18 @@ export const LineSettings = () => {
 
   return (
     <Card className="border-2 border-dotted">
+      <LulyssiaConfirmDialog
+        open={showUnlinkConfirm}
+        onOpenChange={setShowUnlinkConfirm}
+        onConfirm={() => {
+          setShowUnlinkConfirm(false);
+          regenerate();
+        }}
+        title="Unlink LINE and make a new code?"
+        description="A new code also disconnects your LINE account: the morning letter, reminders and nudges stop until you send the new code to the bot."
+        confirmText="Yes, unlink"
+        cancelText="Wait, no!"
+      />
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <MessageCircle size={18} className="text-primary" />
@@ -192,7 +219,8 @@ export const LineSettings = () => {
                 <Button
                   size="icon"
                   variant="outline"
-                  onClick={regenerate}
+                  // A new code also unlinks LINE: ask first while it is linked
+                  onClick={() => (link.line_user_id ? setShowUnlinkConfirm(true) : regenerate())}
                   disabled={busy}
                   aria-label="Generate a new link code"
                 >
