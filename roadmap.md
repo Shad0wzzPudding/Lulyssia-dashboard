@@ -72,7 +72,7 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
    - [x] About Lulyssia link (opens the About page)
    - [x] ~~Quick "Animating menu" on/off switch~~ dropped: tried as a 4th row and as a header chip, both crowd the drawer and Lulyssia's art covers the buttons; the switch stays in Settings
    - [ ] LINE status (linked / not linked, daily message on or off)
-   - [ ] Bigger, bolder items in the same slanted bubble style as the message menu choices
+   - [x] Bigger, bolder items: slanted slabs (heavy outline, white icon block, hard cyan shadow, bold italic labels); chosen from a preview over matching the message menu's bubbles
 2. Game-style cursor in the message menu and the drawer
    - [x] Up/Down arrow keys move between choices, Enter picks one
    - [x] A highlight that slides from choice to choice

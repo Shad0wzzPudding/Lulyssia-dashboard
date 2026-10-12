@@ -106,16 +106,65 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
     },
   });
 
-  /** Drawer cursor: an outline that slides from item to item (in the item's own accent color). */
-  const drawerCursorMark = (i: number, borderColor: string) =>
+  /** Drawer cursor: a fill that slides from slab to slab behind its content (rose on Sign out). */
+  const drawerCursorMark = (i: number, fill: string) =>
     drawerCursor === i && (
       <motion.span
         layoutId="drawer-cursor"
         aria-hidden
         transition={cursorTransition}
-        className={cn('pointer-events-none absolute -inset-[2px] border-2', borderColor)}
+        className={cn('pointer-events-none absolute inset-0', fill)}
       />
     );
+
+  /** One drawer row: a heavy slanted slab with a white icon block and a hard cyan shadow.
+      The current page gets the cyan gradient; under the cursor the slab fills white (or rose). */
+  const drawerRow = (opts: {
+    i: number;
+    icon: typeof Camera;
+    label: string;
+    onClick: () => void;
+    current?: boolean;
+    danger?: boolean;
+    /** Nudged right a little differently per row, like the menu's choices */
+    offset: number;
+  }) => {
+    const { i, icon: Icon, label, onClick, current, danger, offset } = opts;
+    const onCursor = drawerCursor === i;
+    return (
+      <motion.button
+        type="button"
+        {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, i)}
+        {...snapIn(i + 1, -12)}
+        onClick={onClick}
+        aria-current={current ? 'page' : undefined}
+        style={{ marginLeft: offset, width: `calc(100% - ${offset + 6}px)` }}
+        className={cn(
+          'relative flex h-[46px] shrink-0 items-center gap-3 border-[3px] border-foreground text-left shadow-[5px_5px_0_0_hsl(var(--primary)/0.55)] focus-visible:outline-none',
+          current ? 'bg-gradient-to-r from-[#3bc6d4] to-white' : 'bg-background'
+        )}
+      >
+        {drawerCursorMark(i, danger ? 'bg-destructive' : 'bg-foreground')}
+        <span
+          className={cn(
+            'relative grid w-[42px] place-items-center self-stretch transition-colors',
+            onCursor ? 'bg-background text-foreground' : 'bg-foreground text-background'
+          )}
+        >
+          <Icon size={18} className="skew-x-12" />
+        </span>
+        <span
+          className={cn(
+            'relative flex flex-1 skew-x-12 items-center justify-between pr-2.5 font-display text-[20px] font-extrabold italic transition-colors',
+            onCursor ? 'text-background' : current ? 'text-slate-900' : 'text-foreground'
+          )}
+        >
+          {label}
+          <ChevronRight size={16} className={cn('opacity-60 transition-transform', onCursor && 'translate-x-0.5')} />
+        </span>
+      </motion.button>
+    );
+  };
 
   /** Drawer rows slam in one after another as the opening slash passes, settling at their slant:
       MENU at 60% of the slash, then the rows from 77%, 0.05s apart. */
@@ -355,62 +404,35 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
               <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
             </SheetHeader>
           </motion.div>
-          <motion.button
-            type="button"
-            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 0)}
-            {...snapIn(1)}
-            onClick={() => handlePageChange('settings')}
-            aria-current={activePage === 'settings' ? 'page' : undefined}
-            className={cn(
-              'relative flex w-full items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
-              activePage === 'settings'
-                ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
-                : cn('border-foreground/30', drawerCursor === 0 && 'text-primary')
-            )}
-          >
-            {drawerCursorMark(0, 'border-primary')}
-            <Camera size={18} className="skew-x-6" />
-            <span className="flex-1 skew-x-6">Settings</span>
-            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 0 && 'translate-x-0.5')} />
-          </motion.button>
+          {drawerRow({
+            i: 0,
+            icon: Camera,
+            label: 'Settings',
+            onClick: () => handlePageChange('settings'),
+            current: activePage === 'settings',
+            offset: 14,
+          })}
           {/* Sign out: closes the drawer, then asks to confirm */}
-          <motion.button
-            type="button"
-            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 1)}
-            {...snapIn(2)}
-            onClick={() => {
+          {drawerRow({
+            i: 1,
+            icon: LogOut,
+            label: 'Sign out',
+            onClick: () => {
               setDrawerOpen(false);
               setSignOutConfirmOpen(true);
-            }}
-            className={cn(
-              'relative flex w-full items-center gap-3 border-2 border-foreground/30 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
-              drawerCursor === 1 && 'text-destructive'
-            )}
-          >
-            {drawerCursorMark(1, 'border-destructive')}
-            <LogOut size={18} className="skew-x-6" />
-            <span className="flex-1 skew-x-6">Sign out</span>
-            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 1 && 'translate-x-0.5')} />
-          </motion.button>
+            },
+            danger: true,
+            offset: 0,
+          })}
           {/* About Lulyssia: opens the About page (profile card + her art) */}
-          <motion.button
-            type="button"
-            {...cursorProps(drawerItemRefs, drawerCursor, setDrawerCursor, 2)}
-            {...snapIn(3)}
-            onClick={() => handlePageChange('about')}
-            aria-current={activePage === 'about' ? 'page' : undefined}
-            className={cn(
-              'relative flex w-full items-center gap-3 border-2 bg-card/90 px-3 py-2.5 text-left font-semibold transition-colors focus-visible:outline-none',
-              activePage === 'about'
-                ? 'border-foreground/80 bg-gradient-to-r from-[#3bc6d4] to-white text-slate-900'
-                : cn('border-foreground/30', drawerCursor === 2 && 'text-primary')
-            )}
-          >
-            {drawerCursorMark(2, 'border-primary')}
-            <Info size={18} className="skew-x-6" />
-            <span className="flex-1 skew-x-6">About Lulyssia</span>
-            <ChevronRight size={16} className={cn('skew-x-6 opacity-60 transition-transform', drawerCursor === 2 && 'translate-x-0.5')} />
-          </motion.button>
+          {drawerRow({
+            i: 2,
+            icon: Info,
+            label: 'About Lulyssia',
+            onClick: () => handlePageChange('about'),
+            current: activePage === 'about',
+            offset: 22,
+          })}
         </SheetContent>
       </Sheet>
 
