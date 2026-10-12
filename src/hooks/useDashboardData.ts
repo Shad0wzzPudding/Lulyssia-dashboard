@@ -217,6 +217,13 @@ export const useDashboardData = () => {
     }
   });
 
+  // "User sort": a new or copied item goes above the current first one (number 0 tied with the
+  // top item and showed up second)
+  const topSortOrder = (table: 'interests' | 'tasks' | 'events') => {
+    const items = queryClient.getQueryData<{ sort_order?: number }[]>([table]) ?? [];
+    return items.length > 0 ? Math.min(...items.map((item) => item.sort_order ?? 0)) - 1 : 0;
+  };
+
   // Mutations
   const createInterest = useMutation({
     mutationFn: async (
@@ -227,7 +234,7 @@ export const useDashboardData = () => {
       const { __duplicate, __silent, ...insertData } = data;
       const { data: result, error } = await supabase
         .from('interests')
-        .insert([{ ...insertData, user_id: user.id }])
+        .insert([{ ...insertData, sort_order: topSortOrder('interests'), user_id: user.id }])
         .select()
         .single();
       
@@ -311,7 +318,7 @@ export const useDashboardData = () => {
       const { __duplicate, __silent, ...insertData } = data;
       const { error } = await supabase
         .from('tasks')
-        .insert([{ ...insertData, user_id: user.id }]);
+        .insert([{ ...insertData, sort_order: topSortOrder('tasks'), user_id: user.id }]);
       
       if (error) throw error;
       return { __duplicate, __silent };
@@ -495,7 +502,7 @@ export const useDashboardData = () => {
       const { __duplicate, __silent, ...insertData } = data;
       const { error } = await supabase
         .from('events')
-        .insert([{ ...insertData, user_id: user.id }]);
+        .insert([{ ...insertData, sort_order: topSortOrder('events'), user_id: user.id }]);
       
       if (error) throw error;
       return { __duplicate, __silent };
