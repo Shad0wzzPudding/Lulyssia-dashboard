@@ -22,6 +22,7 @@ import {
 import lulyssiaPortrait from '@/assets/image/lulyssia_portrait.webp';
 import { DrawerScene, SLASH_DURATION } from './DrawerScene';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
+import { useLineStatus } from '@/hooks/useLineStatus';
 
 interface NavigationProps {
   activePage: NavigationPage;
@@ -81,6 +82,9 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
   const reduceMotion = useReducedMotion();
   // "Reduce flashing": no opening slash, so the drawer rows don't wait for it or snap in either
   const noSlash = useReduceFlashing();
+  // LINE link status: a chip beside MENU when linked, a "!" on the drawer tab and Settings when not
+  const lineStatus = useLineStatus(drawerOpen);
+  const lineNotLinked = lineStatus?.linked === false;
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -117,6 +121,19 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
       />
     );
 
+  /** The "!" plate shown while LINE is not linked (on the drawer tab and the Settings slab) */
+  const lineAlert = (position: string) => (
+    <span
+      aria-hidden
+      className={cn(
+        'line-alert absolute z-10 grid h-5 w-5 -rotate-[8deg] place-items-center border-2 border-foreground bg-destructive font-display text-sm font-black italic leading-none text-foreground',
+        position
+      )}
+    >
+      !
+    </span>
+  );
+
   /** One drawer row: a heavy slanted slab with a white icon block and a hard cyan shadow.
       The current page gets the cyan gradient; under the cursor the slab fills white (or rose). */
   const drawerRow = (opts: {
@@ -128,8 +145,12 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
     danger?: boolean;
     /** Nudged right a little differently per row, like the menu's choices */
     offset: number;
+    /** A small second line under the label (the slab grows to fit) */
+    sub?: string;
+    /** A "!" plate on the slab's corner */
+    alert?: boolean;
   }) => {
-    const { i, icon: Icon, label, onClick, current, danger, offset } = opts;
+    const { i, icon: Icon, label, onClick, current, danger, offset, sub, alert } = opts;
     const onCursor = drawerCursor === i;
     return (
       <motion.button
@@ -140,11 +161,13 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
         aria-current={current ? 'page' : undefined}
         style={{ marginLeft: offset, width: `calc(100% - ${offset + 6}px)` }}
         className={cn(
-          'relative flex h-[46px] shrink-0 items-center gap-3 border-[3px] border-foreground text-left shadow-[5px_5px_0_0_hsl(var(--primary)/0.55)] focus-visible:outline-none',
+          'relative flex shrink-0 items-center gap-3 border-[3px] border-foreground text-left shadow-[5px_5px_0_0_hsl(var(--primary)/0.55)] focus-visible:outline-none',
+          sub ? 'h-[58px]' : 'h-[46px]',
           current ? 'bg-gradient-to-r from-[#3bc6d4] to-white' : 'bg-background'
         )}
       >
         {drawerCursorMark(i, danger ? 'bg-destructive' : 'bg-foreground')}
+        {alert && lineAlert('-right-2.5 -top-3')}
         <span
           className={cn(
             'relative grid w-[42px] place-items-center self-stretch transition-colors',
@@ -159,8 +182,15 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             onCursor ? 'text-background' : current ? 'text-slate-900' : 'text-foreground'
           )}
         >
-          {label}
-          <ChevronRight size={16} className={cn('opacity-60 transition-transform', onCursor && 'translate-x-0.5')} />
+          {sub ? (
+            <span className="grid min-w-0 leading-[1.05]">
+              <span>{label}</span>
+              <span className={cn('truncate text-xs font-semibold', onCursor ? 'text-background/70' : 'text-rose-300')}>{sub}</span>
+            </span>
+          ) : (
+            label
+          )}
+          <ChevronRight size={16} className={cn('shrink-0 opacity-60 transition-transform', onCursor && 'translate-x-0.5')} />
         </span>
       </motion.button>
     );
@@ -348,14 +378,15 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
         <SheetTrigger asChild>
           <button
             type="button"
-            aria-label="Open drawer"
-            title="More"
+            aria-label={lineNotLinked ? 'Open drawer (LINE not linked)' : 'Open drawer'}
+            title={lineNotLinked ? 'More (LINE not linked)' : 'More'}
             onClick={(e) => {
               drawerOpenedByKeyboard.current = e.detail === 0;
             }}
             className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex h-14 w-9 items-center justify-center border-2 border-l-0 border-foreground/80 bg-card/95 text-foreground backdrop-blur-sm shadow-[4px_4px_0_0_hsl(var(--primary))] transition-[width,color] hover:w-11 hover:text-primary"
           >
             <PanelLeftOpen size={18} />
+            {lineNotLinked && lineAlert('-right-3 -top-2.5')}
           </button>
         </SheetTrigger>
         {/* Transparent layer above DrawerScene (which draws the dark panel behind Lulyssia),
@@ -387,20 +418,39 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             <SheetHeader className="mb-3 text-left">
               {/* "MENU" in ransom-note cut-out letters (styles in index.css). With the slash, the
                   block snaps in like the rows, then the letters drop onto it one by one */}
-              <SheetTitle className="w-fit">
-                <span className="sr-only">Menu</span>
-                <span
-                  aria-hidden
-                  className={cn('menu-ransom', !noSlash && 'menu-ransom-drop')}
-                  style={{ '--drop-start': `${SLASH_DURATION * 0.6 + 0.12}s` } as React.CSSProperties}
-                >
-                  {[...'MENU'].map((letter, i) => (
-                    <span key={letter} style={{ '--i': i } as React.CSSProperties}>
-                      {letter}
+              <div className="flex items-center gap-3">
+                <SheetTitle className="w-fit">
+                  <span className="sr-only">Menu</span>
+                  <span
+                    aria-hidden
+                    className={cn('menu-ransom', !noSlash && 'menu-ransom-drop')}
+                    style={{ '--drop-start': `${SLASH_DURATION * 0.6 + 0.12}s` } as React.CSSProperties}
+                  >
+                    {[...'MENU'].map((letter, i) => (
+                      <span key={letter} style={{ '--i': i } as React.CSSProperties}>
+                        {letter}
+                      </span>
+                    ))}
+                  </span>
+                </SheetTitle>
+                {/* LINE linked: white on LINE green with the daily message on, grey with it off */}
+                {lineStatus?.linked && (
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange('settings')}
+                    aria-label={`LINE linked, daily message ${lineStatus.dailyOn ? 'on' : 'off'}. Open Settings`}
+                    className={cn(
+                      'inline-flex translate-y-4 -rotate-2 -skew-x-12 items-center border-2 border-foreground px-2 py-0.5 font-display text-xs font-extrabold uppercase italic tracking-wide transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                      lineStatus.dailyOn ? 'bg-[#06c755] text-white' : 'bg-[#7d8b90] text-background'
+                    )}
+                  >
+                    <span className="inline-flex skew-x-12 items-center gap-1.5">
+                      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
+                      LINE · Daily {lineStatus.dailyOn ? 'on' : 'off'}
                     </span>
-                  ))}
-                </span>
-              </SheetTitle>
+                  </button>
+                )}
+              </div>
               <SheetDescription className="sr-only">Extra pages and shortcuts</SheetDescription>
             </SheetHeader>
           </motion.div>
@@ -411,6 +461,8 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             onClick: () => handlePageChange('settings'),
             current: activePage === 'settings',
             offset: 14,
+            sub: lineNotLinked ? 'LINE not linked yet' : undefined,
+            alert: lineNotLinked,
           })}
           {/* Sign out: closes the drawer, then asks to confirm */}
           {drawerRow({

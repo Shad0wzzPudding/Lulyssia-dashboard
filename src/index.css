@@ -490,3 +490,22 @@
     transform: none;
   }
 }
+
+/* LINE not linked: the "!" plate on the drawer tab and on the Settings slab, with a slow pulse */
+.line-alert {
+  animation: line-alert-pulse 1.6s ease-in-out infinite;
+}
+@keyframes line-alert-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.15;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .line-alert {
+    animation: none;
+  }
+}
