@@ -33,6 +33,10 @@ import { DailyTasksSection } from './DailyTasksSection';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
+// Deadline filled in from a start time (datetime-local value): 5 hours later
+const autoDeadline = (start: string) =>
+  start ? format(addHours(new Date(start), 5), "yyyy-MM-dd'T'HH:mm") : '';
+
 interface TasksPageProps {
   tasks: Task[];
   onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
@@ -505,8 +509,9 @@ export const TasksPage = ({
                       const v = e.target.value;
                       setFormData(prev => {
                         const next = { ...prev, start_date: v };
-                        if (v) {
-                          next.deadline = format(addHours(new Date(v), 5), "yyyy-MM-dd'T'HH:mm");
+                        // The deadline follows the start (+5 h) until it is set by hand
+                        if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_date))) {
+                          next.deadline = autoDeadline(v);
                         }
                         return next;
                       });

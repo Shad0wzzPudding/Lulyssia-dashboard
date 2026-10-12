@@ -29,6 +29,10 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 
+// Deadline filled in from a start time (datetime-local value): 5 hours later
+const autoDeadline = (start: string) =>
+  start ? format(addHours(new Date(start), 5), "yyyy-MM-dd'T'HH:mm") : '';
+
 interface EventsPageProps {
   events: Event[];
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
@@ -494,8 +498,9 @@ export const EventsPage = ({
                   const v = e.target.value;
                   setFormData(prev => {
                     const next = { ...prev, start_time: v };
-                    if (v) {
-                      next.deadline = format(addHours(new Date(v), 5), "yyyy-MM-dd'T'HH:mm");
+                    // The deadline follows the start (+5 h) until it is set by hand
+                    if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time))) {
+                      next.deadline = autoDeadline(v);
                     }
                     return next;
                   });
