@@ -79,7 +79,8 @@ export const EventsPage = ({
 
   const now = new Date();
   const visibleEvents = useMemo(
-    () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById),
+    // Date sorts use when an event starts (its deadline only if it has no start)
+    () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById, (e) => e.start_time ?? e.deadline),
     [events, filterTagIds, search, sort, tagsById]
   );
   const startOfToday = startOfDay(now);
@@ -584,6 +585,7 @@ export const EventsPage = ({
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search events…"
+          dateLabel="Start time"
         />
       )}
 

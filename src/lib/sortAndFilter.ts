@@ -13,7 +13,9 @@ export type SortOption =
 export const sortItems = <T extends { created_at: string; title: string; deadline?: string; is_pinned?: boolean; is_completed?: boolean; tag_ids?: string[]; sort_order?: number }>(
   items: T[],
   sort: SortOption,
-  tagsById?: Record<string, { name: string }>
+  tagsById?: Record<string, { name: string }>,
+  /** The date the two date sorts use: the deadline, unless a page says otherwise (Events: start time) */
+  dateOf: (item: T) => string | null | undefined = (item) => item.deadline
 ): T[] => {
   const arr = [...items];
   switch (sort) {
@@ -22,9 +24,9 @@ export const sortItems = <T extends { created_at: string; title: string; deadlin
     case 'created_asc':
       return arr.sort((a, b) => a.created_at.localeCompare(b.created_at));
     case 'deadline_asc':
-      return arr.sort((a, b) => (a.deadline || '\uffff').localeCompare(b.deadline || '\uffff'));
+      return arr.sort((a, b) => (dateOf(a) || '\uffff').localeCompare(dateOf(b) || '\uffff'));
     case 'deadline_desc':
-      return arr.sort((a, b) => (b.deadline || '').localeCompare(a.deadline || ''));
+      return arr.sort((a, b) => (dateOf(b) || '').localeCompare(dateOf(a) || ''));
     case 'title_asc':
       return arr.sort((a, b) => a.title.localeCompare(b.title));
     case 'title_desc':

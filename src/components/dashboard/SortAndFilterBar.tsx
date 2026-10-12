@@ -22,6 +22,8 @@ interface Props {
   search?: string;
   onSearchChange?: (v: string) => void;
   searchPlaceholder?: string;
+  /** Name of the date the date sorts use ("Deadline", or "Start time" on Events) */
+  dateLabel?: string;
 }
 
 export const SortAndFilterBar = ({
@@ -34,6 +36,7 @@ export const SortAndFilterBar = ({
   search,
   onSearchChange,
   searchPlaceholder = 'Search…',
+  dateLabel = 'Deadline',
 }: Props) => {
   const { tags, isLoading: tagsLoading } = useTags();
 
@@ -88,8 +91,8 @@ export const SortAndFilterBar = ({
         <SelectContent>
           <SelectItem value="created_desc">Newest first</SelectItem>
           <SelectItem value="created_asc">Oldest first</SelectItem>
-          <SelectItem value="deadline_asc">Deadline (soonest)</SelectItem>
-          <SelectItem value="deadline_desc">Deadline (latest)</SelectItem>
+          <SelectItem value="deadline_asc">{dateLabel} (soonest)</SelectItem>
+          <SelectItem value="deadline_desc">{dateLabel} (latest)</SelectItem>
           <SelectItem value="title_asc">Title A–Z</SelectItem>
           <SelectItem value="title_desc">Title Z–A</SelectItem>
           <SelectItem value="tag">By tag</SelectItem>
