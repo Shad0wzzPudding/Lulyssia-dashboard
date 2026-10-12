@@ -25,34 +25,52 @@ export const DraggableSummaryItem = ({
   isDragging,
   dragOverIndex,
 }: DraggableSummaryItemProps) => {
-  const [touchStartX, setTouchStartX] = useState(0);
   const [currentX, setCurrentX] = useState(0);
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef({ x: 0, y: 0 });
+  const touchDraggingRef = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
+    startRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchDraggingRef.current = true;
     setIsTouchDragging(true);
     onDragStart(index);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isTouchDragging) return;
-    const diff = e.touches[0].clientX - touchStartX;
-    setCurrentX(diff);
-    
-    // Determine which item we're over
-    const elements = document.querySelectorAll('[data-summary-item]');
+    if (!touchDraggingRef.current) return;
     const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
+    const diff = touchX - startRef.current.x;
+    const vertical = Math.abs(touchY - startRef.current.y);
+    // Wait for a clear direction before deciding (a finger jitters a few pixels)
+    if (vertical < 8 && Math.abs(diff) < 8) return;
+
+    // A mostly up/down movement is a page scroll, not a drag: stop tracking it, so scrolling
+    // past the tiles can't reorder them
+    if (vertical > Math.abs(diff) && Math.abs(currentX) < 10) {
+      touchDraggingRef.current = false;
+      setIsTouchDragging(false);
+      setCurrentX(0);
+      onDragEnd();
+      return;
+    }
+    setCurrentX(diff);
+
+    // The tile under the finger (both directions: on a phone the tiles wrap into two rows)
+    const elements = document.querySelectorAll('[data-summary-item]');
     elements.forEach((el, i) => {
       const rect = el.getBoundingClientRect();
-      if (touchX >= rect.left && touchX <= rect.right) {
+      if (touchX >= rect.left && touchX <= rect.right && touchY >= rect.top && touchY <= rect.bottom) {
         onDragOver(i);
       }
     });
   };
 
   const handleTouchEnd = () => {
+    if (!touchDraggingRef.current) return;
+    touchDraggingRef.current = false;
     setIsTouchDragging(false);
     setCurrentX(0);
     onDragEnd();
