@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
+import { useTouchReorder } from "@/hooks/useTouchReorder";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { STICKERS } from '@/lib/stickers';
 interface HomePageProps {
@@ -454,22 +455,46 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     setDragOverIndex(index);
   };
 
-  const handleDragEnd = () => {
-    if (dragIndex !== null && dragOverIndex !== null && dragIndex !== dragOverIndex) {
-      const newOrder = [...summaryOrder];
-      const [removed] = newOrder.splice(dragIndex, 1);
-      newOrder.splice(dragOverIndex, 0, removed);
-      setSummaryOrder(newOrder);
+  // Move a count tile and save the new order
+  const moveSummaryItem = (from: number, to: number) => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (from === to) return;
+    setSummaryOrder((order) => {
+      const newOrder = [...order];
+      const [removed] = newOrder.splice(from, 1);
+      newOrder.splice(to, 0, removed);
       try {
         localStorage.setItem('summaryOrder', JSON.stringify(newOrder));
       } catch (e) {
         console.error('Failed to save summary order:', e);
       }
-    }
-    setDragIndex(null);
-    setDragOverIndex(null);
+      return newOrder;
+    });
   };
 
+  const handleDragEnd = () => {
+    if (dragIndex !== null && dragOverIndex !== null) {
+      moveSummaryItem(dragIndex, dragOverIndex);
+    } else {
+      setDragIndex(null);
+      setDragOverIndex(null);
+    }
+  };
+
+  // Phones: press and hold a tile to pick it up, then drag it anywhere (also to the other row)
+  const summaryTouchRef = useTouchReorder<HTMLDivElement>({
+    onPickUp: (i) => {
+      setDragIndex(i);
+      setDragOverIndex(i);
+    },
+    onOver: setDragOverIndex,
+    onDrop: moveSummaryItem,
+    onCancel: () => {
+      setDragIndex(null);
+      setDragOverIndex(null);
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -493,7 +518,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Today's counts (drag to reorder; the order is saved) */}
-          <div className="flex flex-wrap justify-center gap-3">
+          <div ref={summaryTouchRef} className="flex flex-wrap justify-center gap-3">
             {summaryOrder.map((key, index) => {
               const item = summaryItems[key as keyof typeof summaryItems];
               if (!item) return null;
@@ -509,6 +534,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   onDragOver={handleDragOver}
                   onDragEnd={handleDragEnd}
                   isDragging={dragIndex !== null}
+                  isPicked={dragIndex === index}
                   dragOverIndex={dragOverIndex}
                 />
               );

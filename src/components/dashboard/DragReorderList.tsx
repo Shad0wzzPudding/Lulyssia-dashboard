@@ -1,5 +1,6 @@
 import { useState, ReactNode } from 'react';
 import { GripVertical } from 'lucide-react';
+import { REORDER_INDEX_ATTR, isCoarsePointer, useTouchReorder } from '@/hooks/useTouchReorder';
 
 interface DragReorderListProps<T> {
   items: T[];
@@ -20,26 +21,44 @@ export function DragReorderList<T>({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
+  const move = (fromIndex: number, toIndex: number) => {
+    setDragIndex(null);
+    setOverIndex(null);
+    if (fromIndex === toIndex) return;
+    const next = [...items];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    onReorder(next.map(getId), getId(moved));
+  };
+
   const handleDrop = (toIndex: number) => {
-    if (dragIndex === null || dragIndex === toIndex) {
-      setDragIndex(null);
+    if (dragIndex === null) {
       setOverIndex(null);
       return;
     }
-    const next = [...items];
-    const [moved] = next.splice(dragIndex, 1);
-    next.splice(toIndex, 0, moved);
-    onReorder(next.map(getId), getId(moved));
-    setDragIndex(null);
-    setOverIndex(null);
+    move(dragIndex, toIndex);
   };
 
+  // Phones: press and hold a card to pick it up, then drag (mouse dragging below)
+  const touchRef = useTouchReorder<HTMLDivElement>({
+    onPickUp: (i) => setDragIndex(i),
+    onOver: (i) => setOverIndex(i),
+    onDrop: move,
+    onCancel: () => {
+      setDragIndex(null);
+      setOverIndex(null);
+    },
+  });
+  // A native drag on a touch screen would fight the press-and-hold drag
+  const mouseDraggable = !isCoarsePointer();
+
   return (
-    <div className={className ?? 'space-y-3'}>
+    <div ref={touchRef} className={className ?? 'space-y-3'}>
       {items.map((item, idx) => (
         <div
           key={getId(item)}
-          draggable
+          {...{ [REORDER_INDEX_ATTR]: idx }}
+          draggable={mouseDraggable}
           onDragStart={() => setDragIndex(idx)}
           onDragOver={(e) => {
             e.preventDefault();
@@ -54,8 +73,8 @@ export function DragReorderList<T>({
             setDragIndex(null);
             setOverIndex(null);
           }}
-          className={`relative group transition-all ${
-            dragIndex === idx ? 'opacity-50' : ''
+          className={`relative group transition-all [-webkit-touch-callout:none] [@media(pointer:coarse)]:select-none ${
+            dragIndex === idx ? 'opacity-50 scale-[0.98]' : ''
           } ${overIndex === idx && dragIndex !== idx ? 'ring-2 ring-pink-300 rounded-lg' : ''}`}
         >
           <div className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-40 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-muted-foreground bg-background/80 rounded p-0.5 pointer-events-none">

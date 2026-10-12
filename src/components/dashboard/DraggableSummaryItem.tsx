@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { REORDER_INDEX_ATTR, isCoarsePointer } from "@/hooks/useTouchReorder";
 
 interface DraggableSummaryItemProps {
   id: string;
@@ -10,11 +10,16 @@ interface DraggableSummaryItemProps {
   onDragOver: (index: number) => void;
   onDragEnd: () => void;
   isDragging: boolean;
+  /** This tile is the one being moved */
+  isPicked: boolean;
   dragOverIndex: number | null;
 }
 
+/**
+ * One of Home's count tiles. Mouse: drag and drop. Touch: press and hold, then drag
+ * (handled for the whole row by useTouchReorder in HomePage).
+ */
 export const DraggableSummaryItem = ({
-  id,
   value,
   label,
   colorClass,
@@ -23,86 +28,27 @@ export const DraggableSummaryItem = ({
   onDragOver,
   onDragEnd,
   isDragging,
+  isPicked,
   dragOverIndex,
-}: DraggableSummaryItemProps) => {
-  const [currentX, setCurrentX] = useState(0);
-  const [isTouchDragging, setIsTouchDragging] = useState(false);
-  const itemRef = useRef<HTMLDivElement>(null);
-  const startRef = useRef({ x: 0, y: 0 });
-  const touchDraggingRef = useRef(false);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    touchDraggingRef.current = true;
-    setIsTouchDragging(true);
-    onDragStart(index);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchDraggingRef.current) return;
-    const touchX = e.touches[0].clientX;
-    const touchY = e.touches[0].clientY;
-    const diff = touchX - startRef.current.x;
-    const vertical = Math.abs(touchY - startRef.current.y);
-    // Wait for a clear direction before deciding (a finger jitters a few pixels)
-    if (vertical < 8 && Math.abs(diff) < 8) return;
-
-    // A mostly up/down movement is a page scroll, not a drag: stop tracking it, so scrolling
-    // past the tiles can't reorder them
-    if (vertical > Math.abs(diff) && Math.abs(currentX) < 10) {
-      touchDraggingRef.current = false;
-      setIsTouchDragging(false);
-      setCurrentX(0);
-      onDragEnd();
-      return;
-    }
-    setCurrentX(diff);
-
-    // The tile under the finger (both directions: on a phone the tiles wrap into two rows)
-    const elements = document.querySelectorAll('[data-summary-item]');
-    elements.forEach((el, i) => {
-      const rect = el.getBoundingClientRect();
-      if (touchX >= rect.left && touchX <= rect.right && touchY >= rect.top && touchY <= rect.bottom) {
-        onDragOver(i);
-      }
-    });
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchDraggingRef.current) return;
-    touchDraggingRef.current = false;
-    setIsTouchDragging(false);
-    setCurrentX(0);
-    onDragEnd();
-  };
-
-  return (
-    <div
-      ref={itemRef}
-      data-summary-item
-      draggable
-      onDragStart={() => onDragStart(index)}
-      onDragOver={(e) => {
-        e.preventDefault();
-        onDragOver(index);
-      }}
-      onDragEnd={onDragEnd}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      className={`text-center p-3 rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 select-none
-        ${isDragging && dragOverIndex === index ? 'scale-105 ring-2 ring-blue-400' : ''}
-        ${isTouchDragging ? 'opacity-80' : ''}
-        bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80
-      `}
-      style={{
-        transform: isTouchDragging ? `translateX(${currentX}px)` : undefined,
-      }}
-    >
-      <div className={`text-2xl font-bold ${colorClass}`}>
-        {value}
-      </div>
-      <div className={`text-sm ${colorClass}`}>{label}</div>
+}: DraggableSummaryItemProps) => (
+  <div
+    {...{ [REORDER_INDEX_ATTR]: index }}
+    draggable={!isCoarsePointer()}
+    onDragStart={() => onDragStart(index)}
+    onDragOver={(e) => {
+      e.preventDefault();
+      onDragOver(index);
+    }}
+    onDragEnd={onDragEnd}
+    className={`text-center p-3 rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 select-none [-webkit-touch-callout:none]
+      ${isDragging && dragOverIndex === index && !isPicked ? 'scale-105 ring-2 ring-blue-400' : ''}
+      ${isPicked ? 'opacity-70 scale-95 ring-2 ring-primary' : ''}
+      bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80
+    `}
+  >
+    <div className={`text-2xl font-bold ${colorClass}`}>
+      {value}
     </div>
-  );
-};
+    <div className={`text-sm ${colorClass}`}>{label}</div>
+  </div>
+);
