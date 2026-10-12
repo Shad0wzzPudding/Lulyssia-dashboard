@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,8 +60,23 @@ export const LineSettings = () => {
     setLoading(false);
   };
 
+  // One load at a time (coming back to the app fires both "visible" and "focus"), and none while a
+  // switch is saving, so a reload can't put back the old value of a switch just flipped
+  const loadingRef = useRef(false);
+  const savingRef = useRef(0);
+
   useEffect(() => {
-    load();
+    const refresh = async () => {
+      if (loadingRef.current || savingRef.current > 0) return;
+      loadingRef.current = true;
+      try {
+        await load();
+      } finally {
+        loadingRef.current = false;
+      }
+    };
+
+    refresh();
     supabase.functions
       .invoke('line-bot-info')
       .then(({ data }) => {
@@ -69,12 +84,10 @@ export const LineSettings = () => {
         if (id) setBotId(id);
       })
       .catch(() => { /* bot info unavailable — hide shortcut button */ });
-  }, []);
 
-  // Linking happens in LINE, so check again when coming back to the app (no reload needed)
-  useEffect(() => {
+    // Linking happens in LINE, so check again when coming back to the app (no reload needed)
     const onVisible = () => {
-      if (document.visibilityState === 'visible') load();
+      if (document.visibilityState === 'visible') refresh();
     };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
@@ -108,7 +121,9 @@ export const LineSettings = () => {
   const setLinkFlag = async (field: 'is_enabled' | 'reminders_enabled' | 'overdue_enabled' | 'notice_enabled', value: boolean) => {
     if (!link) return;
     setLink((prev) => (prev ? { ...prev, [field]: value } : prev));
+    savingRef.current += 1;
     const { error } = await supabase.from('line_links').update({ [field]: value }).eq('id', link.id);
+    savingRef.current -= 1;
     if (error) {
       setLink((prev) => (prev ? { ...prev, [field]: !value } : prev));
       toast({ title: 'Could not save that setting', description: 'Please try again.', variant: 'destructive' });
