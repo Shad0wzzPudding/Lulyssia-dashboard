@@ -13,7 +13,7 @@ import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigge
 import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, X, CheckSquare, Repeat } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format, parseISO, isAfter, isBefore, addHours } from 'date-fns';
+import { format, parseISO, isAfter, isBefore } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
@@ -30,12 +30,9 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
+import { autoDeadline } from '@/lib/autoDeadline';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
-
-// Deadline filled in from a start time (datetime-local value): 5 hours later
-const autoDeadline = (start: string) =>
-  start ? format(addHours(new Date(start), 5), "yyyy-MM-dd'T'HH:mm") : '';
 
 interface TasksPageProps {
   tasks: Task[];

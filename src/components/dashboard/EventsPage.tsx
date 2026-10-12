@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Calendar, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
-import { format, parseISO, isAfter, isBefore, isToday, addHours, startOfDay } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, isToday, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
@@ -28,10 +28,7 @@ import { useSortPreference } from '@/hooks/useSortPreference';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
-
-// Deadline filled in from a start time (datetime-local value): 5 hours later
-const autoDeadline = (start: string) =>
-  start ? format(addHours(new Date(start), 5), "yyyy-MM-dd'T'HH:mm") : '';
+import { autoDeadline } from '@/lib/autoDeadline';
 
 interface EventsPageProps {
   events: Event[];
