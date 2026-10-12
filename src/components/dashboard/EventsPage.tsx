@@ -10,9 +10,9 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Calendar, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
-import { format, parseISO, isAfter, isBefore, isToday, addHours } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, isToday, addHours, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
@@ -82,8 +82,15 @@ export const EventsPage = ({
     () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById),
     [events, filterTagIds, search, sort, tagsById]
   );
+  const startOfToday = startOfDay(now);
+  // Started on an earlier day and not over yet (its deadline is still ahead), like Home's "In progress..."
+  const isInProgressEvent = (event: Event) =>
+    !!event.start_time && !!event.deadline
+    && isBefore(parseISO(event.start_time), startOfToday) && !isBefore(parseISO(event.deadline), now);
+  // Over: started on an earlier day and ended (its deadline, or its start if it has none, has passed)
   const isPastEvent = (event: Event) =>
-    !!event.start_time && isBefore(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time));
+    !!event.start_time && isBefore(parseISO(event.start_time), startOfToday) && !isInProgressEvent(event);
+  const inProgressEvents = visibleEvents.filter(isInProgressEvent);
   // Past events shown on the page (respects search and tag filters)
   const pastEvents = visibleEvents.filter(isPastEvent);
   // All past events, ignoring search/filters: what "Clear past events" deletes and Undo restores
@@ -242,6 +249,7 @@ export const EventsPage = ({
     const eventDate = parseISO(event.start_time);
     if (isToday(eventDate)) return 'today';
     if (isAfter(eventDate, now)) return 'upcoming';
+    if (isInProgressEvent(event)) return 'in_progress';
     return 'past';
   };
 
@@ -250,6 +258,7 @@ export const EventsPage = ({
     switch (status) {
       case 'today': return onLight ? 'text-amber-700' : 'text-amber-400 dark:text-amber-300';
       case 'upcoming': return onLight ? 'text-sky-700' : 'text-sky-400 dark:text-sky-300';
+      case 'in_progress': return onLight ? 'text-violet-700' : 'text-violet-400 dark:text-violet-300';
       default: return onLight ? 'text-slate-600' : 'text-slate-400 dark:text-slate-300';
     }
   };
@@ -258,11 +267,12 @@ export const EventsPage = ({
     switch (status) {
       case 'today': return 'border-amber-100 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/10';
       case 'upcoming': return 'border-sky-100 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/10';
+      case 'in_progress': return 'border-violet-100 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/10';
       default: return 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/10';
     }
   };
 
-  const renderEventCard = (event: Event, variant: 'today' | 'upcoming' | 'past') => {
+  const renderEventCard = (event: Event, variant: 'today' | 'in_progress' | 'upcoming' | 'past') => {
     const status = getEventStatus(event);
     return (
       <Card 
@@ -409,7 +419,7 @@ export const EventsPage = ({
         onOpenChange={setShowClearConfirm}
         onConfirm={handleClearConfirm}
         title="Clear all past events?"
-        description="This will permanently delete all your past events. But don't worry, you'll have 10 seconds to undo!"
+        description="This will permanently delete all events that have already ended. Events still in progress stay. But don't worry, you'll have 10 seconds to undo!"
         confirmText="Yep, clear them!"
         cancelText="Wait, no!"
       />
@@ -538,11 +548,17 @@ export const EventsPage = ({
       </div>
 
       {/* Event Statistics */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-4 gap-2 sm:gap-4">
         <Card className="text-center">
           <CardContent className="pt-6 px-1 sm:px-6">
             <div className="text-2xl font-bold text-amber-400 dark:text-amber-300">{todayEvents.length}</div>
             <div className="text-xs sm:text-sm text-muted-foreground truncate">Today</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6 px-1 sm:px-6">
+            <div className="text-2xl font-bold text-violet-400 dark:text-violet-300">{inProgressEvents.length}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">In progress</div>
           </CardContent>
         </Card>
         <Card className="text-center">
@@ -574,7 +590,7 @@ export const EventsPage = ({
       {(() => {
         const renderSection = (
           items: Event[],
-          variant: 'today' | 'upcoming' | 'past',
+          variant: 'today' | 'in_progress' | 'upcoming' | 'past',
           gridClass: string
         ) =>
           sort === 'user' ? (
@@ -606,6 +622,15 @@ export const EventsPage = ({
                 </Card>
               )}
             </div>
+            {inProgressEvents.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-violet-400 dark:text-violet-300 mb-3 flex items-center gap-2">
+                  <Hourglass size={16} />
+                  In Progress ({inProgressEvents.length}){sort === 'user' ? ' — drag to arrange' : ''}
+                </h3>
+                {renderSection(inProgressEvents, 'in_progress', 'grid gap-4 md:grid-cols-2')}
+              </div>
+            )}
             <div>
               <h3 className="text-lg font-semibold text-sky-400 dark:text-sky-300 mb-3">
                 Upcoming Events ({upcomingEvents.length}){sort === 'user' ? ' — drag to arrange' : ''}
