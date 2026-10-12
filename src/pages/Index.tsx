@@ -39,8 +39,13 @@ const Index = () => {
     setActivePage(page);
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
-  const navigateTo = (page: NavigationPage) => {
-    if (page === activePage || pageTransitionId !== null) return;
+  // Opened from the drawer's LINE chip: Settings jumps to its LINE card (a new number each time,
+  // so a second tap while already on Settings jumps again)
+  const [lineFocus, setLineFocus] = useState<number | null>(null);
+  const navigateTo = (page: NavigationPage, focus?: 'line') => {
+    if (pageTransitionId !== null) return;
+    setLineFocus(focus === 'line' ? Date.now() : null);
+    if (page === activePage) return;
     if (!transitionsEnabled) {
       showPage(page);
       return;
@@ -222,7 +227,7 @@ const Index = () => {
           />
         );
       case 'settings':
-        return <SettingsPage />;
+        return <SettingsPage lineFocus={lineFocus} />;
       case 'about':
         return <AboutPage />;
       default:
@@ -243,7 +248,12 @@ const Index = () => {
       <div className="border-b bg-card">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-start h-16">
-            <Navigation activePage={activePage} onPageChange={navigateTo} onSignOut={handleSignOut} />
+            <Navigation
+              activePage={activePage}
+              onPageChange={navigateTo}
+              onOpenLineSettings={() => navigateTo('settings', 'line')}
+              onSignOut={handleSignOut}
+            />
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 Welcome, {names.nickname || user.email} !

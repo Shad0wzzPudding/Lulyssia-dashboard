@@ -25,10 +25,12 @@ const generateCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)),
     (b) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 32]).join('');
     
-export const LineSettings = () => {
+/** scrollToken: when set (a new number each time), the card jumps to the top of the screen */
+export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | null }) => {
   const { toast } = useToast();
   const [link, setLink] = useState<LineLink | null>(null);
   const [loading, setLoading] = useState(true);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   const [botId, setBotId] = useState<string | null>(null);
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
@@ -96,6 +98,13 @@ export const LineSettings = () => {
       window.removeEventListener('focus', onVisible);
     };
   }, []);
+
+  // Opened from the drawer's LINE chip: jump here right away, and once more when the LINE data has
+  // loaded (cards above, like Install app, can appear just after the page opens and push this down)
+  useEffect(() => {
+    if (scrollToken === null) return;
+    cardRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [scrollToken, loading]);
 
   const regenerate = async () => {
     if (!link) return;
@@ -166,7 +175,7 @@ export const LineSettings = () => {
   };
 
   return (
-    <Card className="border-2 border-dotted">
+    <Card ref={cardRef} id="line-settings" className="scroll-mt-4 border-2 border-dotted">
       <LulyssiaConfirmDialog
         open={showUnlinkConfirm}
         onOpenChange={setShowUnlinkConfirm}

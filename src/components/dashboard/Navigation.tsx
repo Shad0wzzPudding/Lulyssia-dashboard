@@ -27,6 +27,8 @@ import { useLineStatus } from '@/hooks/useLineStatus';
 interface NavigationProps {
   activePage: NavigationPage;
   onPageChange: (page: NavigationPage) => void;
+  /** Opens Settings at its LINE card (the drawer's LINE status) */
+  onOpenLineSettings: () => void;
   /** Signs the user out (asked to confirm first, from the side drawer). */
   onSignOut: () => void;
 }
@@ -64,7 +66,7 @@ const moveCursorTo = (refs: ChoiceRefs, current: number | null, index: number) =
 const stepCursor = (current: number | null, key: string, count: number, start: number) =>
   current === null ? start : (current + (key === 'ArrowDown' ? 1 : -1) + count) % count;
 
-export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationProps) => {
+export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSignOut }: NavigationProps) => {
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
@@ -255,6 +257,14 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
     };
   }, [open, menuCursor, menuStart]);
 
+  // The LINE status (chip, or the "not linked" Settings slab): Settings, scrolled to the LINE card
+  const openLineSettings = () => {
+    if (activePage !== 'settings') playSelectionSound();
+    onOpenLineSettings();
+    setOpen(false);
+    setDrawerOpen(false);
+  };
+
   const handlePageChange = (page: NavigationPage) => {
     if (page !== activePage) {
       playSelectionSound();
@@ -437,8 +447,8 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
                 {lineStatus?.linked && (
                   <button
                     type="button"
-                    onClick={() => handlePageChange('settings')}
-                    aria-label={`LINE linked, daily message ${lineStatus.dailyOn ? 'on' : 'off'}. Open Settings`}
+                    onClick={openLineSettings}
+                    aria-label={`LINE linked, daily message ${lineStatus.dailyOn ? 'on' : 'off'}. Open LINE settings`}
                     className={cn(
                       'inline-flex translate-y-4 -rotate-2 -skew-x-12 items-center border-2 border-foreground px-2 py-0.5 font-display text-xs font-extrabold uppercase italic tracking-wide transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                       lineStatus.dailyOn ? 'bg-[#06c755] text-white' : 'bg-[#7d8b90] text-background'
@@ -458,7 +468,8 @@ export const Navigation = ({ activePage, onPageChange, onSignOut }: NavigationPr
             i: 0,
             icon: Camera,
             label: 'Settings',
-            onClick: () => handlePageChange('settings'),
+            // Not linked: straight to the LINE card, where the link code is
+            onClick: lineNotLinked ? openLineSettings : () => handlePageChange('settings'),
             current: activePage === 'settings',
             offset: 14,
             sub: lineNotLinked ? 'LINE not linked yet' : undefined,

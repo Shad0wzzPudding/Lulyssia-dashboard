@@ -6,7 +6,8 @@ import { PageIcon } from './PageIcon';
 import { NameSettings } from './NameSettings';
 import { DisplaySettings } from './DisplaySettings';
 
-export const SettingsPage = () => {
+/** lineFocus: set (a new number each time) when Settings should jump to the LINE card */
+export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -21,7 +22,7 @@ export const SettingsPage = () => {
       </div>
       <DisplaySettings />
       <div className="theme-light">
-        <LineSettings />
+        <LineSettings scrollToken={lineFocus} />
       </div>
       <TagManager />
     </div>
