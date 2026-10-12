@@ -260,7 +260,11 @@ Deno.serve(async (req) => {
         for (const t of tasks ?? []) {
           let occ: Date | null = null;
           if (t.recurrence_unit) {
-            occ = recurrenceOccurrenceToday(t.start_date, t.recurrence_unit, t.recurrence_interval, now);
+            // Just before midnight (Thai time) the window reaches into the next day, so look for
+            // the repeat on both days it touches
+            occ = [now, windowEnd]
+              .map((day) => recurrenceOccurrenceToday(t.start_date, t.recurrence_unit, t.recurrence_interval, day))
+              .find(inWindow) ?? null;
           } else if (t.start_date) {
             occ = new Date(t.start_date);
           }
