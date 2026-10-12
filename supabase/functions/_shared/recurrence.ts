@@ -1,6 +1,6 @@
 // Repeating tasks: when does a repeat fall on a given day (Thai calendar)?
 // Repeats are counted from the task's first deadline (recurrence_anchor), the same way the
-// dashboard renews them (renewRecurringTask in src/hooks/useDashboardData.ts): the n-th repeat
+// database renews them (renew_recurring_tasks, used by the dashboard and the job): the n-th repeat
 // is the anchor plus n steps, and a day the month doesn't have becomes its last day
 // (31 Jan, monthly: 28 Feb, 31 Mar, 30 Apr...).
 

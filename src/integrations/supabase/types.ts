@@ -384,6 +384,7 @@ export type Database = {
         Returns: undefined
       }
       reset_daily_tasks_for_new_day: { Args: never; Returns: undefined }
+      renew_my_recurring_tasks: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

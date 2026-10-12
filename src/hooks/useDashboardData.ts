@@ -4,45 +4,6 @@ import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
 import { useLocalToday } from '@/hooks/useLocalToday';
 import { sortItems } from '@/lib/sortAndFilter';
 import { toast } from '@/lib/toast';
-import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
-
-const advanceDate = (iso: string, unit: string, interval: number): string => {
-  const d = new Date(iso);
-  const n = Math.max(1, interval || 1);
-  let next = d;
-  switch (unit) {
-    case 'day': next = addDays(d, n); break;
-    case 'week': next = addWeeks(d, n); break;
-    case 'month': next = addMonths(d, n); break;
-    case 'year': next = addYears(d, n); break;
-  }
-  return next.toISOString();
-};
-
-const renewRecurringTask = (task: Task): Partial<Task> | null => {
-  if (!task.recurrence_unit || !task.deadline) return null;
-  const now = Date.now();
-  if (new Date(task.deadline).getTime() > now) return null;
-  const interval = Math.max(1, task.recurrence_interval || 1);
-  // Every repeat is counted from the first deadline, so a monthly task due on the 31st comes
-  // back on the 31st (or the month's last day), instead of staying on the 28th after February.
-  // Tasks from before the anchor existed start counting from their current deadline.
-  const anchor = task.recurrence_anchor || task.deadline;
-  // The start keeps the same distance before the deadline
-  const startOffset = task.start_date ? new Date(task.deadline).getTime() - new Date(task.start_date).getTime() : null;
-  // Advance until the deadline is in the future
-  let deadline = task.deadline;
-  for (let step = 1; new Date(deadline).getTime() <= now && step < 100000; step++) {
-    deadline = advanceDate(anchor, task.recurrence_unit, interval * step);
-  }
-  return {
-    deadline,
-    start_date: startOffset === null ? undefined : new Date(new Date(deadline).getTime() - startOffset).toISOString(),
-    recurrence_anchor: anchor,
-    is_completed: false,
-  };
-};
-
 /**
  * What to delete: an id, or { id, __silent } to skip the success toast
  * (batch deletes show one summary toast of their own instead).
@@ -98,6 +59,14 @@ export const useDashboardData = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // First, move repeating tasks whose deadline has passed to their next round. The database
+      // does it (renew_my_recurring_tasks), with the same rule as the scheduled job, and keeps
+      // these routine changes out of Recent Changes.
+      const { error: renewError } = await supabase.rpc('renew_my_recurring_tasks');
+      if (renewError) {
+        console.error('Error renewing repeating tasks:', renewError);
+      }
+
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -105,25 +74,7 @@ export const useDashboardData = () => {
         .order('deadline', { ascending: true });
       
       if (error) throw error;
-      const tasks = (data || []) as unknown as Task[];
-      // Auto-renew recurring tasks whose deadline has passed
-      const renewals: { id: string; patch: Partial<Task> }[] = [];
-      const renewed = tasks.map((t) => {
-        const patch = renewRecurringTask(t);
-        if (patch) {
-          renewals.push({ id: t.id, patch });
-          return { ...t, ...patch } as Task;
-        }
-        return t;
-      });
-      if (renewals.length > 0) {
-        await Promise.all(
-          renewals.map(({ id, patch }) =>
-            supabase.from('tasks').update(patch).eq('id', id).eq('user_id', user.id)
-          )
-        );
-      }
-      return renewed;
+      return (data || []) as unknown as Task[];
     }
   });
 
