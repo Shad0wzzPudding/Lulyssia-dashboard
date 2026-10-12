@@ -125,7 +125,7 @@ Do not put the value in a migration, a commit, or a chat message.
 3. Add `LINE_CHANNEL_SECRET` and `LINE_CHANNEL_ACCESS_TOKEN` as function secrets (see above).
 4. In the app, open **Settings**, add the bot as a friend, and send it the link code shown there.
 
-Chat commands: `today`, `status`, `stop`, `start`, `remind on`, `remind off`, `overdue on`, `overdue off`.
+Chat commands: `today`, `status`, `stop`, `start`, `remind on`, `remind off`, `notice on`, `notice off`, `overdue on`, `overdue off`.
 
 A link code only works while its account is unlinked or being re-linked from the same LINE account.
 To move to another LINE account, press the refresh button next to the code in Settings.

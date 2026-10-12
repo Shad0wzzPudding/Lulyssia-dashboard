@@ -21,7 +21,7 @@ export const NoticeBeforeToggle = ({
           <BellRing size={14} /> Notice before
         </p>
         <p className="text-xs text-muted-foreground">
-          LINE sends a separate heads-up the morning of the day before it starts or is due
+          LINE sends a heads-up at 08:00 the day before it starts or is due (turn "Day-before notice" on in Settings)
         </p>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />

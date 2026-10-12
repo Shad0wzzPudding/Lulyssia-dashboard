@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
               },
               {
                 type: 'text',
-                text: 'The available options for you are:\ntoday / status / stop / start / remind on / remind off / overdue on / overdue off',
+                text: 'The available options for you are:\ntoday / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off',
               },
               {
                 type: 'text',
@@ -216,14 +216,32 @@ Deno.serve(async (req) => {
         if (/^(STATUS)$/i.test(text)) {
           const { data } = await supabase
             .from('line_links')
-            .select('is_enabled, reminders_enabled, overdue_enabled')
+            .select('is_enabled, reminders_enabled, overdue_enabled, notice_enabled')
             .eq('line_user_id', lineUserId)
             .maybeSingle();
           await reply(
             accessToken,
             replyToken,
             data
-              ? `You're linked now, and here are your settings.\nDaily digest: ${data.is_enabled ? 'ON' : 'OFF'} (08:00 Thai time)\nStart reminders: ${data.reminders_enabled ? 'ON' : 'OFF'} (10-15 min before)\nOverdue nudges: ${data.overdue_enabled ? 'ON' : 'OFF'}`
+              ? `You're linked now, and here are your settings.\nDaily digest: ${data.is_enabled ? 'ON' : 'OFF'} (08:00 Thai time)\nStart reminders: ${data.reminders_enabled ? 'ON' : 'OFF'} (10-15 min before)\nDay-before notice: ${data.notice_enabled ? 'ON' : 'OFF'} (08:00 the day before)\nOverdue nudges: ${data.overdue_enabled ? 'ON' : 'OFF'}`
+              : NOT_LINKED_TEXT,
+          );
+          continue;
+        }
+
+        if (/^(NOTICES?)\s*(ON|OFF|START|STOP)$/i.test(text)) {
+          const enable = /(ON|START)$/i.test(text);
+          const { data } = await supabase
+            .from('line_links')
+            .update({ notice_enabled: enable })
+            .eq('line_user_id', lineUserId)
+            .select('id')
+            .maybeSingle();
+          await reply(
+            accessToken,
+            replyToken,
+            data
+              ? `*Writing sounds...*\nDay-before notice turned ${enable ? 'ON' : 'OFF'}\n${enable ? "At 08:00 I'll tell you about items marked \"Notice before\" that start or are due the next day." : "I won't send the day-before notice until you send \"notice on\"."}`
               : NOT_LINKED_TEXT,
           );
           continue;
@@ -336,7 +354,7 @@ Deno.serve(async (req) => {
 
         // Anything else: the reply depends on whether this LINE account is linked yet
         const commandList =
-          'The available options are:\ntoday / status / stop / start / remind on / remind off / overdue on / overdue off';
+          'The available options are:\ntoday / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off';
         const { data: linked } = await supabase
           .from('line_links')
           .select('user_id')

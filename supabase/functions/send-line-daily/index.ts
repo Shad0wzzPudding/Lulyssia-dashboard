@@ -278,13 +278,16 @@ Deno.serve(async (req) => {
     }
 
 
-    // "Daily message" only controls the scheduled 08:00 run; asking for the list
-    // (LINE "today" or the Settings test button) always sends it
+    // The 08:00 run covers anyone with the letter, the day-before notice or missed-deadline
+    // nudges on; each is sent only if its own switch is on. Asking for the list (LINE "today" or
+    // the Settings test button) always sends the letter.
     let query = supabase
       .from('line_links')
-      .select('user_id, line_user_id, display_name, overdue_enabled')
+      .select('user_id, line_user_id, display_name, is_enabled, notice_enabled, overdue_enabled')
       .not('line_user_id', 'is', null);
-    query = targetUserId ? query.eq('user_id', targetUserId) : query.eq('is_enabled', true);
+    query = targetUserId
+      ? query.eq('user_id', targetUserId)
+      : query.or('is_enabled.eq.true,notice_enabled.eq.true,overdue_enabled.eq.true');
 
     const { data: links, error: linksError } = await query;
     if (linksError) throw linksError;
@@ -308,6 +311,9 @@ Deno.serve(async (req) => {
           .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, recurrence_anchor, tag_ids, attachments, notice_before')
           .eq('user_id', link.user_id)
           .eq('is_completed', false);
+
+        // The morning letter: when it's on, or when asked for
+        const sendLetter = !!targetUserId || link.is_enabled;
 
         const { data: events } = await supabase
           .from('events')
@@ -434,7 +440,7 @@ Deno.serve(async (req) => {
         ];
 
         const images: LineMessage[] = [];
-        for (const item of [...todayEvents, ...todayTasks]) {
+        for (const item of sendLetter ? [...todayEvents, ...todayTasks] : []) {
           if (images.length >= 4) break;
           images.push(...(await imageMessages(supabase, (item as Record<string, unknown>).attachments, link.user_id)));
         }
@@ -443,17 +449,26 @@ Deno.serve(async (req) => {
         // If LINE ever rejects the card, the same push goes again with the plain-text letter
         const digestText: LineMessage = { type: 'text', text: lines.join('\n').trim().slice(0, 4900) };
 
-        // Separate "Notice before" message: items flagged to warn one day ahead.
-        const tomorrow = thDateString(new Date(Date.now() + 86400000));
+        // Separate "Notice before" message (its own switch): items flagged to warn one day ahead.
+        const tomorrowDay = new Date(Date.now() + 86400000);
+        const tomorrow = thDateString(tomorrowDay);
         const isTomorrow = (iso: string | null) => !!iso && thDateString(new Date(iso)) === tomorrow;
-        const noticeItems = [
+        const noticeItems = !link.notice_enabled ? [] : [
           ...(events ?? [])
-            .filter((e) => e.notice_before && (isTomorrow(e.start_time) || isTomorrow(e.deadline)))
+            .filter((e) => e.notice_before)
             .map((e) => ({ kind: '📅 Event', title: e.title, description: e.description, start: e.start_time, deadline: e.deadline, tag_ids: e.tag_ids })),
           ...(tasks ?? [])
-            .filter((t) => t.notice_before && !t.recurrence_unit && (isTomorrow(t.start_date) || isTomorrow(t.deadline)))
-            .map((t) => ({ kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids })),
-        ];
+            .filter((t) => t.notice_before)
+            .map((t) => {
+              const item = { kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids };
+              if (!t.recurrence_unit) return item;
+              // A repeating task: its round (counted from the first deadline) that starts or is due tomorrow
+              const anchors = repeatAnchors(t);
+              const on = (anchor: string | null) =>
+                repeatOn(anchor, t.recurrence_unit, t.recurrence_interval, tomorrowDay)?.toISOString() ?? null;
+              return { ...item, start: on(anchors.start), deadline: on(anchors.deadline) };
+            }),
+        ].filter((it) => isTomorrow(it.start) || isTomorrow(it.deadline));
         // Notice-before card (plain text as its fallback)
         let noticeCard: LineMessage | null = null;
         let noticeText: LineMessage | null = null;
@@ -534,7 +549,7 @@ Deno.serve(async (req) => {
         // and sticker together at the very end. LINE counts each push as one message (up to 5
         // bubbles), so they are packed into as few pushes as possible.
         const fallback = new Map<LineMessage, LineMessage>([[letterCard, digestText]]);
-        const ordered: LineMessage[] = [...digest];
+        const ordered: LineMessage[] = sendLetter ? [...digest] : [];
         if (noticeCard && noticeText) {
           ordered.push(noticeCard);
           fallback.set(noticeCard, noticeText);
@@ -543,15 +558,20 @@ Deno.serve(async (req) => {
           ordered.push(overdueCards);
           fallback.set(overdueCards, overdueText);
         }
+        // Letter off and nothing else for today
+        if (ordered.length === 0) continue;
         const pushes: LineMessage[][] = [];
         for (const m of ordered) {
           const last = pushes[pushes.length - 1];
           if (last && last.length < 5) last.push(m);
           else pushes.push([m]);
         }
-        const last = pushes[pushes.length - 1];
-        if (last.length + signOff.length <= 5) last.push(...signOff);
-        else pushes.push([...signOff]);
+        // The sign-off and sticker close the morning letter (not a notice or nudge on its own)
+        if (sendLetter) {
+          const last = pushes[pushes.length - 1];
+          if (last.length + signOff.length <= 5) last.push(...signOff);
+          else pushes.push([...signOff]);
+        }
 
         for (const batch of pushes) {
           try {

@@ -16,9 +16,10 @@ interface LineLink {
   is_enabled: boolean;
   reminders_enabled: boolean;
   overdue_enabled: boolean;
+  notice_enabled: boolean;
 }
 
-const LINK_FIELDS = 'id, link_code, line_user_id, display_name, is_enabled, reminders_enabled, overdue_enabled';
+const LINK_FIELDS = 'id, link_code, line_user_id, display_name, is_enabled, reminders_enabled, overdue_enabled, notice_enabled';
 
 const generateCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)),
@@ -104,7 +105,7 @@ export const LineSettings = () => {
   // Switches update right away, then save. Each one changes only its own field
   // (so quick flips of different switches can't undo each other), and it flips
   // back with an error message if saving fails.
-  const setLinkFlag = async (field: 'is_enabled' | 'reminders_enabled' | 'overdue_enabled', value: boolean) => {
+  const setLinkFlag = async (field: 'is_enabled' | 'reminders_enabled' | 'overdue_enabled' | 'notice_enabled', value: boolean) => {
     if (!link) return;
     setLink((prev) => (prev ? { ...prev, [field]: value } : prev));
     const { error } = await supabase.from('line_links').update({ [field]: value }).eq('id', link.id);
@@ -117,6 +118,7 @@ export const LineSettings = () => {
   const toggleEnabled = (value: boolean) => setLinkFlag('is_enabled', value);
   const toggleReminders = (value: boolean) => setLinkFlag('reminders_enabled', value);
   const toggleOverdue = (value: boolean) => setLinkFlag('overdue_enabled', value);
+  const toggleNotice = (value: boolean) => setLinkFlag('notice_enabled', value);
 
   const sendTest = async () => {
     setBusy(true);
@@ -229,7 +231,8 @@ export const LineSettings = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 In the chat you can also send <b>status</b>, <b>stop</b>, <b>start</b>,{' '}
-                <b>remind on</b>, <b>remind off</b>, <b>overdue on</b>, or <b>overdue off</b>.
+                <b>remind on</b>, <b>remind off</b>, <b>notice on</b>, <b>notice off</b>,{' '}
+                <b>overdue on</b>, or <b>overdue off</b>.
               </p>
             </div>
 
@@ -257,9 +260,23 @@ export const LineSettings = () => {
 
             <div className="flex items-center justify-between gap-3">
               <div>
+                <p className="text-sm font-medium">Day-before notice</p>
+                <p className="text-xs text-muted-foreground">
+                  At 08:00, items marked "Notice before" that start or are due the next day
+                </p>
+              </div>
+              <Switch
+                checked={link.notice_enabled}
+                onCheckedChange={toggleNotice}
+                disabled={!link.line_user_id}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <div>
                 <p className="text-sm font-medium">Missed-deadline nudges</p>
                 <p className="text-xs text-muted-foreground">
-                  One message when an unfinished task passes its deadline
+                  When an unfinished task passes its deadline, then each morning for up to 3 days
                 </p>
               </div>
               <Switch
