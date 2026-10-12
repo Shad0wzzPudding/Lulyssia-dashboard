@@ -121,6 +121,18 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Blocked the bot: forget this LINE account (like the refresh-code button does), so no more
+      // messages or server work go to it. The link code stays, so adding the bot back and sending
+      // it again links the same account.
+      if (event.type === 'unfollow' && lineUserId) {
+        const { error } = await supabase
+          .from('line_links')
+          .update({ line_user_id: null, display_name: null, linked_at: null })
+          .eq('line_user_id', lineUserId);
+        if (error) console.error('Unlink after unfollow failed', error);
+        continue;
+      }
+
       const isPostback = event.type === 'postback' && !!event.postback?.data;
       if ((isPostback || (event.type === 'message' && event.message?.type === 'text')) && lineUserId && replyToken) {
         const text = String((isPostback ? event.postback?.data : event.message?.text) ?? '').trim();
