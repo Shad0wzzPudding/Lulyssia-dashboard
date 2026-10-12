@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
+import { formatDetail } from '../_shared/lineText.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -15,35 +16,6 @@ function thTime(iso: string | null): string | null {
   if (isNaN(d.getTime())) return null;
   const shifted = new Date(d.getTime() + TH_OFFSET_MS);
   return `${String(shifted.getUTCHours()).padStart(2, '0')}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
-}
-
-// The dashboard editor stores literal * and ~ escaped as \* and \~. Keep those as
-// plain characters (placeholders while stripping), and strip ***bold italic*** too.
-const ESC_STAR = '\u0001';
-const ESC_TILDE = '\u0002';
-
-function stripMarkdown(text: string): string {
-  return text
-    .replace(/\\\*/g, ESC_STAR)
-    .replace(/\\~/g, ESC_TILDE)
-    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/~~(.*?)~~/g, '$1')
-    .replace(/==(.*?)==/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .split(ESC_STAR).join('*')
-    .split(ESC_TILDE).join('~')
-    .trim();
-}
-
-function formatDetail(text: string | null): string | null {
-  if (!text) return null;
-  const clean = stripMarkdown(text).trim();
-  if (!clean) return null;
-  const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return null;
-  if (lines.length <= 5) return lines.join('\n');
-  return [...lines.slice(0, 5), '...'].join('\n');
 }
 
 type LineMessage =

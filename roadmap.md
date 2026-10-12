@@ -45,7 +45,7 @@ Second bug hunt (12 Oct 2026), most serious first:
 - [ ] Events are sorted by their deadline, not their start time: the default sort "Deadline (soonest)" (and "Request Lulyssia help") orders events by the optional deadline field. An event tomorrow with no deadline is listed after one next month that has one. Suggest: on the Events page, sort by start time (and call the option "Soonest first")
 - [ ] New items land in second place in "User sort": new, copied and restored items get order number 0, the same as the item at the top, and the tie goes to the older one. So a new item appears second, not first or last. Suggest: give new items the number before the first item (or after the last)
 - [ ] Home "Today's Tasks" shows a task twice when it both starts and is due today (one "Deadline" card and one "Starting" card), while the count above says 1. Each list also stops at 3 items with no "+N more". Suggest: one card per task with both times, and a "+N more" link to the Tasks page
-- [ ] LINE messages clean the text formatting a little differently from the editor: they also remove `==` (not a format the editor has, so "x==1" arrives as "x1"), and a strikethrough that spans two lines keeps its `~~` marks. Suggest: let the LINE functions use the same rules as `src/lib/inlineFormat.ts`
+- [x] LINE messages clean the text formatting a little differently from the editor: they also remove `==` (not a format the editor has, so "x==1" arrives as "x1"), and a strikethrough that spans two lines keeps its `~~` marks. Suggest: let the LINE functions use the same rules as `src/lib/inlineFormat.ts`
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
