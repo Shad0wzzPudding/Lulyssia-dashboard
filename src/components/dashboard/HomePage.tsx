@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
+import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { STICKERS } from '@/lib/stickers';
 interface HomePageProps {
   interests: Interest[];
@@ -397,9 +398,28 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   // Each task counted once, even if it both starts and is due today
   const todayTaskCount = new Set([...allTodayDueTasks, ...allTodayStartingTasks].map(task => task.id)).size;
   
-  // Upcoming events and tasks (excluding today)
+  // In progress: started on an earlier day and not finished yet. Tasks also: not done, not
+  // repeating, and not due today (those are already in Today's Tasks).
+  const startOfToday = startOfDay(now);
+  const inProgressItems: InProgressItem[] = [
+    ...events
+      .filter(event => event.start_time && event.deadline
+        && isBefore(parseISO(event.start_time), startOfToday) && isAfter(parseISO(event.deadline), now))
+      .map(event => ({ id: event.id, type: 'event' as const, title: event.title, description: event.description,
+        start: event.start_time as string, end: event.deadline as string, tag_ids: event.tag_ids })),
+    ...tasks
+      .filter(task => !task.is_completed && !task.recurrence_unit && task.start_date && task.deadline
+        && isBefore(parseISO(task.start_date), startOfToday) && isAfter(parseISO(task.deadline), now)
+        && !isToday(parseISO(task.deadline)))
+      .map(task => ({ id: task.id, type: 'task' as const, title: task.title, description: task.description,
+        start: task.start_date as string, end: task.deadline as string, tag_ids: task.tag_ids })),
+  ].sort((a, b) => parseISO(a.end).getTime() - parseISO(b.end).getTime());
+
+  // Upcoming events and tasks (excluding today). Like events, a task is upcoming only before it
+  // starts: in-progress tasks are in their own card, so each task shows in one place.
   const upcomingTasks = tasks
-    .filter(task => !task.is_completed && task.deadline && isAfter(parseISO(task.deadline), new Date()) && !isToday(parseISO(task.deadline)))
+    .filter(task => !task.is_completed && task.deadline && isAfter(parseISO(task.deadline), new Date()) && !isToday(parseISO(task.deadline))
+      && (!task.start_date || isAfter(parseISO(task.start_date), endOfDay(now))))
     .slice(0, 3);
   const upcomingEvents = events
     .filter(event => event.start_time && isAfter(parseISO(event.start_time), new Date()) && !isToday(parseISO(event.start_time)))
@@ -564,6 +584,19 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
           </div>
         </CardContent>
       </Card>
+
+      {/* In progress (hidden when nothing is) */}
+      <InProgressCard
+        items={inProgressItems}
+        onOpen={(item) => setSelectedItem({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          dateTypes: ['start', 'deadline'],
+          times: { start: format(parseISO(item.start), 'd MMM, HH:mm'), deadline: format(parseISO(item.end), 'd MMM, HH:mm') },
+          description: item.description ?? undefined,
+        })}
+      />
 
       {/* Calendar with Event Markers */}
       <Card className="bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-950/20 dark:to-p5-950/20 border-p5-200 dark:border-p5-800">
