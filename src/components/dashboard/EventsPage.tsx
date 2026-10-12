@@ -39,7 +39,9 @@ interface EventsPageProps {
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean }) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteEvent: (target: DeleteTarget) => void;
-  onClearPast: (ids: string[]) => void;
+  /** The options let the page show Undo only once the clear has gone through */
+  onClearPast: (ids: string[], options?: { onSuccess?: () => void }) => void;
+  onRestoreEvents: (events: Event[]) => void;
 }
 
 export const EventsPage = ({ 
@@ -48,7 +50,8 @@ export const EventsPage = ({
   onUpdateEvent, 
   onReorder,
   onDeleteEvent,
-  onClearPast
+  onClearPast,
+  onRestoreEvents
 }: EventsPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -98,28 +101,24 @@ export const EventsPage = ({
   }, [showUndo]);
 
   const handleClearConfirm = () => {
-    setClearedEvents(allPastEvents);
-    onClearPast(allPastEvents.map((event) => event.id));
+    const cleared = allPastEvents;
     setShowClearConfirm(false);
-    setShowUndo(true);
-    toast({
-      title: "Events cleared! ✨",
-      description: "You can undo this action within 10 seconds~",
+    // Undo appears once the events are really gone, so it can't race the delete
+    onClearPast(cleared.map((event) => event.id), {
+      onSuccess: () => {
+        setClearedEvents(cleared);
+        setShowUndo(true);
+        toast({
+          title: "Events cleared! ✨",
+          description: "You can undo this action within 10 seconds~",
+        });
+      },
     });
   };
 
   const handleUndo = () => {
-    clearedEvents.forEach(event => {
-      onCreateEvent({
-        title: event.title,
-        description: event.description,
-        start_time: event.start_time,
-        deadline: event.deadline,
-        tag_ids: event.tag_ids || [],
-        attachments: event.attachments || [],
-        notice_before: !!event.notice_before,
-      });
-    });
+    // The same events back (same ids, order and dates), not copies
+    onRestoreEvents(clearedEvents);
     setShowUndo(false);
     setClearedEvents([]);
     toast({

@@ -43,8 +43,9 @@ interface TasksPageProps {
   onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean }) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteTask: (target: DeleteTarget) => void;
-  onClearCompleted: () => void;
-  onRestoreTasks?: (tasks: Task[]) => void;
+  /** The options let the page show Undo only once the clear has gone through */
+  onClearCompleted: (variables?: void, options?: { onSuccess?: () => void }) => void;
+  onRestoreTasks: (tasks: Task[]) => void;
   dailyTasks: DailyTask[];
   onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => void;
   onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
@@ -58,6 +59,7 @@ export const TasksPage = ({
   onReorder,
   onDeleteTask,
   onClearCompleted,
+  onRestoreTasks,
   dailyTasks,
   onCreateDailyTask,
   onUpdateDailyTask,
@@ -106,32 +108,23 @@ export const TasksPage = ({
 
   const handleClearConfirm = () => {
     const completed = clearableTasks;
-    setClearedTasks(completed);
-    onClearCompleted();
     setShowClearConfirm(false);
-    setShowUndo(true);
-    toast({
-      title: "Tasks cleared! ✨",
-      description: "You can undo this action within 10 seconds~",
+    // Undo appears once the tasks are really gone, so it can't race the delete
+    onClearCompleted(undefined, {
+      onSuccess: () => {
+        setClearedTasks(completed);
+        setShowUndo(true);
+        toast({
+          title: "Tasks cleared! ✨",
+          description: "You can undo this action within 10 seconds~",
+        });
+      },
     });
   };
 
   const handleUndo = () => {
-    clearedTasks.forEach(task => {
-      onCreateTask({
-        title: task.title,
-        description: task.description,
-        start_date: task.start_date,
-        deadline: task.deadline,
-        is_completed: true,
-        tag_ids: task.tag_ids || [],
-        recurrence_unit: task.recurrence_unit || null,
-        recurrence_interval: task.recurrence_interval || 1,
-        recurrence_anchor: task.recurrence_anchor ?? null,
-        attachments: task.attachments || [],
-        notice_before: !!task.notice_before,
-      });
-    });
+    // The same tasks back (same ids, order and dates), not copies
+    onRestoreTasks(clearedTasks);
     setShowUndo(false);
     setClearedTasks([]);
     toast({

@@ -593,6 +593,40 @@ export const useDashboardData = () => {
     }
   });
 
+  // Undo for "Clear Completed" / "Clear Past": puts the cleared items back exactly as they were
+  // (same ids, order and dates), and removes their "deleted" entries from Recent Changes so
+  // they can't be brought back a second time from there
+  const restoreClearedItems = useMutation({
+    mutationFn: async ({ table, items }: { table: 'tasks' | 'events'; items: (Task | Event)[] }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      if (items.length === 0) return;
+
+      const { error } = await supabase
+        .from(table)
+        // Rows as they were read from this table
+        .insert(items.map((item) => ({ ...item, user_id: user.id })) as never);
+      if (error) throw error;
+
+      const { error: logError } = await supabase
+        .from('activity_log')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('action_type', 'deleted')
+        .eq('item_type', table)
+        .in('item_id', items.map((item) => item.id));
+      if (logError) console.error('Failed to tidy Recent Changes after restoring:', logError);
+    },
+    onSettled: (_data, _error, { table }) => {
+      queryClient.invalidateQueries({ queryKey: [table] });
+      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+    },
+    onError: (error) => {
+      console.error('Failed to restore cleared items:', error);
+      toast.error('Failed to restore. You can still bring items back one by one from Recent Changes.');
+    }
+  });
+
   // Saves only the items whose number changes, then logs the drag once
   // (the log trigger skips updates that only change sort_order)
   const reorderItems = useMutation({
@@ -766,6 +800,7 @@ export const useDashboardData = () => {
       updateEvent,
       deleteEvent,
       clearPastEvents,
+      restoreClearedItems,
       reorderItems,
       deleteActivityLog,
       revertActivityLog,
