@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, flexText, labelRow, lineCard, tagChip, type FlexMessage } from '../_shared/lineCard.ts';
 import { formatDetail } from '../_shared/lineText.ts';
-import { repeatAnchors, repeatOn } from '../_shared/recurrence.ts';
+import { startRepeatOn } from '../_shared/recurrence.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -188,9 +188,8 @@ Deno.serve(async (req) => {
           if (t.recurrence_unit) {
             // Just before midnight (Thai time) the window reaches into the next day, so look for
             // the repeat on both days it touches
-            const { start } = repeatAnchors(t);
             occ = [now, windowEnd]
-              .map((day) => repeatOn(start, t.recurrence_unit, t.recurrence_interval, day))
+              .map((day) => startRepeatOn(t, day))
               .find(inWindow) ?? null;
           } else if (t.start_date) {
             occ = new Date(t.start_date);

@@ -57,15 +57,38 @@ export function repeatOn(anchorIso: string | null, unit: string | null, interval
   }
 }
 
+type RepeatingTask = {
+  deadline: string | null;
+  start_date: string | null;
+  recurrence_unit: string | null;
+  recurrence_interval: number | null;
+  recurrence_anchor?: string | null;
+};
+
+/** A repeating task's deadline repeat on `day`'s Thai date (counted from its first deadline), or null. */
+export function deadlineRepeatOn(task: RepeatingTask, day: Date): Date | null {
+  return repeatOn(task.recurrence_anchor || task.deadline, task.recurrence_unit, task.recurrence_interval, day);
+}
+
 /**
- * Where a repeating task's deadline and start repeats are counted from: the first deadline
- * (recurrence_anchor, or the current deadline for tasks from before it existed), and the start
- * the same distance before it.
+ * A repeating task's start repeat on `day`'s Thai date, or null. Like the dashboard, a round's
+ * start sits the same distance before that round's deadline (so 31 Jan / 28 Feb / 31 Mar
+ * deadlines that start 2 days earlier start on 29 Jan / 26 Feb / 29 Mar). Without a deadline, the
+ * start repeats on its own.
  */
-export function repeatAnchors(task: { deadline: string | null; start_date: string | null; recurrence_anchor?: string | null }) {
-  const deadline = task.recurrence_anchor || task.deadline;
-  if (!task.start_date) return { start: null, deadline };
-  if (!deadline || !task.deadline) return { start: task.start_date, deadline };
+export function startRepeatOn(task: RepeatingTask, day: Date): Date | null {
+  if (!task.start_date) return null;
+  const anchor = task.recurrence_anchor || task.deadline;
+  if (!anchor || !task.deadline) return repeatOn(task.start_date, task.recurrence_unit, task.recurrence_interval, day);
   const before = new Date(task.deadline).getTime() - new Date(task.start_date).getTime();
-  return { start: new Date(new Date(deadline).getTime() - before).toISOString(), deadline };
+  // A start on that day belongs to a deadline between (that day's start + gap) and (its end + gap):
+  // at most two Thai days to look at
+  const dayStart = thDay(day) * DAY_MS - TH_OFFSET_MS;
+  for (const probe of [dayStart + before, dayStart + before + DAY_MS - 1]) {
+    const deadline = repeatOn(anchor, task.recurrence_unit, task.recurrence_interval, new Date(probe));
+    if (!deadline) continue;
+    const start = new Date(deadline.getTime() - before);
+    if (thDay(start) === thDay(day)) return start;
+  }
+  return null;
 }

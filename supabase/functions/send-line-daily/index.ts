@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { CARD, CARD_MAX_CHARS, assetUrl, flexText, lineCard, tagChip, timeRange, type FlexComponent, type FlexMessage } from '../_shared/lineCard.ts';
 import { MAX_NUDGES_PER_MESSAGE, daysSince, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
 import { formatDetail } from '../_shared/lineText.ts';
-import { repeatAnchors, repeatOn } from '../_shared/recurrence.ts';
+import { deadlineRepeatOn, startRepeatOn } from '../_shared/recurrence.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -308,9 +308,10 @@ Deno.serve(async (req) => {
       try {
         const { data: tasks } = await supabase
           .from('tasks')
-          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, recurrence_anchor, tag_ids, attachments, notice_before')
-          .eq('user_id', link.user_id)
-          .eq('is_completed', false);
+          .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, recurrence_anchor, is_completed, tag_ids, attachments, notice_before')
+          .eq('user_id', link.user_id);
+        // Ticked tasks are read too: a ticked repeating task can still get the notice for its next round
+        const openTasks = (tasks ?? []).filter((t) => !t.is_completed);
 
         // The morning letter: when it's on, or when asked for
         const sendLetter = !!targetUserId || link.is_enabled;
@@ -346,15 +347,11 @@ Deno.serve(async (req) => {
         const isOverdue = (t: { deadline: string | null; recurrence_unit: string | null }) =>
           !t.recurrence_unit && !!t.deadline && new Date(t.deadline).getTime() < nowMs;
 
-        const todayTasks = (tasks ?? []).filter((t) => {
+        const todayTasks = openTasks.filter((t) => {
           if (t.recurrence_unit) {
-            // A repeat that starts or is due today (counted from the first deadline)
-            const anchors = repeatAnchors(t);
+            // A round that starts or is due today (counted from the first deadline, like the app)
             const now = new Date();
-            return (
-              !!repeatOn(anchors.start, t.recurrence_unit, t.recurrence_interval, now) ||
-              !!repeatOn(anchors.deadline, t.recurrence_unit, t.recurrence_interval, now)
-            );
+            return !!startRepeatOn(t, now) || !!deadlineRepeatOn(t, now);
           }
           return matchesToday(t.start_date, t.deadline);
         });
@@ -458,15 +455,21 @@ Deno.serve(async (req) => {
             .filter((e) => e.notice_before)
             .map((e) => ({ kind: '📅 Event', title: e.title, description: e.description, start: e.start_time, deadline: e.deadline, tag_ids: e.tag_ids })),
           ...(tasks ?? [])
-            .filter((t) => t.notice_before)
+            .filter((t) => t.notice_before && (t.recurrence_unit || !t.is_completed))
             .map((t) => {
               const item = { kind: '📋 Task', title: t.title, description: t.description, start: t.start_date, deadline: t.deadline, tag_ids: t.tag_ids };
               if (!t.recurrence_unit) return item;
-              // A repeating task: its round (counted from the first deadline) that starts or is due tomorrow
-              const anchors = repeatAnchors(t);
-              const on = (anchor: string | null) =>
-                repeatOn(anchor, t.recurrence_unit, t.recurrence_interval, tomorrowDay)?.toISOString() ?? null;
-              return { ...item, start: on(anchors.start), deadline: on(anchors.deadline) };
+              // A repeating task: its round that starts or is due tomorrow (same rule as the app)
+              const start = startRepeatOn(t, tomorrowDay);
+              const deadline = deadlineRepeatOn(t, tomorrowDay);
+              // Ticked means the current round (the stored deadline) is done; a later round still counts
+              const roundDeadline = deadline ?? (start && t.deadline && t.start_date
+                ? new Date(start.getTime() + new Date(t.deadline).getTime() - new Date(t.start_date).getTime())
+                : null);
+              const tickedRound = t.is_completed
+                && (!t.deadline || !roundDeadline || roundDeadline.getTime() === new Date(t.deadline).getTime());
+              if (tickedRound) return { ...item, start: null, deadline: null };
+              return { ...item, start: start?.toISOString() ?? null, deadline: deadline?.toISOString() ?? null };
             }),
         ].filter((it) => isTomorrow(it.start) || isTomorrow(it.deadline));
         // Notice-before card (plain text as its fallback)
