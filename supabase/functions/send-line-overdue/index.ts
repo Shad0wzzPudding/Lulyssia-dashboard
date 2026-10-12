@@ -150,7 +150,17 @@ Deno.serve(async (req) => {
         } catch (err) {
           // If LINE rejects the cards, send the same nudge as plain text
           console.error(`Missed-deadline cards rejected for user ${link.user_id}, sending text instead:`, err);
-          await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: missedDeadlinesText(name, missed) }]);
+          try {
+            await pushMessages(accessToken, link.line_user_id as string, [{ type: 'text', text: missedDeadlinesText(name, missed) }]);
+          } catch (textErr) {
+            // Nothing went out: forget the "sent" marks so the next check tries again
+            await Promise.all(missed.map((t) =>
+              supabase.from('line_reminders_sent').delete()
+                .eq('user_id', link.user_id).eq('item_type', 'task_overdue')
+                .eq('item_id', t.id).eq('occurrence_at', t.deadline)
+            ));
+            throw textErr;
+          }
         }
         sent += missed.length;
       } catch (err) {

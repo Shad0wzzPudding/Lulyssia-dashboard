@@ -554,6 +554,9 @@ Deno.serve(async (req) => {
         // from send-line-overdue just after the deadline.
         let overdueCards: LineMessage | null = null;
         let overdueText: LineMessage | null = null;
+        // Which repeats were marked as sent today (undone if their push fails)
+        const repeatIds: string[] = [];
+        let repeatKey = '';
         if (link.overdue_enabled) {
           const startOfToday = new Date(`${today}T00:00:00+07:00`);
           const { data: late } = await supabase
@@ -566,6 +569,7 @@ Deno.serve(async (req) => {
             .gte('deadline', new Date(Date.now() - 3 * 86400000).toISOString())
             .order('deadline', { ascending: true });
           const repeats: MissedTask[] = [];
+          repeatKey = startOfToday.toISOString();
           for (const t of late ?? []) {
             if (repeats.length >= MAX_NUDGES_PER_MESSAGE) break;
             // Once a day per task: the day's start is the key
@@ -573,6 +577,7 @@ Deno.serve(async (req) => {
               user_id: link.user_id, item_type: 'task_overdue_repeat', item_id: t.id, occurrence_at: startOfToday.toISOString(),
             });
             if (markErr) continue;
+            repeatIds.push(t.id);
             repeats.push({
               id: t.id,
               title: t.title,
@@ -617,7 +622,20 @@ Deno.serve(async (req) => {
           } catch (err) {
             // If LINE rejects a card, send the same push again with the plain-text versions
             console.error(`LINE cards rejected for user ${link.user_id}, sending text instead:`, err);
-            await pushMessages(accessToken, link.line_user_id as string, batch.map((m) => fallback.get(m) ?? m));
+            try {
+              await pushMessages(accessToken, link.line_user_id as string, batch.map((m) => fallback.get(m) ?? m));
+            } catch (textErr) {
+              // The missed-deadline repeats in this push never arrived: forget today's marks so
+              // the next run that day (e.g. the LINE "today" command) can send them
+              if (overdueCards && batch.includes(overdueCards)) {
+                await Promise.all(repeatIds.map((id) =>
+                  supabase.from('line_reminders_sent').delete()
+                    .eq('user_id', link.user_id).eq('item_type', 'task_overdue_repeat')
+                    .eq('item_id', id).eq('occurrence_at', repeatKey)
+                ));
+              }
+              throw textErr;
+            }
           }
         }
         sent++;
