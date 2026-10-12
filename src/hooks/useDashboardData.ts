@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
@@ -169,10 +170,16 @@ export const useDashboardData = () => {
   });
 
   // "User sort": a new or copied item goes above the current first one (number 0 tied with the
-  // top item and showed up second)
+  // top item and showed up second). Several created before the list reloads (a batch copy, or
+  // quick adds) keep counting down from the last number handed out, so they don't tie.
+  const lastTopSortOrder = useRef<Partial<Record<'interests' | 'tasks' | 'events', number>>>({});
   const topSortOrder = (table: 'interests' | 'tasks' | 'events') => {
     const items = queryClient.getQueryData<{ sort_order?: number }[]>([table]) ?? [];
-    return items.length > 0 ? Math.min(...items.map((item) => item.sort_order ?? 0)) - 1 : 0;
+    const fromList = items.length > 0 ? Math.min(...items.map((item) => item.sort_order ?? 0)) - 1 : 0;
+    const last = lastTopSortOrder.current[table];
+    const next = last === undefined ? fromList : Math.min(fromList, last - 1);
+    lastTopSortOrder.current[table] = next;
+    return next;
   };
 
   // Mutations

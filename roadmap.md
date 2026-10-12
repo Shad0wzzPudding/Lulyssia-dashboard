@@ -54,7 +54,7 @@ Third check (13 Oct 2026), after the fixes above:
 Code review (13 Oct 2026), confirmed findings:
 - [x] A failed morning message can lose that day's missed-deadline repeats: the "sent" marks are only removed when the push holding the repeats fails; if an earlier push (letter + photos) fails twice, the later push is never sent but the marks stay. Suggest: also remove them when a push before the repeats fails
 - [x] Holding a card near the top or bottom of the screen scrolls the page without moving: the edge auto-scroll starts at pick-up, and the highlighted drop target doesn't follow the scroll. Suggest: start edge scrolling only after the finger moves, and update the target as the page scrolls
-- [ ] Two new items made quickly tie in "User sort": the top number comes from the list on screen, which only updates after a reload, so a batch copy or two quick creates get the same number. Suggest: remember the last number handed out
+- [x] Two new items made quickly tie in "User sort": the top number comes from the list on screen, which only updates after a reload, so a batch copy or two quick creates get the same number. Suggest: remember the last number handed out
 - [ ] LINE Settings reloads twice when coming back to the app (visibilitychange and focus both fire), and a reload can briefly undo a switch that is still saving. Suggest: one reload at a time, and skip it while a switch is saving
 - [ ] Every refresh of the task list (after any tick, edit or drag) now makes an extra renewal request to the database. Suggest: only ask for renewal when a loaded repeating task is past its deadline
 - [ ] The 08:00 run loads every completed one-time task (with descriptions and attachments) only to discard them. Suggest: filter them out in the query
