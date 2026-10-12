@@ -60,7 +60,9 @@ export const useDashboardData = () => {
   const {
     data: interests = [],
     isLoading: interestsLoading,
-    error: interestsError
+    error: interestsError,
+    isLoadingError: interestsLoadFailed,
+    isRefetchError: interestsRefreshFailed
   } = useQuery({
     queryKey: ['interests'],
     queryFn: async (): Promise<Interest[]> => {
@@ -82,7 +84,9 @@ export const useDashboardData = () => {
   const {
     data: tasks = [],
     isLoading: tasksLoading,
-    error: tasksError
+    error: tasksError,
+    isLoadingError: tasksLoadFailed,
+    isRefetchError: tasksRefreshFailed
   } = useQuery({
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
@@ -123,7 +127,9 @@ export const useDashboardData = () => {
   const {
     data: dailyTasks = [],
     isLoading: dailyTasksLoading,
-    error: dailyTasksError
+    error: dailyTasksError,
+    isLoadingError: dailyTasksLoadFailed,
+    isRefetchError: dailyTasksRefreshFailed
   } = useQuery({
     queryKey: ['daily_tasks', today],
     // At midnight the key changes; keep showing the current list while the new day's
@@ -161,7 +167,9 @@ export const useDashboardData = () => {
   const {
     data: events = [],
     isLoading: eventsLoading,
-    error: eventsError
+    error: eventsError,
+    isLoadingError: eventsLoadFailed,
+    isRefetchError: eventsRefreshFailed
   } = useQuery({
     queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
@@ -183,7 +191,9 @@ export const useDashboardData = () => {
   const {
     data: activityLog = [],
     isLoading: activityLoading,
-    error: activityError
+    error: activityError,
+    isLoadingError: activityLoadFailed,
+    isRefetchError: activityRefreshFailed
   } = useQuery({
     queryKey: ['activity_log'],
     queryFn: async (): Promise<ActivityLog[]> => {
@@ -728,7 +738,12 @@ export const useDashboardData = () => {
     events,
     activityLog,
     isLoading: interestsLoading || tasksLoading || dailyTasksLoading || eventsLoading || activityLoading,
-    error: interestsError || tasksError || dailyTasksError || eventsError || activityError,
+    // Only a list that never loaded is an error; a failed refresh keeps the data on screen
+    error:
+      (interestsLoadFailed && interestsError) || (tasksLoadFailed && tasksError) ||
+      (dailyTasksLoadFailed && dailyTasksError) || (eventsLoadFailed && eventsError) ||
+      (activityLoadFailed && activityError) || null,
+    refreshFailed: interestsRefreshFailed || tasksRefreshFailed || dailyTasksRefreshFailed || eventsRefreshFailed || activityRefreshFailed,
     mutations: {
       createInterest,
       updateInterest,

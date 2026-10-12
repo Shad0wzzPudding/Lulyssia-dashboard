@@ -99,8 +99,16 @@ const Index = () => {
     activityLog, 
     isLoading: dataLoading, 
     error, 
+    refreshFailed,
     mutations 
   } = useDashboardData();
+
+  // A failed refresh (e.g. briefly offline) keeps the dashboard and any open form; just say so
+  useEffect(() => {
+    if (refreshFailed) {
+      toast({ title: "Couldn't refresh your dashboard", description: 'Showing what was already loaded. It will try again when you come back to the app.', variant: 'destructive' });
+    }
+  }, [refreshFailed]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
