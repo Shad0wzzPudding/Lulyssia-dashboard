@@ -309,8 +309,9 @@ Deno.serve(async (req) => {
         const { data: tasks } = await supabase
           .from('tasks')
           .select('title, description, deadline, start_date, recurrence_unit, recurrence_interval, recurrence_anchor, is_completed, tag_ids, attachments, notice_before')
-          .eq('user_id', link.user_id);
-        // Ticked tasks are read too: a ticked repeating task can still get the notice for its next round
+          .eq('user_id', link.user_id)
+          // Unfinished tasks, plus ticked repeating ones (they can still get the notice for their next round)
+          .or('is_completed.eq.false,recurrence_unit.not.is.null');
         const openTasks = (tasks ?? []).filter((t) => !t.is_completed);
 
         // The morning letter: when it's on, or when asked for
