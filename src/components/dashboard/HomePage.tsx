@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ArrowRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
-import { Interest, Task, Event, ActivityLog } from "@/lib/types";
+import { Interest, Task, Event, ActivityLog, NavigationPage } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
@@ -26,9 +26,11 @@ interface HomePageProps {
   onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
   onDeleteActivityLog?: (id: string) => void;
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
+  /** Opens another page (the "+N more" links under Today's Tasks and Events) */
+  onNavigate?: (page: NavigationPage) => void;
 }
 
-export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog }: HomePageProps) => {
+export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onNavigate }: HomePageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedItem, setSelectedItem] = useState<{
     id: string;
@@ -388,16 +390,32 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   const isOverdue = (task: Task) => !task.is_completed && !!task.deadline && isBefore(parseISO(task.deadline), now);
   const overdueTasks = tasks.filter(isOverdue);
 
-  // Today's events and tasks. The full lists feed the summary counts; the lists
-  // shown in the Today card are trimmed to 3 items each.
-  const allTodayDueTasks = tasks.filter(task => !task.is_completed && task.deadline && isToday(parseISO(task.deadline)) && !isOverdue(task));
-  const allTodayStartingTasks = tasks.filter(task => !task.is_completed && task.start_date && isToday(parseISO(task.start_date)) && !isOverdue(task));
+  // Today's events and tasks. The full lists feed the summary counts; the Today card shows
+  // the first few of each, then a "+N more" link to the page.
+  const TODAY_PREVIEW = 5;
+  const startsToday = (task: Task) => !!task.start_date && isToday(parseISO(task.start_date));
+  const dueToday = (task: Task) => !!task.deadline && isToday(parseISO(task.deadline));
+  // Each task once, even if it both starts and is due today, in order of its first time today
+  const firstTimeToday = (task: Task) => parseISO((startsToday(task) ? task.start_date : task.deadline) as string).getTime();
+  const allTodayTasks = tasks
+    .filter(task => !task.is_completed && !isOverdue(task) && (startsToday(task) || dueToday(task)))
+    .sort((a, b) => firstTimeToday(a) - firstTimeToday(b));
   const allTodayEvents = events.filter(event => event.start_time && isToday(parseISO(event.start_time)));
-  const todayTasks = allTodayDueTasks.slice(0, 3);
-  const todayStartingTasks = allTodayStartingTasks.slice(0, 3);
-  const todayEvents = allTodayEvents.slice(0, 3);
-  // Each task counted once, even if it both starts and is due today
-  const todayTaskCount = new Set([...allTodayDueTasks, ...allTodayStartingTasks].map(task => task.id)).size;
+  const todayTasks = allTodayTasks.slice(0, TODAY_PREVIEW);
+  const todayEvents = allTodayEvents.slice(0, TODAY_PREVIEW);
+  const todayTaskCount = allTodayTasks.length;
+
+  /** "+3 more" under a Today list, opening that page */
+  const moreLink = (hidden: number, page: NavigationPage) =>
+    hidden > 0 ? (
+      <button
+        type="button"
+        onClick={() => onNavigate?.(page)}
+        className="w-full rounded border border-dashed border-p5-300/60 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground dark:border-p5-700/60"
+      >
+        +{hidden} more in {page === 'tasks' ? 'Tasks' : 'Events'}
+      </button>
+    ) : null;
   
   // In progress: started on an earlier day and not finished yet. Tasks also: not done, not
   // repeating, and not due today (those are already in Today's Tasks).
@@ -545,38 +563,29 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             {/* Today's Tasks */}
             <div>
               <h4 className="font-semibold text-sm text-p5-700 dark:text-p5-300 mb-2">Today's Tasks</h4>
-              {(todayTasks.length > 0 || todayStartingTasks.length > 0) ? (
+              {todayTasks.length > 0 ? (
                 <div className="space-y-2">
-                  {/* Tasks with deadlines today */}
                   {todayTasks.map(task => (
-                    <div key={`deadline-${task.id}`} className="p-3 bg-card/90 rounded border border-red-200/40 dark:border-red-800/40">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <p className="font-medium text-sm">{task.title}</p>
-                        <Badge variant="destructive" className="text-xs">Deadline</Badge>
+                        {startsToday(task) && (
+                          <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                        )}
+                        {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
                       </div>
                         {task.description && (
                           <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
                        )}
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Due: {format(parseISO(task.deadline), 'HH:mm')}
+                        {[
+                          startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
+                          dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
+                        ].filter(Boolean).join(' · ')}
                       </p>
                     </div>
                   ))}
-                  {/* Tasks starting today */}
-                  {todayStartingTasks.map(task => (
-                    <div key={`start-${task.id}`} className="p-3 bg-card/90 rounded border border-green-200/40 dark:border-green-800/40">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-sm">{task.title}</p>
-                        <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
-                      </div>
-                        {task.description && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
-                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Starts: {format(parseISO(task.start_date), 'HH:mm')}
-                      </p>
-                    </div>
-                  ))}
+                  {moreLink(allTodayTasks.length - todayTasks.length, 'tasks')}
                 </div>
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400">No tasks today</p>
@@ -602,6 +611,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       </div>
                     </div>
                   ))}
+                  {moreLink(allTodayEvents.length - todayEvents.length, 'events')}
                 </div>
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400">No events today</p>
