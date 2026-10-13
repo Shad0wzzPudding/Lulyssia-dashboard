@@ -134,12 +134,16 @@ Deno.serve(async (req) => {
           .from('tasks')
           .select('id, title, description, start_date, deadline, recurrence_unit, recurrence_interval, recurrence_anchor, tag_ids, attachments')
           .eq('user_id', link.user_id)
-          .eq('is_completed', false);
+          .eq('is_completed', false)
+          // Repeating tasks are worked out below; one-time tasks only if they start in the window
+          .or(`recurrence_unit.not.is.null,and(start_date.gte."${windowStart.toISOString()}",start_date.lt."${windowEnd.toISOString()}")`);
 
         const { data: events } = await supabase
           .from('events')
           .select('id, title, description, start_time, deadline, tag_ids, attachments')
-          .eq('user_id', link.user_id);
+          .eq('user_id', link.user_id)
+          .gte('start_time', windowStart.toISOString())
+          .lt('start_time', windowEnd.toISOString());
 
         const { data: tags } = await supabase.from('tags').select('id, name').eq('user_id', link.user_id);
         const tagMap = new Map((tags ?? []).map((t) => [t.id, t.name]));

@@ -314,7 +314,9 @@ Deno.serve(async (req) => {
         const { data: events } = await supabase
           .from('events')
           .select('title, description, start_time, deadline, tag_ids, attachments, notice_before')
-          .eq('user_id', link.user_id);
+          .eq('user_id', link.user_id)
+          // Only today's and tomorrow's matter: leave out events that were over before today
+          .or(`start_time.gte."${today}T00:00:00+07:00",deadline.gte."${today}T00:00:00+07:00"`);
 
         const { data: tags } = await supabase
           .from('tags')
