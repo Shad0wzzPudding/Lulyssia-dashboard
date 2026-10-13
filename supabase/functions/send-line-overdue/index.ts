@@ -1,6 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { type FlexMessage } from '../_shared/lineCard.ts';
-import { MAX_NUDGES_PER_MESSAGE, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
+import { MAX_NUDGES_PER_MESSAGE, daysSince, missedDeadlinesMessage, missedDeadlinesText, type MissedTask } from '../_shared/missedDeadline.ts';
 import { formatDetail } from '../_shared/lineText.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
@@ -90,7 +90,8 @@ Deno.serve(async (req) => {
             deadline: t.deadline,
             detail: formatDetail(t.description),
             tags: (t.tag_ids ?? []).map((id: string) => tagMap.get(id)).filter(Boolean).join(', '),
-            daysOverdue: 0,
+            // Usually 0 (missed minutes ago), but more if nudges were just turned on or the job was down
+            daysOverdue: daysSince(t.deadline),
           });
         }
         if (missed.length === 0) continue;
