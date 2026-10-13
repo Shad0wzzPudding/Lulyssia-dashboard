@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { MessageCircle, Copy, RefreshCw, Send } from 'lucide-react';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
+import { STICKERS } from '@/lib/stickers';
+import { cn } from '@/lib/utils';
 
 interface LineLink {
   id: string;
@@ -17,9 +19,25 @@ interface LineLink {
   reminders_enabled: boolean;
   overdue_enabled: boolean;
   notice_enabled: boolean;
+  /** Requests for today's list (LINE "today" + the button below), counted per Thai day */
+  today_requests_date: string | null;
+  today_requests_count: number;
 }
 
-const LINK_FIELDS = 'id, link_code, line_user_id, display_name, is_enabled, reminders_enabled, overdue_enabled, notice_enabled';
+/** The bot's monthly LINE messages (from line-bot-info): limit null when the plan has none */
+interface LineQuota {
+  limit: number | null;
+  used: number;
+}
+
+const LINK_FIELDS =
+  'id, link_code, line_user_id, display_name, is_enabled, reminders_enabled, overdue_enabled, notice_enabled, today_requests_date, today_requests_count';
+
+/** Same as TODAY_REQUESTS_PER_DAY in supabase/functions/_shared/lineQuota.ts */
+const TODAY_REQUESTS_PER_DAY = 3;
+
+/** Today's date in Thai time, as stored in today_requests_date */
+const thaiToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
 
 const generateCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)),
@@ -34,6 +52,33 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
   const [busy, setBusy] = useState(false);
   const [botId, setBotId] = useState<string | null>(null);
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
+  const [quota, setQuota] = useState<LineQuota | null>(null);
+  // Lulyssia's "messages have run out" bubble over the send button
+  const [showQuotaPout, setShowQuotaPout] = useState(false);
+  // The KEEP OUT tape crosses the whole send button; its tilt comes from the button's width so the
+  // ends rise about the same on a phone and on a wide screen
+  const [sendWidth, setSendWidth] = useState(0);
+  const sendWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sendWrapRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setSendWidth(el.offsetWidth));
+    observer.observe(el);
+    return () => observer.disconnect();
+    // The button exists once the card has loaded and LINE is linked
+  }, [loading, link?.line_user_id]);
+  const tapeTilt = sendWidth > 0 ? (Math.atan2(14, sendWidth / 2) * 180) / Math.PI : 4;
+
+  // The bot's LINE id (for the "Open LINE" button) and this month's message usage
+  const loadBotInfo = () =>
+    supabase.functions
+      .invoke('line-bot-info')
+      .then(({ data }) => {
+        const info = data as { basicId?: string | null; quota?: LineQuota | null } | null;
+        if (info?.basicId) setBotId(info.basicId);
+        if (info?.quota) setQuota(info.quota);
+      })
+      .catch(() => { /* bot info unavailable — hide shortcut button and usage */ });
 
   const load = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -79,13 +124,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
     };
 
     refresh();
-    supabase.functions
-      .invoke('line-bot-info')
-      .then(({ data }) => {
-        const id = (data as { basicId?: string | null })?.basicId;
-        if (id) setBotId(id);
-      })
-      .catch(() => { /* bot info unavailable — hide shortcut button */ });
+    loadBotInfo();
 
     // Linking happens in LINE, so check again when coming back to the app (no reload needed)
     const onVisible = () => {
@@ -148,13 +187,20 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
     setBusy(true);
     const { data, error } = await supabase.functions.invoke('send-line-daily');
     setBusy(false);
+    const result = data as { sent?: number; reason?: string; message?: string } | null;
     if (error) {
       toast({ title: 'Could not send', description: error.message, variant: 'destructive' });
-    } else if ((data as { sent?: number })?.sent) {
+    } else if (result?.sent) {
       toast({ title: 'Sent!', description: "Check your LINE chat~" });
+    } else if (result?.reason) {
+      // Out of requests today, or the month's messages are used up
+      toast({ title: 'Not sent', description: result.message, variant: 'destructive' });
     } else {
       toast({ title: 'Nothing sent', description: 'Link your LINE account first.', variant: 'destructive' });
     }
+    // The counts changed (or someone else used some): show the new ones
+    load();
+    loadBotInfo();
   };
 
   // The clipboard only exists on secure pages (https or localhost); on a local network
@@ -310,15 +356,104 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
               />
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={sendTest}
-              disabled={busy || !link.line_user_id}
-            >
-              <Send size={16} className="mr-2" />
-              Send me today's digest now
-            </Button>
+            {link.line_user_id && (() => {
+              const usedToday = link.today_requests_date === thaiToday() ? link.today_requests_count : 0;
+              const todayOut = usedToday >= TODAY_REQUESTS_PER_DAY;
+              const limit = quota?.limit ?? null;
+              const monthOut = limit !== null && quota !== null && quota.used >= limit;
+              const monthLow = limit !== null && quota !== null && !monthOut && quota.used >= limit * 0.8;
+              return (
+                <>
+                  <div className="space-y-3 rounded-lg border border-dashed bg-white/60 p-3">
+                    {/* Your own requests today */}
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-0.5">
+                      <p className="text-sm font-medium">Today's list on request</p>
+                      <p className={cn('flex items-center gap-2 whitespace-nowrap font-display text-base font-extrabold italic tabular-nums', todayOut && 'text-muted-foreground')}>
+                        <span aria-hidden className="flex gap-1">
+                          {Array.from({ length: TODAY_REQUESTS_PER_DAY }, (_, i) => (
+                            <span key={i} className={cn('h-2 w-3.5 -skew-x-12', i < usedToday ? 'bg-primary' : 'bg-slate-300')} />
+                          ))}
+                        </span>
+                        {usedToday} of {TODAY_REQUESTS_PER_DAY} used today
+                      </p>
+                      <p className="col-span-2 text-xs text-muted-foreground">
+                        {todayOut
+                          ? 'Back tomorrow. The 08:00 letter still comes as usual.'
+                          : 'LINE "today" and the button below share these. Resets at midnight.'}
+                      </p>
+                    </div>
+                    {/* The bot's shared messages this month */}
+                    {quota && limit !== null && (
+                      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1">
+                        <p className="text-sm font-medium">Bot messages this month</p>
+                        <p className={cn('whitespace-nowrap font-display text-base font-extrabold italic tabular-nums', monthOut ? 'text-red-600' : monthLow && 'text-amber-600')}>
+                          {quota.used} / {limit}
+                        </p>
+                        <div className="col-span-2 h-2 -skew-x-12 overflow-hidden bg-slate-300">
+                          <div
+                            className={cn('h-full transition-[width]', monthOut ? 'bg-red-600' : monthLow ? 'bg-amber-600' : 'bg-[#06C755]')}
+                            style={{ width: `${Math.min(100, (quota.used / limit) * 100)}%` }}
+                          />
+                        </div>
+                        <p className={cn('col-span-2 text-xs', monthOut ? 'font-semibold text-red-600' : 'text-muted-foreground')}>
+                          {monthOut
+                            ? 'Used up for this month. Messages start again on the 1st.'
+                            : monthLow
+                              ? `Only ${limit - quota.used} left this month, shared by everyone.`
+                              : 'Shared by everyone the bot messages.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Used up for the month: KEEP OUT tape over the button, and Lulyssia explains on
+                      hover or tap */}
+                  <div
+                    ref={sendWrapRef}
+                    className="relative"
+                    onMouseEnter={() => monthOut && setShowQuotaPout(true)}
+                    onMouseLeave={() => setShowQuotaPout(false)}
+                  >
+                    {monthOut && showQuotaPout && (
+                      <div className="absolute inset-x-0 bottom-full z-10 mb-2 flex items-end gap-1.5 animate-scale-in">
+                        <img src={STICKERS.no} alt="Lulyssia pouting" className="h-20 w-20 shrink-0 object-contain drop-shadow-md" />
+                        <div className="relative mb-5 max-w-[300px] rounded-2xl border-2 border-[#3cb3d2] bg-[#10171c] px-3.5 py-2.5 text-sm font-medium text-[#fafafa] shadow-xl">
+                          Hmph. My messages for this month have run out. Wait for the next month, okay? The morning
+                          letters will be back on the 1st.
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      className={cn('w-full', monthOut && 'bg-slate-200 text-slate-400 hover:bg-slate-200 hover:text-slate-400')}
+                      onClick={() => (monthOut ? setShowQuotaPout((v) => !v) : sendTest())}
+                      onBlur={() => setShowQuotaPout(false)}
+                      disabled={busy || (todayOut && !monthOut)}
+                      aria-label={monthOut ? "Send me today's digest now: this month's messages are used up" : undefined}
+                    >
+                      <Send size={16} className="mr-2" />
+                      {todayOut && !monthOut ? `Used ${TODAY_REQUESTS_PER_DAY} of ${TODAY_REQUESTS_PER_DAY} today · back tomorrow` : "Send me today's digest now"}
+                    </Button>
+                    {/* Two strips crossing the whole button */}
+                    {monthOut &&
+                      [-1, 1].map((side) => (
+                        <div
+                          key={side}
+                          aria-hidden
+                          className="pointer-events-none absolute -inset-x-1.5 top-1/2 flex h-6 -translate-y-1/2 items-center justify-around overflow-hidden border-y-[3px] border-black bg-[#facc15] shadow-[0_3px_0_rgba(0,0,0,0.25)]"
+                          style={{ rotate: `${side * tapeTilt}deg` }}
+                        >
+                          {Array.from({ length: Math.max(2, Math.round(sendWidth / 220)) }, (_, i) => (
+                            <span key={i} className="whitespace-nowrap font-display text-xs font-black italic tracking-[0.12em] text-black">
+                              KEEP OUT
+                            </span>
+                          ))}
+                        </div>
+                      ))}
+                  </div>
+                </>
+              );
+            })()}
           </>
         )}
       </CardContent>

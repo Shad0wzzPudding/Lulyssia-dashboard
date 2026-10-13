@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { assetUrl } from '../_shared/lineCard.ts';
+import { getLineQuota, quotaUsedUp, QUOTA_USED_UP_TEXT, TODAY_REQUESTS_PER_DAY } from '../_shared/lineQuota.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 
@@ -198,7 +199,31 @@ Deno.serve(async (req) => {
             await reply(accessToken, replyToken, NOT_LINKED_TEXT);
             continue;
           }
-          await reply(accessToken, replyToken, "Alright, I'll relay today's list for you then.\n*swiping sounds...*");
+          // The list is a push message from the bot's shared monthly allowance; these replies are free
+          if (quotaUsedUp(await getLineQuota(accessToken))) {
+            await reply(accessToken, replyToken, QUOTA_USED_UP_TEXT);
+            continue;
+          }
+          // 3 a day per person (this and the Settings button together)
+          const { data: used, error: claimError } = await supabase.rpc('claim_today_request', { p_user_id: data.user_id });
+          if (claimError) {
+            console.error('Counting the today request failed', claimError);
+            await reply(accessToken, replyToken, 'Suspicious... that should have worked. Please try again in a moment.');
+            continue;
+          }
+          if (used === -1) {
+            await reply(
+              accessToken,
+              replyToken,
+              `I've already sent today's list ${TODAY_REQUESTS_PER_DAY} times today. The next one comes at 08:00 tomorrow.`,
+            );
+            continue;
+          }
+          await reply(
+            accessToken,
+            replyToken,
+            `Alright, I'll relay today's list for you then.\n*swiping sounds...* (${used} of ${TODAY_REQUESTS_PER_DAY} today)`,
+          );
           const cronSecret = Deno.env.get('LINE_CRON_SECRET') ?? Deno.env.get('CRON_SECRET') ?? '';
           // Not awaited so LINE gets its reply quickly, but kept alive until the
           // request is out (otherwise the function can stop before sending it)

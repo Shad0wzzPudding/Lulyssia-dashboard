@@ -4,6 +4,7 @@ import { MAX_NUDGES_PER_MESSAGE, daysSince, missedDeadlinesMessage, missedDeadli
 import { formatDetail } from '../_shared/lineText.ts';
 import { deadlineRepeatOn, startRepeatOn } from '../_shared/recurrence.ts';
 import { imageMessages } from '../_shared/lineImages.ts';
+import { getLineQuota, quotaUsedUp, QUOTA_USED_UP_TEXT, TODAY_REQUESTS_PER_DAY } from '../_shared/lineQuota.ts';
 
 const LINE_API = 'https://api.line.me/v2/bot';
 const TH_OFFSET_MS = 7 * 60 * 60 * 1000;
@@ -267,6 +268,24 @@ Deno.serve(async (req) => {
     const { data: links, error: linksError } = await query;
     if (linksError) throw linksError;
     if (!links || links.length === 0) return json({ message: 'No linked LINE accounts', sent: 0 });
+
+    // The Settings "Send me today's digest now" button: the same limits as the LINE "today"
+    // command (which checks them in the webhook before calling this): not when the month's
+    // messages are used up, and 3 a day per person
+    if (!isCron) {
+      if (quotaUsedUp(await getLineQuota(accessToken))) {
+        return json({ sent: 0, reason: 'quota_used_up', message: QUOTA_USED_UP_TEXT });
+      }
+      const { data: used, error: claimError } = await supabase.rpc('claim_today_request', { p_user_id: targetUserId });
+      if (claimError) throw claimError;
+      if (used === -1) {
+        return json({
+          sent: 0,
+          reason: 'today_limit',
+          message: `You've asked for today's list ${TODAY_REQUESTS_PER_DAY} times today. The next one comes at 08:00 tomorrow.`,
+        });
+      }
+    }
 
     // Nicknames set in the dashboard Settings
     const { data: nameRows } = await supabase

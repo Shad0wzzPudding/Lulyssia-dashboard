@@ -182,6 +182,8 @@ export type Database = {
           notice_enabled: boolean
           overdue_enabled: boolean
           reminders_enabled: boolean
+          today_requests_count: number
+          today_requests_date: string | null
           updated_at: string
           user_id: string
         }
@@ -196,6 +198,8 @@ export type Database = {
           notice_enabled?: boolean
           overdue_enabled?: boolean
           reminders_enabled?: boolean
+          today_requests_count?: number
+          today_requests_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -210,6 +214,8 @@ export type Database = {
           notice_enabled?: boolean
           overdue_enabled?: boolean
           reminders_enabled?: boolean
+          today_requests_count?: number
+          today_requests_date?: string | null
           updated_at?: string
           user_id?: string
         }

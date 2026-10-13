@@ -83,7 +83,7 @@ month's last day. These routine changes are not added to Recent Changes.
 | Function | Purpose | Who can call it |
 | --- | --- | --- |
 | `line-webhook` | LINE webhook: account linking by code, chat commands, "Mark as done" on nudges; unlinks an account that blocks the bot | LINE only (verifies the request signature) |
-| `line-bot-info` | Returns the bot ID for the "Open LINE" button | Signed-in users |
+| `line-bot-info` | Returns the bot's public LINE id and name (the "Open LINE" button); for a signed-in user, also this month's message usage | Anyone (usage only for signed-in users) |
 | `line-rich-menu` | Creates the LINE rich menu from an uploaded image | Cron secret |
 | `send-line-daily` | 08:00 run: morning letter, day-before notice and missed-deadline repeats, each by its own switch | Cron secret, or a signed-in user (test button) |
 | `send-line-reminders` | Start reminders | Cron secret, or a signed-in user |
@@ -135,6 +135,10 @@ Do not put the value in a migration, a commit, or a chat message.
 4. In the app, open **Settings**, add the bot as a friend, and send it the link code shown there.
 
 Chat commands: `today`, `status`, `stop`, `start`, `remind on`, `remind off`, `notice on`, `notice off`, `overdue on`, `overdue off`.
+
+`today` (and the Settings "Send me today's digest now" button) works 3 times a day per person and not once the
+bot's monthly message allowance is used up: each list is a push message from that shared allowance (300 a month on
+the free plan). Settings shows both counts.
 
 A link code only works while its account is unlinked or being re-linked from the same LINE account.
 To move to another LINE account, press the refresh button next to the code in Settings.
