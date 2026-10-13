@@ -28,6 +28,7 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `94581ca` | Fix : The LINE "notice" reply starts with a line from Lulyssia saying it doesn't use a "today" request |
 | `1d7dd42` | Fix : On phones the Overdue, Completed and Today badges sit under the title instead of squeezing it |
 | `25f5cea` | Fix : The record of sent LINE messages is trimmed to the last week every night |
 | `c9cee66` | Fix : Long descriptions in LINE are cut at about 300 characters with a note to read the rest in the dashboard |
