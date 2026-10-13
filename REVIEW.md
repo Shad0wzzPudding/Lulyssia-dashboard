@@ -28,6 +28,8 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `69af81b` | Feat : Sound settings: turn any sound off or change its volume |
+| `2825c29` | Feat : Settings cards in a new order, and the Install app card in cyan |
 | `82c4412` | Feat : The LINE menu has two pages, Choice and Settings, with buttons for every command |
 | `5caaf65` | Fix : The Every label and tag chips use darker text on the light cards, so they are readable |
 | `94581ca` | Fix : The LINE "notice" reply starts with a line from Lulyssia saying it doesn't use a "today" request |
