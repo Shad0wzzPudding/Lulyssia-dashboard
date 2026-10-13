@@ -80,11 +80,21 @@ const PLAY: Record<SoundId, () => void> = {
 
 const DEFAULT_SOUND = { on: true, volume: 100 };
 
+const OPEN_GROUPS_KEY = 'soundGroupsOpen';
+const readOpenGroups = (): Set<string> => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPEN_GROUPS_KEY) ?? 'null');
+    if (Array.isArray(saved)) return new Set(saved.filter((g): g is string => typeof g === 'string'));
+  } catch { /* storage unavailable or unreadable */ }
+  return new Set([SOUND_GROUPS[0].name]);
+};
+
 /** "Sound" settings: all sounds on/off and their volume, then each sound on its own. */
 export const SoundSettings = () => {
   const settings = useSoundSettings();
-  // Only the first group starts open, so the card stays short
-  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set([SOUND_GROUPS[0].name]));
+  // Which groups are open, remembered on this device (the first time, only the first is open, so
+  // the card stays short)
+  const [openGroups, setOpenGroups] = useState<Set<string>>(readOpenGroups);
 
   // The sound files load now, so a play button sounds right the first time
   useEffect(() => {
@@ -98,13 +108,18 @@ export const SoundSettings = () => {
     preloadTriggerSound();
   }, []);
 
-  const toggleGroup = (name: string, open: boolean) =>
+  const toggleGroup = (name: string, open: boolean) => {
+    if (open) playExpandSound(); else playCollapseSound();
     setOpenGroups((prev) => {
       const next = new Set(prev);
       if (open) next.add(name);
       else next.delete(name);
+      try {
+        localStorage.setItem(OPEN_GROUPS_KEY, JSON.stringify([...next]));
+      } catch { /* storage unavailable */ }
       return next;
     });
+  };
 
   return (
     <Card>
