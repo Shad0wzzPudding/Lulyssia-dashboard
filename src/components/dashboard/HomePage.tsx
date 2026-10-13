@@ -896,17 +896,17 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       {/* Pinned Interests */}
       <Card className="bg-main-focus/20 border-main-focus/40">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-main-focus">
+          {/* Title and Collapse all on one line; the two hints share it on wide screens and drop to
+              their own line on phones (one line overflowed the screen below about 391px) */}
+          <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2">
+            <CardTitle className="mr-auto flex items-center gap-2 text-main-focus">
               <Pin size={20} />
               <span className="font-bold">Main Focus</span>
             </CardTitle>
-            {sortedPinnedInterests.length > 0 && onUpdateInterest && (
-              <div className="flex items-center gap-2">
-                {(() => {
-                const hasExpanded = sortedPinnedInterests.some(i => !collapsedInterests.has(i.id));
-                return (
-                <div className="relative">
+            {sortedPinnedInterests.length > 0 && onUpdateInterest && (() => {
+              const hasExpanded = sortedPinnedInterests.some(i => !collapsedInterests.has(i.id));
+              return (
+                <>
                   <Button
                     variant="outline"
                     size="sm"
@@ -932,9 +932,21 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <ChevronUp size={12} className="mr-1" />
                     Collapse all
                   </Button>
+                  <div className="flex basis-full flex-wrap items-center gap-2 sm:basis-auto">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
+                      <GripVertical size={12} />
+                      <span>Drag to reorder</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground animate-fade-in">
+                      <ArrowRight size={12} className="animate-pulse" />
+                      <span>Swipe to unpin</span>
+                    </div>
+                  </div>
+                  {/* "Nothing to collapse": Lulyssia and her bubble open under the header from the
+                      card's left edge, so neither runs off the screen */}
                   {showCollapsePout && (
                     <div
-                      className="absolute right-0 top-full mt-2 z-50 flex items-start gap-2 animate-scale-in"
+                      className="absolute inset-x-0 top-full z-50 mt-2 flex items-start gap-2 animate-scale-in"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <img
@@ -942,7 +954,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         alt="Lulyssia pouting"
                         className="w-20 h-20 object-contain drop-shadow-md -mt-2 flex-shrink-0"
                       />
-                      <div className="relative w-[260px] mt-3">
+                      <div className="relative mt-3 min-w-0 max-w-[260px] flex-1">
                         <div className="bg-card border-2 border-main-focus/60 rounded-2xl px-4 py-3 text-sm font-medium text-foreground shadow-xl">
                           Hmph! I can't collapse anything — every block is already closed! Expand at least one first, okay?
                         </div>
@@ -951,19 +963,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       </div>
                     </div>
                   )}
-                </div>
-                );
-                })()}
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                  <GripVertical size={12} />
-                  <span>Drag to reorder</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full animate-fade-in">
-                  <ArrowRight size={12} className="animate-pulse" />
-                  <span>Swipe to unpin</span>
-                </div>
-              </div>
-            )}
+                </>
+              );
+            })()}
           </div>
         </CardHeader>
         <CardContent>
