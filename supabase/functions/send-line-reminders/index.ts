@@ -119,7 +119,9 @@ Deno.serve(async (req) => {
     const nameByUser = new Map((nameRows ?? []).map((r) => [r.user_id, r.nickname || null]));
 
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 10 * 60 * 1000);
+    // Runs every 5 minutes. Starting 5 minutes ahead (not 10) means a reminder LINE refused gets
+    // one more try on the next run; the mark below keeps normal reminders to one each.
+    const windowStart = new Date(now.getTime() + 5 * 60 * 1000);
     const windowEnd = new Date(now.getTime() + 16 * 60 * 1000);
     const inWindow = (d: Date | null) => !!d && d >= windowStart && d < windowEnd;
 
@@ -233,18 +235,31 @@ Deno.serve(async (req) => {
             detail: formatDetail(item.description),
             tags: tagStr,
           });
-          const images = (await imageMessages(supabase, item.attachments, link.user_id)).slice(0, 4);
           try {
-            await pushMessages(accessToken, link.line_user_id as string, [card, ...images]);
+            const images = (await imageMessages(supabase, item.attachments, link.user_id)).slice(0, 4);
+            try {
+              await pushMessages(accessToken, link.line_user_id as string, [card, ...images]);
+            } catch (err) {
+              // If LINE rejects the card, send the same reminder as plain text
+              console.error(`Starting-soon card rejected for user ${link.user_id}, sending text instead:`, err);
+              await pushMessages(accessToken, link.line_user_id as string, [
+                { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
+                ...images,
+              ]);
+            }
+            sent++;
           } catch (err) {
-            // If LINE rejects the card, send the same reminder as plain text
-            console.error(`Starting-soon card rejected for user ${link.user_id}, sending text instead:`, err);
-            await pushMessages(accessToken, link.line_user_id as string, [
-              { type: 'text', text: lines.join('\n').trim().slice(0, 4900) },
-              ...images,
-            ]);
+            // Not sent: remove the mark so the next run can try again, and go on with the rest
+            console.error(`Reminder failed for user ${link.user_id}, item ${item.id}:`, err);
+            failures.push(String(err));
+            await supabase
+              .from('line_reminders_sent')
+              .delete()
+              .eq('user_id', link.user_id)
+              .eq('item_type', item.type)
+              .eq('item_id', item.id)
+              .eq('occurrence_at', occurrenceIso);
           }
-          sent++;
         }
       } catch (err) {
         console.error(`Reminder failed for user ${link.user_id}:`, err);
