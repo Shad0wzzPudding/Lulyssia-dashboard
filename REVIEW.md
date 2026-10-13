@@ -28,6 +28,23 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `1d7dd42` | Fix : On phones the Overdue, Completed and Today badges sit under the title instead of squeezing it |
+| `25f5cea` | Fix : The record of sent LINE messages is trimmed to the last week every night |
+| `c9cee66` | Fix : Long descriptions in LINE are cut at about 300 characters with a note to read the rest in the dashboard |
+| `7bc5495` | Fix : Undo and unpin swipes start from a handle, so selecting text can't trigger them |
+| `c4f75a2` | Fix : Linking LINE again keeps the morning letter's setting, and the link button is hidden while linked |
+| `0c6d175` | Fix : LINE "today" no longer repeats the Notice before card, and the new "notice" command sends it on request |
+| `6469d71` | Fix : A LINE Settings reload that was already running when a switch is flipped no longer shows the old value |
+| `6acbbe3` | Fix : The 404 page uses the app's dark background, so its text is readable |
+| `23d73eb` | Fix : The LINE checks only load the tasks and events they need, and Recent Changes and interests get indexes |
+| `5c9a2c1` | Fix : Deleting a tag takes it off its items, and Sort by tag skips tags that no longer exist |
+| `214d66f` | Fix : The first missed-deadline nudge says how many days late the task is |
+| `8053d2f` | Fix : Picture previews on cards renew their links, so a page left open keeps its pictures |
+| `b964f2a` | Fix : Opening an attachment opens its tab right away, so Safari doesn't block it |
+| `ca146e0` | Fix : Backslashes and back-to-back bold/italic text keep their formatting when saved |
+| `0c01b97` | Fix : Saving an edit form no longer unticks a task that was ticked elsewhere while the form was open |
+| `3ebedd3` | Fix : Clear Completed only deletes the finished tasks the page has loaded, so Undo brings all of them back |
+| `c7e8a70` | Fix : Linking LINE says when it failed, and a LINE account moved to another dashboard account no longer leaves its name behind |
 | `156be2c` | Fix : The daily routine is copied even if a task was added before the day was set up, and yesterday's list can't be changed while today's loads |
 | `a67f00b` | Fix : A starting-soon reminder LINE refuses gets another try, and no longer stops the other reminders |
 | `9fa4d34` | Fix : Picked items hidden by a search or filter are no longer picked, so Delete only removes what's on screen |
