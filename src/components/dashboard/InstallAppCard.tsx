@@ -34,9 +34,10 @@ export const InstallAppCard = () => {
 
   return (
     <Collapsible open={!isInstallCollapsed} onOpenChange={() => toggleInstallCollapse()}>
-      <Card>
+      {/* Cyan, set apart from the black and white cards below it; a white shadow (cyan wouldn't show) */}
+      <Card className="border-primary bg-primary text-primary-foreground shadow-[5px_5px_0_0_hsl(var(--foreground))]">
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer transition-colors hover:bg-black/5">
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Download className="h-5 w-5" />
@@ -45,7 +46,7 @@ export const InstallAppCard = () => {
               {isInstallCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
             </CardTitle>
             {isInstallCollapsed && (
-              <CardDescription>
+              <CardDescription className="text-primary-foreground/75">
                 Tap to expand for installation instructions
               </CardDescription>
             )}
@@ -53,7 +54,7 @@ export const InstallAppCard = () => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <CardDescription className="mb-4">
+            <CardDescription className="mb-4 text-primary-foreground/75">
               {isIOS
                 ? 'Add this app to your home screen using Safari\'s share menu for quick access.'
                 : 'Install the app on your device for quick access, just like a regular app.'
@@ -63,7 +64,7 @@ export const InstallAppCard = () => {
               {isIOS ? (
                 <div className="space-y-2">
                   <p className="text-sm">To add it on iOS:</p>
-                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                  <ol className="text-xs text-primary-foreground/75 space-y-1 list-decimal list-inside">
                     <li>Open this page in Safari (not Chrome/Firefox)</li>
                     <li>Tap the share button at the bottom</li>
                     <li>Select "Add to Home Screen"</li>
@@ -71,7 +72,7 @@ export const InstallAppCard = () => {
                   </ol>
                 </div>
               ) : (
-                <Button onClick={installApp} className="w-full">
+                <Button onClick={installApp} className="w-full bg-background text-foreground hover:bg-background/85">
                   <Download className="h-4 w-4 mr-2" />
                   Install App
                 </Button>

@@ -14,17 +14,17 @@ export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }
         <PageIcon icon={Camera} />
         <h1 className="p5-title w-fit text-2xl">Settings</h1>
       </div>
-      {/* Cards alternate black / white, starting with black. Install App is hidden once the
-          app is installed; the rest still alternates without it. */}
+      {/* Install App (cyan) stands apart and is hidden once the app is installed. The cards
+          below alternate black / white, starting with black. */}
       <InstallAppCard />
-      <div className="theme-light">
-        <NameSettings />
-      </div>
-      <DisplaySettings />
+      <NameSettings />
       <div className="theme-light">
         <LineSettings scrollToken={lineFocus} />
       </div>
       <TagManager />
+      <div className="theme-light">
+        <DisplaySettings />
+      </div>
     </div>
   );
 };
