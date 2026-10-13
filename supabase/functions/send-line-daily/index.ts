@@ -211,6 +211,20 @@ async function pushMessages(token: string, to: string, messages: LineMessage[]) 
   }
 }
 
+// A reply is free (pushes count against the monthly allowance). A rejected reply keeps its token,
+// so the plain-text fallback can still use it.
+async function replyMessages(token: string, replyToken: string, messages: LineMessage[]) {
+  const res = await fetch(`${LINE_API}/message/reply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ replyToken, messages: messages.slice(0, 5) }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`LINE reply failed ${res.status}: ${body}`);
+  }
+}
+
 async function pushMessage(token: string, to: string, text: string) {
   await pushMessages(token, to, [{ type: 'text', text: text.slice(0, 4900) }]);
 }
@@ -239,6 +253,9 @@ Deno.serve(async (req) => {
     const isCron = !!cronSecret && validSecrets.includes(cronSecret);
 
     let targetUserId: string | null = null;
+    // The LINE "notice" command: only tomorrow's "Notice before" items, as a (free) reply
+    let onlyNotice = false;
+    let replyToken: string | null = null;
     if (!isCron) {
       const authHeader = req.headers.get('Authorization') ?? '';
       const token = authHeader.replace('Bearer ', '');
@@ -250,13 +267,18 @@ Deno.serve(async (req) => {
       try {
         const body = await req.json();
         if (body && typeof body.user_id === 'string') targetUserId = body.user_id;
+        if (targetUserId && body?.only === 'notice') {
+          onlyNotice = true;
+          if (typeof body.reply_token === 'string') replyToken = body.reply_token;
+        }
       } catch (_) { /* no body */ }
     }
 
 
     // The 08:00 run covers anyone with the letter, the day-before notice or missed-deadline
     // nudges on; each is sent only if its own switch is on. Asking for the list (LINE "today" or
-    // the Settings test button) always sends the letter.
+    // the Settings test button) always sends the letter, without the notice (it has its own
+    // command, "notice").
     let query = supabase
       .from('line_links')
       .select('user_id, line_user_id, display_name, is_enabled, notice_enabled, overdue_enabled')
@@ -447,7 +469,8 @@ Deno.serve(async (req) => {
         const tomorrowDay = new Date(Date.now() + 86400000);
         const tomorrow = thDateString(tomorrowDay);
         const isTomorrow = (iso: string | null) => !!iso && thDateString(new Date(iso)) === tomorrow;
-        const noticeItems = !link.notice_enabled ? [] : [
+        const wantNotice = onlyNotice || (!targetUserId && link.notice_enabled);
+        const noticeItems = !wantNotice ? [] : [
           ...(events ?? [])
             .filter((e) => e.notice_before)
             .map((e) => ({ kind: '📅 Event', title: e.title, description: e.description, start: e.start_time, deadline: e.deadline, tag_ids: e.tag_ids })),
@@ -499,6 +522,26 @@ Deno.serve(async (req) => {
             events: noticeItems.filter((it) => it.kind === '📅 Event').map(toItem),
             tasks: noticeItems.filter((it) => it.kind !== '📅 Event').map(toItem),
           });
+        }
+
+        // The "notice" command: just the notice, as a reply (free), or a note that there is none
+        if (onlyNotice) {
+          const nothing: LineMessage = { type: 'text', text: `Nothing marked "Notice before" is coming up tomorrow (${tomorrow}).` };
+          const send = (messages: LineMessage[]) => replyToken
+            ? replyMessages(accessToken, replyToken, messages)
+            : pushMessages(accessToken, link.line_user_id as string, messages);
+          if (noticeCard && noticeText) {
+            try {
+              await send([noticeCard]);
+            } catch (err) {
+              console.error(`Notice card rejected for user ${link.user_id}, sending text instead:`, err);
+              await send([noticeText]);
+            }
+          } else {
+            await send([nothing]);
+          }
+          sent++;
+          continue;
         }
 
         // Missed-deadline repeats: tasks still not done whose deadline was on an earlier day (within

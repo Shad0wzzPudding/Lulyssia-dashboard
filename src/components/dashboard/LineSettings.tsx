@@ -308,7 +308,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                In the chat you can also send <b>status</b>, <b>stop</b>, <b>start</b>,{' '}
+                In the chat you can also send <b>notice</b> (tomorrow's "Notice before" items), <b>status</b>, <b>stop</b>, <b>start</b>,{' '}
                 <b>remind on</b>, <b>remind off</b>, <b>notice on</b>, <b>notice off</b>,{' '}
                 <b>overdue on</b>, or <b>overdue off</b>.
               </p>

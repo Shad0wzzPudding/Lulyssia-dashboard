@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
               },
               {
                 type: 'text',
-                text: 'The available options for you are:\ntoday / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off',
+                text: 'The available options for you are:\ntoday / notice / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off',
               },
               {
                 type: 'text',
@@ -238,6 +238,33 @@ Deno.serve(async (req) => {
           continue;
         }
 
+
+        // Tomorrow's "Notice before" items, on request (sent as a reply, so it's free)
+        if (/^(NOTICES?)$/i.test(text)) {
+          const { data } = await supabase
+            .from('line_links')
+            .select('user_id')
+            .eq('line_user_id', lineUserId)
+            .maybeSingle();
+          if (!data) {
+            await reply(accessToken, replyToken, NOT_LINKED_TEXT);
+            continue;
+          }
+          const cronSecret = Deno.env.get('LINE_CRON_SECRET') ?? Deno.env.get('CRON_SECRET') ?? '';
+          const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-line-daily`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-cron-secret': cronSecret },
+            body: JSON.stringify({ user_id: data.user_id, only: 'notice', reply_token: replyToken }),
+          }).catch((e) => {
+            console.error('notice trigger failed', e);
+            return null;
+          });
+          const result = res?.ok ? await res.json().catch(() => null) : null;
+          if (!result || result.sent !== 1) {
+            await reply(accessToken, replyToken, 'Suspicious... that should have worked. Please try again in a moment.');
+          }
+          continue;
+        }
 
         if (/^(STATUS)$/i.test(text)) {
           const { data } = await supabase
@@ -390,7 +417,7 @@ Deno.serve(async (req) => {
 
         // Anything else: the reply depends on whether this LINE account is linked yet
         const commandList =
-          'The available options are:\ntoday / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off';
+          'The available options are:\ntoday / notice / status / stop / start / remind on / remind off / notice on / notice off / overdue on / overdue off';
         const { data: linked } = await supabase
           .from('line_links')
           .select('user_id')
