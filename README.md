@@ -84,7 +84,7 @@ month's last day. These routine changes are not added to Recent Changes.
 | --- | --- | --- |
 | `line-webhook` | LINE webhook: account linking by code, chat commands, "Mark as done" on nudges; unlinks an account that blocks the bot | LINE only (verifies the request signature) |
 | `line-bot-info` | Returns the bot's public LINE id and name (the "Open LINE" button); for a signed-in user, also this month's message usage | Anyone (usage only for signed-in users) |
-| `line-rich-menu` | Creates the LINE rich menu from an uploaded image | Cron secret |
+| `line-rich-menu` | Sets up the two-page LINE menu (Choice and Settings) from the pictures in `public/line-menu/` on the live site | Cron secret |
 | `send-line-daily` | 08:00 run: morning letter, day-before notice and missed-deadline repeats, each by its own switch | Cron secret, or a signed-in user (test button) |
 | `send-line-reminders` | Start reminders | Cron secret, or a signed-in user |
 | `send-line-overdue` | Missed-deadline nudges | Cron secret |

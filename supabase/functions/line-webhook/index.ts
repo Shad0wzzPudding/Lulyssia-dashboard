@@ -142,6 +142,9 @@ Deno.serve(async (req) => {
 
         // "Mark as done" on a missed-deadline card. Only a button tap (postback, signed by LINE)
         // can do this, and only for a task that belongs to the account linked to this LINE user.
+        // A tab of the LINE menu: it only switches the menu page (see line-rich-menu), nothing to answer
+        if (isPostback && text.startsWith('menu-switch:')) continue;
+
         if (isPostback && text.startsWith('done:')) {
           const taskId = text.slice('done:'.length);
           const { data: link } = await supabase
