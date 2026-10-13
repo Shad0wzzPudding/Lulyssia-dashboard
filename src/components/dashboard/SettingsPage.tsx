@@ -5,6 +5,7 @@ import { Camera } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { NameSettings } from './NameSettings';
 import { DisplaySettings } from './DisplaySettings';
+import { SoundSettings } from './SoundSettings';
 
 /** lineFocus: set (a new number each time) when Settings should jump to the LINE card */
 export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }) => {
@@ -25,6 +26,7 @@ export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }
       <div className="theme-light">
         <DisplaySettings />
       </div>
+      <SoundSettings />
     </div>
   );
 };

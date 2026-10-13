@@ -11,6 +11,7 @@ import annoyedCloseEffect from "@/assets/sound/annoyed_close.wav";
 import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 import slidingEffect from "@/assets/sound/sliding.wav";
+import { soundLevel, type SoundId } from "@/lib/soundSettings";
 
 // Haptic feedback utility - vibrates if supported
 const haptic = (pattern: number | number[] = 30) => {
@@ -42,6 +43,24 @@ const getAudioContext = (): AudioContext => {
   return sharedAudioContext;
 };
 
+// Settings (Sound card): a sound turned off doesn't play at all (nor vibrate), and each one plays
+// through its own gain at its volume times the master volume
+const soundOn = (id: SoundId) => soundLevel(id) > 0;
+const outputs = new Map<SoundId, GainNode>();
+
+/** Where a sound connects instead of the speakers: its gain, set to the current setting. */
+const out = (id: SoundId): GainNode => {
+  const ctx = getAudioContext();
+  let gain = outputs.get(id);
+  if (!gain) {
+    gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    outputs.set(id, gain);
+  }
+  gain.gain.value = soundLevel(id);
+  return gain;
+};
+
 // Call this on first touch to unlock audio for iOS
 export const unlockAudio = () => {
   const ctx = getAudioContext();
@@ -54,6 +73,7 @@ export const unlockAudio = () => {
 };
 
 export const playSuccessSound = () => {
+  if (!soundOn('create')) return;
   haptic([20, 30, 20]);
   try {
     const audioContext = getAudioContext();
@@ -63,7 +83,7 @@ export const playSuccessSound = () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('create'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
@@ -88,6 +108,7 @@ export const playSuccessSound = () => {
 };
 
 export const playCompletionSound = () => {
+  if (!soundOn('complete')) return;
   haptic(40);
   try {
     const audioContext = getAudioContext();
@@ -97,7 +118,7 @@ export const playCompletionSound = () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('complete'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = type;
@@ -121,6 +142,7 @@ export const playCompletionSound = () => {
 };
 
 export const playLulyssiaSound = () => {
+  if (!soundOn('ask')) return;
   haptic([15, 20, 15]);
   try {
     const audioContext = getAudioContext();
@@ -130,7 +152,7 @@ export const playLulyssiaSound = () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('ask'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
@@ -154,6 +176,7 @@ export const playLulyssiaSound = () => {
 };
 
 export const playConfirmSound = () => {
+  if (!soundOn('agree')) return;
   haptic([10, 15, 10, 15, 10]);
   try {
     const audioContext = getAudioContext();
@@ -163,7 +186,7 @@ export const playConfirmSound = () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('agree'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
@@ -189,6 +212,7 @@ export const playConfirmSound = () => {
 };
 
 export const playCancelSound = async () => {
+  if (!soundOn('cancel')) return;
   haptic(25);
   try {
     const audioContext = getAudioContext();
@@ -203,7 +227,7 @@ export const playCancelSound = async () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('cancel'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'triangle'; // Softer sound for cancel
@@ -228,6 +252,7 @@ export const playCancelSound = async () => {
 };
 
 export const playDeleteSound = async () => {
+  if (!soundOn('delete')) return;
   haptic([40, 30, 50]);
   try {
     const audioContext = getAudioContext();
@@ -242,7 +267,7 @@ export const playDeleteSound = async () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('delete'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sawtooth'; // Slightly harsher for delete
@@ -267,6 +292,7 @@ export const playDeleteSound = async () => {
 };
 
 export const playDuplicateSound = () => {
+  if (!soundOn('duplicate')) return;
   haptic([15, 30, 15]);
   try {
     const audioContext = getAudioContext();
@@ -276,7 +302,7 @@ export const playDuplicateSound = () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('duplicate'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
@@ -300,6 +326,7 @@ export const playDuplicateSound = () => {
 };
 
 export const playPinSound = async () => {
+  if (!soundOn('pin')) return;
   haptic(30);
   try {
     const audioContext = getAudioContext();
@@ -314,7 +341,7 @@ export const playPinSound = async () => {
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(out('pin'));
       
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
@@ -338,6 +365,7 @@ export const playPinSound = async () => {
 };
 
 export const playUnpinSound = () => {
+  if (!soundOn('unpin')) return;
   haptic([20, 20, 20]);
   try {
     const audioContext = getAudioContext();
@@ -348,7 +376,7 @@ export const playUnpinSound = () => {
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
     osc1.connect(gain1);
-    gain1.connect(audioContext.destination);
+    gain1.connect(out('unpin'));
     osc1.frequency.value = 800;
     osc1.type = 'triangle';
     gain1.gain.setValueAtTime(0.25, now);
@@ -360,7 +388,7 @@ export const playUnpinSound = () => {
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
     osc2.connect(gain2);
-    gain2.connect(audioContext.destination);
+    gain2.connect(out('unpin'));
     osc2.frequency.value = 500;
     osc2.type = 'triangle';
     gain2.gain.setValueAtTime(0.25, now + 0.06);
@@ -375,6 +403,7 @@ export const playUnpinSound = () => {
 };
 
 export const playUpdateSound = () => {
+  if (!soundOn('update')) return;
   haptic(25);
   try {
     const audioContext = getAudioContext();
@@ -384,7 +413,7 @@ export const playUpdateSound = () => {
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
     osc1.connect(gain1);
-    gain1.connect(audioContext.destination);
+    gain1.connect(out('update'));
     osc1.frequency.value = 440; // A4
     osc1.type = 'sine';
     gain1.gain.setValueAtTime(0.18, now);
@@ -395,7 +424,7 @@ export const playUpdateSound = () => {
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
     osc2.connect(gain2);
-    gain2.connect(audioContext.destination);
+    gain2.connect(out('update'));
     osc2.frequency.value = 660; // E5
     osc2.type = 'sine';
     gain2.gain.setValueAtTime(0.2, now + 0.08);
@@ -409,6 +438,7 @@ export const playUpdateSound = () => {
 };
 
 export const playEditSound = () => {
+  if (!soundOn('edit')) return;
   haptic(20);
   try {
     const audioContext = getAudioContext();
@@ -418,7 +448,7 @@ export const playEditSound = () => {
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
     osc1.connect(gain1);
-    gain1.connect(audioContext.destination);
+    gain1.connect(out('edit'));
     osc1.frequency.value = 554.37; // C#5
     osc1.type = 'sine';
     gain1.gain.setValueAtTime(0.18, now);
@@ -429,7 +459,7 @@ export const playEditSound = () => {
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
     osc2.connect(gain2);
-    gain2.connect(audioContext.destination);
+    gain2.connect(out('edit'));
     osc2.frequency.value = 739.99; // F#5
     osc2.type = 'sine';
     gain2.gain.setValueAtTime(0.2, now + 0.06);
@@ -443,6 +473,7 @@ export const playEditSound = () => {
 };
 
 export const playCollapseSound = () => {
+  if (!soundOn('collapse')) return;
   haptic(10);
   try {
     const audioContext = getAudioContext();
@@ -452,7 +483,7 @@ export const playCollapseSound = () => {
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(out('collapse'));
     osc.frequency.setValueAtTime(600, now);
     osc.frequency.exponentialRampToValueAtTime(400, now + 0.08);
     osc.type = 'sine';
@@ -467,6 +498,7 @@ export const playCollapseSound = () => {
 };
 
 export const playExpandSound = () => {
+  if (!soundOn('expand')) return;
   haptic(10);
   try {
     const audioContext = getAudioContext();
@@ -476,7 +508,7 @@ export const playExpandSound = () => {
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(out('expand'));
     osc.frequency.setValueAtTime(400, now);
     osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
     osc.type = 'sine';
@@ -490,7 +522,7 @@ export const playExpandSound = () => {
   }
 };
 
-export const playNavigationSound = () => {
+const playNavigationTap = (id: SoundId) => {
   haptic(10);
   try {
     const audioContext = getAudioContext();
@@ -500,7 +532,7 @@ export const playNavigationSound = () => {
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(out(id));
     osc.frequency.value = 660; // E5
     osc.type = 'sine';
     gain.gain.setValueAtTime(0.15, now);
@@ -509,7 +541,7 @@ export const playNavigationSound = () => {
     osc.stop(now + 0.06);
     
   } catch (e) {
-    console.warn('[playNavigationSound] Audio error:', e);
+    console.warn('[playNavigationTap] Audio error:', e);
   }
 };
 
@@ -522,7 +554,7 @@ const playCodeTick = () => {
     const osc = audioContext.createOscillator();
     const gain = audioContext.createGain();
     osc.connect(gain);
-    gain.connect(audioContext.destination);
+    gain.connect(out('cursor'));
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(1800, now);
     osc.frequency.exponentialRampToValueAtTime(1100, now + 0.03);
@@ -540,7 +572,7 @@ const playCodeTick = () => {
 const SELECT_MODE_VOLUME = 0.8;
 
 /** Plays a loaded sound file, optionally `delayMs` later (scheduled precisely by Web Audio). */
-const playSoundFile = (url: string, volume: number, fallback: () => void, delayMs = 0) => {
+const playSoundFile = (id: SoundId, url: string, volume: number, fallback: () => void, delayMs = 0) => {
   const buffer = soundBuffers.get(url);
   if (!buffer) {
     void loadSoundBuffer(url);
@@ -554,7 +586,7 @@ const playSoundFile = (url: string, volume: number, fallback: () => void, delayM
     source.buffer = buffer;
     gain.gain.value = volume;
     source.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(out(id));
     source.start(ctx.currentTime + delayMs / 1000);
   } catch (e) {
     console.warn('[sounds] Audio error:', url, e);
@@ -574,9 +606,10 @@ export const preloadMenuOpenSound = () => {
 
 /** Opening the message-button menu. Call it from the button's click handler. */
 export const playMenuOpenSound = () => {
+  if (!soundOn('menuOpen')) return;
   haptic(10);
-  playSoundFile(messageOpenEffect, MENU_OPEN_VOLUME, noSound);
-  playSoundFile(menuOpenEffect, MENU_OPEN_VOLUME, playNavigationSound, PONDERING_DELAY_MS);
+  playSoundFile('menuOpen', messageOpenEffect, MENU_OPEN_VOLUME, noSound);
+  playSoundFile('menuOpen', menuOpenEffect, MENU_OPEN_VOLUME, () => playNavigationTap('menuOpen'), PONDERING_DELAY_MS);
 };
 
 // Message button: closing the menu without picking a page.
@@ -591,8 +624,9 @@ export const preloadMenuCloseSounds = () => {
 
 /** Closing the message-button menu (X, outside click, Esc). Not used when a page is picked. */
 export const playMenuCloseSound = () => {
-  playSoundFile(annoyedCloseEffect, MENU_OPEN_VOLUME, noSound);
-  playSoundFile(messageCloseEffect, MENU_OPEN_VOLUME, noSound, MESSAGE_CLOSE_DELAY_MS);
+  if (!soundOn('menuClose')) return;
+  playSoundFile('menuClose', annoyedCloseEffect, MENU_OPEN_VOLUME, noSound);
+  playSoundFile('menuClose', messageCloseEffect, MENU_OPEN_VOLUME, noSound, MESSAGE_CLOSE_DELAY_MS);
 };
 
 // Left drawer (Settings link): open and close sounds
@@ -604,12 +638,14 @@ export const preloadDrawerSounds = () => {
 };
 
 export const playDrawerOpenSound = () => {
+  if (!soundOn('drawerOpen')) return;
   haptic(10);
-  playSoundFile(drawerOpenEffect, DRAWER_VOLUME, noSound);
+  playSoundFile('drawerOpen', drawerOpenEffect, DRAWER_VOLUME, noSound);
 };
 
 export const playDrawerCloseSound = () => {
-  playSoundFile(drawerCloseEffect, DRAWER_VOLUME, noSound);
+  if (!soundOn('drawerClose')) return;
+  playSoundFile('drawerClose', drawerCloseEffect, DRAWER_VOLUME, noSound);
 };
 
 export const preloadSelectModeSounds = () => {
@@ -619,14 +655,16 @@ export const preloadSelectModeSounds = () => {
 
 /** Entering select mode. Call it from the Select button's click handler. */
 export const playSelectModeSound = () => {
+  if (!soundOn('selectOn')) return;
   haptic([10, 20, 10]);
-  playSoundFile(selectModeOpen, SELECT_MODE_VOLUME, playSelectModeTone);
+  playSoundFile('selectOn', selectModeOpen, SELECT_MODE_VOLUME, playSelectModeTone);
 };
 
 /** Leaving select mode (X, Esc, last card deselected, or after an action). */
 export const playSelectModeCloseSound = () => {
+  if (!soundOn('selectOff')) return;
   haptic(10);
-  playSoundFile(selectModeClose, SELECT_MODE_VOLUME, playCancelSound);
+  playSoundFile('selectOff', selectModeClose, SELECT_MODE_VOLUME, () => playNavigationTap('selectOff'));
 };
 
 // Fallback for the open sound: two short high tones
@@ -639,7 +677,7 @@ const playSelectModeTone = () => {
       const osc = audioContext.createOscillator();
       const gain = audioContext.createGain();
       osc.connect(gain);
-      gain.connect(audioContext.destination);
+      gain.connect(out('selectOn'));
       osc.frequency.value = freq;
       osc.type = 'sine';
       gain.gain.setValueAtTime(0.2, start);
@@ -657,6 +695,7 @@ const playSelectModeTone = () => {
 };
 
 export const playAddSound = () => {
+  if (!soundOn('add')) return;
   haptic([10, 15]);
   try {
     const audioContext = getAudioContext();
@@ -667,7 +706,7 @@ export const playAddSound = () => {
       const osc = audioContext.createOscillator();
       const gain = audioContext.createGain();
       osc.connect(gain);
-      gain.connect(audioContext.destination);
+      gain.connect(out('add'));
       osc.frequency.value = freq;
       osc.type = type;
       gain.gain.setValueAtTime(0, start);
@@ -686,16 +725,16 @@ export const playAddSound = () => {
   }
 };
 
-// Persona-style skill activation sound, used by the scroll-to-top cut-in.
-// Created once so the clip is already loaded the first time the button is pressed
+// Persona-style skill activation sound, used by the scroll-to-top cut-in. Played through Web Audio
+// like the others, so its volume setting also works on iPhones (they ignore an <audio> volume);
+// until the file has loaded (the very first press), an <audio> element plays it instead
+const TRIGGER_VOLUME = 0.7;
 let triggerAudio: HTMLAudioElement | null = null;
 
-export const playTriggerSound = () => {
+const playTriggerFallback = () => {
   try {
-    if (!triggerAudio) {
-      triggerAudio = new Audio(triggerEffect);
-      triggerAudio.volume = 0.7;
-    }
+    triggerAudio ??= new Audio(triggerEffect);
+    triggerAudio.volume = Math.min(1, TRIGGER_VOLUME * soundLevel('cutIn'));
     triggerAudio.currentTime = 0;
     triggerAudio.play().catch((e) => console.warn('[playTriggerSound] Audio error:', e));
   } catch (e) {
@@ -703,12 +742,13 @@ export const playTriggerSound = () => {
   }
 };
 
+export const playTriggerSound = () => {
+  if (!soundOn('cutIn')) return;
+  playSoundFile('cutIn', triggerEffect, TRIGGER_VOLUME, playTriggerFallback);
+};
+
 export const preloadTriggerSound = () => {
-  if (!triggerAudio) {
-    triggerAudio = new Audio(triggerEffect);
-    triggerAudio.preload = 'auto';
-    triggerAudio.volume = 0.7;
-  }
+  void loadSoundBuffer(triggerEffect);
 };
 
 // Train sound for the crowd page transition. Played through Web Audio so the start
@@ -755,11 +795,12 @@ export const preloadSelectionSound = () => {
 };
 
 export const playSelectionSound = () => {
+  if (!soundOn('pick')) return;
   const buffer = soundBuffers.get(selectionEffect);
   if (!buffer) {
     // Not loaded yet: fall back to the short beep so there is still feedback
     void loadSoundBuffer(selectionEffect);
-    playNavigationSound();
+    playNavigationTap('pick');
     return;
   }
   haptic(10);
@@ -770,7 +811,7 @@ export const playSelectionSound = () => {
     source.buffer = buffer;
     gain.gain.value = SELECTION_VOLUME;
     source.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(out('pick'));
     source.start();
   } catch (e) {
     console.warn('[playSelectionSound] Audio error:', e);
@@ -787,6 +828,7 @@ export const preloadTickSound = () => {
 };
 
 export const playTickSound = () => {
+  if (!soundOn('cursor')) return;
   const buffer = soundBuffers.get(slidingEffect);
   if (!buffer) {
     void loadSoundBuffer(slidingEffect);
@@ -801,7 +843,7 @@ export const playTickSound = () => {
     source.buffer = buffer;
     gain.gain.value = TICK_VOLUME;
     source.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(out('cursor'));
     source.start();
     tickSource = source;
   } catch (e) {
@@ -814,6 +856,7 @@ export const playTickSound = () => {
  * with a short fade in and fade out. Call it from the click/tap handler.
  */
 export const playTrainSound = (durationMs = 2000, delayMs = 0) => {
+  if (!soundOn('train')) return;
   try {
     const ctx = getAudioContext();
     const trainBuffer = soundBuffers.get(trainEffect);
@@ -830,7 +873,7 @@ export const playTrainSound = (durationMs = 2000, delayMs = 0) => {
     const gain = ctx.createGain();
     source.buffer = trainBuffer;
     source.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(out('train'));
 
     gain.gain.setValueAtTime(0, start);
     gain.gain.linearRampToValueAtTime(TRAIN_VOLUME, start + TRAIN_FADE_IN_S);
