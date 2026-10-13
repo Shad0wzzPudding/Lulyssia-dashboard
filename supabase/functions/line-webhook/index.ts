@@ -9,6 +9,7 @@ declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
 
 // Reply for anyone who messages the bot before linking their account (used in several places)
 const NOT_LINKED_TEXT = "You're not linked yet. Send me the link code shown in the app's Settings page to connect your account.";
+const LINK_FAILED_TEXT = "*Lulyssia frowns at the page*\nSomething went wrong and I couldn't link your account. Please send the code again in a moment.";
 
 interface LineEvent {
   type?: string;
@@ -343,12 +344,17 @@ Deno.serve(async (req) => {
           }
 
           if (link) {
-            // Free the code from any other LINE account first
-            await supabase
+            // Free this LINE account from any other dashboard account first
+            const { error: freeError } = await supabase
               .from('line_links')
-              .update({ link_code: newCode(), line_user_id: null })
+              .update({ link_code: newCode(), line_user_id: null, display_name: null, linked_at: null })
               .eq('line_user_id', lineUserId)
               .neq('id', link.id);
+            if (freeError) {
+              console.error('Freeing the LINE account failed:', freeError);
+              await reply(accessToken, replyToken, LINK_FAILED_TEXT);
+              continue;
+            }
 
             let displayName: string | null = null;
             try {
@@ -358,7 +364,7 @@ Deno.serve(async (req) => {
               if (profRes.ok) displayName = (await profRes.json())?.displayName ?? null;
             } catch (_) { /* ignore */ }
 
-            await supabase
+            const { error: linkError } = await supabase
               .from('line_links')
               .update({
                 line_user_id: lineUserId,
@@ -367,6 +373,11 @@ Deno.serve(async (req) => {
                 is_enabled: true,
               })
               .eq('id', link.id);
+            if (linkError) {
+              console.error('Saving the LINE link failed:', linkError);
+              await reply(accessToken, replyToken, LINK_FAILED_TEXT);
+              continue;
+            }
 
             await reply(
               accessToken,
