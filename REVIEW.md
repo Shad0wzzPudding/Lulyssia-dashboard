@@ -24,7 +24,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Nothing waiting. (`da5aafd`, the commit after `a4f4e29` on main, only adds this file.)
+Newest first. The commits in between only change roadmap.md and REVIEW.md (the cloud bug hunt findings and this file), so they need no review.
+
+| Commit | What |
+| --- | --- |
+| `b6a9498` | Feat : LINE "today" limited to 3 a day per person, with this month's usage in Settings |
+| `076b8f0` | Fix : Main Focus header fits on phones, and Lulyssia's "nothing to collapse" bubble stays on screen |
 
 ## Review history
 
