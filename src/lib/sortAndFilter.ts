@@ -33,9 +33,10 @@ export const sortItems = <T extends { created_at: string; title: string; deadlin
       return arr.sort((a, b) => b.title.localeCompare(a.title));
     case 'tag':
       return arr.sort((a, b) => {
-        const an = a.tag_ids?.[0] && tagsById?.[a.tag_ids[0]]?.name || '\uffff';
-        const bn = b.tag_ids?.[0] && tagsById?.[b.tag_ids[0]]?.name || '\uffff';
-        return an.localeCompare(bn);
+        // The first tag that still exists (an old copy restored by Undo may hold a deleted one)
+        const firstName = (ids?: string[] | null) =>
+          (ids ?? []).map((id) => tagsById?.[id]?.name).find(Boolean) || '\uffff';
+        return firstName(a.tag_ids).localeCompare(firstName(b.tag_ids));
       });
     case 'pinned_first':
       return arr.sort((a, b) => Number(!!b.is_pinned) - Number(!!a.is_pinned));
