@@ -175,7 +175,14 @@ export const TasksPage = ({
     };
 
     if (editingTask) {
-      onUpdateTask({ id: editingTask.id, ...submissionData });
+      // "Done" is only saved when it was changed in the form, so a tick made elsewhere (e.g. from
+      // LINE) while the form was open isn't undone
+      const { is_completed, ...rest } = submissionData;
+      onUpdateTask({
+        id: editingTask.id,
+        ...rest,
+        ...(is_completed !== editingTask.is_completed ? { is_completed } : {}),
+      });
       playUpdateSound();
     } else {
       onCreateTask(submissionData);
