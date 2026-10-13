@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
           if (code.length >= 6 && code.length <= 12) {
           const { data: link } = await supabase
             .from('line_links')
-            .select('id, user_id, line_user_id')
+            .select('id, user_id, line_user_id, is_enabled')
             .eq('link_code', code)
             .maybeSingle();
 
@@ -397,7 +397,8 @@ Deno.serve(async (req) => {
                 line_user_id: lineUserId,
                 display_name: displayName,
                 linked_at: new Date().toISOString(),
-                is_enabled: true,
+                // The morning letter keeps its setting (on for a new account): linking again, or
+                // after blocking and unblocking the bot, doesn't turn it back on
               })
               .eq('id', link.id);
             if (linkError) {
@@ -409,7 +410,9 @@ Deno.serve(async (req) => {
             await reply(
               accessToken,
               replyToken,
-              `Linked successfully${displayName ? `, ${displayName}` : ''}.\nI'll message you every morning at 08:00 (Thai time) with your tasks and events.\n\nSend "stop" to pause, "start" to resume, "status" to check.\nI'm looking forward to helping you every day! 🦋`,
+              `Linked successfully${displayName ? `, ${displayName}` : ''}.\n${link.is_enabled
+                ? `I'll message you every morning at 08:00 (Thai time) with your tasks and events.\n\nSend "stop" to pause, "start" to resume, "status" to check.`
+                : `Your morning letter is still off. Send "start" to get it every morning at 08:00 (Thai time), or "status" to check your settings.`}\nI'm looking forward to helping you every day! 🦋`,
             );
             continue;
           }

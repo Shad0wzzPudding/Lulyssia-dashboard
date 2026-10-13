@@ -274,7 +274,8 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
               <p className="text-xs text-muted-foreground">
                 Add the LINE bot as a friend, then send it this code in the chat:
               </p>
-              {botId && (
+              {/* Already linked: sending the code again would only link the same account again */}
+              {botId && !link.line_user_id && (
                 <Button
                   className="w-full bg-[#06C755] hover:bg-[#05b04c] text-white"
                   onClick={() =>
