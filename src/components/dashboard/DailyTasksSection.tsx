@@ -23,6 +23,8 @@ type NewDailyTask = Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_a
 
 interface DailyTasksSectionProps {
   dailyTasks: DailyTask[];
+  /** Yesterday's list, still showing while today's loads: changes would go to yesterday's rows */
+  stale: boolean;
   onCreate: (data: NewDailyTask) => void;
   onUpdate: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
   onDelete: (id: string) => void;
@@ -41,7 +43,7 @@ const readCollapsed = () => {
 // The database stores a time like "09:30:00"; the time input and the display use "09:30"
 const toHHMM = (time?: string | null) => (time ? time.slice(0, 5) : '');
 
-export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: DailyTasksSectionProps) => {
+export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDelete }: DailyTasksSectionProps) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [quickTitle, setQuickTitle] = useState('');
   const [quickTime, setQuickTime] = useState('');
@@ -65,7 +67,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
   const handleQuickAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const title = quickTitle.trim();
-    if (!title) return;
+    if (!title || stale) return;
     playAddSound();
     onCreate({ title, deadline: quickTime || undefined, is_completed: false });
     setQuickTitle('');
@@ -73,6 +75,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
   };
 
   const handleToggle = (task: DailyTask) => {
+    if (stale) return;
     const completing = !task.is_completed;
     onUpdate({ id: task.id, is_completed: completing, __silent: true });
     if (completing) playCompletionSound(); else playUpdateSound();
@@ -87,7 +90,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const title = form.title.trim();
-    if (!editing || !title) return;
+    if (!editing || !title || stale) return;
     playUpdateSound();
     onUpdate({
       id: editing.id,
@@ -116,7 +119,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
 
         <CollapsibleContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            Resets every day · {format(new Date(), 'EEE, d MMM')}
+            {stale ? 'Loading today\'s list…' : `Resets every day · ${format(new Date(), 'EEE, d MMM')}`}
           </p>
 
           {total > 0 && (
@@ -151,6 +154,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
                         size="sm"
                         variant="ghost"
                         onClick={() => handleToggle(task)}
+                        disabled={stale}
                         className="mt-0.5 p-0 h-6 w-6"
                         aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
                       >
@@ -178,13 +182,14 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(task)} aria-label="Edit daily task">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(task)} disabled={stale} aria-label="Edit daily task">
                         <Edit size={12} />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => { playDeleteSound(); onDelete(task.id); }}
+                        disabled={stale}
                         className="text-destructive hover:text-destructive"
                         aria-label="Delete daily task"
                       >
@@ -218,7 +223,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
               aria-label="Time (optional)"
               className="w-28 shrink-0 px-2 text-xs sm:text-sm"
             />
-            <Button type="submit" size="sm" disabled={!quickTitle.trim()} aria-label="Add daily task" className="shrink-0">
+            <Button type="submit" size="sm" disabled={!quickTitle.trim() || stale} aria-label="Add daily task" className="shrink-0">
               <Plus size={16} />
             </Button>
           </form>
@@ -254,7 +259,7 @@ export const DailyTasksSection = ({ dailyTasks, onCreate, onUpdate, onDelete }: 
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
             />
             <div className="flex gap-2">
-              <Button type="submit" className="flex-1">Update</Button>
+              <Button type="submit" className="flex-1" disabled={stale}>Update</Button>
               <Button type="button" variant="outline" onClick={() => { playCancelSound(); setEditing(null); }}>
                 Cancel
               </Button>

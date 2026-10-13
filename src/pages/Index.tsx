@@ -100,6 +100,7 @@ const Index = () => {
     interests, 
     tasks, 
     dailyTasks,
+    dailyTasksStale,
     events, 
     activityLog, 
     isLoading: dataLoading, 
@@ -209,6 +210,7 @@ const Index = () => {
             onClearCompleted={mutations.clearCompletedTasks.mutate}
             onRestoreTasks={(items) => mutations.restoreClearedItems.mutate({ table: 'tasks', items })}
             dailyTasks={dailyTasks}
+            dailyTasksStale={dailyTasksStale}
             onCreateDailyTask={mutations.createDailyTask.mutate}
             onUpdateDailyTask={mutations.updateDailyTask.mutate}
             onDeleteDailyTask={mutations.deleteDailyTask.mutate}

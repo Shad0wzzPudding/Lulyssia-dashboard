@@ -101,7 +101,8 @@ export const useDashboardData = () => {
     isLoading: dailyTasksLoading,
     error: dailyTasksError,
     isLoadingError: dailyTasksLoadFailed,
-    isRefetchError: dailyTasksRefreshFailed
+    isRefetchError: dailyTasksRefreshFailed,
+    isPlaceholderData: dailyTasksStale
   } = useQuery({
     queryKey: ['daily_tasks', today],
     // At midnight the key changes; keep showing the current list while the new day's
@@ -392,6 +393,14 @@ export const useDashboardData = () => {
     mutationFn: async (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+
+      // Set up today's list first, so a task added early in the day doesn't stop the routine
+      // from being copied
+      const { error: ensureError } = await supabase.rpc('ensure_daily_tasks_for_today', {
+        p_user_id: user.id,
+        p_today: today
+      });
+      if (ensureError) throw ensureError;
 
       const { error } = await supabase
         .from('daily_tasks')
@@ -710,6 +719,8 @@ export const useDashboardData = () => {
     interests,
     tasks,
     dailyTasks,
+    // Still yesterday's list, shown while today's loads: it can't be changed until then
+    dailyTasksStale,
     events,
     activityLog,
     isLoading: interestsLoading || tasksLoading || dailyTasksLoading || eventsLoading || activityLoading,

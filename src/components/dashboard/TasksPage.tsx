@@ -44,6 +44,7 @@ interface TasksPageProps {
   onClearCompleted: (variables?: void, options?: { onSuccess?: () => void }) => void;
   onRestoreTasks: (tasks: Task[]) => void;
   dailyTasks: DailyTask[];
+  dailyTasksStale: boolean;
   onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => void;
   onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
   onDeleteDailyTask: (id: string) => void;
@@ -58,6 +59,7 @@ export const TasksPage = ({
   onClearCompleted,
   onRestoreTasks,
   dailyTasks,
+  dailyTasksStale,
   onCreateDailyTask,
   onUpdateDailyTask,
   onDeleteDailyTask
@@ -715,6 +717,7 @@ export const TasksPage = ({
             )}
             <DailyTasksSection
               dailyTasks={dailyTasks}
+              stale={dailyTasksStale}
               onCreate={onCreateDailyTask}
               onUpdate={onUpdateDailyTask}
               onDelete={onDeleteDailyTask}
