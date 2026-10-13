@@ -144,14 +144,15 @@ export const TagChip = ({
     <span
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all',
+        'tag-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all',
         onClick && 'cursor-pointer hover:scale-105',
         active === false && 'opacity-50'
       )}
       style={{
         background: `${tag.color}22`,
         borderColor: `${tag.color}66`,
-        color: tag.color,
+        // The text colour comes from .tag-chip (darker on light surfaces)
+        ['--tag-color' as string]: tag.color,
       }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: tag.color }} />

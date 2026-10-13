@@ -509,3 +509,21 @@
     animation: none;
   }
 }
+
+/* Text that is bright on the dark page but would fade on the light cards and the Settings page:
+   a darker shade inside .theme-light (contrast 4.5:1 or more on the light card) */
+.tag-chip {
+  color: var(--tag-color);
+}
+.theme-light .tag-chip {
+  /* The tag's own colour, halfway to black; its dot and tint keep the real colour */
+  color: color-mix(in srgb, var(--tag-color) 50%, black);
+}
+.repeat-badge {
+  color: #c4b5fd; /* violet-300 */
+  border-color: #c4b5fd;
+}
+.theme-light .repeat-badge {
+  color: #6d28d9; /* violet-700 */
+  border-color: #a78bfa; /* violet-400 */
+}

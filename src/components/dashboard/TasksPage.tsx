@@ -426,7 +426,7 @@ export const TasksPage = ({
                  )}
                  {task.recurrence_unit && (
                    <div className="mt-2">
-                     <Badge variant="outline" className="text-xs border-violet-300 text-violet-500 dark:text-violet-300">
+                     <Badge variant="outline" className="repeat-badge text-xs">
                        <Repeat size={10} className="mr-1" />
                        Every {(task.recurrence_interval || 1) > 1 ? `${task.recurrence_interval} ` : ''}{task.recurrence_unit}{(task.recurrence_interval || 1) > 1 ? 's' : ''}
                      </Badge>
