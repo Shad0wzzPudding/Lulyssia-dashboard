@@ -1,7 +1,7 @@
 // Sound effects utility using Web Audio API
 import triggerEffect from "@/assets/sound/triger_effect.mp3";
 import trainEffect from "@/assets/sound/train_effect.mp3";
-import selectionEffect from "@/assets/sound/selection_effect.mp3";
+import selectionEffect from "@/assets/sound/selection_effect.wav";
 import selectModeOpen from "@/assets/sound/selectmode_open.wav";
 import selectModeClose from "@/assets/sound/selectmode_close.wav";
 import menuOpenEffect from "@/assets/sound/pondering.mp3";
