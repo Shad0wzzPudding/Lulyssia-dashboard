@@ -25,13 +25,27 @@ export function stripMarkdown(text: string): string {
     .trim();
 }
 
-/** The description cleaned for LINE: at most 5 non-empty lines, then "...". */
+// A long description could make a card too big for LINE (it then falls back to plain text, which has
+// no "Mark as done" button), so it is cut to a few lines and characters
+const MAX_DETAIL_LINES = 5;
+const MAX_DETAIL_CHARS = 300;
+const CUT_NOTE = '...\nRead full detail in dashboard.';
+
+/** The description cleaned for LINE: at most 5 non-empty lines and about 300 characters. */
 export function formatDetail(text: string | null): string | null {
   if (!text) return null;
   const clean = stripMarkdown(text).trim();
   if (!clean) return null;
   const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return null;
-  if (lines.length <= 5) return lines.join('\n');
-  return [...lines.slice(0, 5), '...'].join('\n');
+  let detail = lines.slice(0, MAX_DETAIL_LINES).join('\n');
+  let cut = lines.length > MAX_DETAIL_LINES;
+  if (detail.length > MAX_DETAIL_CHARS) {
+    // Whole characters (an emoji is two UTF-16 units), ending at a space when there is one nearby
+    const chars = Array.from(detail).slice(0, MAX_DETAIL_CHARS);
+    const lastSpace = Math.max(chars.lastIndexOf(' '), chars.lastIndexOf('\n'));
+    detail = chars.slice(0, lastSpace > MAX_DETAIL_CHARS - 40 ? lastSpace : MAX_DETAIL_CHARS).join('').trimEnd();
+    cut = true;
+  }
+  return cut ? `${detail}${CUT_NOTE}` : detail;
 }
