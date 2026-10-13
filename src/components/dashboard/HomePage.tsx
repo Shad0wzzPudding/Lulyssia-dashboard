@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ArrowRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
+import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
 import { Interest, Task, Event, ActivityLog, NavigationPage } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -939,8 +939,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       <span>Drag to reorder</span>
                     </div>
                     <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground animate-fade-in">
-                      <ArrowRight size={12} className="animate-pulse" />
-                      <span>Swipe to unpin</span>
+                      <ChevronsRight size={12} className="animate-pulse" />
+                      <span>Pull to unpin</span>
                     </div>
                   </div>
                   {/* "Nothing to collapse": Lulyssia and her bubble open under the header from the

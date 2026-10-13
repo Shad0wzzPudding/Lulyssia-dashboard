@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Clock, ChevronDown, ChevronUp, X, GripVertical } from "lucide-react";
+import { Clock, ChevronDown, ChevronUp, ChevronsRight, X, GripVertical } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Interest } from "@/lib/types";
 import { playUnpinSound } from "@/lib/sounds";
@@ -37,8 +37,6 @@ export const DraggableInterestCard = ({
   const [isVerticalDragging, setIsVerticalDragging] = useState(false);
   const translateXRef = useRef(0);
   const startXRef = useRef(0);
-  const startYRef = useRef(0);
-  const cardRef = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
 
   const SWIPE_THRESHOLD = 60; // Lowered for easier triggering
@@ -48,72 +46,25 @@ export const DraggableInterestCard = ({
     setTranslateX(value);
   };
 
-  // Horizontal swipe for unpin (on card content)
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // If touching the drag handle, don't start horizontal swipe
-    if (dragHandleRef.current?.contains(e.target as Node)) return;
-    
-    startXRef.current = e.touches[0].clientX;
-    startYRef.current = e.touches[0].clientY;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (dragHandleRef.current?.contains(e.target as Node)) return;
-    if (isVerticalDragging) return;
-    
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const diffX = currentX - startXRef.current;
-    const diffY = Math.abs(currentY - startYRef.current);
-    
-    // If vertical movement is greater, don't swipe horizontally
-    if (diffY > Math.abs(diffX) && !isHorizontalDragging) return;
-    
-    // Only allow right swipe (positive diff)
-    if (diffX > 10) {
-      setIsHorizontalDragging(true);
-      updateTranslateX(Math.min(diffX, 150));
-    }
-  };
-
-  const handleTouchEnd = () => {
-    const currentX = translateXRef.current;
-    const wasDragging = isHorizontalDragging;
-    
-    if (currentX > SWIPE_THRESHOLD) {
-      // Play sound immediately in touch handler
-      playUnpinSound();
-      updateTranslateX(300);
-      setIsHorizontalDragging(false);
-      setTimeout(() => {
-        onUnpin(interest);
-      }, 200);
-    } else {
-      updateTranslateX(0);
-      setIsHorizontalDragging(false);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (dragHandleRef.current?.contains(e.target as Node)) return;
-    
+  // Swipe right to unpin, only from its handle (mouse or touch), so selecting text on the card
+  // can't unpin it. The pointer is captured, so the swipe keeps going when it leaves the handle.
+  const handleSwipeDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
     setIsHorizontalDragging(true);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleSwipeMove = (e: React.PointerEvent) => {
     if (!isHorizontalDragging) return;
-    if (dragHandleRef.current?.contains(e.target as Node)) return;
-    
-    const diff = e.clientX - startXRef.current;
-    if (diff > 0) {
-      updateTranslateX(Math.min(diff, 150));
-    }
+    updateTranslateX(Math.max(0, Math.min(e.clientX - startXRef.current, 150)));
   };
 
-  const handleMouseUp = () => {
+  const handleSwipeUp = () => {
+    if (!isHorizontalDragging) return;
     // Check ref for immediate value (React state may be stale)
-    if (isHorizontalDragging && translateXRef.current > SWIPE_THRESHOLD) {
+    if (translateXRef.current > SWIPE_THRESHOLD) {
       // Play sound FIRST, before any state updates
       playUnpinSound();
       updateTranslateX(300);
@@ -124,13 +75,6 @@ export const DraggableInterestCard = ({
     } else {
       updateTranslateX(0);
       setIsHorizontalDragging(false);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isHorizontalDragging) {
-      setIsHorizontalDragging(false);
-      updateTranslateX(0);
     }
   };
 
@@ -179,7 +123,6 @@ export const DraggableInterestCard = ({
 
       {/* Card content */}
       <div
-        ref={cardRef}
         className="relative bg-card/80 border border-main-focus/30 rounded-lg transition-transform select-text"
         style={{
           transform: `translateX(${translateX}px)`,
@@ -192,13 +135,6 @@ export const DraggableInterestCard = ({
           onDragOver(index);
         }}
         onDragEnd={onDragEnd}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
       >
         <Collapsible open={!isCollapsed}>
           <div className="p-3 flex items-start gap-2">
@@ -218,6 +154,19 @@ export const DraggableInterestCard = ({
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">
                   {interest.title}
                 </h4>
+                {/* Swipe handle: pull right to unpin */}
+                <div
+                  role="button"
+                  aria-label="Pull right to unpin"
+                  title="Pull right to unpin"
+                  className="ml-2 flex h-6 w-6 flex-shrink-0 cursor-grab touch-none select-none items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
+                  onPointerDown={handleSwipeDown}
+                  onPointerMove={handleSwipeMove}
+                  onPointerUp={handleSwipeUp}
+                  onPointerCancel={handleSwipeUp}
+                >
+                  <ChevronsRight size={16} />
+                </div>
                 {interest.description && (
                   <CollapsibleTrigger asChild>
                     <Button

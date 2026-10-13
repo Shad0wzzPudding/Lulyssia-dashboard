@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Undo2 } from "lucide-react";
+import { ChevronsLeft, Lock, Undo2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ActivityLog } from "@/lib/types";
 import { playDeleteSound } from "@/lib/sounds";
@@ -24,7 +24,6 @@ export const SwipeableActivityLogEntry = ({
   const [isDragging, setIsDragging] = useState(false);
   const translateXRef = useRef(0);
   const startXRef = useRef(0);
-  const startYRef = useRef(0);
 
   const SWIPE_THRESHOLD = 80;
   // A locked entry only gives a little: it can't be swiped far enough to undo
@@ -36,68 +35,30 @@ export const SwipeableActivityLogEntry = ({
     setTranslateX(value);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startXRef.current = e.touches[0].clientX;
-    startYRef.current = e.touches[0].clientY;
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    const diff = startXRef.current - e.touches[0].clientX;
-    // A mostly up/down movement is a page scroll, not a swipe: stop tracking it, so a
-    // scroll that drifts sideways can't trigger the undo (which reverts the change)
-    const vertical = Math.abs(startYRef.current - e.touches[0].clientY);
-    if (vertical > Math.abs(diff) && translateXRef.current < 10) {
-      setIsDragging(false);
-      updateTranslateX(0);
-      return;
-    }
-    // Only allow left swipe (negative translateX)
-    if (diff > 0) {
-      updateTranslateX(Math.min(diff, maxSwipe));
-    }
-  };
-
-  // Let go: undo when swiped far enough, or explain when locked
-  const release = () => {
-    if (locked) {
-      if (translateXRef.current > LOCKED_GIVE / 2) onLocked?.();
-      updateTranslateX(0);
-      setIsDragging(false);
-      return true;
-    }
-    return false;
-  };
-
-  const handleTouchEnd = () => {
-    if (release()) return;
-    if (translateXRef.current > SWIPE_THRESHOLD) {
-      playDeleteSound();
-      updateTranslateX(300);
-      setIsDragging(false);
-      setTimeout(() => onDelete(log.id), 200);
-    } else {
-      updateTranslateX(0);
-      setIsDragging(false);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Swiping starts only from the handle (mouse or touch), so selecting text on the entry can't
+  // undo it. The pointer is captured, so the swipe keeps going when it leaves the handle.
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
     setIsDragging(true);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    const diff = startXRef.current - e.clientX;
-    if (diff > 0) {
-      updateTranslateX(Math.min(diff, maxSwipe));
-    }
+    // Only allow left swipe (negative translateX)
+    updateTranslateX(Math.max(0, Math.min(startXRef.current - e.clientX, maxSwipe)));
   };
 
-  const handleMouseUp = () => {
-    if (release()) return;
+  // Let go: undo when swiped far enough, or explain when locked
+  const handlePointerUp = () => {
+    if (!isDragging) return;
+    if (locked) {
+      if (translateXRef.current > LOCKED_GIVE / 2) onLocked?.();
+      updateTranslateX(0);
+      setIsDragging(false);
+      return;
+    }
     if (translateXRef.current > SWIPE_THRESHOLD) {
       playDeleteSound();
       updateTranslateX(300);
@@ -106,13 +67,6 @@ export const SwipeableActivityLogEntry = ({
     } else {
       updateTranslateX(0);
       setIsDragging(false);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      updateTranslateX(0);
     }
   };
 
@@ -133,18 +87,11 @@ export const SwipeableActivityLogEntry = ({
 
       {/* Card content */}
       <div
-        className="relative flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 cursor-grab active:cursor-grabbing select-text"
+        className="relative flex items-center justify-between gap-2 p-2 pr-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600 select-text"
         style={{
           transform: `translateX(-${translateX}px)`,
           transition: isDragging ? "none" : "transform 0.2s ease-out",
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
       >
         <div className="flex items-center gap-2">
           <Badge
@@ -173,9 +120,24 @@ export const SwipeableActivityLogEntry = ({
             ({log.item_type})
           </span>
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {format(parseISO(log.created_at), "MMM dd, HH:mm")}
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {format(parseISO(log.created_at), "MMM dd, HH:mm")}
+          </span>
+          {/* Swipe handle: pull left to undo */}
+          <div
+            role="button"
+            aria-label={locked ? "Undo the newer change to this item first" : "Pull left to undo"}
+            title={locked ? "Undo the newer change to this item first" : "Pull left to undo"}
+            className="flex h-7 w-6 cursor-grab touch-none select-none items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <ChevronsLeft size={16} />
+          </div>
+        </div>
       </div>
     </div>
   );
