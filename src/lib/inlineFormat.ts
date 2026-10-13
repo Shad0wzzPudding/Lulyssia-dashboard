@@ -2,7 +2,10 @@
  * Shared parser / writer for the description formatting used by the editor
  * (FormattedTextarea) and the cards (FormattedText):
  *   ***bold italic***   **bold**   *italic*   ~~strikethrough~~
- * Literal `*` and `~` typed by the user are stored escaped as `\*` / `\~`.
+ * Literal `*`, `~` and `\` typed by the user are stored escaped as `\*` / `\~` / `\\`
+ * (a lone `\` before anything else, as in text saved before backslashes were escaped, stays as it is).
+ * `\|` is an empty separator, written between runs only when the markers would otherwise run
+ * together and read back differently (e.g. bold, italic, bold with no space between).
  *
  * Text is edited as a list of characters, each with its own styles, and then
  * written back with markers. Writing tries a few marker layouts and only uses
@@ -27,6 +30,8 @@ export interface Segment {
 // Placeholder characters used while parsing (never typed by users)
 const ESC_STAR = '\u0001';
 const ESC_TILDE = '\u0002';
+const ESC_BACKSLASH = '\u0007';
+const SEPARATOR = '\u0010';
 const OPEN_B = '\u0003';
 const CLOSE_B = '\u0004';
 const OPEN_I = '\u0005';
@@ -37,7 +42,10 @@ const CLOSE_S = '\u000f';
 /** Read raw stored text into styled characters (newlines stay as '\n' chars). */
 export const parseChars = (raw: string): StyledChar[] => {
   if (!raw) return [];
-  let t = raw.replace(/\\\*/g, ESC_STAR).replace(/\\~/g, ESC_TILDE);
+  // One pass, so "\\*" is an escaped backslash followed by a marker
+  let t = raw.replace(/\\([\\*~|])/g, (_, c) =>
+    c === '*' ? ESC_STAR : c === '~' ? ESC_TILDE : c === '|' ? SEPARATOR : ESC_BACKSLASH
+  );
   // Same rules and order the editor has always used
   t = t.replace(/\*\*\*(.+?)\*\*\*/g, `${OPEN_B}${OPEN_I}$1${CLOSE_I}${CLOSE_B}`);
   t = t.replace(/\*\*(.+?)\*\*/g, `${OPEN_B}$1${CLOSE_B}`);
@@ -56,8 +64,8 @@ export const parseChars = (raw: string): StyledChar[] => {
     else if (c === CLOSE_I) i = Math.max(0, i - 1);
     else if (c === OPEN_S) s++;
     else if (c === CLOSE_S) s = Math.max(0, s - 1);
-    else {
-      const ch = c === ESC_STAR ? '*' : c === ESC_TILDE ? '~' : c;
+    else if (c !== SEPARATOR) {
+      const ch = c === ESC_STAR ? '*' : c === ESC_TILDE ? '~' : c === ESC_BACKSLASH ? '\\' : c;
       out.push({ ch, b: b > 0, i: i > 0, s: s > 0 });
     }
   }
@@ -80,13 +88,13 @@ export const toSegments = (chars: StyledChar[]): Segment[] => {
 
 export const parseSegments = (raw: string): Segment[] => toSegments(parseChars(raw));
 
-const escapeLiteral = (text: string) => text.replace(/[*~]/g, '\\$&');
+const escapeLiteral = (text: string) => text.replace(/[\\*~]/g, '\\$&');
 
 type Attr = 'b' | 'i' | 's';
 const MARK: Record<Attr, string> = { s: '~~', b: '**', i: '*' };
 
-/** Every run fully wrapped on its own: "**a** *b*". */
-const writeFlat = (segs: Segment[]): string =>
+/** Every run fully wrapped on its own: "**a** *b*" (or "**a**\\|*b*" with separators). */
+const writeFlat = (segs: Segment[], separator = ''): string =>
   segs
     .map((seg) => {
       let t = escapeLiteral(seg.text);
@@ -96,7 +104,7 @@ const writeFlat = (segs: Segment[]): string =>
       if (seg.s) t = `~~${t}~~`;
       return t;
     })
-    .join('');
+    .join(separator);
 
 /**
  * Properly nested markers, like HTML tags: a style that lasts longer opens
@@ -140,6 +148,7 @@ const writeLine = (chars: StyledChar[]): string => {
     writeFlat(segs),
     writeNested(segs, ['s', 'b', 'i']),
     writeNested(segs, ['s', 'i', 'b']),
+    writeFlat(segs, '\\|'),
   ];
   return candidates.find((c) => readsBackAs(c, chars)) ?? candidates[0];
 };

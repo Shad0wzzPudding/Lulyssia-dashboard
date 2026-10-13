@@ -1,20 +1,27 @@
 // Descriptions as plain text for LINE: the dashboard editor's formatting marks removed.
 // Same rules, in the same order, as parseChars in src/lib/inlineFormat.ts (keep them in step).
 
-// The editor stores literal * and ~ escaped as \* and \~; placeholders keep them while stripping
+// The editor stores literal *, ~ and \ escaped as \*, \~ and \\, and may put an empty separator
+// \| between runs; placeholders keep them while stripping
 const ESC_STAR = '\u0001';
 const ESC_TILDE = '\u0002';
+const ESC_BACKSLASH = '\u0007';
+const SEPARATOR = '\u0010';
 
 export function stripMarkdown(text: string): string {
   return text
-    .replace(/\\\*/g, ESC_STAR)
-    .replace(/\\~/g, ESC_TILDE)
+    // One pass, so "\\*" is an escaped backslash followed by a marker
+    .replace(/\\([\\*~|])/g, (_, c) =>
+      c === '*' ? ESC_STAR : c === '~' ? ESC_TILDE : c === '|' ? SEPARATOR : ESC_BACKSLASH
+    )
     .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
     .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '$1')
     .replace(/~~([\s\S]+?)~~/g, '$1')
     .split(ESC_STAR).join('*')
     .split(ESC_TILDE).join('~')
+    .split(ESC_BACKSLASH).join('\\')
+    .split(SEPARATOR).join('')
     .trim();
 }
 
