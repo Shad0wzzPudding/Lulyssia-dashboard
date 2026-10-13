@@ -52,6 +52,8 @@ export const EventsPage = ({
 }: EventsPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // A file still uploading: saving waits, or the item would be saved without it
+  const [uploading, setUploading] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -147,6 +149,7 @@ export const EventsPage = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploading) return;
     
     const submissionData = {
       ...formData,
@@ -530,10 +533,11 @@ export const EventsPage = ({
               <AttachmentsField
                 value={formData.attachments}
                 onChange={(atts) => setFormData(prev => ({ ...prev, attachments: atts }))}
+                onUploadingChange={setUploading}
               />
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingEvent ? 'Update' : 'Create'}
+                <Button type="submit" className="flex-1" disabled={uploading}>
+                  {uploading ? 'Uploading file…' : editingEvent ? 'Update' : 'Create'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => { playCancelSound(); setIsCreateOpen(false); }}>
                   Cancel

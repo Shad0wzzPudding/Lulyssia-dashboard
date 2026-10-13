@@ -40,15 +40,18 @@ function isDisplayed(a: Attachment) {
 interface AttachmentsFieldProps {
   value: Attachment[];
   onChange: (next: Attachment[]) => void;
+  /** Told when an upload starts and ends, so the form can wait to save until the file is in */
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
-export function AttachmentsField({ value, onChange }: AttachmentsFieldProps) {
+export function AttachmentsField({ value, onChange, onUploadingChange }: AttachmentsFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+    onUploadingChange?.(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -77,6 +80,7 @@ export function AttachmentsField({ value, onChange }: AttachmentsFieldProps) {
       if (uploaded.length > 0) onChange([...(value || []), ...uploaded]);
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
       if (inputRef.current) inputRef.current.value = '';
     }
   };

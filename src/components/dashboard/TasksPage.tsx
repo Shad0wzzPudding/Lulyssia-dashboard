@@ -64,6 +64,8 @@ export const TasksPage = ({
 }: TasksPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // A file still uploading: saving waits, or the item would be saved without it
+  const [uploading, setUploading] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -148,6 +150,7 @@ export const TasksPage = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploading) return;
     
     const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
     const recurrenceUnit = formData.recurrence_unit || null;
@@ -631,10 +634,11 @@ export const TasksPage = ({
               <AttachmentsField
                 value={formData.attachments}
                 onChange={(atts) => setFormData(prev => ({ ...prev, attachments: atts }))}
+                onUploadingChange={setUploading}
               />
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">
-                  {editingTask ? 'Update' : 'Create'}
+                <Button type="submit" className="flex-1" disabled={uploading}>
+                  {uploading ? 'Uploading file…' : editingTask ? 'Update' : 'Create'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => { playCancelSound(); setIsCreateOpen(false); }}>
                   Cancel
