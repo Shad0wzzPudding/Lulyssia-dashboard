@@ -28,6 +28,8 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `630641e` | Fix : Only the newest Recent Changes entry per item can be undone, one step at a time |
+| `0f5d8be` | Fix : Main Focus hints sit on the right on phones |
 | `b6a9498` | Feat : LINE "today" limited to 3 a day per person, with this month's usage in Settings |
 | `076b8f0` | Fix : Main Focus header fits on phones, and Lulyssia's "nothing to collapse" bubble stays on screen |
 
