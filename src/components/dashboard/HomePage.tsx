@@ -16,6 +16,7 @@ import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
 import { useTouchReorder } from "@/hooks/useTouchReorder";
+import { toast } from "@/lib/toast";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { STICKERS } from '@/lib/stickers';
 interface HomePageProps {
@@ -1067,15 +1068,25 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             <CardContent>
              {activityLog.length > 0 ? (
                 <div className="space-y-2">
-                  {activityLog
-                    .filter(log => !pendingDeleteIds.has(log.id))
-                    .map(log => (
-                      <SwipeableActivityLogEntry
-                        key={log.id}
-                        log={log}
-                        onDelete={handleActivityLogSwipe}
-                      />
-                    ))}
+                  {(() => {
+                    // Only the newest change to each item can be undone (the list is newest first;
+                    // entries already being undone still count until they are gone)
+                    const newestForItem = new Map<string, string>();
+                    activityLog.forEach(log => {
+                      if (log.item_id && !newestForItem.has(log.item_id)) newestForItem.set(log.item_id, log.id);
+                    });
+                    return activityLog
+                      .filter(log => !pendingDeleteIds.has(log.id))
+                      .map(log => (
+                        <SwipeableActivityLogEntry
+                          key={log.id}
+                          log={log}
+                          onDelete={handleActivityLogSwipe}
+                          locked={!!log.item_id && newestForItem.get(log.item_id) !== log.id}
+                          onLocked={() => toast(`Undo the newer change to "${log.item_title}" first.`)}
+                        />
+                      ));
+                  })()}
                   {/* Undo buttons for pending deletes */}
                   {Array.from(pendingDeleteIds).map(id => {
                     const log = activityLog.find(l => l.id === id);

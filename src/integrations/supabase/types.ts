@@ -391,6 +391,7 @@ export type Database = {
       }
       reset_daily_tasks_for_new_day: { Args: never; Returns: undefined }
       renew_my_recurring_tasks: { Args: never; Returns: number }
+      revert_activity_log: { Args: { p_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

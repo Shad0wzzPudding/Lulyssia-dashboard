@@ -20,6 +20,14 @@ export interface ReorderArgs {
   movedId: string;
 }
 
+// Why an undo was refused, from revert_activity_log
+const REVERT_REFUSED: Record<string, string> = {
+  newer: 'Only the newest change to an item can be undone. Undo the newer one first.',
+  not_found: 'That change was already undone or removed.',
+  missing_data: 'This change has no saved copy to go back to.',
+  unsupported: 'This kind of change cannot be undone.',
+};
+
 export const useDashboardData = () => {
   const queryClient = useQueryClient();
 
@@ -674,61 +682,14 @@ export const useDashboardData = () => {
     }
   });
 
+  // Undo one Recent Changes entry. The database does it (revert_activity_log): it refuses when a
+  // newer change to the same item exists, puts the item back without recording the undo (so the
+  // next undo goes one more step back), and removes the entry.
   const revertActivityLog = useMutation({
     mutationFn: async (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const tableName = log.item_type as 'interests' | 'tasks' | 'events';
-
-      if (log.action_type === 'created' && log.item_id) {
-        // Undo create → delete the item
-        const { error } = await supabase
-          .from(tableName)
-          .delete()
-          .eq('id', log.item_id)
-          .eq('user_id', user.id);
-        if (error) throw error;
-      } else if (log.action_type === 'updated' && log.previous_data && log.item_id) {
-        // Undo update → restore previous data
-        const { id: _id, user_id: _uid, created_at: _ca, updated_at: _ua, ...restoreData } = log.previous_data;
-        const { error } = await supabase
-          .from(tableName)
-          .update(restoreData)
-          .eq('id', log.item_id)
-          .eq('user_id', user.id);
-        if (error) throw error;
-      } else if (log.action_type === 'reordered' && Array.isArray(log.previous_data?.sort_orders)) {
-        // Undo reorder → put back every number the drag changed
-        const orders = log.previous_data.sort_orders as { id: string; sort_order: number }[];
-        const results = await Promise.all(
-          orders.map(o =>
-            supabase
-              .from(tableName)
-              .update({ sort_order: o.sort_order })
-              .eq('id', o.id)
-              .eq('user_id', user.id)
-          )
-        );
-        const failed = results.find(r => r.error);
-        if (failed) throw failed.error;
-      } else if (log.action_type === 'deleted' && log.previous_data) {
-        // Undo delete → re-insert the item
-        const { error } = await supabase
-          .from(tableName)
-          // tableName is a runtime union; the stored snapshot has that table's row shape
-          .insert([log.previous_data as never]);
-        if (error) throw error;
-      } else {
-        throw new Error('Cannot revert this action - missing data');
-      }
-
-      // Delete the activity log entry after successful revert
-      await supabase
-        .from('activity_log')
-        .delete()
-        .eq('id', log.id)
-        .eq('user_id', user.id);
+      const { data, error } = await supabase.rpc('revert_activity_log', { p_id: log.id });
+      if (error) throw error;
+      if (data !== 'ok') throw new Error(REVERT_REFUSED[data as string] ?? 'Failed to revert change.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interests'] });
@@ -740,7 +701,8 @@ export const useDashboardData = () => {
     },
     onError: (error) => {
       console.error('Failed to revert change:', error);
-      toast.error('Failed to revert change. The item may have been modified since.');
+      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+      toast.error(Object.values(REVERT_REFUSED).includes(error.message) ? error.message : 'Failed to revert change. Please try again.');
     }
   });
 

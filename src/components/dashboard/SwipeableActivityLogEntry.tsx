@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Undo2 } from "lucide-react";
+import { Lock, Undo2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ActivityLog } from "@/lib/types";
 import { playDeleteSound } from "@/lib/sounds";
@@ -8,11 +8,17 @@ import { playDeleteSound } from "@/lib/sounds";
 interface SwipeableActivityLogEntryProps {
   log: ActivityLog;
   onDelete: (id: string) => void;
+  /** A newer change to the same item exists: this one can't be undone yet */
+  locked?: boolean;
+  /** Swiped while locked (to explain why nothing happens) */
+  onLocked?: () => void;
 }
 
 export const SwipeableActivityLogEntry = ({
   log,
   onDelete,
+  locked = false,
+  onLocked,
 }: SwipeableActivityLogEntryProps) => {
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -21,6 +27,9 @@ export const SwipeableActivityLogEntry = ({
   const startYRef = useRef(0);
 
   const SWIPE_THRESHOLD = 80;
+  // A locked entry only gives a little: it can't be swiped far enough to undo
+  const LOCKED_GIVE = 28;
+  const maxSwipe = locked ? LOCKED_GIVE : 150;
 
   const updateTranslateX = (value: number) => {
     translateXRef.current = value;
@@ -46,11 +55,23 @@ export const SwipeableActivityLogEntry = ({
     }
     // Only allow left swipe (negative translateX)
     if (diff > 0) {
-      updateTranslateX(Math.min(diff, 150));
+      updateTranslateX(Math.min(diff, maxSwipe));
     }
   };
 
+  // Let go: undo when swiped far enough, or explain when locked
+  const release = () => {
+    if (locked) {
+      if (translateXRef.current > LOCKED_GIVE / 2) onLocked?.();
+      updateTranslateX(0);
+      setIsDragging(false);
+      return true;
+    }
+    return false;
+  };
+
   const handleTouchEnd = () => {
+    if (release()) return;
     if (translateXRef.current > SWIPE_THRESHOLD) {
       playDeleteSound();
       updateTranslateX(300);
@@ -71,11 +92,12 @@ export const SwipeableActivityLogEntry = ({
     if (!isDragging) return;
     const diff = startXRef.current - e.clientX;
     if (diff > 0) {
-      updateTranslateX(Math.min(diff, 150));
+      updateTranslateX(Math.min(diff, maxSwipe));
     }
   };
 
   const handleMouseUp = () => {
+    if (release()) return;
     if (translateXRef.current > SWIPE_THRESHOLD) {
       playDeleteSound();
       updateTranslateX(300);
@@ -98,12 +120,14 @@ export const SwipeableActivityLogEntry = ({
     <div className="relative overflow-hidden rounded">
       {/* Background action indicator - right side */}
       <div
-        className="absolute inset-0 bg-gradient-to-l from-red-500 to-red-400 flex items-center justify-end pr-4 rounded"
-        style={{ opacity: Math.min(translateX / SWIPE_THRESHOLD, 1) }}
+        className={`absolute inset-0 flex items-center justify-end pr-3 rounded ${
+          locked ? "bg-slate-500" : "bg-gradient-to-l from-red-500 to-red-400 pr-4"
+        }`}
+        style={{ opacity: Math.min(translateX / (locked ? LOCKED_GIVE : SWIPE_THRESHOLD), 1) }}
       >
         <div className="flex items-center gap-2 text-white font-medium text-sm">
-          <Undo2 size={16} />
-          <span>Undo</span>
+          {locked ? <Lock size={16} /> : <Undo2 size={16} />}
+          {!locked && <span>Undo</span>}
         </div>
       </div>
 
@@ -138,6 +162,13 @@ export const SwipeableActivityLogEntry = ({
             {log.action_type}
           </Badge>
           <span className="text-sm font-medium">{log.item_title}</span>
+          {locked && (
+            <Lock
+              size={12}
+              className="shrink-0 text-gray-400"
+              aria-label="Undo the newer change to this item first"
+            />
+          )}
           <span className="text-xs text-gray-500 dark:text-gray-400">
             ({log.item_type})
           </span>
