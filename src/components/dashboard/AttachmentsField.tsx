@@ -6,6 +6,9 @@ import { Paperclip, X, Loader2, FileText, Image as ImageIcon, Download, Eye, Eye
 import { toast } from '@/lib/toast';
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+// Picture previews on cards: how long their links last, and when they are renewed
+const LINK_LIFETIME_S = 3600;
+const LINK_RENEW_MS = 50 * 60 * 1000;
 
 function iconFor(type: string) {
   if (type.startsWith('image/')) return <ImageIcon size={12} />;
@@ -204,15 +207,34 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
   const shown = (attachments || []).filter(isDisplayed);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const key = shown.map((a) => a.path).join('|');
+  // The links last an hour: renew them before then, and when the app comes back into view after
+  // being away (timers barely run in the background), so a page left open keeps its pictures
+  const [renewal, setRenewal] = useState(0);
+  const loadedAt = useRef(0);
+
+  useEffect(() => {
+    const renewIfOld = () => {
+      if (document.visibilityState === 'visible' && Date.now() - loadedAt.current > LINK_RENEW_MS) {
+        setRenewal((n) => n + 1);
+      }
+    };
+    const timer = window.setInterval(renewIfOld, 60 * 1000);
+    document.addEventListener('visibilitychange', renewIfOld);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', renewIfOld);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
+    loadedAt.current = Date.now();
     (async () => {
       const next: Record<string, string> = {};
       for (const a of shown) {
         const { data } = await supabase.storage
           .from('attachments')
-          .createSignedUrl(a.path, 3600);
+          .createSignedUrl(a.path, LINK_LIFETIME_S);
         if (data?.signedUrl) next[a.path] = data.signedUrl;
       }
       if (!cancelled) setUrls(next);
@@ -221,7 +243,7 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, renewal]);
 
   if (shown.length === 0) return null;
   return (
