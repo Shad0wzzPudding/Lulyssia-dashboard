@@ -74,7 +74,7 @@ export const EventsPage = ({
   const { tags } = useTags();
   const tagsById = useMemo(() => Object.fromEntries(tags.map((t) => [t.id, t])), [tags]);
 
-  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Event>();
+  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, keepOnly, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Event>();
 
   const now = new Date();
   const visibleEvents = useMemo(
@@ -82,6 +82,10 @@ export const EventsPage = ({
     () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById, (e) => e.start_time ?? e.deadline),
     [events, filterTagIds, search, sort, tagsById]
   );
+  // A search or tag filter that hides picked items also unpicks them
+  useEffect(() => {
+    keepOnly(visibleEvents);
+  }, [visibleEvents, keepOnly]);
   const startOfToday = startOfDay(now);
   // Started on an earlier day and not over yet (its deadline is still ahead), like Home's "In progress..."
   const isInProgressEvent = (event: Event) =>

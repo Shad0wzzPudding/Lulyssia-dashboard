@@ -89,7 +89,7 @@ export const TasksPage = ({
   const { tags } = useTags();
   const tagsById = useMemo(() => Object.fromEntries(tags.map((t) => [t.id, t])), [tags]);
 
-  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Task>();
+  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, keepOnly, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Task>();
 
   // Hide undo button after 10 seconds
   useEffect(() => {
@@ -281,6 +281,10 @@ export const TasksPage = ({
     () => sortItems(searchItems(filterByTags(tasks, filterTagIds), search), sort, tagsById),
     [tasks, filterTagIds, search, sort, tagsById]
   );
+  // A search or tag filter that hides picked items also unpicks them
+  useEffect(() => {
+    keepOnly(visibleTasks);
+  }, [visibleTasks, keepOnly]);
   const pendingTasks = visibleTasks.filter(task => !task.is_completed);
   const completedTasks = visibleTasks.filter(task => task.is_completed);
   

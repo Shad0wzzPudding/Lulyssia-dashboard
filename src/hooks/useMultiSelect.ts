@@ -24,6 +24,16 @@ export function useMultiSelect<T extends { id: string }>() {
     setSelectedIds(new Set(items.map(i => i.id)));
   }, []);
 
+  // Drop picked items that are no longer shown (a search or tag filter hid them), so a batch
+  // action never touches something off screen. Select mode stays on.
+  const keepOnly = useCallback((items: T[]) => {
+    const shown = new Set(items.map(i => i.id));
+    setSelectedIds(prev => {
+      const next = new Set([...prev].filter(id => shown.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, []);
+
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
     setIsSelecting(false);
@@ -41,6 +51,7 @@ export function useMultiSelect<T extends { id: string }>() {
     isSelecting,
     toggle,
     selectAll,
+    keepOnly,
     clearSelection,
     enterSelectMode,
     isSelected,

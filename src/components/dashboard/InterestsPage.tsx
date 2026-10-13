@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Interest } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -63,7 +63,7 @@ export const InterestsPage = ({
   const { tags } = useTags();
   const tagsById = useMemo(() => Object.fromEntries(tags.map((t) => [t.id, t])), [tags]);
 
-  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Interest>();
+  const { selectedIds, selectedCount, isSelecting, toggle, selectAll, keepOnly, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Interest>();
 
   const resetForm = () => {
     setFormData({
@@ -203,6 +203,10 @@ export const InterestsPage = ({
     () => sortItems(searchItems(filterByTags(interests, filterTagIds), search), sort, tagsById),
     [interests, filterTagIds, search, sort, tagsById]
   );
+  // A search or tag filter that hides picked items also unpicks them
+  useEffect(() => {
+    keepOnly(visibleInterests);
+  }, [visibleInterests, keepOnly]);
   const pinnedInterests = visibleInterests.filter(i => i.is_pinned);
   const unpinnedInterests = visibleInterests.filter(i => !i.is_pinned);
 
