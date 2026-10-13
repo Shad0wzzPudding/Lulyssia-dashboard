@@ -28,6 +28,8 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `156be2c` | Fix : The daily routine is copied even if a task was added before the day was set up, and yesterday's list can't be changed while today's loads |
+| `a67f00b` | Fix : A starting-soon reminder LINE refuses gets another try, and no longer stops the other reminders |
 | `9fa4d34` | Fix : Picked items hidden by a search or filter are no longer picked, so Delete only removes what's on screen |
 | `9550a9c` | Fix : Saving waits until an attachment has finished uploading |
 | `630641e` | Fix : Only the newest Recent Changes entry per item can be undone, one step at a time |
