@@ -28,6 +28,7 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `2ae5f86` | Feat : The Sound card remembers which groups are open |
 | `a1d73b8` | Fix : Choice picked sound without the noise |
 | `69af81b` | Feat : Sound settings: turn any sound off or change its volume |
 | `2825c29` | Feat : Settings cards in a new order, and the Install app card in cyan |
