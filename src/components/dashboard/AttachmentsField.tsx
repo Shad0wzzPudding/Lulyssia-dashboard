@@ -19,14 +19,20 @@ function formatSize(bytes: number) {
 }
 
 async function openAttachment(a: Attachment) {
+  // Open the tab during the tap: Safari blocks one opened after waiting for the link
+  const tab = window.open('', '_blank');
+  if (tab) tab.opener = null;
   const { data, error } = await supabase.storage
     .from('attachments')
     .createSignedUrl(a.path, 60);
   if (error || !data?.signedUrl) {
+    tab?.close();
     toast.error('Failed to open attachment');
     return;
   }
-  window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  if (tab) tab.location.href = data.signedUrl;
+  // Pop-ups blocked altogether: open it here instead
+  else window.location.assign(data.signedUrl);
 }
 
 function isImageAttachment(a: Attachment) {
