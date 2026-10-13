@@ -81,6 +81,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
       .catch(() => { /* bot info unavailable — hide shortcut button and usage */ });
 
   const load = async () => {
+    const changesBefore = changesRef.current;
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) {
@@ -95,7 +96,9 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
       .maybeSingle();
 
     if (data) {
-      setLink(data as LineLink);
+      // A switch flipped (or a new code made) while this was loading: what was read is older than
+      // the screen, so keep the screen
+      if (changesRef.current === changesBefore) setLink(data as LineLink);
     } else {
       const { data: created } = await supabase
         .from('line_links')
@@ -111,6 +114,9 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
   // switch is saving, so a reload can't put back the old value of a switch just flipped
   const loadingRef = useRef(false);
   const savingRef = useRef(0);
+  // Counts changes made on this page, so a load that was already running when one started ignores
+  // its (older) result
+  const changesRef = useRef(0);
 
   useEffect(() => {
     const refresh = async () => {
@@ -148,6 +154,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
   const regenerate = async () => {
     if (!link) return;
     setBusy(true);
+    changesRef.current += 1;
     const { data, error } = await supabase
       .from('line_links')
       .update({ link_code: generateCode(), line_user_id: null, display_name: null, linked_at: null })
@@ -170,6 +177,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
     if (!link) return;
     setLink((prev) => (prev ? { ...prev, [field]: value } : prev));
     savingRef.current += 1;
+    changesRef.current += 1;
     const { error } = await supabase.from('line_links').update({ [field]: value }).eq('id', link.id);
     savingRef.current -= 1;
     if (error) {

@@ -96,7 +96,7 @@ Checked against the code, not run against the live project. Most serious first.
 
 ## Code review (13 Oct 2026, cloud)
 The 13 commits from b1a895c to a4f4e29. Typecheck and lint pass. Confirmed findings:
-- [ ] Low: LINE Settings can still briefly show the old value of a switch: a reload that started just before the switch was flipped still finishes and overwrites it (the new check only stops reloads from starting while saving). The saved value is right; the screen corrects on the next reload. Suggest: ignore a reload's result if a switch was saved while it was running (e.g. a counter checked when it finishes)
+- [x] Low: LINE Settings can still briefly show the old value of a switch: a reload that started just before the switch was flipped still finishes and overwrites it (the new check only stops reloads from starting while saving). The saved value is right; the screen corrects on the next reload. Suggest: ignore a reload's result if a switch was saved while it was running (e.g. a counter checked when it finishes)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
