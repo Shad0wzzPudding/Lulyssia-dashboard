@@ -279,6 +279,11 @@ export const EventsPage = ({
 
   const renderEventCard = (event: Event, variant: 'today' | 'in_progress' | 'upcoming' | 'past') => {
     const status = getEventStatus(event);
+    const todayBadge = (
+      <Badge className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300">
+        Today
+      </Badge>
+    );
     return (
       <Card 
         key={event.id} 
@@ -301,13 +306,13 @@ export const EventsPage = ({
                 )}
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-lg">{event.title}</h4>
+                  {/* On phones the badge sits under the title, leaving the title the row's width */}
+                  {!isSelecting && <div className="mt-1 sm:hidden">{todayBadge}</div>}
                 </div>
               </div>
               {!isSelecting && (
                 <div data-card-actions className="flex items-center gap-2 shrink-0">
-                  <Badge className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300">
-                    Today
-                  </Badge>
+                  <div className="hidden sm:block">{todayBadge}</div>
                   <Button size="sm" variant="outline" onClick={() => handleCopy(event)}>
                     <Copy size={12} />
                   </Button>

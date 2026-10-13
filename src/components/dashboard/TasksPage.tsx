@@ -328,6 +328,11 @@ export const TasksPage = ({
   };
 
   const renderTaskCard = (task: Task, showBadge?: string) => {
+    const badge = showBadge === 'overdue'
+      ? <Badge variant="destructive" className="text-xs">Overdue</Badge>
+      : showBadge === 'completed'
+        ? <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300">Completed</Badge>
+        : null;
     const status = getTaskStatus(task);
     return (
       <Card 
@@ -364,12 +369,13 @@ export const TasksPage = ({
                 <h4 className={`font-semibold ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                   {task.title}
                 </h4>
+                {/* On phones the badge sits under the title, leaving the title the row's width */}
+                {!isSelecting && badge && <div className="mt-1 sm:hidden">{badge}</div>}
               </div>
             </div>
             {!isSelecting && (
               <div data-card-actions className="flex items-center gap-2 shrink-0">
-                {showBadge === 'overdue' && <Badge variant="destructive" className="text-xs">Overdue</Badge>}
-                {showBadge === 'completed' && <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300">Completed</Badge>}
+                {badge && <div className="hidden sm:block">{badge}</div>}
                 <Button size="sm" variant="outline" onClick={() => handleCopy(task)}>
                   <Copy size={12} />
                 </Button>
