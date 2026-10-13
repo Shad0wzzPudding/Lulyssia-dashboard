@@ -526,16 +526,26 @@ Deno.serve(async (req) => {
 
         // The "notice" command: just the notice, as a reply (free), or a note that there is none
         if (onlyNotice) {
-          const nothing: LineMessage = { type: 'text', text: `Nothing marked "Notice before" is coming up tomorrow (${tomorrow}).` };
+          // Her answer comes first, and says this one is free, so a "today" count that didn't go
+          // down isn't a surprise
+          const free = `This one's on me, it doesn't use any of your ${TODAY_REQUESTS_PER_DAY} "today" requests.`;
+          const intro: LineMessage = {
+            type: 'text',
+            text: `*Flips to tomorrow's page*\nHere's what you asked me to warn you about. ${free}`,
+          };
+          const nothing: LineMessage = {
+            type: 'text',
+            text: `*Flips to tomorrow's page*\nHmm... nothing marked "Notice before" is coming up tomorrow (${tomorrow}). Enjoy the quiet while it lasts.\n${free}`,
+          };
           const send = (messages: LineMessage[]) => replyToken
             ? replyMessages(accessToken, replyToken, messages)
             : pushMessages(accessToken, link.line_user_id as string, messages);
           if (noticeCard && noticeText) {
             try {
-              await send([noticeCard]);
+              await send([intro, noticeCard]);
             } catch (err) {
               console.error(`Notice card rejected for user ${link.user_id}, sending text instead:`, err);
-              await send([noticeText]);
+              await send([intro, noticeText]);
             }
           } else {
             await send([nothing]);
