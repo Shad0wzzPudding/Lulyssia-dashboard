@@ -116,3 +116,7 @@ Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 5. [x] ~~A calm Persona 3 touch: a slow light ripple moving across the drawer's water~~ dropped: a light sweep was tried, but the drawer is busy enough that it was barely noticeable
 6. [x] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
 7. [x] Not needed (checked on a laptop and a phone: the rows stay readable over her art). Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them
+
+## Optional (maybe later)
+Ideas worth keeping, not planned yet.
+- [ ] LINE safeguard near the monthly limit: once the bot's 300 messages a month are used up, LINE refuses every automatic message (morning letter, day-before notice, reminders, nudges) until the next month; only replies still work. When few are left, the bot could skip the less important ones (e.g. starting-soon reminders, then the day-before notice) so the morning letters last the whole month. Needs a choice of threshold and order

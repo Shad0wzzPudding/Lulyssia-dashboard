@@ -932,7 +932,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <ChevronUp size={12} className="mr-1" />
                     Collapse all
                   </Button>
-                  <div className="flex basis-full flex-wrap items-center gap-2 sm:basis-auto">
+                  <div className="flex basis-full flex-wrap items-center justify-end gap-2 sm:basis-auto">
                     <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
                       <GripVertical size={12} />
                       <span>Drag to reorder</span>
