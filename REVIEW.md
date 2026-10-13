@@ -28,6 +28,8 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `9fa4d34` | Fix : Picked items hidden by a search or filter are no longer picked, so Delete only removes what's on screen |
+| `9550a9c` | Fix : Saving waits until an attachment has finished uploading |
 | `630641e` | Fix : Only the newest Recent Changes entry per item can be undone, one step at a time |
 | `0f5d8be` | Fix : Main Focus hints sit on the right on phones |
 | `b6a9498` | Feat : LINE "today" limited to 3 a day per person, with this month's usage in Settings |
