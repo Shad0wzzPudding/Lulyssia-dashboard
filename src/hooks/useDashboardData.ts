@@ -363,14 +363,18 @@ export const useDashboardData = () => {
   });
 
   const clearCompletedTasks = useMutation({
-    mutationFn: async () => {
+    // Only the tasks the page showed, so Undo can bring back everything that was deleted
+    // (a task ticked from LINE since the last load isn't among them)
+    mutationFn: async (ids: string[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      if (ids.length === 0) return;
 
       const { error } = await supabase
         .from('tasks')
         .delete()
         .eq('user_id', user.id)
+        .in('id', ids)
         .eq('is_completed', true)
         // Ticked repeating tasks stay: they come back on their next round
         .is('recurrence_unit', null);

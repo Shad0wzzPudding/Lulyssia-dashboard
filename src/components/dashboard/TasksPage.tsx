@@ -41,7 +41,7 @@ interface TasksPageProps {
   onReorder: (args: ReorderArgs) => void;
   onDeleteTask: (target: DeleteTarget) => void;
   /** The options let the page show Undo only once the clear has gone through */
-  onClearCompleted: (variables?: void, options?: { onSuccess?: () => void }) => void;
+  onClearCompleted: (ids: string[], options?: { onSuccess?: () => void }) => void;
   onRestoreTasks: (tasks: Task[]) => void;
   dailyTasks: DailyTask[];
   dailyTasksStale: boolean;
@@ -111,7 +111,7 @@ export const TasksPage = ({
     const completed = clearableTasks;
     setShowClearConfirm(false);
     // Undo appears once the tasks are really gone, so it can't race the delete
-    onClearCompleted(undefined, {
+    onClearCompleted(completed.map((task) => task.id), {
       onSuccess: () => {
         setClearedTasks(completed);
         setShowUndo(true);
