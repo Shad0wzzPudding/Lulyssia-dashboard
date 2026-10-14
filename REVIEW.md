@@ -28,6 +28,9 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `4cc592e` | Feat : Today's Tasks and Today's Events use the "+N more" cover |
+| `a32c8e2` | Fix : The "+N more" cover only covers a peek of what's hidden |
+| `47fd8c9` | Feat : In Progress section on the Tasks page |
 | `2ae5f86` | Feat : The Sound card remembers which groups are open |
 | `a1d73b8` | Fix : Choice picked sound without the noise |
 | `69af81b` | Feat : Sound settings: turn any sound off or change its volume |
