@@ -28,6 +28,7 @@ Newest first. The commits in between only change roadmap.md and REVIEW.md (the c
 
 | Commit | What |
 | --- | --- |
+| `32df3e3` | Fix : The "+N more" cover fades smoothly from clear to covered |
 | `ca1c205` | Fix : The "+N more" cover shows the next row in full and blurs its lower part |
 | `4cc592e` | Feat : Today's Tasks and Today's Events use the "+N more" cover |
 | `a32c8e2` | Fix : The "+N more" cover only covers a peek of what's hidden |
