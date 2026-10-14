@@ -10,7 +10,7 @@
 - [x] Home page: remove the separate "Today's Summary" section and show its counts (today's tasks, completed, today's events, overdue) inside the "Today Events" section instead
 - [x] Home page: move the Upcoming Events section up into the Interests section's place, and move Interests down below it
 - [x] Home page: new "In progress..." section under "Today Events", listing the tasks and events that have already started and run longer than one day (started before today and not finished yet)
-- [ ] "+N more" cover on Home's "In progress..." card: only show the blurred cover and button when the cards really wrap onto a second row (on a computer three fit in one row, so with 4 items the cover hides a full row for one extra card). If that can't be measured reliably, remove the cover there
+- [x] "+N more" cover on Home's "In progress..." card: only show the blurred cover and button when the cards really wrap onto a second row (on a computer three fit in one row, so with 4 items the cover hides a full row for one extra card). If that can't be measured reliably, remove the cover there. Done: the cover sits only on a peek of the next row; the first row of a grid (or the first items of a single column) stays clear, and with nothing beyond it there is no cover
 - [ ] Home "Today Events" card: use the same "+N more" cover for its "Today's Tasks" and "Today's Events" lists: the first 3 show as now, the rest behind the cover and button (same rule as above)
 - [x] Tasks page: an "In Progress" section above "Upcoming Tasks" for tasks that started before today and aren't due yet, like the Events page has (never built: Home and the Events page have one, the Tasks page doesn't)
 
