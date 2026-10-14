@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
-import { Interest, Task, Event, ActivityLog, NavigationPage } from "@/lib/types";
+import { Interest, Task, Event, ActivityLog } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
@@ -18,6 +18,7 @@ import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
 import { useTouchReorder } from "@/hooks/useTouchReorder";
 import { toast } from "@/lib/toast";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
+import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
 interface HomePageProps {
   interests: Interest[];
@@ -27,11 +28,9 @@ interface HomePageProps {
   onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
   onDeleteActivityLog?: (id: string) => void;
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
-  /** Opens another page (the "+N more" links under Today's Tasks and Events) */
-  onNavigate?: (page: NavigationPage) => void;
 }
 
-export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onNavigate }: HomePageProps) => {
+export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog }: HomePageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedItem, setSelectedItem] = useState<{
     id: string;
@@ -391,9 +390,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   const isOverdue = (task: Task) => !task.is_completed && !!task.deadline && isBefore(parseISO(task.deadline), now);
   const overdueTasks = tasks.filter(isOverdue);
 
-  // Today's events and tasks. The full lists feed the summary counts; the Today card shows
-  // the first few of each, then a "+N more" link to the page.
-  const TODAY_PREVIEW = 5;
+  // Today's events and tasks. The full lists feed the summary counts; the Today card shows the
+  // first 3 of each, then the rest behind the "+N more" cover.
   const startsToday = (task: Task) => !!task.start_date && isToday(parseISO(task.start_date));
   const dueToday = (task: Task) => !!task.deadline && isToday(parseISO(task.deadline));
   // Each task once, even if it both starts and is due today, in order of its first time today
@@ -402,21 +400,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     .filter(task => !task.is_completed && !isOverdue(task) && (startsToday(task) || dueToday(task)))
     .sort((a, b) => firstTimeToday(a) - firstTimeToday(b));
   const allTodayEvents = events.filter(event => event.start_time && isToday(parseISO(event.start_time)));
-  const todayTasks = allTodayTasks.slice(0, TODAY_PREVIEW);
-  const todayEvents = allTodayEvents.slice(0, TODAY_PREVIEW);
   const todayTaskCount = allTodayTasks.length;
 
-  /** "+3 more" under a Today list, opening that page */
-  const moreLink = (hidden: number, page: NavigationPage) =>
-    hidden > 0 ? (
-      <button
-        type="button"
-        onClick={() => onNavigate?.(page)}
-        className="w-full rounded border border-dashed border-p5-300/60 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground dark:border-p5-700/60"
-      >
-        +{hidden} more in {page === 'tasks' ? 'Tasks' : 'Events'}
-      </button>
-    ) : null;
   
   // In progress: started on an earlier day and not finished yet. Tasks also: not done, not
   // repeating, and not due today (those are already in Today's Tasks).
@@ -564,30 +549,36 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             {/* Today's Tasks */}
             <div>
               <h4 className="font-semibold text-sm text-p5-700 dark:text-p5-300 mb-2">Today's Tasks</h4>
-              {todayTasks.length > 0 ? (
-                <div className="space-y-2">
-                  {todayTasks.map(task => (
-                    <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <p className="font-medium text-sm">{task.title}</p>
-                        {startsToday(task) && (
-                          <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
-                        )}
-                        {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
+              {allTodayTasks.length > 0 ? (
+                <CollapsiblePreview
+                  items={allTodayTasks}
+                  previewCount={3}
+                  label="today's tasks"
+                  renderList={(list) => (
+                    <div className="space-y-2">
+                      {list.map(task => (
+                      <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <p className="font-medium text-sm">{task.title}</p>
+                          {startsToday(task) && (
+                            <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                          )}
+                          {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
+                        </div>
+                          {task.description && (
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
+                         )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {[
+                            startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
+                            dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
+                          ].filter(Boolean).join(' · ')}
+                        </p>
                       </div>
-                        {task.description && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
-                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {[
-                          startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
-                          dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
-                        ].filter(Boolean).join(' · ')}
-                      </p>
+                      ))}
                     </div>
-                  ))}
-                  {moreLink(allTodayTasks.length - todayTasks.length, 'tasks')}
-                </div>
+                  )}
+                />
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400">No tasks today</p>
               )}
@@ -596,24 +587,30 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             {/* Today's Events */}
             <div>
               <h4 className="font-semibold text-sm text-p5-700 dark:text-p5-300 mb-2">Today's Events</h4>
-              {todayEvents.length > 0 ? (
-                <div className="space-y-2">
-                  {todayEvents.map(event => (
-                    <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
-                      <p className="font-medium text-sm">{event.title}</p>
-                        {event.description && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
-                       )}
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                        <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
-                        {event.deadline && (
-                          <p>Deadline: {format(parseISO(event.deadline), 'HH:mm')}</p>
-                        )}
+              {allTodayEvents.length > 0 ? (
+                <CollapsiblePreview
+                  items={allTodayEvents}
+                  previewCount={3}
+                  label="today's events"
+                  renderList={(list) => (
+                    <div className="space-y-2">
+                      {list.map(event => (
+                      <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
+                        <p className="font-medium text-sm">{event.title}</p>
+                          {event.description && (
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
+                         )}
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                          <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
+                          {event.deadline && (
+                            <p>Deadline: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                          )}
+                        </div>
                       </div>
+                      ))}
                     </div>
-                  ))}
-                  {moreLink(allTodayEvents.length - todayEvents.length, 'events')}
-                </div>
+                  )}
+                />
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400">No events today</p>
               )}

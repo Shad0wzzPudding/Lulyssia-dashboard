@@ -186,7 +186,6 @@ const Index = () => {
             onUpdateInterest={mutations.updateInterest.mutate}
             onDeleteActivityLog={mutations.deleteActivityLog.mutate}
             onRevertActivityLog={mutations.revertActivityLog.mutate}
-            onNavigate={navigateTo}
           />
         );
       case 'interests':
