@@ -10,9 +10,32 @@ interface Props<T> {
   label?: string;
 }
 
-// The cover lies on the next row from this far down it (its titles stay readable above), and
-// its blur fades in over the first part
-const COVER_FROM = 0.3;
+// The cover lies on the next row from this far down it (its titles stay readable above)
+const COVER_FROM = 0.25;
+
+// A progressive blur: thin layers from light to strong, each fading in over the one before, so
+// the cover goes from clear to fully covered with no visible bands (one blur behind a mask
+// switches on in a step)
+const BLUR_LAYERS = [0.5, 1, 2, 4, 8, 16];
+const blurLayerMask = (i: number) => {
+  const n = BLUR_LAYERS.length;
+  const pct = (k: number) => `${Math.min(100, (k * 100) / n).toFixed(1)}%`;
+  return i === n - 1
+    ? `linear-gradient(to bottom, transparent ${pct(i)}, black ${pct(i + 1)})`
+    : `linear-gradient(to bottom, transparent ${pct(i)}, black ${pct(i + 1)}, black ${pct(i + 2)}, transparent ${pct(i + 3)})`;
+};
+
+// The tint on top: many small eased steps (smoothstep) instead of three, from see-through to
+// nearly solid card colour with a touch of cyan
+const easedFade = (color: string, maxAlpha: number) => {
+  const stops = Array.from({ length: 11 }, (_, k) => {
+    const t = k / 10;
+    const alpha = maxAlpha * t * t * (3 - 2 * t);
+    return `hsl(var(${color}) / ${alpha.toFixed(3)}) ${k * 10}%`;
+  });
+  return `linear-gradient(to bottom, ${stops.join(', ')})`;
+};
+const COVER_TINT = `${easedFade('--primary', 0.35)}, ${easedFade('--card', 0.85)}`;
 
 /**
  * Shows the first items as they are (the first row of a grid, or `previewCount` items in one
@@ -75,19 +98,28 @@ export function CollapsiblePreview<T>({ items, previewCount, renderList, label =
       {covered && (
         // The whole next row: its cards are only a glimpse, so tapping anywhere on it opens the full
         // list instead of reaching a card's buttons under the blur
+        // No isolation or clipping here: either one stops the browser from applying the blur
+        // layers' fade-in masks, and the whole cover then blurs at full strength from its top edge
         <div
-          className="absolute inset-x-0 bottom-0 z-10 isolate cursor-pointer overflow-hidden rounded-b-2xl"
+          className="absolute inset-x-0 bottom-0 z-10 cursor-pointer"
           style={{ top: layout.nextTop }}
           onClick={() => setOpen(true)}
         >
-          <div
-            className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-transparent via-primary/20 to-primary/50 backdrop-blur-[6px]"
-            style={{
-              top: `${COVER_FROM * 100}%`,
-              maskImage: 'linear-gradient(to bottom, transparent, black 35%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)',
-            }}
-          />
+          <div className="absolute inset-x-0 bottom-0" style={{ top: `${COVER_FROM * 100}%` }}>
+            {BLUR_LAYERS.map((px, i) => (
+              <div
+                key={px}
+                className="absolute inset-0"
+                style={{
+                  backdropFilter: `blur(${px}px)`,
+                  WebkitBackdropFilter: `blur(${px}px)`,
+                  maskImage: blurLayerMask(i),
+                  WebkitMaskImage: blurLayerMask(i),
+                }}
+              />
+            ))}
+            <div className="absolute inset-0" style={{ backgroundImage: COVER_TINT }} />
+          </div>
           <div className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-center pb-1.5">
             <button
               type="button"
