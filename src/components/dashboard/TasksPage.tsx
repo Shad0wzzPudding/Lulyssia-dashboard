@@ -10,10 +10,10 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, X, CheckSquare, Repeat } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, X, CheckSquare, Repeat, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format, parseISO, isAfter, isBefore } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
@@ -298,7 +298,15 @@ export const TasksPage = ({
   const completedTasks = visibleTasks.filter(task => task.is_completed);
   
   const overdueTasks = pendingTasks.filter(task => task.deadline && isBefore(parseISO(task.deadline), now));
-  const upcomingTasks = pendingTasks.filter(task => !task.deadline || isAfter(parseISO(task.deadline), now));
+  // In progress: started on an earlier day and not due yet (like Home's "In progress..." and the
+  // Events page). Each unfinished task shows in one place: overdue, in progress or upcoming.
+  const startOfToday = startOfDay(now);
+  const isInProgressTask = (task: Task) =>
+    !!task.start_date && !!task.deadline
+    && isBefore(parseISO(task.start_date), startOfToday) && !isBefore(parseISO(task.deadline), now);
+  const inProgressTasks = pendingTasks.filter(isInProgressTask);
+  const upcomingTasks = pendingTasks.filter(task =>
+    (!task.deadline || isAfter(parseISO(task.deadline), now)) && !isInProgressTask(task));
 
   const handleUserReorder = (orderedIds: string[], movedId: string) => {
     onReorder({ table: 'tasks', orderedIds, movedId });
@@ -670,7 +678,13 @@ export const TasksPage = ({
       </div>
 
       {/* Task Statistics */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-4 gap-2 sm:gap-4">
+        <Card className="text-center">
+          <CardContent className="pt-6 px-1 sm:px-6">
+            <div className="text-2xl font-bold text-violet-400 dark:text-violet-300">{inProgressTasks.length}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">In progress</div>
+          </CardContent>
+        </Card>
         <Card className="text-center">
           <CardContent className="pt-6 px-1 sm:px-6">
             <div className="text-2xl font-bold text-sky-400 dark:text-sky-300">{upcomingTasks.length}</div>
@@ -735,6 +749,15 @@ export const TasksPage = ({
               onUpdate={onUpdateDailyTask}
               onDelete={onDeleteDailyTask}
             />
+            {inProgressTasks.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-violet-400 dark:text-violet-300 mb-3 flex items-center gap-2">
+                  <Hourglass size={16} />
+                  In Progress ({inProgressTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
+                </h3>
+                {renderSection(inProgressTasks)}
+              </div>
+            )}
             <div>
               <h3 className="text-lg font-semibold text-sky-400 dark:text-sky-300 mb-3">
                 Upcoming Tasks ({upcomingTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}

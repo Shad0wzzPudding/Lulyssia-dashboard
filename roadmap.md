@@ -12,7 +12,7 @@
 - [x] Home page: new "In progress..." section under "Today Events", listing the tasks and events that have already started and run longer than one day (started before today and not finished yet)
 - [ ] "+N more" cover on Home's "In progress..." card: only show the blurred cover and button when the cards really wrap onto a second row (on a computer three fit in one row, so with 4 items the cover hides a full row for one extra card). If that can't be measured reliably, remove the cover there
 - [ ] Home "Today Events" card: use the same "+N more" cover for its "Today's Tasks" and "Today's Events" lists: the first 3 show as now, the rest behind the cover and button (same rule as above)
-- [ ] Tasks page: an "In Progress" section above "Upcoming Tasks" for tasks that started before today and aren't due yet, like the Events page has (never built: Home and the Events page have one, the Tasks page doesn't)
+- [x] Tasks page: an "In Progress" section above "Upcoming Tasks" for tasks that started before today and aren't due yet, like the Events page has (never built: Home and the Events page have one, the Tasks page doesn't)
 
 ## Backlog from the bug hunt (need a decision before changing)
 - [x] Clean up unused attachment files: removing an attachment no longer deletes the file (it could still be used by a copy or an undo), so add a server-side job that deletes stored files no task, event or interest points to anymore
