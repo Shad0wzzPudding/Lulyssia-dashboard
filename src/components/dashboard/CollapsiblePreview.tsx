@@ -10,20 +10,21 @@ interface Props<T> {
   label?: string;
 }
 
-// How much of the next row peeks out under the cover
-const PEEK_PX = 56;
+// The cover lies on the next row from this far down it (its titles stay readable above), and
+// its blur fades in over the first part
+const COVER_FROM = 0.3;
 
 /**
  * Shows the first items as they are (the first row of a grid, or `previewCount` items in one
- * column), then only a peek of the next row under a blurred cover with a "+N more" button that
- * opens the full list. The cover never sits on the items that count as shown, and with nothing
- * beyond them there is no cover at all.
+ * column), then the next row in full with a blurred cover over its lower part and a "+N more"
+ * button that opens the full list. The cover never sits on the items that count as shown, and
+ * with nothing beyond them there is no cover at all.
  */
 export function CollapsiblePreview<T>({ items, previewCount, renderList, label = 'items' }: Props<T>) {
   const [open, setOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  // Measured from the real layout: how many are shown, and where they end
-  const [layout, setLayout] = useState<{ shown: number; bottom: number } | null>(null);
+  // Measured from the real layout: how many are shown, and where the next row starts and ends
+  const [layout, setLayout] = useState<{ shown: number; nextTop: number; nextBottom: number } | null>(null);
 
   // Enough for the shown items plus the peek of the next row (grids have at most `previewCount`
   // columns), so a long list isn't drawn in full just to be covered
@@ -41,8 +42,14 @@ export function CollapsiblePreview<T>({ items, previewCount, renderList, label =
       // Cards on the first row share its top (a grid); one per row means a single column
       const perRow = rects.filter((r) => Math.abs(r.top - rects[0].top) < 2).length;
       const shown = perRow > 1 ? perRow : previewCount;
-      const bottom = Math.round(Math.max(...rects.slice(0, shown).map((r) => r.bottom)) - boxTop);
-      setLayout((prev) => (prev?.shown === shown && prev.bottom === bottom ? prev : { shown, bottom }));
+      const next = rects.slice(shown, shown + perRow);
+      const nextTop = next.length ? Math.round(Math.min(...next.map((r) => r.top)) - boxTop) : 0;
+      const nextBottom = next.length ? Math.round(Math.max(...next.map((r) => r.bottom)) - boxTop) : 0;
+      setLayout((prev) =>
+        prev?.shown === shown && prev.nextTop === nextTop && prev.nextBottom === nextBottom
+          ? prev
+          : { shown, nextTop, nextBottom }
+      );
     };
     measure();
     // Again when the width changes the row, or a picture loads and changes a card's height
@@ -60,18 +67,28 @@ export function CollapsiblePreview<T>({ items, previewCount, renderList, label =
       <div
         ref={listRef}
         className="overflow-hidden"
-        style={covered ? { maxHeight: layout.bottom + PEEK_PX } : undefined}
+        style={covered ? { maxHeight: layout.nextBottom } : undefined}
       >
         {renderList(rendered)}
       </div>
 
       {covered && (
+        // The whole next row: its cards are only a glimpse, so tapping anywhere on it opens the full
+        // list instead of reaching a card's buttons under the blur
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 isolate overflow-hidden rounded-b-2xl"
-          style={{ top: layout.bottom + 4 }}
+          className="absolute inset-x-0 bottom-0 z-10 isolate cursor-pointer overflow-hidden rounded-b-2xl"
+          style={{ top: layout.nextTop }}
+          onClick={() => setOpen(true)}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/15 to-primary/40 backdrop-blur-[4px]" />
-          <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-20 flex items-end justify-center pb-1.5">
+          <div
+            className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-transparent via-primary/20 to-primary/50 backdrop-blur-[6px]"
+            style={{
+              top: `${COVER_FROM * 100}%`,
+              maskImage: 'linear-gradient(to bottom, transparent, black 35%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 35%)',
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-center pb-1.5">
             <button
               type="button"
               onClick={() => setOpen(true)}
