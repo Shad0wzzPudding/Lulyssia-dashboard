@@ -102,7 +102,13 @@ The 13 commits from b1a895c to a4f4e29. Typecheck and lint pass. Confirmed findi
 - [x] Low: LINE Settings can still briefly show the old value of a switch: a reload that started just before the switch was flipped still finishes and overwrites it (the new check only stops reloads from starting while saving). The saved value is right; the screen corrects on the next reload. Suggest: ignore a reload's result if a switch was saved while it was running (e.g. a counter checked when it finishes)
 
 ## Cloud review (15 Oct 2026)
-Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`. Summary at the end of the run.
+Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
+
+**Summary (kept up to date during the run).**
+- Checks used: `npx tsc --noEmit -p tsconfig.app.json`, `npx eslint`, `npm run build`, `deno check` on every edge function (Deno 2.1.4 in a scratch folder), all migrations replayed on a local Postgres 16 (with stand-ins for Supabase's auth, storage, cron and vault), and the app run in a local browser with every backend request answered by test data (nothing reached the live project).
+- Phase 1: the 37 commits waiting in REVIEW.md (`a4f4e29..36c0c12`) were reviewed; 1 bug found and fixed.
+- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass started.
+- To apply before merging: migrations `20261015000004_revert_keeps_order.sql` and `20261015000005_line_links_no_delete.sql`. No edge function changed, so nothing to deploy there; the site changes go out with the next Vercel deploy.
 
 ### Findings
 - [x] Medium: Undoing an edit in Recent Changes moves the item back to its old place in "User sort" and can undo a later drag without saying so. Undo put back the item's whole saved row, including its order number, but an edit never changes the order (drags are their own entries). Example: edit task A, drag task C to the top, then undo A's edit: A and C both get number 0 and A jumps back above C (shown on a local copy of the database). Done: undoing an edit keeps the item's current place; undoing a delete still puts it back where it was (migration `20261015000004_revert_keeps_order.sql`)
@@ -136,6 +142,8 @@ Areas, in the order of `.claude/skills/cloud-review`: Home; Tasks (daily and rep
 - Round 14 (Phone layouts and accessibility): checked every page at 320 and 360px for sideways overflow (Settings with all sound groups open), unnamed buttons on every page, the form windows on a phone; found 1 fixed, 2 proposed
 - Round 15 (Time zones and dates): read useLocalToday.ts, the Thai-date parts of LineSettings.tsx, send-line-daily and the renewal and claim functions; checked in a browser set to Thai time with the clock at 23:58 on 31 Oct running past midnight (Today's Tasks, Overdue, the daily list's new day); found no new bug
 Second pass (fresh eyes, largest areas first):
+- Round 16 (LINE functions, again): read line-webhook and send-line-daily again in full; checked the real webhook under Deno with LINE and the database faked: "today" at the daily limit, a second request, the month used up, "notice", a menu tab, "Mark as done" with bad data, a link code when freeing the old link fails; found no new bug
+- Round 17 (Home, again): checked in a browser 7 tasks due today (the "+4 more" cover, its window listing all 7, the count tile) and the calendar's day details; found no new bug
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
