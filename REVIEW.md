@@ -28,6 +28,14 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `9904b83` | Fix : Screen readers name the icon buttons on cards (copy, edit, delete, tick, pin, fold) |
+| `a221782` | Fix : The LINE "today" limit can't be reset by deleting and recreating the LINE link (needs migration 20261015000005_line_links_no_delete.sql) |
+| `9fbb892` | Fix : A dragged card stays where it was dropped instead of jumping back while the new order saves |
+| `01e6af3` | Fix : An upload still running when a form is closed no longer lands in the next form that opens |
+| `61fd3a2` | Fix : Clicks in a scrolled add/edit form no longer start resizing the form window |
+| `65516f4` | Fix : Search finds words that are bold, and text with *, ~ or a backslash in the description |
+| `0079d00` | Fix : Editing an interest no longer puts back an unpin or a drag made elsewhere while the form was open |
+| `f1aef58` | Fix : A long unbroken title (like a web address) no longer makes pages wider than a phone screen |
 | `bfaeaef` | Fix : Undoing an edit in Recent Changes no longer moves the item back to its old place (needs migration 20261015000004_revert_keeps_order.sql) |
 
 ## Review history
