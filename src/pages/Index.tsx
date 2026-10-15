@@ -255,8 +255,9 @@ const Index = () => {
               onOpenLineSettings={() => navigateTo('settings', 'line')}
               onSignOut={handleSignOut}
             />
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex min-w-0 items-center gap-4">
+              {/* An email (shown when no nickname is set) can't wrap at spaces: break it if needed */}
+              <span className="min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]">
                 Welcome, {names.nickname || user.email} !
               </span>
             </div>

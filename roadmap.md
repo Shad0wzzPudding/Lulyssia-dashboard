@@ -129,6 +129,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 - [ ] Low: The installed app's "Add Task" shortcut (long-press the app icon on Android) does nothing special: it opens `/?action=add-task`, but the app never reads that address, so it just shows Home. Needs decision: (a) make the app open Tasks with the new-task form when it starts with `?action=add-task` (recommended); or (b) remove the shortcut from `public/manifest.json`
 - [ ] Low: The installed app's colours in `public/manifest.json` are left over from a template: `background_color` white and `theme_color` blue (#2563eb). Android shows the white launch screen and a blue status bar around the dark cyan app. Needs decision: (a) use the app's colours, e.g. background `#080c0e` (the page background) and theme `#3aadd0` (recommended); or (b) keep them
 - [x] Low: README's "Scheduled jobs" table doesn't list the new nightly `trim-line-reminders-sent` job (03:30 Thai time, from `20261015000003_trim_line_reminders_sent.sql`). Done: added it, and noted the weekly trim in the table of database tables
+- [x] Low: With no nickname set, the header greets you by email, and a long email can't wrap, so on a narrow phone the page becomes wider than the screen (a 44-character address made a 320px screen 327px wide). Done: the greeting breaks inside the address when it doesn't fit
 
 ### Rounds log
 Areas, in the order of `.claude/skills/cloud-review`: Home; Tasks (daily and repeating); Events; Interests; Settings; navigation, drawer and transitions; select mode, search, sort and filters; Recent Changes and undo; attachments and storage clean-up; the editor's formatting; data hooks and caching; LINE functions; migrations, access rules and cron; phone layouts and accessibility; time zones and dates.
@@ -161,6 +162,7 @@ Second pass (fresh eyes, largest areas first):
 - Round 26 (Migrations, again): checked on a local Postgres the today counter (3 then refused, a new Thai day, no LINE row) and the daily list's date check; found no new bug
 - Round 27 (Double clicks and repeated actions, across pages): checked in a browser double Enter in the daily quick add and the task form, double clicks on Clear's confirm, Undo Clear and card buttons; found 1 proposed
 - Round 28 (Installable app: manifest, icons, service worker): read public/manifest.json, public/sw.js, index.html, usePWA.ts, InstallAppCard.tsx; checked that the icons exist at the listed sizes and searched the app for the shortcut's `?action=` handling; found 2 proposed
+- Round 29 (Header and docs): read Index.tsx's header and README's job and table lists; checked in a browser the email greeting (no nickname) at 320, 360 and 390px; found 2 fixed (README job list, long email)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
