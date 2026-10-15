@@ -88,7 +88,15 @@ export const InterestsPage = ({
     };
 
     if (editingInterest) {
-      onUpdateInterest({ id: editingInterest.id, ...submissionData });
+      // The form's place in "User sort" and "Pin" are as they were when it opened: the place is
+      // never saved from here, and Pin only when it was changed in the form, so a drag or an
+      // unpin made elsewhere (another tab, Home) while the form was open isn't undone
+      const { sort_order: _order, is_pinned, ...rest } = submissionData;
+      onUpdateInterest({
+        id: editingInterest.id,
+        ...rest,
+        ...(is_pinned !== editingInterest.is_pinned ? { is_pinned } : {}),
+      });
       playUpdateSound();
     } else {
       onCreateInterest(submissionData);
