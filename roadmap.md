@@ -144,6 +144,8 @@ Areas, in the order of `.claude/skills/cloud-review`: Home; Tasks (daily and rep
 Second pass (fresh eyes, largest areas first):
 - Round 16 (LINE functions, again): read line-webhook and send-line-daily again in full; checked the real webhook under Deno with LINE and the database faked: "today" at the daily limit, a second request, the month used up, "notice", a menu tab, "Mark as done" with bad data, a link code when freeing the old link fails; found no new bug
 - Round 17 (Home, again): checked in a browser 7 tasks due today (the "+4 more" cover, its window listing all 7, the count tile) and the calendar's day details; found no new bug
+- Round 18 (Tasks, again): checked in a browser set to Thai time across midnight with the new day's daily list slow to load: the section says "Loading today's list…" and locks its buttons, then unlocks; found no new bug
+- Round 19 (LINE functions and the LINE card, again): ran the real send-line-daily 08:00 run under Deno with the database and LINE faked (Notice before for a ticked and an unticked repeating task, a missed-deadline repeat, how the messages are packed into pushes, all pushes failing: the repeat's mark is removed); checked the Settings LINE card in a browser for 0 and 3 requests used today, 3 used yesterday, the month used up and nearly used up; found no new bug
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
