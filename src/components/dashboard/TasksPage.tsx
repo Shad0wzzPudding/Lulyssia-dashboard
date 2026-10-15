@@ -81,7 +81,8 @@ export const TasksPage = ({
     is_completed: false,
     tag_ids: [] as string[],
     recurrence_unit: '' as RecurrenceUnit,
-    recurrence_interval: 1,
+    // '' while the box is being retyped; saving turns it into a whole number of at least 1
+    recurrence_interval: 1 as number | '',
     attachments: [] as import('@/lib/types').Attachment[],
     notice_before: false,
   });
@@ -156,7 +157,7 @@ export const TasksPage = ({
     
     const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
     const recurrenceUnit = formData.recurrence_unit || null;
-    const recurrenceInterval = formData.recurrence_unit ? Math.max(1, Number(formData.recurrence_interval) || 1) : 1;
+    const recurrenceInterval = formData.recurrence_unit ? Math.max(1, Math.round(Number(formData.recurrence_interval)) || 1) : 1;
     // A repeating task counts its repeats from its first deadline. Editing keeps that anchor
     // unless the deadline (to the minute) or the repeat setting changed.
     const minute = (iso?: string | null) => (iso ? Math.floor(new Date(iso).getTime() / 60000) : null);
@@ -626,7 +627,9 @@ export const TasksPage = ({
                       type="number"
                       min={1}
                       value={formData.recurrence_interval}
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: Math.max(1, Number(e.target.value) || 1) }))}
+                      // The box may be empty while a new number is typed (forcing 1 there turned "3" into "13");
+                      // saving makes it a whole number of at least 1
+                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: e.target.value === '' ? '' : Number(e.target.value) }))}
                       className="w-20 h-9 text-sm"
                     />
                     <Select
