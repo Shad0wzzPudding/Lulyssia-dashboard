@@ -196,8 +196,11 @@ const ResizableDialogContent = React.forwardRef<
     };
   }, [isResizing, resizeDirection, minWidth, minHeight, maxWidth, maxHeight]);
 
+  // The dialog scrolls its content, and the handles (absolute children) would scroll with it,
+  // leaving invisible strips over the form (a click there resized instead). They are shifted by
+  // the scroll amount (--dialog-scroll, set on scroll) so they stay on the dialog's edges.
   const resizeHandleBase = cn(
-    "absolute bg-transparent hover:bg-primary/20 transition-colors z-10",
+    "absolute translate-y-[var(--dialog-scroll,0px)] bg-transparent hover:bg-primary/20 transition-colors z-10",
     isMobile && "hidden"
   );
 
@@ -218,6 +221,10 @@ const ResizableDialogContent = React.forwardRef<
             : { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '90vh' }
         }
         {...props}
+        onScroll={(e) => {
+          e.currentTarget.style.setProperty('--dialog-scroll', `${e.currentTarget.scrollTop}px`);
+          props.onScroll?.(e);
+        }}
         onCloseAutoFocus={(e) => {
           // Prevent Radix from returning focus to the trigger, which causes
           // the browser to scroll the trigger back into view and yank the
