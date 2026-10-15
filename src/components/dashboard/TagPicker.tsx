@@ -145,7 +145,8 @@ export const TagChip = ({
     <span
       onClick={onClick}
       className={cn(
-        'tag-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all',
+        // max-w-full + the name breaking inside a word: a long one-word tag name can't widen the page
+        'tag-chip inline-flex max-w-full items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all',
         onClick && 'cursor-pointer hover:scale-105',
         active === false && 'opacity-50'
       )}
@@ -156,8 +157,8 @@ export const TagChip = ({
         ['--tag-color' as string]: tag.color,
       }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: tag.color }} />
-      {tag.name}
+      <span className="w-1.5 h-1.5 shrink-0 rounded-full" style={{ background: tag.color }} />
+      <span className="min-w-0 [overflow-wrap:anywhere]">{tag.name}</span>
       {onRemove && (
         <button
           type="button"
