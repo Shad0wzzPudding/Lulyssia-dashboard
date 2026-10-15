@@ -106,6 +106,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`. Summary
 
 ### Findings
 - [x] Medium: Undoing an edit in Recent Changes moves the item back to its old place in "User sort" and can undo a later drag without saying so. Undo put back the item's whole saved row, including its order number, but an edit never changes the order (drags are their own entries). Example: edit task A, drag task C to the top, then undo A's edit: A and C both get number 0 and A jumps back above C (shown on a local copy of the database). Done: undoing an edit keeps the item's current place; undoing a delete still puts it back where it was (migration `20261015000004_revert_keeps_order.sql`)
+- [x] Low: A task, event or interest whose title is one long word, such as a pasted web address (`https://docs.google.com/document/d/…/edit`), makes Home, Tasks, Events and Interests wider than a phone screen, so the page slides sideways (measured in a browser at 375px: 435–496px wide). Titles had no way to break inside a word. Done: titles on cards, Home's lists, In progress, Main Focus, the calendar details and Recent Changes now break a long word when it doesn't fit; normal titles look the same
 
 ### Rounds log
 

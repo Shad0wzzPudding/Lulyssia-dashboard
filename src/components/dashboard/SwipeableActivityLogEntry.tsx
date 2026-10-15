@@ -108,7 +108,7 @@ export const SwipeableActivityLogEntry = ({
           >
             {log.action_type}
           </Badge>
-          <span className="text-sm font-medium">{log.item_title}</span>
+          <span className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">{log.item_title}</span>
           {locked && (
             <Lock
               size={12}

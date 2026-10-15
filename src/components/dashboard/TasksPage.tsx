@@ -374,7 +374,7 @@ export const TasksPage = ({
                 </Button>
               )}
               <div className="flex-1 min-w-0">
-                <h4 className={`font-semibold ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                <h4 className={`font-semibold [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                   {task.title}
                 </h4>
                 {/* On phones the badge sits under the title, leaving the title the row's width */}

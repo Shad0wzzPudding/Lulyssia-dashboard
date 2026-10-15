@@ -151,7 +151,7 @@ export const DraggableInterestCard = ({
             
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 min-w-0 [overflow-wrap:anywhere]">
                   {interest.title}
                 </h4>
                 {/* Swipe handle: pull right to unpin */}
