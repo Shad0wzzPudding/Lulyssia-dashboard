@@ -28,6 +28,15 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `2f00005` | Fix : The undo and unpin handles on Home work from the keyboard |
+| `50359b1` | Fix : Retyping a repeating task's "Every N" number saves the number typed (3, not 13) |
+| `d11a092` | Fix : Long titles in the calendar details and a long LINE name in Settings fit a narrow phone |
+| `2679f61` | Fix : A link in a description no longer makes pages wider than a phone screen |
+| `793b94d` | Fix : A long one-word tag name no longer makes the Interests page wider than a phone screen |
+| `2256582` | Fix : A long email in the header greeting no longer makes a narrow phone screen slide sideways |
+| `33bf296` | Docs : README lists the nightly job that trims the record of sent LINE messages |
+| `ee9bfb4` | Fix : A quick double Enter no longer creates the same tag twice |
+| `d66f5bf` | Fix : Copying several items at once keeps their order in "User sort" |
 | `9904b83` | Fix : Screen readers name the icon buttons on cards (copy, edit, delete, tick, pin, fold) |
 | `a221782` | Fix : The LINE "today" limit can't be reset by deleting and recreating the LINE link (needs migration 20261015000005_line_links_no_delete.sql) |
 | `9fbb892` | Fix : A dragged card stays where it was dropped instead of jumping back while the new order saves |

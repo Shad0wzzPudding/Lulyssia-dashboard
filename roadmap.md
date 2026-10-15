@@ -105,9 +105,10 @@ The 13 commits from b1a895c to a4f4e29. Typecheck and lint pass. Confirmed findi
 Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 
 **Summary (kept up to date during the run).**
-- Checks used: `npx tsc --noEmit -p tsconfig.app.json`, `npx eslint`, `npm run build`, `deno check` on every edge function (Deno 2.1.4 in a scratch folder), all migrations replayed on a local Postgres 16 (with stand-ins for Supabase's auth, storage, cron and vault), and the app run in a local browser with every backend request answered by test data (nothing reached the live project).
+- Checks used: `npx tsc --noEmit -p tsconfig.app.json`, `npx eslint`, `npm run build`, `deno check` on every edge function (Deno 2.1.4 in a scratch folder), all migrations replayed on a local Postgres 16 (with stand-ins for Supabase's auth, storage, cron and vault), the real webhook and 08:00 functions run under Deno with LINE and the database faked, and the app run in a local browser with every backend request answered by test data (nothing reached the live project).
 - Phase 1: the 37 commits waiting in REVIEW.md (`a4f4e29..36c0c12`) were reviewed; 1 bug found and fixed.
-- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass started.
+- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass and extra angles (long words on phones, double clicks, keyboard use, the installable app): 32 rounds so far.
+- Results: 18 fixed (17 fix commits and a README update), 7 proposals waiting for a decision (marked `Needs decision` below).
 - To apply before merging: migrations `20261015000004_revert_keeps_order.sql` and `20261015000005_line_links_no_delete.sql`. No edge function changed, so nothing to deploy there; the site changes go out with the next Vercel deploy.
 
 ### Findings
