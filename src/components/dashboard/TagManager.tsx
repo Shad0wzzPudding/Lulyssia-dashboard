@@ -146,9 +146,15 @@ export const TagManager = () => {
   }
 
   const handleCreate = async () => {
-    if (!newName.trim()) return;
-    await createTag.mutateAsync({ name: newName.trim(), color: newColor });
-    setNewName('');
+    // Enter can be pressed again while the first one is still saving (the Add button is disabled
+    // then, the input isn't): one tag per name
+    if (!newName.trim() || createTag.isPending) return;
+    try {
+      await createTag.mutateAsync({ name: newName.trim(), color: newColor });
+      setNewName('');
+    } catch {
+      // The error toast is already shown; keep the typed name so it can be retried
+    }
   };
 
   return (

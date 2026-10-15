@@ -31,7 +31,8 @@ export const TagPicker = ({ selected, onChange }: TagPickerProps) => {
   };
 
   const handleCreate = async () => {
-    if (!newName.trim()) return;
+    // A second Enter or click while the first is still saving would make the same tag twice
+    if (!newName.trim() || createTag.isPending) return;
     // A failed create already shows an error toast; keep the typed name so it can be retried
     let tag: Tag | undefined;
     try {
@@ -103,7 +104,7 @@ export const TagPicker = ({ selected, onChange }: TagPickerProps) => {
                   }}
                   className="h-8 text-sm"
                 />
-                <Button type="button" size="sm" onClick={handleCreate} disabled={!newName.trim()}>
+                <Button type="button" size="sm" onClick={handleCreate} disabled={!newName.trim() || createTag.isPending}>
                   <Plus size={14} />
                 </Button>
               </div>
