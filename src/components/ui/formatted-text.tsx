@@ -1,4 +1,5 @@
 import { parseSegments } from '@/lib/inlineFormat';
+import { cn } from '@/lib/utils';
 
 interface FormattedTextProps {
   children: string;
@@ -14,8 +15,11 @@ interface FormattedTextProps {
 export const FormattedText = ({ children, className }: FormattedTextProps) => {
   if (!children) return null;
 
+  // A long word such as a pasted link breaks where it must: otherwise it set the card's minimum
+  // width and pushed the page wider than a phone screen (break-words alone doesn't do that inside
+  // the grid and flex layouts the cards sit in)
   return (
-    <span className={className}>
+    <span className={cn('[overflow-wrap:anywhere]', className)}>
       {parseSegments(children).map((seg, k) => {
         let node: React.ReactNode = seg.text;
         if (seg.i) node = <em className="italic">{node}</em>;

@@ -131,6 +131,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 - [x] Low: README's "Scheduled jobs" table doesn't list the new nightly `trim-line-reminders-sent` job (03:30 Thai time, from `20261015000003_trim_line_reminders_sent.sql`). Done: added it, and noted the weekly trim in the table of database tables
 - [x] Low: With no nickname set, the header greets you by email, and a long email can't wrap, so on a narrow phone the page becomes wider than the screen (a 44-character address made a 320px screen 327px wide). Done: the greeting breaks inside the address when it doesn't fit
 - [x] Low: A tag with a long one-word name (e.g. "ProjectAlphaQuarterlyPlanningDocuments2026") makes the Interests page wider than a 360px phone (367px), because the tag chip can't shrink or wrap. Done: tag chips are at most as wide as their row and break a long name inside the word; normal tags look the same
+- [x] Medium: A web address (or any long word) in a description makes the page much wider than a phone screen, so it slides sideways: with a Google Docs link in the descriptions, Home was 559px and Events and Interests 640px wide on a 360px phone (measured in a browser). The cards' `break-words` doesn't stop a long word from setting the card's minimum width inside their grid and flex layouts. Done: descriptions now break a long word where needed, everywhere they are shown (the shared FormattedText); text with normal words looks the same
 
 ### Rounds log
 Areas, in the order of `.claude/skills/cloud-review`: Home; Tasks (daily and repeating); Events; Interests; Settings; navigation, drawer and transitions; select mode, search, sort and filters; Recent Changes and undo; attachments and storage clean-up; the editor's formatting; data hooks and caching; LINE functions; migrations, access rules and cron; phone layouts and accessibility; time zones and dates.
@@ -164,7 +165,7 @@ Second pass (fresh eyes, largest areas first):
 - Round 27 (Double clicks and repeated actions, across pages): checked in a browser double Enter in the daily quick add and the task form, double clicks on Clear's confirm, Undo Clear and card buttons; found 1 proposed
 - Round 28 (Installable app: manifest, icons, service worker): read public/manifest.json, public/sw.js, index.html, usePWA.ts, InstallAppCard.tsx; checked that the icons exist at the listed sizes and searched the app for the shortcut's `?action=` handling; found 2 proposed
 - Round 29 (Header and docs): read Index.tsx's header and README's job and table lists; checked in a browser the email greeting (no nickname) at 320, 360 and 390px; found 2 fixed (README job list, long email)
-- Round 30 (Tags on phones): checked in a browser every page at 360px with a long one-word tag on an event and an interest; found 1 fixed
+- Round 30 (Long words on phones): checked in a browser every page at 360px with a long one-word tag, and with a web address in every task, event, interest and daily-task description; found 2 fixed
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
