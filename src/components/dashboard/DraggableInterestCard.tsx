@@ -78,6 +78,17 @@ export const DraggableInterestCard = ({
     }
   };
 
+  // Keyboard (Enter or Space on the focused handle): the same as a full swipe
+  const handleSwipeKey = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    playUnpinSound();
+    updateTranslateX(300);
+    setTimeout(() => {
+      onUnpin(interest);
+    }, 200);
+  };
+
   // Vertical drag for reordering (on drag handle)
   const handleDragHandleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
@@ -157,9 +168,11 @@ export const DraggableInterestCard = ({
                 {/* Swipe handle: pull right to unpin */}
                 <div
                   role="button"
+                  tabIndex={0}
+                  onKeyDown={handleSwipeKey}
                   aria-label="Pull right to unpin"
                   title="Pull right to unpin"
-                  className="ml-2 flex h-6 w-6 flex-shrink-0 cursor-grab touch-none select-none items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
+                  className="ml-2 flex h-6 w-6 flex-shrink-0 cursor-grab touch-none select-none items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing"
                   onPointerDown={handleSwipeDown}
                   onPointerMove={handleSwipeMove}
                   onPointerUp={handleSwipeUp}

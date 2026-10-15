@@ -70,6 +70,19 @@ export const SwipeableActivityLogEntry = ({
     }
   };
 
+  // Keyboard (Enter or Space on the focused handle): the same as a full swipe
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (locked) {
+      onLocked?.();
+      return;
+    }
+    playDeleteSound();
+    updateTranslateX(300);
+    setTimeout(() => onDelete(log.id), 200);
+  };
+
   return (
     <div className="relative overflow-hidden rounded">
       {/* Background action indicator - right side */}
@@ -127,9 +140,11 @@ export const SwipeableActivityLogEntry = ({
           {/* Swipe handle: pull left to undo */}
           <div
             role="button"
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
             aria-label={locked ? "Undo the newer change to this item first" : "Pull left to undo"}
             title={locked ? "Undo the newer change to this item first" : "Pull left to undo"}
-            className="flex h-7 w-6 cursor-grab touch-none select-none items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className="flex h-7 w-6 cursor-grab touch-none select-none items-center justify-center rounded text-gray-400 hover:bg-gray-200 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing dark:hover:bg-gray-700 dark:hover:text-gray-200"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
