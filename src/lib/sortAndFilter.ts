@@ -1,3 +1,5 @@
+import { parseChars } from '@/lib/inlineFormat';
+
 export type SortOption =
   | 'created_desc'
   | 'created_asc'
@@ -71,6 +73,8 @@ export const searchItems = <T extends { title: string; description?: string | nu
   return items.filter(
     (i) =>
       i.title.toLowerCase().includes(q) ||
-      (i.description || '').toLowerCase().includes(q)
+      // The description as it reads on screen: without the bold/italic/strike marks, and with the
+      // stored escapes turned back into the * ~ and backslash typed (so "5*3" or a bold word is found)
+      parseChars(i.description || '').map((c) => c.ch).join('').toLowerCase().includes(q)
   );
 };
