@@ -1119,11 +1119,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedItem?.type === 'task' ? (
-                <CheckCircle2 className="text-primary" size={20} />
+                <CheckCircle2 className="shrink-0 text-primary" size={20} />
               ) : (
-                <CalendarIcon className="text-secondary" size={20} />
+                <CalendarIcon className="shrink-0 text-secondary" size={20} />
               )}
-              {selectedItem?.title}
+              <span className="min-w-0 [overflow-wrap:anywhere]">{selectedItem?.title}</span>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">

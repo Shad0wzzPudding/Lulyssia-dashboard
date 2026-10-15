@@ -262,7 +262,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium">Status:</span>
               {link.line_user_id ? (
-                <Badge className="bg-green-500/15 text-green-600 hover:bg-green-500/15">
+                <Badge className="min-w-0 bg-green-500/15 text-green-600 hover:bg-green-500/15 [overflow-wrap:anywhere]">
                   Linked{link.display_name ? ` · ${link.display_name}` : ''}
                 </Badge>
               ) : (
