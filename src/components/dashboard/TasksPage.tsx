@@ -365,6 +365,7 @@ export const TasksPage = ({
                   size="sm"
                   variant="ghost"
                   onClick={() => handleToggleComplete(task)}
+                  aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
                   className="mt-1 p-0 h-6 w-6"
                 >
                    {task.is_completed ? 
@@ -384,16 +385,18 @@ export const TasksPage = ({
             {!isSelecting && (
               <div data-card-actions className="flex items-center gap-2 shrink-0">
                 {badge && <div className="hidden sm:block">{badge}</div>}
-                <Button size="sm" variant="outline" onClick={() => handleCopy(task)}>
+                <Button size="sm" variant="outline" onClick={() => handleCopy(task)} aria-label="Copy task" title="Copy">
                   <Copy size={12} />
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>
+                <Button size="sm" variant="outline" onClick={() => handleEdit(task)} aria-label="Edit task" title="Edit">
                   <Edit size={12} />
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => { playDeleteSound(); onDeleteTask(task.id); }}
+                  aria-label="Delete task"
+                  title="Delete"
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 size={12} />
@@ -558,6 +561,7 @@ export const TasksPage = ({
                   <button
                     type="button"
                     onClick={() => formData.start_date && setFormData(prev => ({ ...prev, start_date: '' }))}
+                    aria-label="Clear start date"
                     className={`shrink-0 h-9 w-9 rounded-md border flex items-center justify-center transition-colors ${
                       formData.start_date 
                         ? 'bg-rose-500 border-rose-500 text-white hover:bg-rose-600 cursor-pointer' 
@@ -581,6 +585,7 @@ export const TasksPage = ({
                   <button
                     type="button"
                     onClick={() => formData.deadline && setFormData(prev => ({ ...prev, deadline: '' }))}
+                    aria-label="Clear deadline"
                     className={`shrink-0 h-9 w-9 rounded-md border flex items-center justify-center transition-colors ${
                       formData.deadline 
                         ? 'bg-rose-500 border-rose-500 text-white hover:bg-rose-600 cursor-pointer' 

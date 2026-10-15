@@ -271,19 +271,21 @@ export const InterestsPage = ({
         )}
         {!isSelecting && (
           <div data-card-actions className="flex items-center gap-2 pt-2 mt-auto">
-            <Button size="sm" variant="outline" onClick={() => handlePin(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
               <PinOff size={12} />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleCopy(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handleCopy(interest)} aria-label="Copy interest" title="Copy">
               <Copy size={12} />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleEdit(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(interest)} aria-label="Edit interest" title="Edit">
               <Edit size={12} />
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => { playDeleteSound(); onDeleteInterest(interest.id); }}
+              aria-label="Delete interest"
+              title="Delete"
               className="text-destructive hover:text-destructive"
             >
               <Trash2 size={12} />
@@ -339,19 +341,21 @@ export const InterestsPage = ({
         )}
         {!isSelecting && (
           <div data-card-actions className="flex items-center gap-2 pt-2 mt-auto">
-            <Button size="sm" variant="outline" onClick={() => handlePin(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
               <Pin size={12} />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleCopy(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handleCopy(interest)} aria-label="Copy interest" title="Copy">
               <Copy size={12} />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => handleEdit(interest)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(interest)} aria-label="Edit interest" title="Edit">
               <Edit size={12} />
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => { playDeleteSound(); onDeleteInterest(interest.id); }}
+              aria-label="Delete interest"
+              title="Delete"
               className="text-destructive hover:text-destructive"
             >
               <Trash2 size={12} />

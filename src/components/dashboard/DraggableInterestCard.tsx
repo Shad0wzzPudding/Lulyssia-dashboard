@@ -177,6 +177,7 @@ export const DraggableInterestCard = ({
                         onToggleCollapse(interest.id);
                       }}
                       className="ml-2 h-6 w-6 p-0"
+                      aria-label={isCollapsed ? 'Unfold' : 'Fold'}
                     >
                       {isCollapsed ? (
                         <ChevronDown size={16} />

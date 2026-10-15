@@ -996,6 +996,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                               size="sm"
                               onClick={() => toggleInterestCollapse(interest.id)}
                               className="ml-2 h-6 w-6 p-0"
+                              aria-label={collapsedInterests.has(interest.id) ? 'Unfold' : 'Fold'}
                             >
                               {collapsedInterests.has(interest.id) ? (
                                 <ChevronDown size={16} />
@@ -1051,7 +1052,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   <Activity size={20} />
                   <span className="font-bold">Recent Changes</span>
                 </CardTitle>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 group-hover:bg-recent-changes/20">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 group-hover:bg-recent-changes/20" aria-label={recentChangesCollapsed ? 'Unfold Recent Changes' : 'Fold Recent Changes'}>
                   {recentChangesCollapsed ? (
                     <ChevronDown size={18} className="text-recent-changes" />
                   ) : (
