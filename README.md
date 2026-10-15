@@ -62,7 +62,7 @@ Every table has Row Level Security enabled and users can only access their own r
 | `activity_log` | Change history used for reverting deletions |
 | `user_preferences` | Per-user settings |
 | `line_links` | Link between an app user and a LINE account |
-| `line_reminders_sent` | De-duplicates LINE reminders |
+| `line_reminders_sent` | De-duplicates LINE reminders (records older than a week are trimmed nightly) |
 | `daily_tasks` | Daily checklist on the Tasks page (one row per task per day) |
 | `daily_task_days` | Records which days were already set up, so deleted daily tasks never come back |
 
@@ -103,8 +103,8 @@ Function secrets (Supabase Dashboard → Edge Functions → Secrets):
 ### Scheduled jobs
 
 Jobs are created by migrations `20261005000003_line_cron_vault.sql`,
-`20261008000001_cleanup_unused_attachments.sql` and `20261013000000_renew_recurring_tasks.sql` using
-pg_cron and pg_net.
+`20261008000001_cleanup_unused_attachments.sql`, `20261013000000_renew_recurring_tasks.sql` and
+`20261015000003_trim_line_reminders_sent.sql` using pg_cron and pg_net.
 
 | Job | Schedule (UTC) | Meaning | Calls |
 | --- | --- | --- | --- |
@@ -113,6 +113,7 @@ pg_cron and pg_net.
 | `line-start-reminders` | `*/5 * * * *` | Every 5 minutes | `send-line-reminders` |
 | `attachments-cleanup` | `0 20 * * *` | 03:00 Thai time | `cleanup-attachments` |
 | `renew-recurring-tasks` | `*/5 * * * *` | Every 5 minutes | `renew_recurring_tasks()` (SQL, no secret) |
+| `trim-line-reminders-sent` | `30 20 * * *` | 03:30 Thai time | `trim_line_reminders_sent()` (SQL, no secret): forgets sent-message records older than a week |
 
 The shared secret is **never stored in this repository**. The jobs read it from Supabase Vault at run
 time, from a secret named `line_cron_secret`. To set it up for the first time, or to rotate it:
