@@ -205,7 +205,9 @@ export const EventsPage = ({
 
   // Batch actions
   const handleBatchCopy = () => {
-    const selected = events.filter(e => selectedIds.has(e.id));
+    // Each copy goes above the one made before it, so copy from the last to the first: the copies
+    // keep the originals' order in "User sort" instead of coming out reversed
+    const selected = sortItems(events.filter(e => selectedIds.has(e.id)), 'user').reverse();
     selected.forEach((event, idx) => {
       onCreateEvent({
         title: event.title,

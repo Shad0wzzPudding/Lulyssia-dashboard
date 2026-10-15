@@ -150,7 +150,9 @@ export const InterestsPage = ({
 
   // Batch actions
   const handleBatchCopy = () => {
-    const selected = interests.filter(i => selectedIds.has(i.id));
+    // Each copy goes above the one made before it, so copy from the last to the first: the copies
+    // keep the originals' order in "User sort" instead of coming out reversed
+    const selected = sortItems(interests.filter(i => selectedIds.has(i.id)), 'user').reverse();
     selected.forEach((interest, idx) => {
       onCreateInterest({
         title: interest.title,

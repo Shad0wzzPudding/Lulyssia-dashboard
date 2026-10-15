@@ -244,7 +244,9 @@ export const TasksPage = ({
 
   // Batch actions
   const handleBatchCopy = () => {
-    const selected = tasks.filter(t => selectedIds.has(t.id));
+    // Each copy goes above the one made before it, so copy from the last to the first: the copies
+    // keep the originals' order in "User sort" instead of coming out reversed
+    const selected = sortItems(tasks.filter(t => selectedIds.has(t.id)), 'user').reverse();
     selected.forEach((task, idx) => {
       onCreateTask({
         title: task.title,
