@@ -56,10 +56,25 @@ interface AttachmentsFieldProps {
 export function AttachmentsField({ value, onChange, onUploadingChange }: AttachmentsFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  // Gone once the form closes. An upload still running then belongs to that closed form: its
+  // result must not be added to whatever form is open by the time it ends (another item's)
+  const mounted = useRef(true);
+  const uploadingRef = useRef(false);
+  const onUploadingChangeRef = useRef(onUploadingChange);
+  onUploadingChangeRef.current = onUploadingChange;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      // The next form shouldn't wait for this one's upload
+      if (uploadingRef.current) onUploadingChangeRef.current?.(false);
+    };
+  }, []);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+    uploadingRef.current = true;
     onUploadingChange?.(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -86,10 +101,13 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
           size: file.size,
         });
       }
-      if (uploaded.length > 0) onChange([...(value || []), ...uploaded]);
+      if (uploaded.length > 0 && mounted.current) onChange([...(value || []), ...uploaded]);
     } finally {
-      setUploading(false);
-      onUploadingChange?.(false);
+      uploadingRef.current = false;
+      if (mounted.current) {
+        setUploading(false);
+        onUploadingChange?.(false);
+      }
       if (inputRef.current) inputRef.current.value = '';
     }
   };
