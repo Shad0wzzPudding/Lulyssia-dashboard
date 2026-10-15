@@ -624,9 +624,6 @@ export const useDashboardData = () => {
   // (the log trigger skips updates that only change sort_order)
   const reorderItems = useMutation({
     mutationFn: async ({ table, orderedIds, movedId }: ReorderArgs) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const items = queryClient.getQueryData<{ id: string; title: string; created_at: string; sort_order?: number }[]>([table]) ?? [];
       const byId = new Map(items.map(item => [item.id, item]));
 
@@ -641,6 +638,19 @@ export const useDashboardData = () => {
         .map((id, index) => ({ id, from: byId.get(id)?.sort_order, to: index }))
         .filter(c => c.from !== c.to);
       if (changed.length === 0) return;
+
+      // Show the new order right away (before any await, so the next drag starts from it): the
+      // list only reloads once everything is saved, and until then the card jumped back to its
+      // old place, and a second drag in that time was worked out from the old order. A failed
+      // save puts the real order back (onSettled reloads it).
+      const to = new Map(changed.map(c => [c.id, c.to]));
+      void queryClient.cancelQueries({ queryKey: [table] });
+      queryClient.setQueryData<{ id: string; sort_order?: number }[]>([table], (old) =>
+        old?.map(item => (to.has(item.id) ? { ...item, sort_order: to.get(item.id) } : item))
+      );
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
       const results = await Promise.all(
         changed.map(c =>
