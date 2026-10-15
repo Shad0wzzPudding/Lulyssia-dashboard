@@ -101,6 +101,14 @@ Checked against the code, not run against the live project. Most serious first.
 The 13 commits from b1a895c to a4f4e29. Typecheck and lint pass. Confirmed findings:
 - [x] Low: LINE Settings can still briefly show the old value of a switch: a reload that started just before the switch was flipped still finishes and overwrites it (the new check only stops reloads from starting while saving). The saved value is right; the screen corrects on the next reload. Suggest: ignore a reload's result if a switch was saved while it was running (e.g. a counter checked when it finishes)
 
+## Cloud review (15 Oct 2026)
+Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`. Summary at the end of the run.
+
+### Findings
+- [x] Medium: Undoing an edit in Recent Changes moves the item back to its old place in "User sort" and can undo a later drag without saying so. Undo put back the item's whole saved row, including its order number, but an edit never changes the order (drags are their own entries). Example: edit task A, drag task C to the top, then undo A's edit: A and C both get number 0 and A jumps back above C (shown on a local copy of the database). Done: undoing an edit keeps the item's current place; undoing a delete still puts it back where it was (migration `20261015000004_revert_keeps_order.sql`)
+
+### Rounds log
+
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 
