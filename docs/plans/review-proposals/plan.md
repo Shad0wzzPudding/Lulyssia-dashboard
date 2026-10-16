@@ -24,7 +24,18 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Problem:** on the Interests page the ⋮⋮ grab icon shows on unpinned cards only when the sort is not
   "User sort" (where they can't be dragged), and is hidden in "User sort" (where the list shows its own
   handle). The condition looks reversed (`sort !== 'user'` in `renderUnpinnedCard`).
-- **Decision:** Not decided yet
+- **Decision:** Remove the ⋮⋮ icon from the unpinned cards.
+- **Branch:** `plan/review-proposals/1-interest-drag-icon`
+- **What it does:** unpinned interest cards no longer show the grab icon in any sort. In "User sort" the
+  drag list's own handle still shows where to drag.
+- **Done when:**
+  - [ ] the `GripVertical` icon line in `renderUnpinnedCard` (InterestsPage.tsx) is gone, and the
+    unused import with it if nothing else uses it
+  - [ ] "User sort" on Interests still shows the list's handle and dragging still works
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the Interests page in "User sort" and in another sort.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 2. About page 5px too wide on 320px phones
 - **Problem:** the slanted About card sticks out on the right of a 320px screen.
