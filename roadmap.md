@@ -104,12 +104,12 @@ The 13 commits from b1a895c to a4f4e29. Typecheck and lint pass. Confirmed findi
 ## Cloud review (15 Oct 2026)
 Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 
-**Summary (kept up to date during the run).**
+**Summary.**
 - Checks used: `npx tsc --noEmit -p tsconfig.app.json`, `npx eslint`, `npm run build`, `deno check` on every edge function (Deno 2.1.4 in a scratch folder), all migrations replayed on a local Postgres 16 (with stand-ins for Supabase's auth, storage, cron and vault), the real webhook and 08:00 functions run under Deno with LINE and the database faked, and the app run in a local browser with every backend request answered by test data (nothing reached the live project).
 - Phase 1: the 37 commits waiting in REVIEW.md (`a4f4e29..36c0c12`) were reviewed; 1 bug found and fixed.
-- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass and extra angles (long words on phones, double clicks, keyboard use, the installable app): 46 rounds so far.
+- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass and extra angles (long words on phones, double clicks, keyboard use, the installable app, iPhone screen edges, failed saves, many items, offline use, access rules): 51 rounds. Stopped after rounds 47–51 found nothing new, three of them (49–51) on parts not looked at before in this run.
 - Results: 25 fixed (24 fix commits and a README update), 11 proposals waiting for a decision (marked `Needs decision` below).
-- To apply before merging: migrations `20261015000004_revert_keeps_order.sql`, `20261015000005_line_links_no_delete.sql` and `20261016000000_daily_tasks_keep_order.sql`. No edge function changed, so nothing to deploy there; the site changes go out with the next Vercel deploy.
+- To apply before merging: migrations `20261015000004_revert_keeps_order.sql`, `20261015000005_line_links_no_delete.sql` and `20261016000000_daily_tasks_keep_order.sql` (in that order). No edge function changed, so nothing to deploy there; the site changes go out with the next Vercel deploy.
 
 ### Findings
 - [x] Medium: Undoing an edit in Recent Changes moves the item back to its old place in "User sort" and can undo a later drag without saying so. Undo put back the item's whole saved row, including its order number, but an edit never changes the order (drags are their own entries). Example: edit task A, drag task C to the top, then undo A's edit: A and C both get number 0 and A jumps back above C (shown on a local copy of the database). Done: undoing an edit keeps the item's current place; undoing a delete still puts it back where it was (migration `20261015000004_revert_keeps_order.sql`)
@@ -198,6 +198,11 @@ Second pass (fresh eyes, largest areas first):
 - Round 44 (Opening the app offline): checked in a browser opening the app with no connection and a sign-in older than an hour, for 60 seconds, then the connection coming back after 15 seconds; found 1 fixed
 - Round 45 (Sign-in fields): read the inputs in Auth.tsx (types, labels and autofill hints for email, current and new passwords); found no new bug
 - Round 46 (Dates in the forms): read the start and deadline fields of the task and event forms and what an end before the start does on Home, the In progress card and LINE; found 1 proposed
+- Round 47 (Home's calendar): read how the calendar marks starts and deadlines and hides dates; found no new bug
+- Round 48 (Sorting): read sortItems again for titles in Thai and the date sorts (they compare the stored text, which only misorders two items within the same second); found no new bug
+- Round 49 (About page): read AboutPage.tsx and AboutLulyssiaCard.tsx; found no new bug
+- Round 50 (Access rules of every table and the files): listed on a local Postgres every table's access rules and what a signed-in user may do (rows can't be read, written or handed to another account; the record of sent LINE messages is read-only), the attachment folder rules, and how the LINE functions sign photo links (only from the owner's folder); found no new bug
+- Round 51 (README's function table): compared it with the functions' own sign-in checks and supabase/config.toml; found no new bug
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
