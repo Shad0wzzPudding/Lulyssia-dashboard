@@ -54,7 +54,24 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 3. Page-change train and the device's "reduce motion" setting
 - **Problem:** with "reduce motion" on, the drawer's flashing slash is off, but the train crowd still
   slides across the whole screen.
-- **Decision:** Not decided yet
+- **Decision:** When the device asks for reduced motion, skip the train.
+- **Branch:** `plan/review-proposals/3-reduce-motion-train`
+- **What it does:** with the device's "reduce motion" setting on, page changes behave as if Settings'
+  "Page transitions" switch were off: no train crowd and no train sound. In Settings that switch shows as
+  off and can't be turned on, with a short note, the same way "Reduce flashing" already does ("Your
+  device asks for less motion, so…").
+- **Rules decided:** the saved switch value isn't changed; turning the device setting off brings the
+  owner's own choice back.
+- **Done when:**
+  - [ ] with reduced motion emulated (browser dev tools, prefers-reduced-motion: reduce), changing page
+    shows no train and plays no train sound
+  - [ ] without it, the train works as before and follows the Settings switch
+  - [ ] Settings shows the switch off and disabled with the note while reduced motion is on
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** a page change with the device's reduce-motion setting on and off, and the
+  note in Settings → Animating menu.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 4. Double-click on "Undo Clear" opens "Clear" again
 - **Problem:** after Undo (Tasks' Clear Completed, Events' Clear Past) the Clear button appears exactly
