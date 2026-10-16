@@ -28,6 +28,8 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `812572a` | Fix : Screen readers name the LINE switches, tag buttons and the back-to-top button |
+| `5f8a535` | Fix : Confirm windows wrap between words, and a long nickname fits the welcome greeting |
 | `7e5c679` | Fix : Daily tasks keep their order from one day to the next (needs migration 20261016000000_daily_tasks_keep_order.sql) |
 | `8495bbd` | Fix : On iPhones the corner buttons stay clear of the home bar in the installed app |
 | `2f00005` | Fix : The undo and unpin handles on Home work from the keyboard |
