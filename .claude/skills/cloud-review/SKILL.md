@@ -27,6 +27,11 @@ These protect the live app and the owner's control over it, so treat them as har
   merges after checking.
 - **Push often.** Push after every commit or every few. A cloud session can stop at any moment when the
   tokens run out, and unpushed work is lost.
+- **Keep the history about the code.** The roadmap line for a fix goes in the fix's own commit. Notes
+  that aren't part of a fix (proposals, the rounds log) go in one `Docs :` commit every few rounds, and
+  REVIEW.md is updated only when Phase 1 ends and when you stop. A history where half the commits only
+  update notes is hard for the owner to read and review (one run had 21 notes-only commits beside 24
+  fixes).
 - **Nothing outward-facing.** Don't deploy, apply migrations to the live database, write to the live
   project, or read, print or ask for secrets (that includes the cron secret `line_cron_secret` /
   `LINE_CRON_SECRET`). You may write new migration files and change edge functions; the owner applies
@@ -65,8 +70,12 @@ without asking.
   finding:
   - fixed: `- [x] <High|Medium|Low>: <plain explanation>. Done: <what changed> (<commit>)`. Tick it in the
     same commit as the fix.
-  - proposed: `- [ ] <High|Medium|Low>: <plain explanation>. Needs decision: <options, recommendation>`
-  - Under the section, keep a `### Rounds log` (format in Phase 2).
+  - proposed: `- [ ] <High|Medium|Low>: <plain explanation>. Needs decision: <options, recommendation>.
+    Size: <small|medium|large><, needs a preview>`. The size (small: under an hour, medium: a few
+    hours, large: more) and whether the choice is easier to make by looking at a preview let the owner
+    plan the decisions and the building.
+- **docs/reviews/<date>-cloud-review.md:** the rounds log (format in Phase 2). It's long and only
+  matters for checking the run, so it stays out of roadmap.md; the roadmap section links to it.
 - **REVIEW.md:** follow the plan in the comment at its top, with one exception. That plan says to ask
   before reviewing a large waiting list, but nobody can answer, so review all of it.
 
@@ -78,7 +87,7 @@ without asking.
    security problems (row level security gaps, functions anyone can call without a check), performance
    problems and clean-ups worth doing.
 3. Fix or propose each finding as above.
-4. Then update REVIEW.md in a `Docs :` commit:
+4. Then update REVIEW.md in a `Docs :` commit (together with any proposals from this phase):
    - set "Last reviewed" to the newest commit you reviewed;
    - clear the waiting list;
    - add a "Review history" line (date, range, number of commits, result);
@@ -108,7 +117,16 @@ Run rounds until you run out of tokens, or until three rounds in a row find no n
    14. Phone layouts (360-430px) and accessibility
    15. Time zones and dates
 
-   Once all are covered, start a second pass with fresh eyes, taking the areas with the most code first.
+   Once all are covered, do a second pass by angle instead of by area: each angle cuts across every
+   page, and these found real bugs before:
+   - long unbroken words (web addresses, emails, one-word names) on 320-430px phones;
+   - double clicks and double Enter on every button and form;
+   - keyboard only (Tab, Enter, Space, Esc) and screen reader names;
+   - the installed app: no address bar or reload, iPhone status bar and home bar, offline start;
+   - failed and slow saves: what happens to what was typed, and to the screen;
+   - many items (hundreds of tasks): speed and layout;
+   - access rules: what a signed-in user could do through the database API that the app never does.
+   Then go back to the areas with the most code, with fresh eyes.
 2. Read every file in the area in full, plus the code it calls.
 3. Check it concretely:
    - typecheck, lint and `npm run build`;
@@ -120,7 +138,7 @@ Run rounds until you run out of tokens, or until three rounds in a row find no n
 4. Count only bugs you can show: a failing script or query, or an exact code path with the input that
    triggers it. Style preferences and "might be nicer" ideas aren't bugs. Leave them out.
 5. Fix or propose each bug, commit, push.
-6. Log the round under `### Rounds log`:
+6. Log the round in docs/reviews/<date>-cloud-review.md:
    `- Round N (<area>): read <files>; checked <what you did, briefly>; found <X fixed, Y proposed>`, or
    `found no new bug`.
 
@@ -137,9 +155,9 @@ is genuinely clean, not to give an easy way out. So:
 
 Whether you finish or run low on tokens, keep enough budget for this:
 
-1. Everything is committed and pushed.
-2. A short summary sits at the top of the roadmap section:
-   - rounds run, bugs fixed, proposals waiting;
+1. Everything is committed and pushed, including the last notes commit.
+2. A short summary sits at the top of the roadmap section, with a link to the rounds log:
+   - rounds run, bugs fixed, proposals waiting (with their sizes added up);
    - migrations to apply and functions to deploy, by file and function name;
    - why you stopped: three clean rounds, or out of tokens, and which area you were on.
-3. Your own commits are in REVIEW.md's waiting list.
+3. REVIEW.md lists all your own commits in its waiting list, newest first.
