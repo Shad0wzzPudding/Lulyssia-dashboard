@@ -168,7 +168,9 @@ const Index = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">Something went wrong loading your dashboard</p>
-          <p className="text-sm text-muted-foreground">Please refresh the page to try again</p>
+          {/* The installed app has no reload button; it also tries again by itself once back online */}
+          <p className="text-sm text-muted-foreground mb-4">Check your connection, then try again</p>
+          <Button onClick={() => queryClient.refetchQueries({ type: 'active' })}>Try again</Button>
         </div>
       </div>
     );
