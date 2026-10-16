@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `a454fe6` | Fix : On iPhones the header, pop-up messages and Select mode banner start below the status bar |
 | `812572a` | Fix : Screen readers name the LINE switches, tag buttons and the back-to-top button |
 | `5f8a535` | Fix : Confirm windows wrap between words, and a long nickname fits the welcome greeting |
 | `7e5c679` | Fix : Daily tasks keep their order from one day to the next (needs migration 20261016000000_daily_tasks_keep_order.sql) |
