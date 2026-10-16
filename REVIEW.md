@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `8495bbd` | Fix : On iPhones the corner buttons stay clear of the home bar in the installed app |
 | `2f00005` | Fix : The undo and unpin handles on Home work from the keyboard |
 | `50359b1` | Fix : Retyping a repeating task's "Every N" number saves the number typed (3, not 13) |
 | `d11a092` | Fix : Long titles in the calendar details and a long LINE name in Settings fit a narrow phone |
