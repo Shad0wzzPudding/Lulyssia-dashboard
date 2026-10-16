@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 
 | Commit | What |
 | --- | --- |
+| `a5b2994` | Fix : Opening the app offline says it's still connecting instead of only spinning |
 | `4d09c7f` | Fix : The "couldn't load your dashboard" screen has a Try again button |
 | `a454fe6` | Fix : On iPhones the header, pop-up messages and Select mode banner start below the status bar |
 | `812572a` | Fix : Screen readers name the LINE switches, tag buttons and the back-to-top button |
