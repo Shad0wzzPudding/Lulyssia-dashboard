@@ -103,14 +103,14 @@ export const LulyssiaConfirmDialog = ({
               className="w-20 h-20 object-contain animate-bounce"
             />
           </div>
-          <AlertDialogTitle className="text-xl text-primary">
+          <AlertDialogTitle className="text-xl text-primary [overflow-wrap:anywhere]">
             {fillNames(lulyssiaMessage.text, names)}
           </AlertDialogTitle>
           <div className="py-3 min-w-0 w-full">
-            <p className="text-base font-semibold text-foreground break-all">
+            <p className="text-base font-semibold text-foreground [overflow-wrap:anywhere]">
               {title}
             </p>
-            <AlertDialogDescription className="text-sm text-muted-foreground mt-2 break-all max-h-40 overflow-y-auto">
+            <AlertDialogDescription className="text-sm text-muted-foreground mt-2 [overflow-wrap:anywhere] max-h-40 overflow-y-auto">
               {description}
             </AlertDialogDescription>
           </div>

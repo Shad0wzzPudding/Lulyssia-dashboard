@@ -76,7 +76,7 @@ export const WelcomeMessage = () => {
         />
       </div>
       <h1 className="text-3xl md:text-5xl font-bold mb-4 flex flex-wrap items-center justify-center gap-2 min-h-[2.5em]">
-        <span className="bg-gradient-to-r from-welcome-primary to-welcome-secondary bg-clip-text text-transparent">
+        <span className="min-w-0 max-w-full bg-gradient-to-r from-welcome-primary to-welcome-secondary bg-clip-text text-transparent [overflow-wrap:anywhere]">
           {displayedText}
           {showCursor && (
             <span className="inline-block w-[3px] h-[1em] bg-welcome-primary ml-1 animate-pulse align-middle" />
