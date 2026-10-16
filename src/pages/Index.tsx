@@ -320,6 +320,8 @@ const Index = () => {
                 variant="default"
                 size="icon"
                 className="rounded-full shadow-lg"
+                aria-label="Back to top"
+                title="Back to top"
                 onClick={() => {
                   // Ignore extra clicks while the cut-in is still on screen
                   if (cutInPlaying.current) return;

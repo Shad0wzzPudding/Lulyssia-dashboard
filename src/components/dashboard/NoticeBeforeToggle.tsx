@@ -24,7 +24,7 @@ export const NoticeBeforeToggle = ({
           LINE sends a heads-up at 08:00 the day before it starts or is due (turn "Day-before notice" on in Settings)
         </p>
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label="Notice before" />
     </div>
   );
 };

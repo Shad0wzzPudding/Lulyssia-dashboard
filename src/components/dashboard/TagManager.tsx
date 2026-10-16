@@ -50,6 +50,7 @@ const ColorPalette = ({ value, onChange }: { value: string; onChange: (c: string
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label="Custom color"
         className="absolute inset-0 opacity-0 cursor-pointer"
       />
     </label>
@@ -92,10 +93,10 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
           >
             {count} {count === 1 ? 'item' : 'items'}
           </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100" onClick={() => setEditing(true)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100" onClick={() => setEditing(true)} aria-label={`Rename tag ${tag.name}`} title="Rename">
             <Pencil size={13} />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-60 group-hover:opacity-100" onClick={() => onDelete(tag)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-60 group-hover:opacity-100" onClick={() => onDelete(tag)} aria-label={`Delete tag ${tag.name}`} title="Delete">
             <Trash2 size={13} />
           </Button>
         </div>
@@ -110,6 +111,7 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
+          aria-label="Tag name"
           className="h-8 text-sm"
           autoFocus
           onKeyDown={(e) => {
@@ -117,10 +119,10 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
             if (e.key === 'Escape') cancel();
           }}
         />
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={save} disabled={!name.trim()}>
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={save} disabled={!name.trim()} aria-label="Save tag" title="Save">
           <Check size={14} />
         </Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={cancel}>
+        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={cancel} aria-label="Cancel" title="Cancel">
           <X size={14} />
         </Button>
       </div>

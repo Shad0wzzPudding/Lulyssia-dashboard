@@ -320,7 +320,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
                 <p className="text-sm font-medium">Daily message</p>
                 <p className="text-xs text-muted-foreground">Sent at 08:00 Thai time</p>
               </div>
-              <Switch checked={link.is_enabled} onCheckedChange={toggleEnabled} disabled={!link.line_user_id} />
+              <Switch checked={link.is_enabled} onCheckedChange={toggleEnabled} disabled={!link.line_user_id} aria-label="Daily message" />
             </div>
 
             <div className="flex items-center justify-between gap-3">
@@ -334,6 +334,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
                 checked={link.reminders_enabled}
                 onCheckedChange={toggleReminders}
                 disabled={!link.line_user_id}
+                aria-label="Start reminders"
               />
             </div>
 
@@ -348,6 +349,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
                 checked={link.notice_enabled}
                 onCheckedChange={toggleNotice}
                 disabled={!link.line_user_id}
+                aria-label="Day-before notice"
               />
             </div>
 
@@ -362,6 +364,7 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
                 checked={link.overdue_enabled}
                 onCheckedChange={toggleOverdue}
                 disabled={!link.line_user_id}
+                aria-label="Missed-deadline nudges"
               />
             </div>
 
