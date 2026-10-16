@@ -39,7 +39,17 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 2. About page 5px too wide on 320px phones
 - **Problem:** the slanted About card sticks out on the right of a 320px screen.
-- **Decision:** Not decided yet
+- **Decision:** Fix it on screens narrower than about 360px only.
+- **Branch:** `plan/review-proposals/2-about-narrow-phones`
+- **What it does:** below about 360px the About card gets a little less tilt or side margin (whichever
+  keeps it closest to its current look) so the page fits the screen. Wider screens look exactly the same.
+- **Done when:**
+  - [ ] at 320px the About page is no wider than the screen (document scroll width ≤ 320)
+  - [ ] at 360px, 390px and a computer width the card looks unchanged (same tilt and margins)
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the About page on a narrow phone (or a 320px browser window).
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 3. Page-change train and the device's "reduce motion" setting
 - **Problem:** with "reduce motion" on, the drawer's flashing slash is off, but the train crowd still
