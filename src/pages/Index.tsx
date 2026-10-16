@@ -25,6 +25,24 @@ import { playTriggerSound, preloadTriggerSound, playTrainSound, preloadTrainSoun
 import type { User, Session } from '@supabase/supabase-js';
 import { useUserNames } from '@/hooks/useUserNames';
 
+/**
+ * Shown under a loading spinner once it has taken a while. Opened offline with an expired
+ * sign-in, the check keeps retrying until the connection is back, which looked stuck.
+ */
+const SlowConnectionHint = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShow(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, []);
+  if (!show) return null;
+  return (
+    <p className="mt-2 max-w-sm px-4 text-sm text-muted-foreground">
+      Still connecting... Check your internet connection. It carries on by itself once you're back online.
+    </p>
+  );
+};
+
 const Index = () => {
   const [activePage, setActivePage] = useState<NavigationPage>('home');
   const { names } = useUserNames();
@@ -143,6 +161,7 @@ const Index = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
+          <SlowConnectionHint />
         </div>
       </div>
     );
@@ -158,6 +177,7 @@ const Index = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your dashboard...</p>
+          <SlowConnectionHint />
         </div>
       </div>
     );
