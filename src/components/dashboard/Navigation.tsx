@@ -286,7 +286,7 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
             animate="show"
             exit="hidden"
             variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-            className="fixed right-3 bottom-24 z-[60] flex items-end sm:right-6"
+            className="fixed right-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] flex items-end sm:right-6"
           >
             <motion.ul
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } } }}
@@ -376,7 +376,7 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
         aria-expanded={open}
         aria-controls="main-navigation"
         title={open ? 'Close menu' : 'Menu'}
-        className="fixed right-6 bottom-6 z-[60] h-14 w-14 rounded-full border-2 border-foreground/80 shadow-[4px_4px_0_0_hsl(var(--foreground)/0.8)] transition-transform hover:scale-105 [&_svg]:size-6"
+        className="fixed right-6 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[60] h-14 w-14 rounded-full border-2 border-foreground/80 shadow-[4px_4px_0_0_hsl(var(--foreground)/0.8)] transition-transform hover:scale-105 [&_svg]:size-6"
       >
         {open ? <X /> : <MessageCircle />}
       </Button>

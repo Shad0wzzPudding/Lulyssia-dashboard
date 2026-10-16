@@ -107,8 +107,8 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 **Summary (kept up to date during the run).**
 - Checks used: `npx tsc --noEmit -p tsconfig.app.json`, `npx eslint`, `npm run build`, `deno check` on every edge function (Deno 2.1.4 in a scratch folder), all migrations replayed on a local Postgres 16 (with stand-ins for Supabase's auth, storage, cron and vault), the real webhook and 08:00 functions run under Deno with LINE and the database faked, and the app run in a local browser with every backend request answered by test data (nothing reached the live project).
 - Phase 1: the 37 commits waiting in REVIEW.md (`a4f4e29..36c0c12`) were reviewed; 1 bug found and fixed.
-- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass and extra angles (long words on phones, double clicks, keyboard use, the installable app): 32 rounds so far.
-- Results: 18 fixed (17 fix commits and a README update), 7 proposals waiting for a decision (marked `Needs decision` below).
+- Phase 2: every area in the skill's list covered once (rounds 1–15), then a second pass and extra angles (long words on phones, double clicks, keyboard use, the installable app): 33 rounds so far.
+- Results: 19 fixed (18 fix commits and a README update), 7 proposals waiting for a decision (marked `Needs decision` below).
 - To apply before merging: migrations `20261015000004_revert_keeps_order.sql` and `20261015000005_line_links_no_delete.sql`. No edge function changed, so nothing to deploy there; the site changes go out with the next Vercel deploy.
 
 ### Findings
@@ -137,6 +137,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-15`.
 - [x] Medium: Changing a repeating task's "Every N" number by deleting it and typing a new one saves the wrong number: the box refills with 1 the moment it is empty, so Backspace then 3 gives 13 ("every 13 weeks" instead of 3), and typing after the 1 does the same. Seen in a browser. Done: the box may be empty while typing; saving still turns an empty box into 1, and the browser's own check asks for a whole number of at least 1 instead of 0 or 2.6
 - [ ] Low: Two sort choices do nothing useful: "Completed last" on Tasks and "Pinned first" on Interests. Those pages already show completed tasks and pinned interests in their own sections, so within each section every item ties and the list just keeps the order it was loaded in (deadline for tasks, User sort for interests). Needs decision: (a) remove the two choices (recommended); or (b) keep them and give them a second key (e.g. then by deadline)
 - [x] Low: The new swipe handles on Home ("Pull left to undo" on Recent Changes, "Pull right to unpin" on Main Focus) are announced as buttons but can't be reached with Tab or pressed with Enter, so without a mouse or touch there's no way to undo a change or unpin from Home. Done: both handles can be focused and pressed with Enter or Space, which does the same as a full swipe (the 10-second Undo still appears; a locked entry explains itself)
+- [x] Low: In the installed app on an iPhone with no home button, the round menu button, the scroll-to-top button, the select-mode action bar and Lulyssia's corner picture sit partly under the home bar at the bottom of the screen: the app asks to fill the whole screen (`viewport-fit=cover` with a see-through status bar) but these were placed a fixed distance from the very bottom. Done: they now sit that distance above the home bar's safe area; on screens without one nothing moves (checked in a browser; not tried on a real iPhone)
 
 ### Rounds log
 Areas, in the order of `.claude/skills/cloud-review`: Home; Tasks (daily and repeating); Events; Interests; Settings; navigation, drawer and transitions; select mode, search, sort and filters; Recent Changes and undo; attachments and storage clean-up; the editor's formatting; data hooks and caching; LINE functions; migrations, access rules and cron; phone layouts and accessibility; time zones and dates.
@@ -173,6 +174,7 @@ Second pass (fresh eyes, largest areas first):
 - Round 30 (Long words on phones): checked in a browser every page at 360px with a long one-word tag, and with a web address in every task, event, interest and daily-task description; then at 320px a link title in Home's calendar details and a long LINE profile name in Settings; found 3 fixed
 - Round 31 (Form inputs): checked in a browser retyping the repeating task's "Every N" box (Backspace then a digit, select all, typing at the end) and what each case saves, and the sort choices each page offers against how the page groups its items; found 1 fixed, 1 proposed
 - Round 32 (Keyboard use of the new swipe handles): checked in a browser Tab and Enter/Space on the undo handle (locked and unlocked) and the unpin handle; found 1 fixed
+- Round 33 (iPhone safe area): read index.html's viewport and status bar settings and every fixed element pinned to the bottom of the screen; checked in a browser that their place is unchanged where there is no safe area; found 1 fixed
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.

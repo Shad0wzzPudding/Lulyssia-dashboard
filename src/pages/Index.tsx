@@ -283,7 +283,7 @@ const Index = () => {
           <>
             {/* Chibi Lulyssia peeking from left edge */}
             <motion.div
-              className="fixed bottom-20 left-0 w-20 h-20 pointer-events-none z-50"
+              className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 w-20 h-20 pointer-events-none z-50"
               initial={{ x: -60, opacity: 0, scale: 0.8 }}
               animate={{ x: -8, opacity: 1, scale: 1 }}
               exit={{ x: -60, opacity: 0, scale: 0.8 }}
@@ -314,7 +314,7 @@ const Index = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ duration: 0.3, ease: 'easeOut', delay: 0.15 }}
-              className="fixed bottom-6 left-6 z-50"
+              className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-6 z-50"
             >
               <Button
                 variant="default"

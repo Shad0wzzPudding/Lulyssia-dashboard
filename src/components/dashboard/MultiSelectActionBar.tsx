@@ -33,7 +33,7 @@ export const MultiSelectActionBar = ({
           // Phones: sits above the corner buttons; wider screens: between them.
           // z-[65]: above the corner sticker and the open menu, below the page transition (z-[70]).
           // P5 panel: sharp corners, white border, hard cyan offset shadow (like the cards and menu).
-          className="fixed inset-x-0 bottom-24 z-[65] mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-3 overflow-x-auto border-2 border-foreground/80 bg-card px-3 py-2.5 shadow-[5px_5px_0_0_hsl(var(--primary))] sm:bottom-6 sm:max-w-[calc(100vw-12rem)]"
+          className="fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[65] mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-3 overflow-x-auto border-2 border-foreground/80 bg-card px-3 py-2.5 shadow-[5px_5px_0_0_hsl(var(--primary))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:max-w-[calc(100vw-12rem)]"
         >
           {/* Count in a slanted cyan block, like the page titles */}
           <span className="shrink-0 -skew-x-12 bg-primary px-3 py-1">
