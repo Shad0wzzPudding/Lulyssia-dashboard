@@ -79,7 +79,7 @@ export const SelectModeOverlay = ({ visible, onExit }: { visible: boolean; onExi
           {/* "SELECT MODE" banner, dropping in with a slight tilt.
               Centered by a full-width flex wrapper, because framer-motion owns the
               banner's transform (a translate-x centering class would be overwritten). */}
-          <div className="absolute inset-x-0 top-6 flex justify-center">
+          <div className="absolute inset-x-0 top-[calc(1.5rem+env(safe-area-inset-top))] flex justify-center">
             <motion.div
               initial={{ y: -80, rotate: -8, opacity: 0 }}
               animate={{ y: 0, rotate: -3, opacity: 1 }}

@@ -245,8 +245,8 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen ${isAbout ? 'md:overflow-y-clip' : ''}`}>
-      {/* Top Navigation with User Info */}
-      <div className="border-b bg-card">
+      {/* Top Navigation with User Info (below an iPhone's see-through status bar in the installed app) */}
+      <div className="border-b bg-card pt-[env(safe-area-inset-top)]">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-start h-16">
             <Navigation
