@@ -183,7 +183,32 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Problem:** the add/edit form closes as soon as Create or Update is pressed; when the save fails
   (dropped connection, server error) the text and choices are gone. The daily list's quick add clears
   its box the same way.
-- **Decision:** Not decided yet
+- **Decision:** Forms stay open until the save succeeds; on failure everything typed stays.
+- **Branch:** `plan/review-proposals/9-keep-form-on-failed-save`
+- **What it does:** pressing Create or Update shows "Saving…" on that button (disabled) until the
+  database answers. Success: the form closes and the usual message shows, as now. Failure: the form
+  stays open with every field as it was, and the message says "Couldn't save. Check your connection and
+  press Create again." (or "Update"). The daily list's quick-add box keeps its text (and time) until the
+  task is saved, and keeps it if saving fails.
+- **Rules decided:**
+  - applies to the add/edit forms of Tasks, Events and Interests (including copies made through the
+    form) and to the daily tasks' quick add and edit window;
+  - Cancel and closing the form still work while saving; the save then finishes on its own, and a
+    failure only shows the message (closing means letting go of the text);
+  - the existing "Uploading file…" wait stays as it is, before "Saving…";
+  - sounds stay as now (played when the button is pressed);
+  - a double press can't save twice (the button is disabled while saving).
+- **Done when:**
+  - [ ] with the save request made to fail (offline, or a stubbed error), the form stays open with all
+    fields kept and the new message, on Tasks, Events and Interests, for both create and edit
+  - [ ] with it succeeding, the form closes and behaves as before
+  - [ ] the button shows "Saving…" and can't be pressed twice while the request is out
+  - [ ] the daily quick add keeps its text on failure and clears it on success
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** turn Wi-Fi off on the phone, try to save a task, turn it back on and press
+  Create again.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 10. Tasks page slows down with many tasks
 - **Problem:** every card is redrawn on each search keystroke or tick: about 0.3s per tick at 60 tasks
