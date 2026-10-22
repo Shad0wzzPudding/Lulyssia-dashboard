@@ -97,7 +97,26 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 5. Installed app's "Add Task" shortcut does nothing
 - **Problem:** long-pressing the app icon on Android offers "Add Task", which opens `/?action=add-task`,
   but the app never reads that, so it just shows Home.
-- **Decision:** Not decided yet
+- **Decision:** Make the shortcut open the Tasks page with the new-task form open.
+- **Branch:** `plan/review-proposals/5-add-task-shortcut`
+- **What it does:** opening the app with `?action=add-task` (the "Add Task" shortcut) goes to the Tasks
+  page and opens the empty new-task form, ready to type.
+- **Rules decided:**
+  - signed out: sign-in comes first as usual, then the form opens (if keeping the action through
+    sign-in isn't simple, opening Tasks without the form is acceptable; note it in the log);
+  - `?action=add-task` is removed from the address once handled, so a reload or going back doesn't
+    open the form again;
+  - no page-change train for this jump (it isn't a page change the person made);
+  - any other or unknown `action` is ignored (Home opens as now).
+- **Done when:**
+  - [ ] opening `/?action=add-task` while signed in shows the Tasks page with the new-task form open
+  - [ ] the address no longer has `?action=add-task` afterwards; reloading shows Tasks without the form
+  - [ ] opening `/` and `/?action=something-else` behave as before
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** on an Android phone with the app installed, long-press the icon → Add Task.
+  (On a computer: open `/?action=add-task` in the browser.)
+- **Needs:** nothing (the shortcut is already in public/manifest.json)
+- **Depends on:** nothing
 
 ### 6. Installed app's colours
 - **Problem:** `public/manifest.json` still has template colours: a white launch screen and a blue
