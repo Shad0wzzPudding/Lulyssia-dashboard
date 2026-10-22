@@ -1,8 +1,8 @@
 # Plan: Cloud review proposals
 
-**Status:** Draft <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `2d01ff1` (16 Oct 2026)
-**Decided with the owner on:** 16 Oct 2026 (in progress)
+**Decided with the owner on:** 16 and 22 Oct 2026
 
 ## Goal
 
@@ -243,12 +243,35 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 11. Deadline before the start
 - **Problem:** the task and event forms accept a deadline (or end) before the start, e.g. after moving a
   task's start past a hand-set deadline, so it turns Overdue (and sends a LINE nudge) before it starts.
-- **Decision:** Not decided yet
+- **Decision:** Refuse to save a deadline (or end) before the start.
+- **Branch:** `plan/review-proposals/11-deadline-before-start`
+- **What it does:** in the task and event forms, pressing Create or Update with the deadline before the
+  start shows "The deadline is before the start" under the deadline field and doesn't save. The deadline
+  picker's earliest choice is the start time when a start is set.
+- **Rules decided:**
+  - a deadline equal to the start is allowed; only strictly earlier is refused;
+  - if either date is empty, there's nothing to compare and saving works as now;
+  - the automatic "start + 5 hours" deadline keeps working as now;
+  - an existing item that already has a deadline before its start opens normally, and only needs fixing
+    when it's saved from the form;
+  - the message goes away as soon as the dates are fixed;
+  - Interests (one date) and daily tasks (a time only) are not affected.
+- **Done when:**
+  - [ ] a task and an event with the deadline before the start can't be saved, and show the message
+  - [ ] equal dates, or a missing start or deadline, save as before
+  - [ ] after fixing the dates, saving works without reopening the form
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** open a task, move its start past its deadline and press Update.
+- **Needs:** nothing
+- **Depends on:** nothing (if item 9 is built first, the refusal happens before "Saving…")
 
 ## Questions answered while planning
 
 - **Q:** Where are these from? **A:** The cloud review of 15 Oct 2026, roadmap.md "Cloud review
   (15 Oct 2026)", items marked "Needs decision" (with the evidence for each).
+- **Q:** What happens to those roadmap lines? **A:** Each item's branch ticks its roadmap line and
+  adds "Done: <what changed> (plan review-proposals, item N)", like the other roadmap entries.
+- **Q:** Previews? **A:** None were needed; every item is described in words above.
 
 ## If something isn't covered here
 
@@ -258,4 +281,5 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-Filled in as items are decided.
+Nothing to apply or deploy: no item needs a migration or a function deploy. The site changes go out
+with the next Vercel deploy after merging.
