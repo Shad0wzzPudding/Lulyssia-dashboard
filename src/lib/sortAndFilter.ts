@@ -1,18 +1,23 @@
 import { parseChars } from '@/lib/inlineFormat';
 
-export type SortOption =
-  | 'created_desc'
-  | 'created_asc'
-  | 'deadline_asc'
-  | 'deadline_desc'
-  | 'title_asc'
-  | 'title_desc'
-  | 'tag'
-  | 'pinned_first'
-  | 'completed_last'
-  | 'user';
+const SORT_OPTIONS = [
+  'created_desc',
+  'created_asc',
+  'deadline_asc',
+  'deadline_desc',
+  'title_asc',
+  'title_desc',
+  'tag',
+  'user',
+] as const;
 
-export const sortItems = <T extends { created_at: string; title: string; deadline?: string; is_pinned?: boolean; is_completed?: boolean; tag_ids?: string[]; sort_order?: number }>(
+export type SortOption = (typeof SORT_OPTIONS)[number];
+
+/** True for a sort the menus offer (a saved one may be old, e.g. the removed "Pinned first") */
+export const isSortOption = (value: unknown): value is SortOption =>
+  (SORT_OPTIONS as readonly unknown[]).includes(value);
+
+export const sortItems = <T extends { created_at: string; title: string; deadline?: string; tag_ids?: string[]; sort_order?: number }>(
   items: T[],
   sort: SortOption,
   tagsById?: Record<string, { name: string }>,
@@ -40,10 +45,6 @@ export const sortItems = <T extends { created_at: string; title: string; deadlin
           (ids ?? []).map((id) => tagsById?.[id]?.name).find(Boolean) || '\uffff';
         return firstName(a.tag_ids).localeCompare(firstName(b.tag_ids));
       });
-    case 'pinned_first':
-      return arr.sort((a, b) => Number(!!b.is_pinned) - Number(!!a.is_pinned));
-    case 'completed_last':
-      return arr.sort((a, b) => Number(!!a.is_completed) - Number(!!b.is_completed));
     case 'user':
       return arr.sort((a, b) => {
         const ao = a.sort_order ?? 0;

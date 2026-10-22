@@ -17,8 +17,6 @@ interface Props {
   onSortChange: (s: SortOption) => void;
   filterTagIds: string[];
   onFilterChange: (ids: string[]) => void;
-  showPinned?: boolean;
-  showCompleted?: boolean;
   search?: string;
   onSearchChange?: (v: string) => void;
   searchPlaceholder?: string;
@@ -31,8 +29,6 @@ export const SortAndFilterBar = ({
   onSortChange,
   filterTagIds,
   onFilterChange,
-  showPinned,
-  showCompleted,
   search,
   onSearchChange,
   searchPlaceholder = 'Search…',
@@ -97,8 +93,6 @@ export const SortAndFilterBar = ({
           <SelectItem value="title_desc">Title Z–A</SelectItem>
           <SelectItem value="tag">By tag</SelectItem>
           <SelectItem value="user">User sort (drag to arrange)</SelectItem>
-          {showPinned && <SelectItem value="pinned_first">Pinned first</SelectItem>}
-          {showCompleted && <SelectItem value="completed_last">Completed last</SelectItem>}
         </SelectContent>
       </Select>
 

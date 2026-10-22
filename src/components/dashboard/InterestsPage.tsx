@@ -483,7 +483,6 @@ export const InterestsPage = ({
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search interests…"
-          showPinned
         />
       )}
       <>

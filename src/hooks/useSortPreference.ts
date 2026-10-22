@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { SortOption } from '@/lib/sortAndFilter';
+import { isSortOption, type SortOption } from '@/lib/sortAndFilter';
 
 type PageKey = 'tasks' | 'events' | 'interests';
 
@@ -25,9 +25,10 @@ export function useSortPreference(page: PageKey) {
         .eq('user_id', user.id)
         .maybeSingle();
       const prefs = (data?.prefs ?? {}) as Record<string, unknown>;
-      const sortPrefs = (prefs.sort ?? {}) as Record<string, SortOption | undefined>;
+      const sortPrefs = (prefs.sort ?? {}) as Record<string, unknown>;
       const saved = sortPrefs[page];
-      if (saved && !cancelled && !touched.current) setSortState(saved);
+      // A sort that was removed (or anything unknown) is ignored: the page keeps the default
+      if (isSortOption(saved) && !cancelled && !touched.current) setSortState(saved);
       loaded.current = true;
     })();
     return () => { cancelled = true; };
