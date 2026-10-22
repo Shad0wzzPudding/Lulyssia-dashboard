@@ -26,6 +26,7 @@ import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './Attachm
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
+import { useBriefHold } from '@/hooks/useBriefHold';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
@@ -73,6 +74,9 @@ export const TasksPage = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clearedTasks, setClearedTasks] = useState<Task[]>([]);
   const [showUndo, setShowUndo] = useState(false);
+  // After Undo, the Clear button comes back where Undo was: keep it out of reach for a second so a
+  // double click on Undo can't open the "Clear …?" question again
+  const [clearHeld, holdClear] = useBriefHold(1000);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -129,6 +133,7 @@ export const TasksPage = ({
     onRestoreTasks(clearedTasks);
     setShowUndo(false);
     setClearedTasks([]);
+    holdClear();
     toast({
       title: "Tasks restored! 💠",
       description: "Lulyssia stole them back~",
@@ -493,11 +498,14 @@ export const TasksPage = ({
               Undo Clear
             </Button>
           )}
-          {clearableTasks.length > 0 && !showUndo && (
+          {(clearableTasks.length > 0 || clearHeld) && !showUndo && (
             <Button 
               variant="outline"
               onClick={() => setShowClearConfirm(true)}
-              className="text-destructive hover:text-destructive"
+              // While held: its space is kept (nothing around it moves), then it fades in
+              aria-hidden={clearHeld || undefined}
+              tabIndex={clearHeld ? -1 : undefined}
+              className={`text-destructive hover:text-destructive transition-opacity duration-300 ${clearHeld ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
             >
               <Trash size={16} className="mr-2" />
               Clear Completed
