@@ -162,7 +162,22 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 8. Daily task edit window open over midnight
 - **Problem:** Update then saves to yesterday's copy (shows "updated" but the change isn't on today's
   list or tomorrow's routine).
-- **Decision:** Not decided yet
+- **Decision:** Close the edit window with a short note; save nothing to yesterday.
+- **Branch:** `plan/review-proposals/8-daily-edit-over-midnight`
+- **What it does:** when the new day's daily list loads while a daily task's edit window is open, and
+  the task being edited isn't on the new list (it was yesterday's copy), the window closes and a message
+  says: "A new day started, so this edit wasn't saved. Open today's task to edit it." Nothing is saved.
+- **Rules decided:** only for the daily tasks' edit window (src/components/dashboard/DailyTasksSection.tsx).
+  If the person presses Update during the moment the new list is still loading, nothing is saved either
+  (it's already locked then). The message uses the app's usual pop-up message style.
+- **Done when:**
+  - [ ] with the edit window open, switching the day (simulate by changing the list's day / query key)
+    closes it with the message, and no update is sent for yesterday's task
+  - [ ] editing during the same day works as before
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** hard to see for real (needs midnight); reading the message wording is enough.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 9. A failed save loses what was typed
 - **Problem:** the add/edit form closes as soon as Create or Update is pressed; when the save fails
