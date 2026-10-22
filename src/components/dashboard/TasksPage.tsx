@@ -1,6 +1,6 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Task, DailyTask, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
+import { memo, useDeferredValue, useState, useEffect, useMemo, useRef } from 'react';
+import { Task, DailyTask, FormSaveCallbacks, FormSaveMarker, Tag } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,163 @@ interface TasksPageProps {
   onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onDeleteDailyTask: (id: string) => void;
 }
+
+// onLight: the card is white (outside select mode), so use deeper colors that stay readable
+const getStatusColor = (status: string, onLight = false) => {
+  switch (status) {
+    case 'completed': return onLight ? 'text-emerald-700' : 'text-emerald-400 dark:text-emerald-300';
+    case 'overdue': return onLight ? 'text-rose-600' : 'text-rose-400 dark:text-rose-300';
+    default: return onLight ? 'text-sky-700' : 'text-sky-400 dark:text-sky-300';
+  }
+};
+
+const getBorderColor = (status: string) => {
+  switch (status) {
+    case 'completed': return 'border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/10';
+    case 'overdue': return 'border-rose-100 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/10';
+    default: return 'border-sky-100 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/10';
+  }
+};
+
+
+/** What a task card's buttons do. The object stays the same between renders (see TasksPage). */
+/** How many tasks a long section shows at first, and how many more each "Show more" adds */
+const SECTION_PAGE_SIZE = 50;
+
+type TaskCardActions = {
+  cardClick: (task: Task) => void;
+  toggleSelect: (id: string) => void;
+  toggleComplete: (task: Task) => void;
+  copy: (task: Task) => void;
+  edit: (task: Task) => void;
+  remove: (task: Task) => void;
+};
+
+type TaskCardProps = {
+  task: Task;
+  badge?: string;
+  status: 'completed' | 'overdue' | 'pending';
+  isSelecting: boolean;
+  selected: boolean;
+  tagsById: Record<string, Tag>;
+  actions: TaskCardActions;
+};
+
+/**
+ * One task card. Memoized: with many tasks, ticking or editing one (or typing in search) no longer
+ * redraws every other card, only the cards whose task or state changed.
+ */
+const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, selected, tagsById, actions }: TaskCardProps) {
+  const badgeEl = badge === 'overdue'
+    ? <Badge variant="destructive" className="text-xs">Overdue</Badge>
+    : badge === 'completed'
+      ? <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300">Completed</Badge>
+      : null;
+  return (
+    <Card 
+      className={`${getBorderColor(status)} relative transition-all ${
+        cardSurface(isSelecting, selected)
+      } ${selected ? 'ring-2 ring-upcoming-events shadow-lg' : ''}`}
+      onClick={() => actions.cardClick(task)}
+    >
+      <CardContent className="p-4">
+        <div data-card-header className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {isSelecting ? (
+              <Checkbox
+                checked={selected}
+                onCheckedChange={() => actions.toggleSelect(task.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="mt-1"
+              />
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => actions.toggleComplete(task)}
+                aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
+                className="mt-1 p-0 h-6 w-6"
+              >
+                 {task.is_completed ? 
+                   <CheckCircle2 size={20} className="text-emerald-400" /> : 
+                   <Circle size={20} className="text-gray-400" />
+                 }
+              </Button>
+            )}
+            <div className="flex-1 min-w-0">
+              <h4 className={`font-semibold [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                {task.title}
+              </h4>
+              {/* On phones the badge sits under the title, leaving the title the row's width */}
+              {!isSelecting && badgeEl && <div className="mt-1 sm:hidden">{badgeEl}</div>}
+            </div>
+          </div>
+          {!isSelecting && (
+            <div data-card-actions className="flex items-center gap-2 shrink-0">
+              {badgeEl && <div className="hidden sm:block">{badgeEl}</div>}
+              <Button size="sm" variant="outline" onClick={() => actions.copy(task)} aria-label="Copy task" title="Copy">
+                <Copy size={12} />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => actions.edit(task)} aria-label="Edit task" title="Edit">
+                <Edit size={12} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => actions.remove(task)}
+                aria-label="Delete task"
+                title="Delete"
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 size={12} />
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="w-full mt-2">
+                {task.description && (
+                  <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{task.description}</FormattedText></p>
+                )}
+               {task.attachments && task.attachments.length > 0 && (
+                 <div className="mt-2">
+                   <AttachmentsImages attachments={task.attachments} />
+                 </div>
+               )}
+               {task.attachments && task.attachments.length > 0 && (
+                 <div className="mt-2">
+                   <AttachmentsChips attachments={task.attachments} />
+                 </div>
+               )}
+               <div className="space-y-1 mt-2">
+                 {task.start_date ? (
+                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                     <Calendar size={12} />
+                     <span>Start: {format(parseISO(task.start_date), 'MMM dd, yyyy HH:mm')}</span>
+                   </div>
+                 ) : null}
+                 <div className={`flex items-center gap-1 text-sm ${getStatusColor(status, !isSelecting)}`}>
+                   <CalendarClock size={12} />
+                   <span>Due: {task.deadline ? format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm') : 'No deadline'}</span>
+                 </div>
+               </div>
+               {task.tag_ids && task.tag_ids.length > 0 && (
+                 <div className="flex flex-wrap gap-1 mt-2">
+                   {task.tag_ids.map(id => tagsById[id] && <TagChip key={id} tag={tagsById[id]} />)}
+                 </div>
+               )}
+               {task.recurrence_unit && (
+                 <div className="mt-2">
+                   <Badge variant="outline" className="repeat-badge text-xs">
+                     <Repeat size={10} className="mr-1" />
+                     Every {(task.recurrence_interval || 1) > 1 ? `${task.recurrence_interval} ` : ''}{task.recurrence_unit}{(task.recurrence_interval || 1) > 1 ? 's' : ''}
+                   </Badge>
+                 </div>
+               )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
 
 export const TasksPage = ({ 
   tasks, 
@@ -309,9 +466,12 @@ export const TasksPage = ({
   };
 
   const now = new Date();
+  // The search box updates right away; the (slower) list follows just after, so typing never waits
+  // for every card to be redrawn
+  const deferredSearch = useDeferredValue(search);
   const visibleTasks = useMemo(
-    () => sortItems(searchItems(filterByTags(tasks, filterTagIds), search), sort, tagsById),
-    [tasks, filterTagIds, search, sort, tagsById]
+    () => sortItems(searchItems(filterByTags(tasks, filterTagIds), deferredSearch), sort, tagsById),
+    [tasks, filterTagIds, deferredSearch, sort, tagsById]
   );
   // A search or tag filter that hides picked items also unpicks them
   useEffect(() => {
@@ -331,145 +491,49 @@ export const TasksPage = ({
   const upcomingTasks = pendingTasks.filter(task =>
     (!task.deadline || isAfter(parseISO(task.deadline), now)) && !isInProgressTask(task));
 
+  // The cards' buttons, as one object that never changes: the cards can skip redrawing, and each
+  // call still reaches the latest handlers
+  const latestHandlers = useRef({ handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask });
+  latestHandlers.current = { handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask };
+  const cardActions = useMemo<TaskCardActions>(() => ({
+    cardClick: (task) => latestHandlers.current.handleCardClick(task),
+    toggleSelect: (id) => latestHandlers.current.toggle(id),
+    toggleComplete: (task) => latestHandlers.current.handleToggleComplete(task),
+    copy: (task) => latestHandlers.current.handleCopy(task),
+    edit: (task) => latestHandlers.current.handleEdit(task),
+    remove: (task) => {
+      playDeleteSound();
+      latestHandlers.current.onDeleteTask(task.id);
+    },
+  }), []);
+
+  // Long sections show 50 tasks at a time ("Show more" adds 50); back to 50 when the search,
+  // tag filter or sort changes
+  const [shownCounts, setShownCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    setShownCounts({});
+  }, [deferredSearch, filterTagIds, sort]);
+  const renderTaskCard = (task: Task, badge?: string) => (
+    <TaskCard
+      key={task.id}
+      task={task}
+      badge={badge}
+      status={getTaskStatus(task)}
+      isSelecting={isSelecting}
+      selected={isSelected(task.id)}
+      tagsById={tagsById}
+      actions={cardActions}
+    />
+  );
+
   const handleUserReorder = (orderedIds: string[], movedId: string) => {
     onReorder({ table: 'tasks', orderedIds, movedId });
   };
 
-  const getTaskStatus = (task: Task) => {
+  const getTaskStatus = (task: Task): TaskCardProps['status'] => {
     if (task.is_completed) return 'completed';
     if (task.deadline && isBefore(parseISO(task.deadline), now)) return 'overdue';
     return 'pending';
-  };
-
-  // onLight: the card is white (outside select mode), so use deeper colors that stay readable
-  const getStatusColor = (status: string, onLight = false) => {
-    switch (status) {
-      case 'completed': return onLight ? 'text-emerald-700' : 'text-emerald-400 dark:text-emerald-300';
-      case 'overdue': return onLight ? 'text-rose-600' : 'text-rose-400 dark:text-rose-300';
-      default: return onLight ? 'text-sky-700' : 'text-sky-400 dark:text-sky-300';
-    }
-  };
-
-  const getBorderColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/10';
-      case 'overdue': return 'border-rose-100 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/10';
-      default: return 'border-sky-100 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/10';
-    }
-  };
-
-  const renderTaskCard = (task: Task, showBadge?: string) => {
-    const badge = showBadge === 'overdue'
-      ? <Badge variant="destructive" className="text-xs">Overdue</Badge>
-      : showBadge === 'completed'
-        ? <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300">Completed</Badge>
-        : null;
-    const status = getTaskStatus(task);
-    return (
-      <Card 
-        key={task.id} 
-        className={`${getBorderColor(status)} relative transition-all ${
-          cardSurface(isSelecting, isSelected(task.id))
-        } ${isSelected(task.id) ? 'ring-2 ring-upcoming-events shadow-lg' : ''}`}
-        onClick={() => handleCardClick(task)}
-      >
-        <CardContent className="p-4">
-          <div data-card-header className="flex items-start justify-between gap-2">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
-              {isSelecting ? (
-                <Checkbox
-                  checked={isSelected(task.id)}
-                  onCheckedChange={() => toggle(task.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="mt-1"
-                />
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleToggleComplete(task)}
-                  aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
-                  className="mt-1 p-0 h-6 w-6"
-                >
-                   {task.is_completed ? 
-                     <CheckCircle2 size={20} className="text-emerald-400" /> : 
-                     <Circle size={20} className="text-gray-400" />
-                   }
-                </Button>
-              )}
-              <div className="flex-1 min-w-0">
-                <h4 className={`font-semibold [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
-                  {task.title}
-                </h4>
-                {/* On phones the badge sits under the title, leaving the title the row's width */}
-                {!isSelecting && badge && <div className="mt-1 sm:hidden">{badge}</div>}
-              </div>
-            </div>
-            {!isSelecting && (
-              <div data-card-actions className="flex items-center gap-2 shrink-0">
-                {badge && <div className="hidden sm:block">{badge}</div>}
-                <Button size="sm" variant="outline" onClick={() => handleCopy(task)} aria-label="Copy task" title="Copy">
-                  <Copy size={12} />
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(task)} aria-label="Edit task" title="Edit">
-                  <Edit size={12} />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => { playDeleteSound(); onDeleteTask(task.id); }}
-                  aria-label="Delete task"
-                  title="Delete"
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 size={12} />
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="w-full mt-2">
-                  {task.description && (
-                    <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{task.description}</FormattedText></p>
-                  )}
-                 {task.attachments && task.attachments.length > 0 && (
-                   <div className="mt-2">
-                     <AttachmentsImages attachments={task.attachments} />
-                   </div>
-                 )}
-                 {task.attachments && task.attachments.length > 0 && (
-                   <div className="mt-2">
-                     <AttachmentsChips attachments={task.attachments} />
-                   </div>
-                 )}
-                 <div className="space-y-1 mt-2">
-                   {task.start_date ? (
-                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                       <Calendar size={12} />
-                       <span>Start: {format(parseISO(task.start_date), 'MMM dd, yyyy HH:mm')}</span>
-                     </div>
-                   ) : null}
-                   <div className={`flex items-center gap-1 text-sm ${getStatusColor(status, !isSelecting)}`}>
-                     <CalendarClock size={12} />
-                     <span>Due: {task.deadline ? format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm') : 'No deadline'}</span>
-                   </div>
-                 </div>
-                 {task.tag_ids && task.tag_ids.length > 0 && (
-                   <div className="flex flex-wrap gap-1 mt-2">
-                     {task.tag_ids.map(id => tagsById[id] && <TagChip key={id} tag={tagsById[id]} />)}
-                   </div>
-                 )}
-                 {task.recurrence_unit && (
-                   <div className="mt-2">
-                     <Badge variant="outline" className="repeat-badge text-xs">
-                       <Repeat size={10} className="mr-1" />
-                       Every {(task.recurrence_interval || 1) > 1 ? `${task.recurrence_interval} ` : ''}{task.recurrence_unit}{(task.recurrence_interval || 1) > 1 ? 's' : ''}
-                     </Badge>
-                   </div>
-                 )}
-          </div>
-        </CardContent>
-      </Card>
-    );
   };
 
   return (
@@ -749,7 +813,27 @@ export const TasksPage = ({
       )}
 
       {(() => {
-        const renderSection = (items: Task[], badge?: string) =>
+        // `section` names a list shown 50 at a time; without it (Completed) every item is shown
+        const renderSection = (items: Task[], badge?: string, section?: string) => {
+          const limit = section ? (shownCounts[section] ?? SECTION_PAGE_SIZE) : items.length;
+          const shown = items.length > limit ? items.slice(0, limit) : items;
+          const left = items.length - shown.length;
+          return (
+            <>
+              {renderCards(shown, badge)}
+              {left > 0 && section && (
+                <Button
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={() => setShownCounts((prev) => ({ ...prev, [section]: limit + SECTION_PAGE_SIZE }))}
+                >
+                  Show more ({left} left)
+                </Button>
+              )}
+            </>
+          );
+        };
+        const renderCards = (items: Task[], badge?: string) =>
           sort === 'user' ? (
             <DragReorderList
               items={items}
@@ -769,7 +853,7 @@ export const TasksPage = ({
                 <h3 className="text-lg font-semibold text-rose-400 dark:text-rose-300 mb-3">
                   Overdue Tasks ({overdueTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
                 </h3>
-                {renderSection(overdueTasks, 'overdue')}
+                {renderSection(overdueTasks, 'overdue', 'overdue')}
               </div>
             )}
             <DailyTasksSection
@@ -785,14 +869,14 @@ export const TasksPage = ({
                   <Hourglass size={16} />
                   In Progress ({inProgressTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
                 </h3>
-                {renderSection(inProgressTasks)}
+                {renderSection(inProgressTasks, undefined, 'inProgress')}
               </div>
             )}
             <div>
               <h3 className="text-lg font-semibold text-sky-400 dark:text-sky-300 mb-3">
                 Upcoming Tasks ({upcomingTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
               </h3>
-              {renderSection(upcomingTasks)}
+              {renderSection(upcomingTasks, undefined, 'upcoming')}
             </div>
             {completedTasks.length > 0 && (
               <div>
