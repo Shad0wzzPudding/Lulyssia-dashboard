@@ -48,6 +48,8 @@ interface TasksPageProps {
   onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => void;
   onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
   onDeleteDailyTask: (id: string) => void;
+  /** Set (a new number each time) to open the empty new-task form, e.g. from the "Add Task" shortcut */
+  newTaskRequest?: number | null;
 }
 
 export const TasksPage = ({ 
@@ -62,7 +64,8 @@ export const TasksPage = ({
   dailyTasksStale,
   onCreateDailyTask,
   onUpdateDailyTask,
-  onDeleteDailyTask
+  onDeleteDailyTask,
+  newTaskRequest = null,
 }: TasksPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -150,6 +153,13 @@ export const TasksPage = ({
     });
     setEditingTask(null);
   };
+
+  // Asked from outside (the "Add Task" shortcut): open the empty new-task form
+  useEffect(() => {
+    if (newTaskRequest === null) return;
+    resetForm();
+    setIsCreateOpen(true);
+  }, [newTaskRequest]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
