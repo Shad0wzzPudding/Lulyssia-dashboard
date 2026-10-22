@@ -121,7 +121,21 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 6. Installed app's colours
 - **Problem:** `public/manifest.json` still has template colours: a white launch screen and a blue
   (#2563eb) status bar around the dark cyan app.
-- **Decision:** Not decided yet
+- **Decision:** Use the app's own colours: dark launch screen, cyan status bar.
+- **Branch:** `plan/review-proposals/6-app-colours`
+- **What it does:** the installed app opens on a near-black screen instead of white, and Android's
+  status bar is the app's cyan instead of blue.
+- **Rules decided:** `background_color` = the app's page background and `theme_color` = the app's
+  cyan, converted from `--background` and `--primary` in src/index.css (about `#080c0e` and `#3aadd0`;
+  use the exact conversion). Only public/manifest.json changes.
+- **Done when:**
+  - [ ] public/manifest.json has the two new colours and is still valid JSON
+  - [ ] the hex values match `--background` and `--primary` in src/index.css
+  - [ ] build passes
+- **Owner checks by eye:** open the installed app on Android (may need reinstalling the app, or
+  waiting for it to update, before the new colours show).
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 7. Two sort choices that do nothing
 - **Problem:** "Completed last" on Tasks and "Pinned first" on Interests: those items already have their
