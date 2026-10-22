@@ -88,3 +88,10 @@ export interface Tag {
   created_at: string;
   updated_at: string;
 }
+/**
+ * What an add/edit form passes along with a save: the form closes in onSuccess, and stays open
+ * (with everything typed) when the save fails. `__form` names the button the failure message
+ * asks to press again.
+ */
+export type FormSaveCallbacks = { onSuccess?: () => void; onError?: () => void };
+export type FormSaveMarker = { __form?: 'Create' | 'Update' | 'Add' };

@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Interest } from '@/lib/types';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Interest, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,8 +29,8 @@ import { DragReorderList } from './DragReorderList';
 
 interface InterestsPageProps {
   interests: Interest[];
-  onCreateInterest: (data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
+  onCreateInterest: (data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteInterest: (target: DeleteTarget) => void;
 }
@@ -46,6 +46,15 @@ export const InterestsPage = ({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   // A file still uploading: saving waits, or the item would be saved without it
   const [uploading, setUploading] = useState(false);
+  // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
+  // tells a late answer apart from the form opened since (closing the form lets go of the save).
+  const [saving, setSaving] = useState(false);
+  const saveRun = useRef(0);
+  const closeForm = () => {
+    saveRun.current += 1;
+    setSaving(false);
+    setIsCreateOpen(false);
+  };
   const [editingInterest, setEditingInterest] = useState<Interest | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
@@ -80,13 +89,26 @@ export const InterestsPage = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploading) return;
+    if (uploading || saving) return;
     
     const submissionData = {
       ...formData,
       deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
     };
 
+    // The form closes once the save went through; on a failure it stays open with everything kept
+    const run = ++saveRun.current;
+    setSaving(true);
+    const callbacks: FormSaveCallbacks = {
+      onSuccess: () => {
+        if (saveRun.current !== run) return;
+        closeForm();
+        resetForm();
+      },
+      onError: () => {
+        if (saveRun.current === run) setSaving(false);
+      },
+    };
     if (editingInterest) {
       // The form's place in "User sort" and "Pin" are as they were when it opened: the place is
       // never saved from here, and Pin only when it was changed in the form, so a drag or an
@@ -96,15 +118,13 @@ export const InterestsPage = ({
         id: editingInterest.id,
         ...rest,
         ...(is_pinned !== editingInterest.is_pinned ? { is_pinned } : {}),
-      });
+        __form: 'Update',
+      }, callbacks);
       playUpdateSound();
     } else {
-      onCreateInterest(submissionData);
+      onCreateInterest({ ...submissionData, __form: 'Create' }, callbacks);
       playSuccessSound();
     }
-    
-    resetForm();
-    setIsCreateOpen(false);
   };
 
   const handleEdit = (interest: Interest) => {
@@ -403,7 +423,7 @@ export const InterestsPage = ({
               Select
             </Button>
           )}
-          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); setIsCreateOpen(open); }}>
+          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
             <DialogTrigger asChild>
               <Button 
                 onClick={() => { playAddSound(); resetForm(); }}
@@ -460,10 +480,10 @@ export const InterestsPage = ({
                   <label htmlFor="is_pinned" className="text-sm">Pin to main focus</label>
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1" disabled={uploading}>
-                    {uploading ? 'Uploading file…' : editingInterest ? 'Update' : 'Create'}
+                  <Button type="submit" className="flex-1" disabled={uploading || saving}>
+                    {uploading ? 'Uploading file…' : saving ? 'Saving…' : editingInterest ? 'Update' : 'Create'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { playCancelSound(); setIsCreateOpen(false); }}>
+                  <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeForm(); }}>
                     Cancel
                   </Button>
                 </div>

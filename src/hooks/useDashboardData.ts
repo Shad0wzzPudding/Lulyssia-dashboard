@@ -20,6 +20,14 @@ export interface ReorderArgs {
   movedId: string;
 }
 
+/**
+ * Set by the add/edit forms: which button to press again when saving fails. Their form stays open
+ * on a failure, so the message tells the person to try the same button again.
+ */
+type FormSave = { __form?: 'Create' | 'Update' | 'Add' };
+const formSaveFailed = (button: NonNullable<FormSave['__form']>) =>
+  toast.error(`Couldn't save. Check your connection and press ${button} again.`);
+
 // Why an undo was refused, from revert_activity_log
 const REVERT_REFUSED: Record<string, string> = {
   newer: 'Only the newest change to an item can be undone. Undo the newer one first.',
@@ -201,11 +209,11 @@ export const useDashboardData = () => {
   // Mutations
   const createInterest = useMutation({
     mutationFn: async (
-      data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }
+      data: Omit<Interest, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSave
     ) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      const { __duplicate, __silent, ...insertData } = data;
+      const { __duplicate, __silent, __form: _form, ...insertData } = data;
       const { data: result, error } = await supabase
         .from('interests')
         .insert([{ ...insertData, sort_order: topSortOrder('interests'), user_id: user.id }])
@@ -221,15 +229,16 @@ export const useDashboardData = () => {
       if (__silent) return;
       toast.success(__duplicate ? 'Interest duplicated!' : 'Interest created successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to create interest:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to create interest. Please try again.');
     }
   });
 
   // __silent skips the success toast (used by batch pin/unpin, which shows one summary)
   const updateInterest = useMutation({
-    mutationFn: async ({ id, __silent, ...data }: Partial<Interest> & { id: string; __silent?: boolean }) => {
+    mutationFn: async ({ id, __silent, __form: _form, ...data }: Partial<Interest> & { id: string; __silent?: boolean } & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -250,8 +259,9 @@ export const useDashboardData = () => {
       if (__silent) return;
       toast.success('Interest updated successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to update interest:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to update interest. Please try again.');
     }
   });
@@ -285,11 +295,11 @@ export const useDashboardData = () => {
 
   const createTask = useMutation({
     mutationFn: async (
-      data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }
+      data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSave
     ) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      const { __duplicate, __silent, ...insertData } = data;
+      const { __duplicate, __silent, __form: _form, ...insertData } = data;
       const { error } = await supabase
         .from('tasks')
         .insert([{ ...insertData, sort_order: topSortOrder('tasks'), user_id: user.id }]);
@@ -303,14 +313,15 @@ export const useDashboardData = () => {
       if (meta?.__silent) return;
       toast.success(meta?.__duplicate ? 'Task duplicated!' : 'Task created successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to create task:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to create task. Please try again.');
     }
   });
 
   const updateTask = useMutation({
-    mutationFn: async ({ id, __silent, ...data }: Partial<Task> & { id: string; __silent?: boolean }) => {
+    mutationFn: async ({ id, __silent, __form: _form, ...data }: Partial<Task> & { id: string; __silent?: boolean } & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -329,8 +340,9 @@ export const useDashboardData = () => {
       if (__silent) return;
       toast.success('Task updated successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to update task:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to update task. Please try again.');
     }
   });
@@ -394,7 +406,7 @@ export const useDashboardData = () => {
 
   // Daily Task mutations
   const createDailyTask = useMutation({
-    mutationFn: async (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => {
+    mutationFn: async ({ __form: _form, ...data }: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'> & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -416,13 +428,14 @@ export const useDashboardData = () => {
       queryClient.invalidateQueries({ queryKey: ['daily_tasks'] });
       toast.success('Daily task created successfully!');
     },
-    onError: () => {
+    onError: (_error, { __form }) => {
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to create daily task');
     }
   });
 
   const updateDailyTask = useMutation({
-    mutationFn: async ({ id, __silent, ...data }: Partial<DailyTask> & { id: string; __silent?: boolean }) => {
+    mutationFn: async ({ id, __silent, __form: _form, ...data }: Partial<DailyTask> & { id: string; __silent?: boolean } & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -436,7 +449,7 @@ export const useDashboardData = () => {
       return { __silent };
     },
     // Show the change immediately (ticking a box should feel instant), undo it if saving fails
-    onMutate: async ({ id, __silent, ...data }) => {
+    onMutate: async ({ id, __silent, __form: _form, ...data }) => {
       await queryClient.cancelQueries({ queryKey: ['daily_tasks'] });
       const previous = queryClient.getQueriesData<DailyTask[]>({ queryKey: ['daily_tasks'] });
       queryClient.setQueriesData<DailyTask[]>({ queryKey: ['daily_tasks'] }, (old) =>
@@ -444,8 +457,9 @@ export const useDashboardData = () => {
       );
       return { previous };
     },
-    onError: (_error, _variables, context) => {
+    onError: (_error, { __form }, context) => {
       context?.previous.forEach(([key, value]) => queryClient.setQueryData<DailyTask[]>(key, value));
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to update daily task');
     },
     onSuccess: ({ __silent }) => {
@@ -481,11 +495,11 @@ export const useDashboardData = () => {
 
   const createEvent = useMutation({
     mutationFn: async (
-      data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }
+      data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSave
     ) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      const { __duplicate, __silent, ...insertData } = data;
+      const { __duplicate, __silent, __form: _form, ...insertData } = data;
       const { error } = await supabase
         .from('events')
         .insert([{ ...insertData, sort_order: topSortOrder('events'), user_id: user.id }]);
@@ -499,14 +513,15 @@ export const useDashboardData = () => {
       if (meta?.__silent) return;
       toast.success(meta?.__duplicate ? 'Event duplicated!' : 'Event created successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to create event:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to create event. Please try again.');
     }
   });
 
   const updateEvent = useMutation({
-    mutationFn: async ({ id, __silent, ...data }: Partial<Event> & { id: string; __silent?: boolean }) => {
+    mutationFn: async ({ id, __silent, __form: _form, ...data }: Partial<Event> & { id: string; __silent?: boolean } & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -525,8 +540,9 @@ export const useDashboardData = () => {
       if (__silent) return;
       toast.success('Event updated successfully!');
     },
-    onError: (error) => {
+    onError: (error, { __form }) => {
       console.error('Failed to update event:', error);
+      if (__form) return formSaveFailed(__form);
       toast.error('Failed to update event. Please try again.');
     }
   });

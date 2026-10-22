@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { DailyTask } from '@/lib/types';
+import { DailyTask, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +25,8 @@ interface DailyTasksSectionProps {
   dailyTasks: DailyTask[];
   /** Yesterday's list, still showing while today's loads: changes would go to yesterday's rows */
   stale: boolean;
-  onCreate: (data: NewDailyTask) => void;
-  onUpdate: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
+  onCreate: (data: NewDailyTask & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdate: (data: Partial<DailyTask> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onDelete: (id: string) => void;
 }
 
@@ -49,6 +49,16 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
   const [quickTime, setQuickTime] = useState('');
   const [editing, setEditing] = useState<DailyTask | null>(null);
   const [form, setForm] = useState({ title: '', time: '', description: '' });
+  // Quick add and the edit window keep what was typed until the save went through (and keep it
+  // when it fails). The edit window's number tells a late answer apart from a window opened since.
+  const [adding, setAdding] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const editRun = useRef(0);
+  const closeEdit = () => {
+    editRun.current += 1;
+    setSavingEdit(false);
+    setEditing(null);
+  };
 
   const total = dailyTasks.length;
   const done = dailyTasks.filter((task) => task.is_completed).length;
@@ -67,11 +77,17 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
   const handleQuickAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const title = quickTitle.trim();
-    if (!title || stale) return;
+    if (!title || stale || adding) return;
     playAddSound();
-    onCreate({ title, deadline: quickTime || undefined, is_completed: false });
-    setQuickTitle('');
-    setQuickTime('');
+    setAdding(true);
+    onCreate({ title, deadline: quickTime || undefined, is_completed: false, __form: 'Add' }, {
+      onSuccess: () => {
+        setAdding(false);
+        setQuickTitle('');
+        setQuickTime('');
+      },
+      onError: () => setAdding(false),
+    });
   };
 
   const handleToggle = (task: DailyTask) => {
@@ -90,15 +106,24 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const title = form.title.trim();
-    if (!editing || !title || stale) return;
+    if (!editing || !title || stale || savingEdit) return;
     playUpdateSound();
+    const run = ++editRun.current;
+    setSavingEdit(true);
     onUpdate({
       id: editing.id,
       title,
       deadline: form.time || null,
       description: form.description.trim() || null,
+      __form: 'Update',
+    }, {
+      onSuccess: () => {
+        if (editRun.current === run) closeEdit();
+      },
+      onError: () => {
+        if (editRun.current === run) setSavingEdit(false);
+      },
     });
-    setEditing(null);
   };
 
   return (
@@ -223,14 +248,14 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
               aria-label="Time (optional)"
               className="w-28 shrink-0 px-2 text-xs sm:text-sm"
             />
-            <Button type="submit" size="sm" disabled={!quickTitle.trim() || stale} aria-label="Add daily task" className="shrink-0">
+            <Button type="submit" size="sm" disabled={!quickTitle.trim() || stale || adding} aria-label={adding ? 'Saving…' : 'Add daily task'} className="shrink-0">
               <Plus size={16} />
             </Button>
           </form>
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={!!editing} onOpenChange={(open) => { if (!open) setEditing(null); }}>
+      <Dialog open={!!editing} onOpenChange={(open) => { if (!open) closeEdit(); }}>
         <ResizableDialogContent>
           <DialogHeader>
             <DialogTitle>Edit Daily Task</DialogTitle>
@@ -259,8 +284,8 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
             />
             <div className="flex gap-2">
-              <Button type="submit" className="flex-1" disabled={stale}>Update</Button>
-              <Button type="button" variant="outline" onClick={() => { playCancelSound(); setEditing(null); }}>
+              <Button type="submit" className="flex-1" disabled={stale || savingEdit}>{savingEdit ? 'Saving…' : 'Update'}</Button>
+              <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeEdit(); }}>
                 Cancel
               </Button>
             </div>
