@@ -213,7 +213,32 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 10. Tasks page slows down with many tasks
 - **Problem:** every card is redrawn on each search keystroke or tick: about 0.3s per tick at 60 tasks
   on a mid-range phone, 2s at 1,000 tasks.
-- **Decision:** Not decided yet
+- **Decision:** Code-only speed-up, plus long sections show 50 tasks at a time with "Show more".
+- **Branch:** `plan/review-proposals/10-tasks-page-speed`
+- **What it does:**
+  1. behind the scenes: a card that didn't change isn't redrawn when another task is ticked or edited,
+     and the search results update just after typing instead of holding up each letter;
+  2. the In Progress, Overdue and Upcoming sections on the Tasks page show their first 50 tasks, then a
+     "Show more (N left)" button at the bottom that adds the next 50.
+- **Rules decided:**
+  - Completed Tasks keeps its existing "+N more" cover; Daily Tasks is unchanged;
+  - the shown count goes back to 50 when the search, tag filter or sort changes;
+  - in "User sort", only shown tasks can be dragged; dragging stays within the shown ones;
+  - Tasks page only (Events and Interests can follow later if needed);
+  - nothing else looks different; with 50 or fewer tasks in a section there's no button.
+- **Done when:**
+  - [ ] measured on the production build (`npm run build` + `vite preview`) with test data of 60, 200 and
+    1,000 tasks and the processor slowed 4× in dev tools: time per letter typed in search and per tick,
+    before and after, written in the log (before: about 65–250ms / 300ms at 60, 150–480ms / 470ms at
+    200, 0.8–2s / 2s at 1,000); after should be clearly lower at every size, and a tick at 200 tasks
+    under about 100ms
+  - [ ] a section with more than 50 tasks shows 50 and "Show more (N left)"; pressing it shows 50 more
+  - [ ] search, filter and sort still give the same results as before
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the Tasks page with your real tasks (search, tick, Show more if a section
+  has over 50).
+- **Needs:** nothing
+- **Depends on:** nothing (if item 9 is built first, keep its form changes when touching TasksPage.tsx)
 
 ### 11. Deadline before the start
 - **Problem:** the task and event forms accept a deadline (or end) before the start, e.g. after moving a
