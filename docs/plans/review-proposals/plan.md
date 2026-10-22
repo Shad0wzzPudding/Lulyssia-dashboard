@@ -1,6 +1,6 @@
 # Plan: Cloud review proposals
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `2d01ff1` (16 Oct 2026)
 **Decided with the owner on:** 16 and 22 Oct 2026
 
@@ -283,3 +283,9 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 Nothing to apply or deploy: no item needs a migration or a function deploy. The site changes go out
 with the next Vercel deploy after merging.
+
+- [ ] Merge the item branches in order (1 → 11; 9 before 10 and 11), then `plan/review-proposals/summary`
+  last. See log/summary.md for the two expected merge conflicts and how to resolve them.
+- [ ] After merging: nothing to run on the database or the functions.
+- [ ] After the next Vercel deploy: the installed app picks up the new manifest colours (item 6) when it
+  updates or is reinstalled.
