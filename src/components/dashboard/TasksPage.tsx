@@ -31,6 +31,7 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
 import { autoDeadline } from '@/lib/autoDeadline';
+import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
@@ -71,6 +72,9 @@ export const TasksPage = ({
   // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
   // tells a late answer apart from the form opened since (closing the form lets go of the save).
   const [saving, setSaving] = useState(false);
+  // "The deadline is before the start": shown once Create/Update was pressed with the dates that
+  // way round, and gone as soon as they are fixed
+  const [dateErrorShown, setDateErrorShown] = useState(false);
   const saveRun = useRef(0);
   const closeForm = () => {
     saveRun.current += 1;
@@ -158,11 +162,16 @@ export const TasksPage = ({
       notice_before: false,
     });
     setEditingTask(null);
+    setDateErrorShown(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (uploading || saving) return;
+    if (deadlineBeforeStart(formData.start_date, formData.deadline)) {
+      setDateErrorShown(true);
+      return;
+    }
     
     const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
     const recurrenceUnit = formData.recurrence_unit || null;
@@ -217,6 +226,7 @@ export const TasksPage = ({
   const handleEdit = (task: Task) => {
     playEditSound();
     setEditingTask(task);
+    setDateErrorShown(false);
     setFormData({
       title: task.title,
       description: task.description || '',
@@ -603,6 +613,15 @@ export const TasksPage = ({
                     placeholder="When task is due"
                     value={formData.deadline}
                     onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                    // Earliest choice: the start. The browser's own check would block saving with
+                    // its own bubble, so show the form's message instead
+                    min={formData.start_date || undefined}
+                    onInvalid={(e) => {
+                      if (!deadlineBeforeStart(formData.start_date, formData.deadline)) return;
+                      e.preventDefault();
+                      setDateErrorShown(true);
+                    }}
+                    aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_date, formData.deadline)}
                     className="flex-1 h-9 text-sm"
                   />
                   <button
@@ -618,6 +637,9 @@ export const TasksPage = ({
                     {formData.deadline && <X size={16} />}
                   </button>
                 </div>
+                {dateErrorShown && deadlineBeforeStart(formData.start_date, formData.deadline) && (
+                  <p role="alert" className="text-sm text-destructive">{DEADLINE_BEFORE_START_MESSAGE}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-1">
