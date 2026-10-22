@@ -76,7 +76,23 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 4. Double-click on "Undo Clear" opens "Clear" again
 - **Problem:** after Undo (Tasks' Clear Completed, Events' Clear Past) the Clear button appears exactly
   where Undo was, so a double click opens the "Clear …?" question again.
-- **Decision:** Not decided yet
+- **Decision:** After Undo, the Clear button appears only after about a second.
+- **Branch:** `plan/review-proposals/4-clear-after-undo`
+- **What it does:** on Tasks (Clear Completed) and Events (Clear Past), pressing Undo brings the items
+  back as now, but the Clear button stays hidden for about one second before it shows again, so a
+  double click on Undo can't land on it.
+- **Rules decided:** during that second the button's space is kept (invisible, not clickable), so the
+  buttons around it don't jump; then it fades in. Only after Undo: the button shows normally at all
+  other times (page load, after the 10-second Undo window runs out).
+- **Done when:**
+  - [ ] right after Undo, the Clear button can't be seen or clicked for about one second, on both pages
+  - [ ] after that it appears in its usual place and works
+  - [ ] the other buttons in that row don't move when it hides or appears
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** Clear Completed → Undo on Tasks (and Clear Past → Undo on Events), including
+  a quick double click on Undo.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 5. Installed app's "Add Task" shortcut does nothing
 - **Problem:** long-pressing the app icon on Android offers "Add Task", which opens `/?action=add-task`,
