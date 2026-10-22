@@ -140,7 +140,24 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 ### 7. Two sort choices that do nothing
 - **Problem:** "Completed last" on Tasks and "Pinned first" on Interests: those items already have their
   own sections, so the list just keeps its loaded order.
-- **Decision:** Not decided yet
+- **Decision:** Remove both choices.
+- **Branch:** `plan/review-proposals/7-remove-useless-sorts`
+- **What it does:** the Tasks sort menu no longer offers "Completed last", and the Interests sort menu
+  no longer offers "Pinned first".
+- **Rules decided:** a sort is saved per person in `user_preferences` (src/hooks/useSortPreference.ts).
+  If the saved sort is one of the removed two (or any value that isn't a known option), the page uses
+  the default sort ("Deadline (soonest)", `deadline_asc`) instead of crashing or showing a blank menu.
+  The saved value may be left as is; it's simply ignored. The `showPinned` and `showCompleted`
+  options of SortAndFilterBar and the two cases in src/lib/sortAndFilter.ts go if nothing else uses them.
+- **Done when:**
+  - [ ] neither choice appears in any sort menu
+  - [ ] with `pinned_first` or `completed_last` saved as the sort, the page opens sorted by deadline and
+    the menu shows "Deadline (soonest)"
+  - [ ] the other sorts work as before on Tasks, Events and Interests
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the sort menus on Tasks and Interests.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 8. Daily task edit window open over midnight
 - **Problem:** Update then saves to yesterday's copy (shows "updated" but the change isn't on today's
