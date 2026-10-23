@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { DailyTask } from '@/lib/types';
+import { toast } from '@/lib/toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,17 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
   const [quickTime, setQuickTime] = useState('');
   const [editing, setEditing] = useState<DailyTask | null>(null);
   const [form, setForm] = useState({ title: '', time: '', description: '' });
+
+  // A new day's list loaded while a task's edit window was open: that task was yesterday's copy,
+  // so close the window without saving rather than change a list nobody sees any more
+  useEffect(() => {
+    if (!editing || stale) return;
+    if (dailyTasks.some((task) => task.id === editing.id)) return;
+    // Gone from the same day's list (deleted elsewhere) is not a new day
+    if (dailyTasks.some((task) => task.task_date === editing.task_date)) return;
+    setEditing(null);
+    toast("A new day started, so this edit wasn't saved. Open today's task to edit it.");
+  }, [dailyTasks, stale, editing]);
 
   const total = dailyTasks.length;
   const done = dailyTasks.filter((task) => task.is_completed).length;
