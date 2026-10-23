@@ -9,7 +9,7 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Pin, PinOff, Clock, GripVertical, Copy, CheckSquare, Heart } from 'lucide-react';
+import { Plus, Edit, Trash2, Pin, PinOff, Clock, Copy, CheckSquare, Heart } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -319,7 +319,6 @@ export const InterestsPage = ({
             )}
             <CardTitle className="min-w-0 text-lg [overflow-wrap:anywhere]">{interest.title}</CardTitle>
           </div>
-          {!isSelecting && sort !== 'user' && <GripVertical size={16} className="text-gray-400 cursor-grab" />}
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3">
