@@ -43,7 +43,33 @@ const SlowConnectionHint = () => {
   );
 };
 
+// The installed app's "Add Task" shortcut opens /?action=add-task. The request is kept for this tab
+// until the dashboard has loaded (sign-in may come first), and taken out of the address so a reload
+// or going back doesn't open the form again. Any other action is ignored.
+const PENDING_ACTION_KEY = 'pendingAction';
+const takeShortcutFromAddress = () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') !== 'add-task') return;
+  try {
+    sessionStorage.setItem(PENDING_ACTION_KEY, 'add-task');
+  } catch { /* storage unavailable: the form just won't open */ }
+  params.delete('action');
+  const query = params.toString();
+  window.history.replaceState(window.history.state, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+};
+const consumePendingAction = () => {
+  try {
+    const action = sessionStorage.getItem(PENDING_ACTION_KEY);
+    sessionStorage.removeItem(PENDING_ACTION_KEY);
+    return action;
+  } catch {
+    return null;
+  }
+};
+
 const Index = () => {
+  // Read once, before anything can send a signed-out visitor to the sign-in page
+  useState(takeShortcutFromAddress);
   const [activePage, setActivePage] = useState<NavigationPage>('home');
   const { names } = useUserNames();
 
@@ -60,6 +86,8 @@ const Index = () => {
   // Opened from the drawer's LINE chip: Settings jumps to its LINE card (a new number each time,
   // so a second tap while already on Settings jumps again)
   const [lineFocus, setLineFocus] = useState<number | null>(null);
+  // Set (a new number each time) when the Tasks page should open the new-task form
+  const [newTaskRequest, setNewTaskRequest] = useState<number | null>(null);
   const navigateTo = (page: NavigationPage, focus?: 'line') => {
     if (pageTransitionId !== null) return;
     setLineFocus(focus === 'line' ? Date.now() : null);
@@ -133,6 +161,15 @@ const Index = () => {
       toast({ title: "Couldn't refresh your dashboard", description: 'Showing what was already loaded. It will try again when you come back to the app.', variant: 'destructive' });
     }
   }, [refreshFailed]);
+
+  // The "Add Task" shortcut: once signed in and loaded, go straight to Tasks (no train, it isn't a
+  // page change the person made) with the new-task form open
+  useEffect(() => {
+    if (!user || dataLoading || error) return;
+    if (consumePendingAction() !== 'add-task') return;
+    showPage('tasks');
+    setNewTaskRequest(Date.now());
+  }, [user, dataLoading, error]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
@@ -235,6 +272,7 @@ const Index = () => {
             onCreateDailyTask={mutations.createDailyTask.mutate}
             onUpdateDailyTask={mutations.updateDailyTask.mutate}
             onDeleteDailyTask={mutations.deleteDailyTask.mutate}
+            newTaskRequest={newTaskRequest}
           />
         );
       case 'events':
