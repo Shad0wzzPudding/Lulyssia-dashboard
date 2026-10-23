@@ -4,8 +4,8 @@
   "description": "Personal productivity dashboard with tasks, events, and interests",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#080b0c",
+  "theme_color": "#3aafcf",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
