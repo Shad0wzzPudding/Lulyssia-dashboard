@@ -540,6 +540,13 @@ export const TasksPage = ({
   useEffect(() => {
     setShownCounts({});
   }, [deferredSearch, filterTagIds, sort]);
+  // Picked tasks still behind a "Show more" ("All" picks them too): the delete question says so.
+  // Only worked out while that question is open.
+  const hiddenSelectedCount = showDeleteConfirm
+    ? ([[overdueTasks, 'overdue'], [inProgressTasks, 'inProgress'], [upcomingTasks, 'upcoming']] as const)
+        .reduce((count, [items, section]) =>
+          count + items.slice(shownCounts[section] ?? SECTION_PAGE_SIZE).filter((task) => selectedIds.has(task.id)).length, 0)
+    : 0;
   const renderTaskCard = (task: Task, badge?: string) => (
     <TaskCard
       key={task.id}
@@ -581,7 +588,9 @@ export const TasksPage = ({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
         title={`Delete ${selectedCount} task(s)?`}
-        description="This will permanently delete the selected tasks."
+        description={hiddenSelectedCount > 0
+          ? `This will permanently delete the selected tasks, including ${hiddenSelectedCount} not shown yet (behind "Show more").`
+          : 'This will permanently delete the selected tasks.'}
         confirmText="Yes, delete them!"
         cancelText="Wait, no!"
       />
