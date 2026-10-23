@@ -52,7 +52,10 @@ export const TagPicker = ({ selected, onChange }: TagPickerProps) => {
         {selectedTags.map((t) => (
           <TagChip key={t.id} tag={t} onRemove={() => toggle(t.id)} />
         ))}
-        <Popover open={open} onOpenChange={setOpen}>
+        {/* Modal: the picker opens over a form window, which blocks scrolling (wheel and touch)
+            outside itself, and the picker is drawn outside it, so its tag list couldn't scroll.
+            As a modal it takes over the scroll lock while open. */}
+        <Popover open={open} onOpenChange={setOpen} modal>
           <PopoverTrigger asChild>
             <Button type="button" variant="outline" size="sm" className="h-7">
               <TagIcon size={12} className="mr-1" />
