@@ -2,29 +2,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
+  markMotionNoticeSeen,
   setMenuAnimationsEnabled,
-  setPageTransitionsEnabled,
-  setReduceFlashing,
+  useFlashingSwitch,
   useMenuAnimations,
-  usePageTransitionsSetting,
-  useReduceFlashingSetting,
+  useMotionNoticeSeen,
+  usePageTransitionsSwitch,
 } from '@/hooks/usePageTransitions';
 import { useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 /** "Animating menu" settings: page transitions and the side menu's moving effects. */
 export const DisplaySettings = () => {
-  const transitionsEnabled = usePageTransitionsSetting();
+  const transitions = usePageTransitionsSwitch();
   const menuAnimationsEnabled = useMenuAnimations();
-  const reduceFlashing = useReduceFlashingSetting();
+  const flashing = useFlashingSwitch();
   const deviceReducedMotion = useReducedMotion();
+  // The device asks for less motion, so the train and flashing start off: a "!" on the title says
+  // there is something here, until the title is hovered or a switch is touched
+  const noticeSeen = useMotionNoticeSeen();
+  const showNotice = !!deviceReducedMotion && !noticeSeen;
+  const reducedMotionNote = (
+    <p className="text-sm text-primary">Your device asks for less motion, so this starts off. You can turn it on here.</p>
+  );
 
   return (
-    <Card>
+    <Card onPointerDownCapture={showNotice ? markMotionNoticeSeen : undefined} onFocusCapture={showNotice ? markMotionNoticeSeen : undefined}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles size={18} className="text-primary" />
-          Animating menu
+          <span className="relative pr-6" onPointerEnter={showNotice ? markMotionNoticeSeen : undefined}>
+            Animating menu
+            {showNotice && (
+              <span
+                aria-hidden
+                className="line-alert absolute -top-2 right-0 grid h-5 w-5 -rotate-[8deg] place-items-center border-2 border-foreground bg-destructive font-display text-sm font-black italic leading-none text-foreground"
+              >
+                !
+              </span>
+            )}
+          </span>
         </CardTitle>
         <CardDescription>Saved on this device only.</CardDescription>
       </CardHeader>
@@ -33,15 +50,12 @@ export const DisplaySettings = () => {
           <div>
             <Label htmlFor="page-transitions" className="text-base">Page transitions</Label>
             <p className="text-sm text-muted-foreground">Play the train crowd animation when switching pages</p>
-            {deviceReducedMotion && (
-              <p className="text-sm text-primary">Your device asks for less motion, so page transitions are off.</p>
-            )}
+            {deviceReducedMotion && reducedMotionNote}
           </div>
           <Switch
             id="page-transitions"
-            checked={transitionsEnabled && !deviceReducedMotion}
-            disabled={!!deviceReducedMotion}
-            onCheckedChange={setPageTransitionsEnabled}
+            checked={transitions.checked}
+            onCheckedChange={transitions.set}
           />
         </div>
         <div className="flex items-center justify-between gap-4">
@@ -59,20 +73,17 @@ export const DisplaySettings = () => {
         </div>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <Label htmlFor="reduce-flashing" className="text-base">Reduce flashing</Label>
+            <Label htmlFor="enable-flashing" className="text-base">Enable flashing</Label>
             <p className="text-sm text-muted-foreground">
-              Turns off bright flashes and screen shakes: the slash when the side menu opens, and the white flash and
-              shake when Lulyssia casts a skill. Use this if flashing light bothers you.
+              Bright flashes and screen shakes: the slash when the side menu opens, and the white flash and shake
+              when Lulyssia casts a skill. Turn this off if flashing light bothers you.
             </p>
-            {deviceReducedMotion && (
-              <p className="text-sm text-primary">Your device asks for less motion, so flashing is already off.</p>
-            )}
+            {deviceReducedMotion && reducedMotionNote}
           </div>
           <Switch
-            id="reduce-flashing"
-            checked={reduceFlashing || !!deviceReducedMotion}
-            disabled={!!deviceReducedMotion}
-            onCheckedChange={setReduceFlashing}
+            id="enable-flashing"
+            checked={flashing.checked}
+            onCheckedChange={flashing.set}
           />
         </div>
       </CardContent>
