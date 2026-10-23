@@ -9,7 +9,7 @@ const ROLE = 'Dashboard assistant';
 // Placeholder bio based on what she does in the app; replace with her real story.
 const BIO =
   'Hi there. I\'m your guide around this dashboard. I keep an eye on your tasks, events and interests, and sends you a letter on LINE every morning.';
-const BIO2 = '*Ahem* But that need to be link with your line first, so please do that in the setting page.🦋';
+const BIO2 = '*Ahem* But that needs to be linked with your LINE first, so please do that on the Settings page.🦋';
 // Easter egg when the account is already linked with LINE: she starts the usual reminder,
 // cuts herself off, then notices (typed out, with a pause at the cut)
 const BIO2_LINKED_START = '*Ahem* But that needs to be linked with your LINE firs—';

@@ -603,7 +603,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
                           <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
                           {event.deadline && (
-                            <p>Deadline: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                            <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
                           )}
                         </div>
                       </div>

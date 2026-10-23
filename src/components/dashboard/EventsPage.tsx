@@ -32,7 +32,7 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { autoDeadline } from '@/lib/autoDeadline';
-import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
+import { END_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
 
 interface EventsPageProps {
@@ -406,7 +406,7 @@ export const EventsPage = ({
                     {event.start_time ? `${format(parseISO(event.start_time), 'HH:mm')} - Today` : 'No start time'}
                     {event.deadline && (
                       <span className="ml-2 text-xs text-muted-foreground">
-                        • Deadline: {format(parseISO(event.deadline), 'HH:mm')}
+                        • End: {format(parseISO(event.deadline), 'HH:mm')}
                       </span>
                     )}
                   </div>
@@ -443,7 +443,7 @@ export const EventsPage = ({
                 {event.start_time ? format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm') : 'No start time'}
                 {event.deadline && (
                   <span className="ml-2 text-xs text-muted-foreground">
-                    • Deadline: {format(parseISO(event.deadline), 'MMM dd, HH:mm')}
+                    • End: {format(parseISO(event.deadline), 'MMM dd, HH:mm')}
                   </span>
                 )}
               </div>
@@ -596,7 +596,7 @@ export const EventsPage = ({
               />
               <Input
                 type="datetime-local"
-                placeholder="Deadline (optional)"
+                placeholder="End (optional)"
                 value={formData.deadline}
                 onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
                 // Earliest choice: the start. The browser's own check would block saving with its
@@ -610,7 +610,7 @@ export const EventsPage = ({
                 aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline)}
               />
               {dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline) && (
-                <p role="alert" className="-mt-2 text-sm text-destructive">{DEADLINE_BEFORE_START_MESSAGE}</p>
+                <p role="alert" className="-mt-2 text-sm text-destructive">{END_BEFORE_START_MESSAGE}</p>
               )}
               <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
               <div>

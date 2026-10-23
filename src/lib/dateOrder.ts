@@ -6,4 +6,6 @@
 export const deadlineBeforeStart = (start: string, deadline: string) =>
   !!start && !!deadline && new Date(deadline).getTime() < new Date(start).getTime();
 
-export const DEADLINE_BEFORE_START_MESSAGE = 'The deadline is before the start';
+export const DEADLINE_BEFORE_START_MESSAGE = 'The deadline is before the start. Pick a later deadline or an earlier start.';
+/** The same for events, whose second date is called "End" */
+export const END_BEFORE_START_MESSAGE = 'The end is before the start. Pick a later end or an earlier start.';
