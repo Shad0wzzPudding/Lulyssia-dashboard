@@ -8,16 +8,26 @@ type HoldButtonProps = Omit<ComponentProps<typeof Button>, 'onClick' | 'children
   holdMs?: number;
   /** Shown in place of the label for a moment after a press that was let go too early */
   hint?: string;
+  /** The fill's color while held */
+  fillClassName?: string;
   children: ReactNode;
 };
 
 /**
- * A button that has to be pressed and held, for actions a stray click shouldn't start (e.g. "Clear
- * Completed", which sits where "Undo" was a moment earlier). A fill sweeps across while it is held;
- * letting go early cancels and shows the hint. Enter or Space from the keyboard still work with a
- * normal press: nobody double-clicks there by accident.
+ * A button that has to be pressed and held, for actions a stray click shouldn't start (e.g. "Undo
+ * Clear": a double click on it used to land on "Clear" once the items were back). A fill sweeps
+ * across while it is held; letting go early cancels and shows the hint. Enter or Space from the
+ * keyboard still work with a normal press: nobody double-clicks there by accident.
  */
-export const HoldButton = ({ onHold, holdMs = 700, hint = 'Hold to confirm', children, className, ...props }: HoldButtonProps) => {
+export const HoldButton = ({
+  onHold,
+  holdMs = 700,
+  hint = 'Hold to confirm',
+  fillClassName = 'bg-destructive/25',
+  children,
+  className,
+  ...props
+}: HoldButtonProps) => {
   const [holding, setHolding] = useState(false);
   const [hinting, setHinting] = useState(false);
   const timer = useRef<number>();
@@ -64,7 +74,7 @@ export const HoldButton = ({ onHold, holdMs = 700, hint = 'Hold to confirm', chi
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 bg-destructive/25"
+        className={cn('pointer-events-none absolute inset-y-0 left-0', fillClassName)}
         style={{ width: holding ? '100%' : '0%', transition: holding ? `width ${holdMs}ms linear` : 'none' }}
       />
       <span className="relative flex items-center">{hinting ? hint : children}</span>

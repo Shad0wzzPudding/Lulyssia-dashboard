@@ -250,7 +250,7 @@ export const TasksPage = ({
   const [clearedTasks, setClearedTasks] = useState<Task[]>([]);
   const [showUndo, setShowUndo] = useState(false);
   // After Undo, the Clear button comes back where Undo was: keep it out of reach for 2 seconds so a
-  // double click on Undo can't open the "Clear …?" question again (and it needs a long press anyway)
+  // click running on from Undo can't open the "Clear …?" question again
   const [clearHeld, holdClear] = useBriefHold(2000);
   const [formData, setFormData] = useState({
     title: '',
@@ -605,29 +605,32 @@ export const TasksPage = ({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {showUndo && (
-            <Button 
+            // A long press: a quick or double click does nothing, so it can't run on into the Clear
+            // button that comes back in its place
+            <HoldButton
               variant="outline"
-              onClick={handleUndo}
+              onHold={handleUndo}
+              hint="Hold to undo"
+              title="Press and hold to undo"
+              fillClassName="bg-pink-400/40"
               className="bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 border-pink-300 dark:border-pink-700 text-pink-600 dark:text-pink-400 hover:from-pink-200 hover:to-purple-200 animate-pulse"
             >
               <Undo2 size={16} className="mr-2" />
               Undo Clear
-            </Button>
+            </HoldButton>
           )}
           {(clearableTasks.length > 0 || clearHeld) && !showUndo && (
-            <HoldButton
+            <Button 
               variant="outline"
-              onHold={() => setShowClearConfirm(true)}
-              hint="Hold to clear"
-              title="Press and hold to clear"
+              onClick={() => setShowClearConfirm(true)}
               // While held: its space is kept (nothing around it moves), then it fades in
               aria-hidden={clearHeld || undefined}
               tabIndex={clearHeld ? -1 : undefined}
-              className={`text-destructive hover:text-destructive transition-opacity duration-300 ${clearHeld ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+              className={`select-none text-destructive hover:text-destructive transition-opacity duration-300 ${clearHeld ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
             >
               <Trash size={16} className="mr-2" />
               Clear Completed
-            </HoldButton>
+            </Button>
           )}
           {!isSelecting && tasks.length > 0 && (
             <Button
