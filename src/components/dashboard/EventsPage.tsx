@@ -30,6 +30,7 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { autoDeadline } from '@/lib/autoDeadline';
+import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 
 interface EventsPageProps {
   events: Event[];
@@ -58,6 +59,9 @@ export const EventsPage = ({
   // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
   // tells a late answer apart from the form opened since (closing the form lets go of the save).
   const [saving, setSaving] = useState(false);
+  // "The deadline is before the start": shown once Create/Update was pressed with the dates that
+  // way round, and gone as soon as they are fixed
+  const [dateErrorShown, setDateErrorShown] = useState(false);
   const saveRun = useRef(0);
   const closeForm = () => {
     saveRun.current += 1;
@@ -163,11 +167,16 @@ export const EventsPage = ({
       notice_before: false,
     });
     setEditingEvent(null);
+    setDateErrorShown(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (uploading || saving) return;
+    if (deadlineBeforeStart(formData.start_time, formData.deadline)) {
+      setDateErrorShown(true);
+      return;
+    }
     
     const submissionData = {
       ...formData,
@@ -201,6 +210,7 @@ export const EventsPage = ({
   const handleEdit = (event: Event) => {
     playEditSound();
     setEditingEvent(event);
+    setDateErrorShown(false);
     setFormData({
       title: event.title,
       description: event.description || '',
@@ -563,7 +573,19 @@ export const EventsPage = ({
                 placeholder="Deadline (optional)"
                 value={formData.deadline}
                 onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                // Earliest choice: the start. The browser's own check would block saving with its
+                // own bubble, so show the form's message instead
+                min={formData.start_time || undefined}
+                onInvalid={(e) => {
+                  if (!deadlineBeforeStart(formData.start_time, formData.deadline)) return;
+                  e.preventDefault();
+                  setDateErrorShown(true);
+                }}
+                aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline)}
               />
+              {dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline) && (
+                <p role="alert" className="-mt-2 text-sm text-destructive">{DEADLINE_BEFORE_START_MESSAGE}</p>
+              )}
               <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
               <div>
                 <label className="text-sm font-medium mb-1 block">Tags</label>
