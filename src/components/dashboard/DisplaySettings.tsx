@@ -2,11 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
-  markMotionNoticeSeen,
+  dismissMotionNotice,
   setMenuAnimationsEnabled,
   useFlashingSwitch,
   useMenuAnimations,
-  useMotionNoticeSeen,
+  useMotionNotice,
   usePageTransitionsSwitch,
 } from '@/hooks/usePageTransitions';
 import { useReducedMotion } from 'framer-motion';
@@ -18,30 +18,36 @@ export const DisplaySettings = () => {
   const menuAnimationsEnabled = useMenuAnimations();
   const flashing = useFlashingSwitch();
   const deviceReducedMotion = useReducedMotion();
-  // The device asks for less motion, so the train and flashing start off: a "!" on the title says
-  // there is something here, until the title is hovered or a switch is touched
-  const noticeSeen = useMotionNoticeSeen();
-  const showNotice = !!deviceReducedMotion && !noticeSeen;
+  // The device asks for less motion, so the train and flashing start off: a "!" by the title says
+  // there is something here, until it is pressed
+  const showNotice = useMotionNotice();
   const reducedMotionNote = (
     <p className="text-sm text-primary">Your device asks for less motion, so this starts off. You can turn it on here.</p>
   );
 
   return (
-    <Card onPointerDownCapture={showNotice ? markMotionNoticeSeen : undefined} onFocusCapture={showNotice ? markMotionNoticeSeen : undefined}>
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
           <Sparkles size={18} className="text-primary" />
-          <span className="relative pr-6" onPointerEnter={showNotice ? markMotionNoticeSeen : undefined}>
-            Animating menu
-            {showNotice && (
+          Animating menu
+          {showNotice && (
+            <button
+              type="button"
+              onClick={dismissMotionNotice}
+              aria-label="Dismiss: page transitions and flashing are off because your device asks for less motion"
+              title="Dismiss"
+              className="group ml-1 flex items-center gap-1.5 font-sans text-xs font-normal not-italic text-destructive"
+            >
               <span
                 aria-hidden
-                className="line-alert absolute -top-2 right-0 grid h-5 w-5 -rotate-[8deg] place-items-center border-2 border-foreground bg-destructive font-display text-sm font-black italic leading-none text-foreground"
+                className="line-alert grid h-5 w-5 -rotate-[8deg] place-items-center border-2 border-foreground bg-destructive font-display text-sm font-black italic leading-none text-foreground transition-transform group-hover:scale-110"
               >
                 !
               </span>
-            )}
-          </span>
+              <span className="underline-offset-2 group-hover:underline">Tap to dismiss</span>
+            </button>
+          )}
         </CardTitle>
         <CardDescription>Saved on this device only.</CardDescription>
       </CardHeader>

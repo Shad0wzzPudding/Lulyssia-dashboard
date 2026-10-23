@@ -75,8 +75,13 @@ export const useFlashingSwitch = () => {
 /** Whether flashes and shakes are off. */
 export const useReduceFlashing = () => !useFlashingSwitch().checked;
 
-// The "!" on Settings' Animating menu card, telling a device that asks for reduced motion that the
-// train and flashing are off but can be turned on there. Gone for good once looked at.
-const motionNoticeSeen = createDeviceSetting('motionNoticeSeen', false);
-export const useMotionNoticeSeen = motionNoticeSeen.useValue;
-export const markMotionNoticeSeen = () => motionNoticeSeen.set(true);
+// The "!" telling a device that asks for reduced motion that the train and flashing are off but
+// can be turned on in Settings (on the drawer tab, the drawer's Settings slab and the Animating
+// menu card). Stays until the person dismisses it on that card.
+const motionNoticeDismissed = createDeviceSetting('motionNoticeSeen', false);
+/** Whether the "!" about reduced motion shows. */
+export const useMotionNotice = () => {
+  const deviceReducedMotion = !!useReducedMotion();
+  return deviceReducedMotion && !motionNoticeDismissed.useValue();
+};
+export const dismissMotionNotice = () => motionNoticeDismissed.set(true);

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight, LogOut, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { useReduceFlashing } from '@/hooks/usePageTransitions';
+import { useMotionNotice, useReduceFlashing } from '@/hooks/usePageTransitions';
 import {
   playDrawerCloseSound,
   playDrawerOpenSound,
@@ -87,6 +87,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
   // LINE link status: a chip beside MENU when linked, a "!" on the drawer tab and Settings when not
   const lineStatus = useLineStatus(drawerOpen);
   const lineNotLinked = lineStatus?.linked === false;
+  // The device asks for less motion and the person hasn't dismissed Settings' note about it yet
+  const motionNotice = useMotionNotice();
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -123,7 +125,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
       />
     );
 
-  /** The "!" plate shown while LINE is not linked (on the drawer tab and the Settings slab) */
+  /** The "!" plate shown while LINE is not linked, or Settings has an unread note about reduced
+      motion (on the drawer tab and the Settings slab) */
   const lineAlert = (position: string) => (
     <span
       aria-hidden
@@ -396,7 +399,7 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
             className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex h-14 w-9 items-center justify-center border-2 border-l-0 border-foreground/80 bg-card/95 text-foreground backdrop-blur-sm shadow-[4px_4px_0_0_hsl(var(--primary))] transition-[width,color] hover:w-11 hover:text-primary"
           >
             <PanelLeftOpen size={18} />
-            {lineNotLinked && lineAlert('-right-3 -top-2.5')}
+            {(lineNotLinked || motionNotice) && lineAlert('-right-3 -top-2.5')}
           </button>
         </SheetTrigger>
         {/* Transparent layer above DrawerScene (which draws the dark panel behind Lulyssia),
@@ -472,8 +475,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
             onClick: lineNotLinked ? openLineSettings : () => handlePageChange('settings'),
             current: activePage === 'settings',
             offset: 14,
-            sub: lineNotLinked ? 'LINE not linked yet' : undefined,
-            alert: lineNotLinked,
+            sub: lineNotLinked ? 'LINE not linked yet' : motionNotice ? 'Animations are off on this device' : undefined,
+            alert: lineNotLinked || motionNotice,
           })}
           {/* Sign out: closes the drawer, then asks to confirm */}
           {drawerRow({
