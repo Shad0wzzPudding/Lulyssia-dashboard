@@ -1,6 +1,6 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
-import { useState, useEffect, useMemo } from 'react';
-import { Task, DailyTask } from '@/lib/types';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Task, DailyTask, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,8 +37,8 @@ type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
 interface TasksPageProps {
   tasks: Task[];
-  onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean }) => void;
+  onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteTask: (target: DeleteTarget) => void;
   /** The options let the page show Undo only once the clear has gone through */
@@ -46,8 +46,8 @@ interface TasksPageProps {
   onRestoreTasks: (tasks: Task[]) => void;
   dailyTasks: DailyTask[];
   dailyTasksStale: boolean;
-  onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>) => void;
-  onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean }) => void;
+  onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateDailyTask: (data: Partial<DailyTask> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onDeleteDailyTask: (id: string) => void;
   /** Set (a new number each time) to open the empty new-task form, e.g. from the "Add Task" shortcut */
   newTaskRequest?: number | null;
@@ -72,6 +72,15 @@ export const TasksPage = ({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   // A file still uploading: saving waits, or the item would be saved without it
   const [uploading, setUploading] = useState(false);
+  // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
+  // tells a late answer apart from the form opened since (closing the form lets go of the save).
+  const [saving, setSaving] = useState(false);
+  const saveRun = useRef(0);
+  const closeForm = () => {
+    saveRun.current += 1;
+    setSaving(false);
+    setIsCreateOpen(false);
+  };
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -168,7 +177,7 @@ export const TasksPage = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploading) return;
+    if (uploading || saving) return;
     
     const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
     const recurrenceUnit = formData.recurrence_unit || null;
@@ -190,6 +199,19 @@ export const TasksPage = ({
       recurrence_anchor: !recurrenceUnit ? null : keepAnchor ? (editingTask?.recurrence_anchor ?? deadline) : deadline,
     };
 
+    // The form closes once the save went through; on a failure it stays open with everything kept
+    const run = ++saveRun.current;
+    setSaving(true);
+    const callbacks: FormSaveCallbacks = {
+      onSuccess: () => {
+        if (saveRun.current !== run) return;
+        closeForm();
+        resetForm();
+      },
+      onError: () => {
+        if (saveRun.current === run) setSaving(false);
+      },
+    };
     if (editingTask) {
       // "Done" is only saved when it was changed in the form, so a tick made elsewhere (e.g. from
       // LINE) while the form was open isn't undone
@@ -198,15 +220,13 @@ export const TasksPage = ({
         id: editingTask.id,
         ...rest,
         ...(is_completed !== editingTask.is_completed ? { is_completed } : {}),
-      });
+        __form: 'Update',
+      }, callbacks);
       playUpdateSound();
     } else {
-      onCreateTask(submissionData);
+      onCreateTask({ ...submissionData, __form: 'Create' }, callbacks);
       playSuccessSound();
     }
-    
-    resetForm();
-    setIsCreateOpen(false);
   };
 
   const handleEdit = (task: Task) => {
@@ -531,7 +551,7 @@ export const TasksPage = ({
               Select
             </Button>
           )}
-          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); setIsCreateOpen(open); }}>
+          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
             <DialogTrigger asChild>
               <Button 
                 onClick={() => { playAddSound(); resetForm(); }}
@@ -692,10 +712,10 @@ export const TasksPage = ({
                 onUploadingChange={setUploading}
               />
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1" disabled={uploading}>
-                  {uploading ? 'Uploading file…' : editingTask ? 'Update' : 'Create'}
+                <Button type="submit" className="flex-1" disabled={uploading || saving}>
+                  {uploading ? 'Uploading file…' : saving ? 'Saving…' : editingTask ? 'Update' : 'Create'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => { playCancelSound(); setIsCreateOpen(false); }}>
+                <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeForm(); }}>
                   Cancel
                 </Button>
               </div>

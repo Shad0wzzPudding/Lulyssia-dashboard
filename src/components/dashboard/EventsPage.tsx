@@ -1,6 +1,6 @@
 import { NoticeBeforeToggle } from './NoticeBeforeToggle';
-import { useState, useEffect, useMemo } from 'react';
-import { Event } from '@/lib/types';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Event, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,8 @@ import { autoDeadline } from '@/lib/autoDeadline';
 
 interface EventsPageProps {
   events: Event[];
-  onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean }) => void;
-  onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean }) => void;
+  onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & { __duplicate?: boolean; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteEvent: (target: DeleteTarget) => void;
   /** The options let the page show Undo only once the clear has gone through */
@@ -55,6 +55,15 @@ export const EventsPage = ({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   // A file still uploading: saving waits, or the item would be saved without it
   const [uploading, setUploading] = useState(false);
+  // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
+  // tells a late answer apart from the form opened since (closing the form lets go of the save).
+  const [saving, setSaving] = useState(false);
+  const saveRun = useRef(0);
+  const closeForm = () => {
+    saveRun.current += 1;
+    setSaving(false);
+    setIsCreateOpen(false);
+  };
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -158,7 +167,7 @@ export const EventsPage = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploading) return;
+    if (uploading || saving) return;
     
     const submissionData = {
       ...formData,
@@ -167,16 +176,26 @@ export const EventsPage = ({
       deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
     };
 
+    // The form closes once the save went through; on a failure it stays open with everything kept
+    const run = ++saveRun.current;
+    setSaving(true);
+    const callbacks: FormSaveCallbacks = {
+      onSuccess: () => {
+        if (saveRun.current !== run) return;
+        closeForm();
+        resetForm();
+      },
+      onError: () => {
+        if (saveRun.current === run) setSaving(false);
+      },
+    };
     if (editingEvent) {
-      onUpdateEvent({ id: editingEvent.id, ...submissionData });
+      onUpdateEvent({ id: editingEvent.id, ...submissionData, __form: 'Update' }, callbacks);
       playUpdateSound();
     } else {
-      onCreateEvent(submissionData);
+      onCreateEvent({ ...submissionData, __form: 'Create' }, callbacks);
       playSuccessSound();
     }
-    
-    resetForm();
-    setIsCreateOpen(false);
   };
 
   const handleEdit = (event: Event) => {
@@ -495,7 +514,7 @@ export const EventsPage = ({
               Select
             </Button>
           )}
-          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); setIsCreateOpen(open); }}>
+          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
             <DialogTrigger asChild>
               <Button 
                 onClick={() => { playAddSound(); resetForm(); }}
@@ -559,10 +578,10 @@ export const EventsPage = ({
                 onUploadingChange={setUploading}
               />
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1" disabled={uploading}>
-                  {uploading ? 'Uploading file…' : editingEvent ? 'Update' : 'Create'}
+                <Button type="submit" className="flex-1" disabled={uploading || saving}>
+                  {uploading ? 'Uploading file…' : saving ? 'Saving…' : editingEvent ? 'Update' : 'Create'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => { playCancelSound(); setIsCreateOpen(false); }}>
+                <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeForm(); }}>
                   Cancel
                 </Button>
               </div>
