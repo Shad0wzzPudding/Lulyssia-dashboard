@@ -26,6 +26,7 @@ import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sor
 import { useSortPreference } from '@/hooks/useSortPreference';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
+import { refuseSaveOffline } from '@/lib/formSave';
 
 interface InterestsPageProps {
   interests: Interest[];
@@ -90,6 +91,7 @@ export const InterestsPage = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (uploading || saving) return;
+    if (refuseSaveOffline(editingInterest ? 'Update' : 'Create')) return;
     
     const submissionData = {
       ...formData,

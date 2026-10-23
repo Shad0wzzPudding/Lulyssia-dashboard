@@ -1,10 +1,11 @@
 import { useRef } from 'react';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Interest, Task, Event, ActivityLog, DailyTask } from '@/lib/types';
+import { Interest, Task, Event, ActivityLog, DailyTask, FormSaveMarker } from '@/lib/types';
 import { useLocalToday } from '@/hooks/useLocalToday';
 import { sortItems } from '@/lib/sortAndFilter';
 import { toast } from '@/lib/toast';
+import { formSaveFailed } from '@/lib/formSave';
 /**
  * What to delete: an id, or { id, __silent } to skip the success toast
  * (batch deletes show one summary toast of their own instead).
@@ -24,9 +25,7 @@ export interface ReorderArgs {
  * Set by the add/edit forms: which button to press again when saving fails. Their form stays open
  * on a failure, so the message tells the person to try the same button again.
  */
-type FormSave = { __form?: 'Create' | 'Update' | 'Add' };
-const formSaveFailed = (button: NonNullable<FormSave['__form']>) =>
-  toast.error(`Couldn't save. Check your connection and press ${button} again.`);
+type FormSave = FormSaveMarker;
 
 // Why an undo was refused, from revert_activity_log
 const REVERT_REFUSED: Record<string, string> = {

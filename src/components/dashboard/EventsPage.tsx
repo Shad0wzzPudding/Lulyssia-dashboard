@@ -31,6 +31,7 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
+import { refuseSaveOffline } from '@/lib/formSave';
 
 interface EventsPageProps {
   events: Event[];
@@ -177,6 +178,7 @@ export const EventsPage = ({
       setDateErrorShown(true);
       return;
     }
+    if (refuseSaveOffline(editingEvent ? 'Update' : 'Create')) return;
     
     const submissionData = {
       ...formData,

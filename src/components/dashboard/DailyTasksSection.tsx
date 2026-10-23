@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { DailyTask, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import { toast } from '@/lib/toast';
+import { refuseSaveOffline } from '@/lib/formSave';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +91,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
     e.preventDefault();
     const title = quickTitle.trim();
     if (!title || stale || adding) return;
+    if (refuseSaveOffline('Add')) return;
     playAddSound();
     setAdding(true);
     onCreate({ title, deadline: quickTime || undefined, is_completed: false, __form: 'Add' }, {
@@ -119,6 +121,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
     e.preventDefault();
     const title = form.title.trim();
     if (!editing || !title || stale || savingEdit) return;
+    if (refuseSaveOffline('Update')) return;
     playUpdateSound();
     const run = ++editRun.current;
     setSavingEdit(true);

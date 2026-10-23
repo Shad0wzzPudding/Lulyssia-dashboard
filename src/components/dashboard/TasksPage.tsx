@@ -33,6 +33,7 @@ import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
+import { refuseSaveOffline } from '@/lib/formSave';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
@@ -344,6 +345,7 @@ export const TasksPage = ({
       setDateErrorShown(true);
       return;
     }
+    if (refuseSaveOffline(editingTask ? 'Update' : 'Create')) return;
     
     const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
     const recurrenceUnit = formData.recurrence_unit || null;
