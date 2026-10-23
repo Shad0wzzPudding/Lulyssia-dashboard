@@ -32,6 +32,7 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
+import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
@@ -75,8 +76,6 @@ const getBorderColor = (status: string) => {
 
 
 /** What a task card's buttons do. The object stays the same between renders (see TasksPage). */
-/** How many tasks a long section shows at first, and how many more each "Show more" adds */
-const SECTION_PAGE_SIZE = 50;
 
 type TaskCardActions = {
   cardClick: (task: Task) => void;
@@ -535,7 +534,7 @@ export const TasksPage = ({
     },
   }), []);
 
-  // Long sections show 50 tasks at a time ("Show more" adds 50); back to 50 when the search,
+  // Long sections show 25 tasks at a time ("Show more" adds 25); back to 25 when the search,
   // tag filter or sort changes
   const [shownCounts, setShownCounts] = useState<Record<string, number>>({});
   useEffect(() => {
@@ -869,7 +868,7 @@ export const TasksPage = ({
       )}
 
       {(() => {
-        // `section` names a list shown 50 at a time; without it (Completed) every item is shown
+        // `section` names a list shown 25 at a time; without it (Completed) every item is shown
         const renderSection = (items: Task[], badge?: string, section?: string) => {
           const limit = section ? (shownCounts[section] ?? SECTION_PAGE_SIZE) : items.length;
           const shown = items.length > limit ? items.slice(0, limit) : items;
@@ -878,13 +877,10 @@ export const TasksPage = ({
             <>
               {renderCards(shown, badge)}
               {left > 0 && section && (
-                <Button
-                  variant="outline"
-                  className="mt-3 w-full"
+                <ShowMoreButton
+                  left={left}
                   onClick={() => setShownCounts((prev) => ({ ...prev, [section]: limit + SECTION_PAGE_SIZE }))}
-                >
-                  Show more ({left} left)
-                </Button>
+                />
               )}
             </>
           );

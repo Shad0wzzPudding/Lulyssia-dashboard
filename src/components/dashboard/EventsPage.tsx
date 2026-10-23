@@ -30,6 +30,7 @@ import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
+import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
@@ -284,6 +285,21 @@ export const EventsPage = ({
   const todayEvents = visibleEvents.filter(event => event.start_time && isToday(parseISO(event.start_time)));
   const upcomingEvents = visibleEvents.filter(event => !event.start_time || (isAfter(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time))));
 
+  // Long sections show 25 events at a time ("Show more" adds 25); back to 25 when the search,
+  // tag filter or sort changes
+  const [shownCounts, setShownCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    setShownCounts({});
+  }, [search, filterTagIds, sort]);
+  const shownLimit = (section: string) => shownCounts[section] ?? SECTION_PAGE_SIZE;
+  // Picked events still behind a "Show more" ("All" picks them too): the delete question says so.
+  // Only worked out while that question is open. Past events count as shown once unfolded.
+  const hiddenSelectedCount = showDeleteConfirm
+    ? ([[todayEvents, 'today'], [inProgressEvents, 'in_progress'], [upcomingEvents, 'upcoming'], [pastEvents, 'past']] as const)
+        .reduce((count, [items, section]) =>
+          count + items.slice(shownLimit(section)).filter((event) => selectedIds.has(event.id)).length, 0)
+    : 0;
+
   const handleUserReorder = (orderedIds: string[], movedId: string) => {
     onReorder({ table: 'events', orderedIds, movedId });
   };
@@ -481,7 +497,9 @@ export const EventsPage = ({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
         title={`Delete ${selectedCount} event(s)?`}
-        description="This will permanently delete the selected events."
+        description={hiddenSelectedCount > 0
+          ? `This will permanently delete the selected events, including ${hiddenSelectedCount} not shown yet (behind "Show more").`
+          : 'This will permanently delete the selected events.'}
         confirmText="Yes, delete them!"
         cancelText="Wait, no!"
       />
@@ -663,22 +681,41 @@ export const EventsPage = ({
       )}
 
       {(() => {
+        // Each section shows 25 at a time, with "Show more" under it for the rest
+        const withShowMore = (items: Event[], section: string, render: (shown: Event[]) => React.ReactNode) => {
+          const limit = shownLimit(section);
+          const shown = items.length > limit ? items.slice(0, limit) : items;
+          const left = items.length - shown.length;
+          return (
+            <>
+              {render(shown)}
+              {left > 0 && (
+                <ShowMoreButton
+                  left={left}
+                  onClick={() => setShownCounts((prev) => ({ ...prev, [section]: limit + SECTION_PAGE_SIZE }))}
+                />
+              )}
+            </>
+          );
+        };
         const renderSection = (
           items: Event[],
           variant: 'today' | 'in_progress' | 'upcoming' | 'past',
           gridClass: string
         ) =>
-          sort === 'user' ? (
-            <DragReorderList
-              items={items}
-              getId={(e) => e.id}
-              onReorder={handleUserReorder}
-              renderItem={(event) => renderEventCard(event, variant)}
-            />
-          ) : (
-            <div className={gridClass}>
-              {items.map((event) => renderEventCard(event, variant))}
-            </div>
+          withShowMore(items, variant, (shown) =>
+            sort === 'user' ? (
+              <DragReorderList
+                items={shown}
+                getId={(e) => e.id}
+                onReorder={handleUserReorder}
+                renderItem={(event) => renderEventCard(event, variant)}
+              />
+            ) : (
+              <div className={gridClass}>
+                {shown.map((event) => renderEventCard(event, variant))}
+              </div>
+            )
           );
         return (
           <>
@@ -724,11 +761,11 @@ export const EventsPage = ({
                     items={pastEvents}
                     previewCount={3}
                     label="past events"
-                    renderList={(items) => (
+                    renderList={(items) => withShowMore(items, 'past', (shown) => (
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {items.map((event) => renderEventCard(event, 'past'))}
+                        {shown.map((event) => renderEventCard(event, 'past'))}
                       </div>
-                    )}
+                    ))}
                   />
                 )}
               </div>
