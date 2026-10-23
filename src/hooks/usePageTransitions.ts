@@ -37,8 +37,17 @@ const createDeviceSetting = (storageKey: string, defaultValue = true) => {
 // "Page transitions": the train crowd animation when switching pages
 const pageTransitions = createDeviceSetting('pageTransitionsEnabled');
 export const setPageTransitionsEnabled = pageTransitions.set;
-/** Whether the crowd transition plays when switching pages. */
-export const usePageTransitions = pageTransitions.useValue;
+/** The "Page transitions" switch itself (for Settings). */
+export const usePageTransitionsSetting = pageTransitions.useValue;
+/**
+ * Whether the crowd transition plays when switching pages: the switch is on and the device doesn't
+ * ask for reduced motion (the saved switch is kept, so turning that device setting off brings it back).
+ */
+export const usePageTransitions = () => {
+  const setting = pageTransitions.useValue();
+  const deviceReducedMotion = useReducedMotion();
+  return setting && !deviceReducedMotion;
+};
 
 // "Animating menu": moving effects in the side drawer (water, butterflies, bubbles, float, sparkles)
 const menuAnimations = createDeviceSetting('menuAnimationsEnabled');

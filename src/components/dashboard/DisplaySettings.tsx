@@ -6,7 +6,7 @@ import {
   setPageTransitionsEnabled,
   setReduceFlashing,
   useMenuAnimations,
-  usePageTransitions,
+  usePageTransitionsSetting,
   useReduceFlashingSetting,
 } from '@/hooks/usePageTransitions';
 import { useReducedMotion } from 'framer-motion';
@@ -14,7 +14,7 @@ import { Sparkles } from 'lucide-react';
 
 /** "Animating menu" settings: page transitions and the side menu's moving effects. */
 export const DisplaySettings = () => {
-  const transitionsEnabled = usePageTransitions();
+  const transitionsEnabled = usePageTransitionsSetting();
   const menuAnimationsEnabled = useMenuAnimations();
   const reduceFlashing = useReduceFlashingSetting();
   const deviceReducedMotion = useReducedMotion();
@@ -33,10 +33,14 @@ export const DisplaySettings = () => {
           <div>
             <Label htmlFor="page-transitions" className="text-base">Page transitions</Label>
             <p className="text-sm text-muted-foreground">Play the train crowd animation when switching pages</p>
+            {deviceReducedMotion && (
+              <p className="text-sm text-primary">Your device asks for less motion, so page transitions are off.</p>
+            )}
           </div>
           <Switch
             id="page-transitions"
-            checked={transitionsEnabled}
+            checked={transitionsEnabled && !deviceReducedMotion}
+            disabled={!!deviceReducedMotion}
             onCheckedChange={setPageTransitionsEnabled}
           />
         </div>
