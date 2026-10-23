@@ -15,6 +15,7 @@ import { PageIcon } from './PageIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { toast as notify } from '@/lib/toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
 import { cardSurface } from '@/lib/selectMode';
@@ -418,15 +419,43 @@ export const TasksPage = ({
 
   const handleToggleComplete = (task: Task) => {
     const isCompleting = !task.is_completed;
+    // A repeating task's tick only finishes this round; its message offers to finish it for good
+    const repeatingDone = isCompleting && !!task.recurrence_unit;
     onUpdateTask({
       id: task.id,
-      is_completed: isCompleting
+      is_completed: isCompleting,
+      ...(repeatingDone ? { __silent: true } : {}),
     });
     if (isCompleting) {
       playCompletionSound();
     } else {
       playUpdateSound();
     }
+    if (repeatingDone) {
+      notify.success(
+        task.deadline
+          ? `This round is done. "${task.title}" comes back on ${format(parseISO(task.deadline), 'MMM d, HH:mm')}.`
+          : `This round of "${task.title}" is done.`,
+        {
+          duration: 8000,
+          action: { label: 'Done for good', onClick: () => finishForGood(task) },
+        }
+      );
+    }
+  };
+
+  // Stops a repeating task and keeps it as a completed one-time task (Clear Completed can clear it)
+  const finishForGood = (task: Task) => {
+    onUpdateTask({
+      id: task.id,
+      recurrence_unit: null,
+      recurrence_interval: 1,
+      recurrence_anchor: null,
+      is_completed: true,
+      __silent: true,
+    });
+    playCompletionSound();
+    notify.success(`"${task.title}" is done for good. It won't repeat any more.`);
   };
 
   const handleCopy = (task: Task) => {
