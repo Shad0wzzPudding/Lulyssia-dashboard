@@ -1,8 +1,9 @@
 # Plan: Cloud review proposals
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `2d01ff1` (16 Oct 2026)
 **Decided with the owner on:** 16 and 22 Oct 2026
+**Reviewed with the owner on:** 23 Oct 2026 (see "After the build" at the end)
 
 ## Goal
 
@@ -284,8 +285,49 @@ skip the item and mark it Blocked in its log with the question for the owner.
 Nothing to apply or deploy: no item needs a migration or a function deploy. The site changes go out
 with the next Vercel deploy after merging.
 
-- [ ] Merge the item branches in order (1 → 11; 9 before 10 and 11), then `plan/review-proposals/summary`
-  last. See log/summary.md for the two expected merge conflicts and how to resolve them.
+- [x] Merge the item branches in order (1 → 11; 9 before 10 and 11), then `plan/review-proposals/summary`
+  last. Done on `review/review-proposals-merged` (23 Oct), with the review's fixes on top: merge that
+  branch into `main`.
 - [ ] After merging: nothing to run on the database or the functions.
 - [ ] After the next Vercel deploy: the installed app picks up the new manifest colours (item 6) when it
   updates or is reinstalled.
+
+## After the build
+
+Reviewed on 23 Oct 2026 on the branch `review/review-proposals-merged` (every build branch merged
+in order, plus the commits below). Typecheck, lint and build pass; the owner's checks 1–11 were
+gone through in the browser on the test account (Test-dummy).
+
+**Found in the code review and fixed**
+- After the "Add Task" shortcut, every later visit to Tasks opened the new-task form again.
+
+**Decided with the owner (each is its own commit)**
+- Item 9: an offline save is refused right away ("Couldn't save. Check your connection and press …
+  again.", form kept) instead of waiting on "Saving…" and going through later. Ticks, pins and
+  drags still wait for the connection. A failure after the form was closed keeps the same message.
+- Item 3: with "reduce motion" on, Page transitions and flashing start off but are no longer locked;
+  the choice made then is saved separately. "Reduce flashing" became "Enable flashing" (on = flashes
+  play). A "!" on the Animating menu title, the drawer tab and the drawer's Settings slab
+  ("Animations are off on this device") stays until "Tap to dismiss" is pressed.
+- Item 4: "Undo Clear" (Tasks and Events) needs a 0.7s long press ("Hold to undo" after a quick
+  click), and "Clear" stays out of reach for 2 seconds after Undo (was 1).
+- Item 8: a daily task edit open over midnight moves to today's copy (same title) with what was
+  typed kept unsaved, instead of closing; with no copy it closes as built.
+- Item 10: sections show 25 at a time (was 50), on Events too (Today, In Progress, Upcoming, Past
+  once unfolded); select-mode "All" still picks hidden items and the delete question says how many
+  are behind "Show more"; the "Show more" bar is cyan.
+- Item 11: events call their second date "End" (form, cards, Home); the messages read "The deadline
+  is before the start. Pick a later deadline or an earlier start." and "The end is before the
+  start. Pick a later end or an earlier start."
+- About card text: "…needs to be linked with your LINE first, so please do that on the Settings page."
+- Accepted as built: items 1, 2, 5 (reload shows Home, no sound, waits through sign-in), 6, 7, and
+  the quick add's "press Add again".
+
+**Still to see after the next deploy**
+- Item 5 on Android: long-press the installed app's icon → Add Task.
+- Item 6 on Android: the installed app's dark launch screen and cyan status bar (may need a reinstall).
+- Item 8 for real: an edit left open over midnight (only reachable at a day change).
+- The "reduce motion off" side of item 3 wasn't tried (needs the device setting changed).
+
+**For a later plan**
+- Deleting many selected items sends one request each (60 tasks took several seconds to disappear).
