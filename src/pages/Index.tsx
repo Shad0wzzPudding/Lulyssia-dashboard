@@ -78,16 +78,18 @@ const Index = () => {
   const transitionsEnabled = usePageTransitions();
   const [pageTransitionId, setPageTransitionId] = useState<number | null>(null);
   const pendingPage = useRef<NavigationPage | null>(null);
-  // A new page always opens at the top (instant, not the smooth scroll-to-top button)
+  // Set (a new number each time) when the Tasks page should open the new-task form
+  const [newTaskRequest, setNewTaskRequest] = useState<number | null>(null);
+  // A new page always opens at the top (instant, not the smooth scroll-to-top button). Any page
+  // change lets go of the "Add Task" request, or coming back to Tasks would open the form again.
   const showPage = (page: NavigationPage) => {
     setActivePage(page);
+    setNewTaskRequest(null);
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
   // Opened from the drawer's LINE chip: Settings jumps to its LINE card (a new number each time,
   // so a second tap while already on Settings jumps again)
   const [lineFocus, setLineFocus] = useState<number | null>(null);
-  // Set (a new number each time) when the Tasks page should open the new-task form
-  const [newTaskRequest, setNewTaskRequest] = useState<number | null>(null);
   const navigateTo = (page: NavigationPage, focus?: 'line') => {
     if (pageTransitionId !== null) return;
     setLineFocus(focus === 'line' ? Date.now() : null);
