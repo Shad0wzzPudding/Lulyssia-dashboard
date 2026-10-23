@@ -62,15 +62,25 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
     setEditing(null);
   };
 
-  // A new day's list loaded while a task's edit window was open: that task was yesterday's copy,
-  // so close the window without saving rather than change a list nobody sees any more
+  // A new day's list loaded while a task's edit window was open: that task was yesterday's copy.
+  // The window moves to today's copy (the day's list is copied by title), keeping what was typed
+  // unsaved; with no such copy it closes without saving rather than change a list nobody sees
   useEffect(() => {
     if (!editing || stale) return;
     if (dailyTasks.some((task) => task.id === editing.id)) return;
     // Gone from the same day's list (deleted elsewhere) is not a new day
     if (dailyTasks.some((task) => task.task_date === editing.task_date)) return;
-    closeEdit();
-    toast("A new day started, so this edit wasn't saved. Open today's task to edit it.");
+    const todays = dailyTasks.find((task) => task.title === editing.title);
+    if (!todays) {
+      closeEdit();
+      toast("A new day started, so this edit wasn't saved. Open today's task to edit it.");
+      return;
+    }
+    // A save still out for yesterday's copy can't close or change the moved window
+    editRun.current += 1;
+    setSavingEdit(false);
+    setEditing(todays);
+    toast("A new day started: your edit is now on today's task. Press Update to save it.");
   }, [dailyTasks, stale, editing]);
 
   const total = dailyTasks.length;
