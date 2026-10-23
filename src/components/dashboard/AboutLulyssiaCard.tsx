@@ -72,7 +72,8 @@ export const AboutLulyssiaCard = ({ large = false }: { large?: boolean }) => (
   <section
     aria-label={`About ${NAME}`}
     className={`-skew-x-3 border-2 border-foreground/80 bg-card/95 shadow-[4px_4px_0_0_hsl(var(--primary))] backdrop-blur-sm ${
-      large ? 'p-5 shadow-[6px_6px_0_0_hsl(var(--primary))]' : 'p-3'
+      // Phones narrower than 360px: less side padding, so the text beside the portrait fits
+      large ? 'p-5 max-[359px]:px-3 shadow-[6px_6px_0_0_hsl(var(--primary))]' : 'p-3'
     }`}
   >
     <div className="skew-x-3">
