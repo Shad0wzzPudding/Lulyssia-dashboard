@@ -26,6 +26,7 @@ import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
 import { useBriefHold } from '@/hooks/useBriefHold';
+import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
@@ -74,9 +75,9 @@ export const EventsPage = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clearedEvents, setClearedEvents] = useState<Event[]>([]);
   const [showUndo, setShowUndo] = useState(false);
-  // After Undo, the Clear button comes back where Undo was: keep it out of reach for a second so a
-  // double click on Undo can't open the "Clear …?" question again
-  const [clearHeld, holdClear] = useBriefHold(1000);
+  // After Undo, the Clear button comes back where Undo was: keep it out of reach for 2 seconds so a
+  // double click on Undo can't open the "Clear …?" question again (and it needs a long press anyway)
+  const [clearHeld, holdClear] = useBriefHold(2000);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -504,9 +505,11 @@ export const EventsPage = ({
             </Button>
           )}
           {(pastEvents.length > 0 || clearHeld) && !showUndo && (
-            <Button 
+            <HoldButton
               variant="outline"
-              onClick={() => setShowClearConfirm(true)}
+              onHold={() => setShowClearConfirm(true)}
+              hint="Hold to clear"
+              title="Press and hold to clear"
               // While held: its space is kept (nothing around it moves), then it fades in
               aria-hidden={clearHeld || undefined}
               tabIndex={clearHeld ? -1 : undefined}
@@ -514,7 +517,7 @@ export const EventsPage = ({
             >
               <Trash size={16} className="mr-2" />
               Clear Past
-            </Button>
+            </HoldButton>
           )}
           {!isSelecting && events.length > 0 && (
             <Button
