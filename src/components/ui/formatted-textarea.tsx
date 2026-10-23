@@ -216,6 +216,31 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
   setCaretAt(sel, el, el.childNodes.length);
 };
 
+/**
+ * Redraw the editor's contents without losing its scroll position: emptying it for a moment would
+ * otherwise snap a long description back to the top after every button press or undo.
+ */
+const redraw = (el: HTMLElement, html: string) => {
+  const top = el.scrollTop;
+  el.innerHTML = html;
+  el.scrollTop = top;
+};
+
+/** Scroll the editor just enough to show the caret (or the end of the selection), if it's out of view. */
+const keepCaretInView = (el: HTMLElement) => {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0).cloneRange();
+  range.collapse(false);
+  let rect = range.getBoundingClientRect();
+  // A collapsed range at a line start can have no box; fall back to its node's box
+  if (!rect.height && range.startContainer instanceof Element) rect = range.startContainer.getBoundingClientRect();
+  if (!rect.height) return;
+  const box = el.getBoundingClientRect();
+  if (rect.top < box.top) el.scrollTop -= box.top - rect.top + 4;
+  else if (rect.bottom > box.bottom) el.scrollTop += rect.bottom - box.bottom + 4;
+};
+
 const restoreSelection = (el: HTMLElement, visStart: number, visEnd: number) => {
   const sel = window.getSelection();
   if (!sel) return;
@@ -299,7 +324,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const el = editorRef.current;
     if (!el) return;
     isUpdatingRef.current = true;
-    el.innerHTML = toHTML(entry.value);
+    redraw(el, toHTML(entry.value));
     // Measure the maximum caret offset in the newly-rendered DOM so we can
     // clamp any override without walking past the end.
     const maxOffset = measureDomOffset(el);
@@ -307,7 +332,8 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       ? Math.min(Math.max(0, cursorOverride), maxOffset)
       : entry.cursor;
     restoreCursor(el, target);
-    el.focus();
+    el.focus({ preventScroll: true });
+    keepCaretInView(el);
     onChange(entry.value);
     requestAnimationFrame(() => {
       isUpdatingRef.current = false;
@@ -371,9 +397,10 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const token = ++renderTokenRef.current;
     requestAnimationFrame(() => {
       if (token !== renderTokenRef.current) return;
-      el.innerHTML = toHTML(newValue);
-      el.focus();
+      redraw(el, toHTML(newValue));
+      el.focus({ preventScroll: true });
       restoreSelection(el, selStart, selEnd);
+      keepCaretInView(el);
       isUpdatingRef.current = false;
     });
   }, [onChange, pushSnapshotNow]);
@@ -400,7 +427,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       if (token !== renderTokenRef.current) return;
       const html = toHTML(plainText);
       if (el.innerHTML !== html) {
-        el.innerHTML = html;
+        redraw(el, html);
         restoreCursor(el, pos);
       }
       isUpdatingRef.current = false;
