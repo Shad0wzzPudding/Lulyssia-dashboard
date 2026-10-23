@@ -742,7 +742,6 @@ export const TasksPage = ({
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search tasks…"
-          showCompleted
         />
       )}
 
