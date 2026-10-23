@@ -24,10 +24,22 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-2026-10-15`), so nobody has reviewed them yet.
+Newest first. The first 10 were made while reviewing the build of plan review-proposals with the owner
+(23 Oct 2026; branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026
+(branch `cloud-review-2026-10-15`). Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `9c7cbf0` | Fix : Events call their second date "End", the date message says how to fix it, and the About text reads right |
+| `f78e6ab` | Feat : Long sections show 25 at a time on Tasks and Events, with a cyan "Show more" |
+| `aae0a31` | Feat : A daily task edit left open over midnight moves to today's copy, keeping what was typed |
+| `647928f` | Fix : The long press moves from "Clear" to "Undo Clear" |
+| `08690b7` | Feat : "Clear Completed" and "Clear Past" need a long press, and stay away 2 seconds after Undo |
+| `08e4df9` | Feat : The reduced-motion "!" also shows in the drawer and stays until "Tap to dismiss" is pressed |
+| `35162fb` | Feat : Page transitions and flashing can be turned on with reduce motion, with a "!" pointing to them |
+| `8a580af` | Feat : Deleting picked tasks says when some of them are still behind "Show more" |
+| `582d5cd` | Fix : Saving a form while offline says so right away instead of waiting on "Saving…" |
+| `6e55a17` | Fix : After the "Add Task" shortcut, coming back to Tasks no longer opens the new-task form again |
 | `a5b2994` | Fix : Opening the app offline says it's still connecting instead of only spinning |
 | `4d09c7f` | Fix : The "couldn't load your dashboard" screen has a Try again button |
 | `a454fe6` | Fix : On iPhones the header, pop-up messages and Select mode banner start below the status bar |
@@ -61,3 +73,4 @@ Newest first. Made during the cloud review of 15 Oct 2026 (branch `cloud-review-
 | 2026-10-12 | `c6c2f21..a9aeb03` (the bug-hunt branch, 27 commits) | 8 confirmed findings (5 edge-case bugs, 3 clean-ups), all fixed in `ef487fa`..`24ba04c`; 1 reported finding was not a bug |
 | 2026-10-13 | `a9aeb03..a4f4e29` (13 commits, cloud session) | 1 confirmed finding (LINE Settings: a reload already running when a switch is flipped can still show the old value for a moment), in roadmap.md under "Code review (13 Oct 2026, cloud)"; typecheck and lint pass |
 | 2026-10-15 | `a4f4e29..36c0c12` (37 code commits, plus docs and skill commits; cloud session) | 1 confirmed finding (undoing an edit moved the item back to its old place in User sort), fixed in `bfaeaef`. Checked: tsc, eslint, build, deno check on all functions; all migrations replayed on a local Postgres; the editor's formatting and LINE's text cleaning compared on random texts |
+| 2026-10-23 | the build of plan review-proposals (branches `plan/review-proposals/1`..`11`, merged in order) | 1 confirmed finding (after the "Add Task" shortcut, every later visit to Tasks opened the form again), fixed in `6e55a17`; item 9's offline case found waiting instead of failing, changed with the owner in `582d5cd`. Checked: tsc, eslint, build, and all 11 owner checks in the browser. Last reviewed stays at `36c0c12`: the 15 Oct waiting list wasn't part of this review |
