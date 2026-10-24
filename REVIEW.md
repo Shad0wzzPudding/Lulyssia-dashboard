@@ -24,12 +24,16 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. The first 10 were made while reviewing the build of plan review-proposals with the owner
-(23 Oct 2026; branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026
-(branch `cloud-review-2026-10-15`). Nobody has reviewed them yet.
+Newest first. The first 3 fix bugs the owner reported on 23 Oct 2026 (branch `fix/editor-repeat-tags`);
+the next 10 were made while reviewing the build of plan review-proposals with the owner (23 Oct 2026;
+branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026 (branch
+`cloud-review-2026-10-15`). Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `cc21596` | Feat : A repeating task can be finished for good from the message after ticking it |
+| `194410f` | Fix : The tag list in the add/edit forms scrolls again (touch and mouse wheel) |
+| `15453f0` | Fix : Bold, italic, strikethrough, "• Add" and undo no longer jump a long description back to the top |
 | `9c7cbf0` | Fix : Events call their second date "End", the date message says how to fix it, and the About text reads right |
 | `f78e6ab` | Feat : Long sections show 25 at a time on Tasks and Events, with a cyan "Show more" |
 | `aae0a31` | Feat : A daily task edit left open over midnight moves to today's copy, keeping what was typed |
