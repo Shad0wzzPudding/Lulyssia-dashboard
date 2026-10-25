@@ -20,62 +20,15 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `36c0c12` Chore : Plan template and /cloud-build skill for the plan → build → review cycle
+**Last reviewed:** `58308d3` Docs : REVIEW.md waiting list adds the faster bulk delete
 
 ## Waiting for review
 
-Newest first. The first 4 are the pop-up messages and the menu button (26 Oct 2026, branch
-`fix/toasts-behind-nav`); the next is the faster bulk delete (25 Oct 2026, branch `feat/fast-bulk-delete`); the next 3
-fix bugs the owner reported on 23 Oct 2026 (branch `fix/editor-repeat-tags`);
-the next 10 were made while reviewing the build of plan review-proposals with the owner (23 Oct 2026;
-branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026 (branch
-`cloud-review-2026-10-15`). Nobody has reviewed them yet.
+Newest first. Made during the cloud review of 25 Oct 2026 (branch `cloud-review-2026-10-25`), so nobody has reviewed it yet.
 
 | Commit | What |
 | --- | --- |
-| `fcad22f` | Fix : The menu button leaves and comes back at once with Side menu effects off or reduced motion |
-| `86bfd64` | Feat : The round menu button slides out while a form is open, and back when it closes |
-| `246dbf1` | Feat : Pop-up messages can be swiped away sideways, also while a form is open |
-| `85ba844` | Fix : Pop-up messages sit behind the menu button instead of covering it |
-| `5f048e6` | Perf : Deleting many picked items at once is one request, and the cards leave right away |
-| `cc21596` | Feat : A repeating task can be finished for good from the message after ticking it |
-| `194410f` | Fix : The tag list in the add/edit forms scrolls again (touch and mouse wheel) |
-| `15453f0` | Fix : Bold, italic, strikethrough, "• Add" and undo no longer jump a long description back to the top |
-| `9c7cbf0` | Fix : Events call their second date "End", the date message says how to fix it, and the About text reads right |
-| `f78e6ab` | Feat : Long sections show 25 at a time on Tasks and Events, with a cyan "Show more" |
-| `aae0a31` | Feat : A daily task edit left open over midnight moves to today's copy, keeping what was typed |
-| `647928f` | Fix : The long press moves from "Clear" to "Undo Clear" |
-| `08690b7` | Feat : "Clear Completed" and "Clear Past" need a long press, and stay away 2 seconds after Undo |
-| `08e4df9` | Feat : The reduced-motion "!" also shows in the drawer and stays until "Tap to dismiss" is pressed |
-| `35162fb` | Feat : Page transitions and flashing can be turned on with reduce motion, with a "!" pointing to them |
-| `8a580af` | Feat : Deleting picked tasks says when some of them are still behind "Show more" |
-| `582d5cd` | Fix : Saving a form while offline says so right away instead of waiting on "Saving…" |
-| `6e55a17` | Fix : After the "Add Task" shortcut, coming back to Tasks no longer opens the new-task form again |
-| `a5b2994` | Fix : Opening the app offline says it's still connecting instead of only spinning |
-| `4d09c7f` | Fix : The "couldn't load your dashboard" screen has a Try again button |
-| `a454fe6` | Fix : On iPhones the header, pop-up messages and Select mode banner start below the status bar |
-| `812572a` | Fix : Screen readers name the LINE switches, tag buttons and the back-to-top button |
-| `5f8a535` | Fix : Confirm windows wrap between words, and a long nickname fits the welcome greeting |
-| `7e5c679` | Fix : Daily tasks keep their order from one day to the next (needs migration 20261016000000_daily_tasks_keep_order.sql) |
-| `8495bbd` | Fix : On iPhones the corner buttons stay clear of the home bar in the installed app |
-| `2f00005` | Fix : The undo and unpin handles on Home work from the keyboard |
-| `50359b1` | Fix : Retyping a repeating task's "Every N" number saves the number typed (3, not 13) |
-| `d11a092` | Fix : Long titles in the calendar details and a long LINE name in Settings fit a narrow phone |
-| `2679f61` | Fix : A link in a description no longer makes pages wider than a phone screen |
-| `793b94d` | Fix : A long one-word tag name no longer makes the Interests page wider than a phone screen |
-| `2256582` | Fix : A long email in the header greeting no longer makes a narrow phone screen slide sideways |
-| `33bf296` | Docs : README lists the nightly job that trims the record of sent LINE messages |
-| `ee9bfb4` | Fix : A quick double Enter no longer creates the same tag twice |
-| `d66f5bf` | Fix : Copying several items at once keeps their order in "User sort" |
-| `9904b83` | Fix : Screen readers name the icon buttons on cards (copy, edit, delete, tick, pin, fold) |
-| `a221782` | Fix : The LINE "today" limit can't be reset by deleting and recreating the LINE link (needs migration 20261015000005_line_links_no_delete.sql) |
-| `9fbb892` | Fix : A dragged card stays where it was dropped instead of jumping back while the new order saves |
-| `01e6af3` | Fix : An upload still running when a form is closed no longer lands in the next form that opens |
-| `61fd3a2` | Fix : Clicks in a scrolled add/edit form no longer start resizing the form window |
-| `65516f4` | Fix : Search finds words that are bold, and text with *, ~ or a backslash in the description |
-| `0079d00` | Fix : Editing an interest no longer puts back an unpin or a drag made elsewhere while the form was open |
-| `f1aef58` | Fix : A long unbroken title (like a web address) no longer makes pages wider than a phone screen |
-| `bfaeaef` | Fix : Undoing an edit in Recent Changes no longer moves the item back to its old place (needs migration 20261015000004_revert_keeps_order.sql) |
+| `bcad0fc` | Fix : Home calls an event's second date "End" everywhere, like the Events page |
 
 ## Review history
 
@@ -85,3 +38,4 @@ branch `review/review-proposals-merged`); the rest during the cloud review of 15
 | 2026-10-13 | `a9aeb03..a4f4e29` (13 commits, cloud session) | 1 confirmed finding (LINE Settings: a reload already running when a switch is flipped can still show the old value for a moment), in roadmap.md under "Code review (13 Oct 2026, cloud)"; typecheck and lint pass |
 | 2026-10-15 | `a4f4e29..36c0c12` (37 code commits, plus docs and skill commits; cloud session) | 1 confirmed finding (undoing an edit moved the item back to its old place in User sort), fixed in `bfaeaef`. Checked: tsc, eslint, build, deno check on all functions; all migrations replayed on a local Postgres; the editor's formatting and LINE's text cleaning compared on random texts |
 | 2026-10-23 | the build of plan review-proposals (branches `plan/review-proposals/1`..`11`, merged in order) | 1 confirmed finding (after the "Add Task" shortcut, every later visit to Tasks opened the form again), fixed in `6e55a17`; item 9's offline case found waiting instead of failing, changed with the owner in `582d5cd`. Checked: tsc, eslint, build, and all 11 owner checks in the browser. Last reviewed stays at `36c0c12`: the 15 Oct waiting list wasn't part of this review |
+| 2026-10-25 | `36c0c12..58308d3`: the 15 Oct cloud review's fixes, the plan review-proposals build and its review follow-ups, the 23 Oct editor/tag list/repeating task fixes and the 25 Oct bulk delete (40 commits listed, 50 code commits) | 1 finding fixed (`bcad0fc`: Home still said Deadline/Due for an event's end); 2 small proposals put in the roadmap's backlog (the delete question doesn't count folded completed tasks and past events; LINE's starting-soon card says Deadline for events). Checked: tsc, eslint on src, build, and the newest features in a local browser with test data (cloud review, review only) |

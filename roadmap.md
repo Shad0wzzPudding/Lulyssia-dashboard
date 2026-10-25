@@ -66,6 +66,8 @@ Code review (13 Oct 2026), confirmed findings:
 - [x] The 08:00 run loads every completed one-time task (with descriptions and attachments) only to discard them. Suggest: filter them out in the query
 - [x] The photo-signing helper with the folder security check is copied in three LINE functions (the send-line-overdue copy is unused). Suggest: one shared helper in supabase/functions/_shared
 - [x] The "deadline = start + 5 h" helper is copied in the Tasks and Events pages. Suggest: one shared helper in src/lib
+- [ ] Low (cloud review 25 Oct): Select mode's "All" picks every matching item, and the delete question now says how many are "not shown yet (behind "Show more")". But completed tasks (Tasks) and past events (Events) folded behind their "+N more" cover are picked too and aren't counted, because that cover isn't a "Show more". Example: with 8 completed tasks and any sort but "User sort", only 1 or 2 are on screen; "All" → Delete says "Delete 40 task(s)?" with no mention of the 6 or 7 folded ones, and they are deleted too. Needs decision: (a) count the folded ones in the same note, e.g. "including N not shown yet (behind "Show more" or "+N more")" (recommended); or (b) leave it, since the count in the question's title already includes them. Size: small
+- [ ] Low (cloud review 25 Oct): The LINE "starting soon" card still says "Deadline" under an event's time, though events now call their second date "End" in the app. Needs decision: (a) say "Ends" for events on that card (tasks keep "Deadline") (recommended; needs function deploy: send-line-reminders); or (b) keep "Deadline" on LINE. Size: small
 
 ## Cloud bug hunt (13 Oct 2026)
 Checked against the code, not run against the live project. Most serious first.
@@ -207,8 +209,14 @@ Second pass (fresh eyes, largest areas first):
 ## Cloud review (25 Oct 2026)
 Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: the commits waiting in REVIEW.md. Findings that need a decision are in "Backlog from the bug hunt" above, marked "(cloud review 25 Oct)".
 
+**Summary.**
+- Reviewed: the 40 commits on REVIEW.md's waiting list (`36c0c12..58308d3`, 50 code commits counting the plan build's merges), newest first, each diff read with the code around it. The newest ones (bulk delete, "Done for good", hold-to-undo, editor scroll, tag list scroll, 25 at a time, End wording, reduce-motion switches) were also tried in a local browser with test data; the forms' save checks from the plan build were run again on today's code and still pass. Typecheck, lint (all of src) and build pass.
+- Results: 1 fixed, 2 proposals waiting in the backlog (both small).
+- To apply before merging: nothing new (no migration, no function change). The earlier migrations from 15 Oct are already listed in that section.
+- Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds.
+
 ### Findings
-- [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (this commit)
+- [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (bcad0fc)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
