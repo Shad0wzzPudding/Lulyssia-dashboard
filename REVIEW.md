@@ -24,13 +24,15 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. The first 3 fix bugs the owner reported on 23 Oct 2026 (branch `fix/editor-repeat-tags`);
+Newest first. The first is the faster bulk delete (25 Oct 2026, branch `feat/fast-bulk-delete`); the next 3
+fix bugs the owner reported on 23 Oct 2026 (branch `fix/editor-repeat-tags`);
 the next 10 were made while reviewing the build of plan review-proposals with the owner (23 Oct 2026;
 branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026 (branch
 `cloud-review-2026-10-15`). Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `5f048e6` | Perf : Deleting many picked items at once is one request, and the cards leave right away |
 | `cc21596` | Feat : A repeating task can be finished for good from the message after ticking it |
 | `194410f` | Fix : The tag list in the add/edit forms scrolls again (touch and mouse wheel) |
 | `15453f0` | Fix : Bold, italic, strikethrough, "• Add" and undo no longer jump a long description back to the top |
