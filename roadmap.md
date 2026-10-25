@@ -204,6 +204,12 @@ Second pass (fresh eyes, largest areas first):
 - Round 50 (Access rules of every table and the files): listed on a local Postgres every table's access rules and what a signed-in user may do (rows can't be read, written or handed to another account; the record of sent LINE messages is read-only), the attachment folder rules, and how the LINE functions sign photo links (only from the owner's folder); found no new bug
 - Round 51 (README's function table): compared it with the functions' own sign-in checks and supabase/config.toml; found no new bug
 
+## Cloud review (25 Oct 2026)
+Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: the commits waiting in REVIEW.md. Findings that need a decision are in "Backlog from the bug hunt" above, marked "(cloud review 25 Oct)".
+
+### Findings
+- [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (this commit)
+
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 

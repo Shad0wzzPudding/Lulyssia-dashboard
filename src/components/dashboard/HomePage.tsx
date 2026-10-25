@@ -779,7 +779,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                       variant={dt === 'deadline' ? 'destructive' : 'outline'}
                                       className="text-xs px-1.5 py-0.5 h-5"
                                     >
-                                      {dt === 'deadline' ? 'Due' : 'Start'}
+                                      {/* An event's second date is its end (tasks: due) */}
+                                      {dt === 'deadline' ? (item.type === 'event' ? 'End' : 'Due') : 'Start'}
                                     </Badge>
                                   ))}
                                 </div>
@@ -877,7 +878,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
                         <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
                         {event.deadline && (
-                          <p>Deadline: {format(parseISO(event.deadline), 'MMM dd, yyyy HH:mm')}</p>
+                          <p>Ends: {format(parseISO(event.deadline), 'MMM dd, yyyy HH:mm')}</p>
                         )}
                       </div>
                     </div>
@@ -1136,7 +1137,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   key={dt}
                   variant={dt === 'deadline' ? 'destructive' : 'outline'}
                 >
-                  {dt === 'deadline' ? 'Due' : 'Start'}
+                  {dt === 'deadline' ? (selectedItem?.type === 'event' ? 'End' : 'Due') : 'Start'}
                 </Badge>
               ))}
             </div>
@@ -1164,7 +1165,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   <div className="flex items-center gap-2 text-sm">
                     <div className="flex items-center gap-1 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded px-2 py-1">
                       <Clock size={14} />
-                      <span className="font-medium">Due:</span>
+                      <span className="font-medium">{selectedItem?.type === 'event' ? 'End:' : 'Due:'}</span>
                     </div>
                     <span>{selectedItem.times.deadline}</span>
                   </div>
