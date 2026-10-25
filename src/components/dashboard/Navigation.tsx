@@ -6,6 +6,7 @@ import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeft
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useMotionNotice, useReduceFlashing } from '@/hooks/usePageTransitions';
+import { useAnyWindowOpen } from '@/hooks/useWindowOpen';
 import {
   playDrawerCloseSound,
   playDrawerOpenSound,
@@ -89,6 +90,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
   const lineNotLinked = lineStatus?.linked === false;
   // The device asks for less motion and the person hasn't dismissed Settings' note about it yet
   const motionNotice = useMotionNotice();
+  // A form (or another window) is open: the round menu button slides off to the right until it closes
+  const windowOpen = useAnyWindowOpen();
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -379,7 +382,12 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
         aria-expanded={open}
         aria-controls="main-navigation"
         title={open ? 'Close menu' : 'Menu'}
-        className="fixed right-6 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[60] h-14 w-14 rounded-full border-2 border-foreground/80 shadow-[4px_4px_0_0_hsl(var(--foreground)/0.8)] transition-transform hover:scale-105 [&_svg]:size-6"
+        aria-hidden={windowOpen || undefined}
+        tabIndex={windowOpen ? -1 : undefined}
+        className={cn(
+          'fixed right-6 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[60] h-14 w-14 rounded-full border-2 border-foreground/80 shadow-[4px_4px_0_0_hsl(var(--foreground)/0.8)] transition-transform duration-300 ease-out hover:scale-105 [&_svg]:size-6',
+          windowOpen && 'pointer-events-none translate-x-[calc(100%+2rem)]'
+        )}
       >
         {open ? <X /> : <MessageCircle />}
       </Button>

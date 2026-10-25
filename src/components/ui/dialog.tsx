@@ -5,8 +5,27 @@ import { X, Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { playCancelSound } from "@/lib/sounds"
+import { useCountAsOpenWindow } from "@/hooks/useWindowOpen"
 
-const Dialog = DialogPrimitive.Root
+/**
+ * Radix's Dialog root, which also reports whether it is open (see useWindowOpen), so the round menu
+ * button can slide out of the way as soon as a window opens and back as soon as it starts closing.
+ */
+const Dialog = ({ open, defaultOpen, onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen ?? false)
+  useCountAsOpenWindow(open ?? uncontrolledOpen)
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={(next) => {
+        setUncontrolledOpen(next)
+        onOpenChange?.(next)
+      }}
+      {...props}
+    />
+  )
+}
 
 type PointerDownOutside = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>["onPointerDownOutside"]
 /**
