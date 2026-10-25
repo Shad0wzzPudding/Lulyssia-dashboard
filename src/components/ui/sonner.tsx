@@ -10,6 +10,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      // Above an open form (z-50) but behind the menu button and its menus (z-[60]), so a message
+      // never covers them; Sonner's own default sits above everything
+      style={{ zIndex: 55 }}
       toastOptions={{
         classNames: {
           toast:
