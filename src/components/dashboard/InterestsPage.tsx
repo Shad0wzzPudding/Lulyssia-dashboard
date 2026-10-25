@@ -34,6 +34,8 @@ interface InterestsPageProps {
   onUpdateInterest: (data: Partial<Interest> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteInterest: (target: DeleteTarget) => void;
+  /** Select mode's Delete: all picked items in one go */
+  onDeleteInterests: (ids: string[], options?: { onSuccess?: () => void }) => void;
 }
 
 export const InterestsPage = ({ 
@@ -41,7 +43,8 @@ export const InterestsPage = ({
   onCreateInterest, 
   onUpdateInterest, 
   onReorder,
-  onDeleteInterest 
+  onDeleteInterest,
+  onDeleteInterests,
 }: InterestsPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -197,10 +200,10 @@ export const InterestsPage = ({
   };
 
   const confirmBatchDelete = () => {
-    // Silent: the summary toast below replaces one toast per item
-    selectedIds.forEach(id => onDeleteInterest({ id, __silent: true }));
+    // One request for all of them; the summary shows once it went through (a failure says so instead)
+    const count = selectedCount;
+    onDeleteInterests([...selectedIds], { onSuccess: () => toast({ title: `${count} interest(s) deleted` }) });
     playDeleteSound();
-    toast({ title: `${selectedCount} interest(s) deleted` });
     clearSelection();
     setShowDeleteConfirm(false);
   };

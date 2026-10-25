@@ -14,6 +14,49 @@ export type DeleteTarget = string | { id: string; __silent?: boolean };
 const deleteArgs = (target: DeleteTarget) =>
   typeof target === 'string' ? { id: target, __silent: false } : { id: target.id, __silent: !!target.__silent };
 
+// Ids per request in a batch delete: they go in the request's address, which mustn't get too long
+const BATCH_DELETE_CHUNK = 100;
+
+/**
+ * Deletes many items of one list at once (select mode's Delete): one request per 100 items instead
+ * of one per item, and the cards leave the page right away; a failure puts them back. The database
+ * still logs each item in Recent Changes, so each can be undone there as before.
+ */
+const useBatchDelete = (table: 'tasks' | 'events' | 'interests', noun: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const chunks: string[][] = [];
+      for (let i = 0; i < ids.length; i += BATCH_DELETE_CHUNK) chunks.push(ids.slice(i, i + BATCH_DELETE_CHUNK));
+      const results = await Promise.all(
+        chunks.map((chunk) => supabase.from(table).delete().eq('user_id', user.id).in('id', chunk))
+      );
+      const failed = results.find((r) => r.error);
+      if (failed) throw failed.error;
+    },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: [table] });
+      const previous = queryClient.getQueryData<{ id: string }[]>([table]);
+      const gone = new Set(ids);
+      queryClient.setQueryData<{ id: string }[]>([table], (old) => old?.filter((item) => !gone.has(item.id)));
+      return { previous };
+    },
+    onError: (error, _ids, context) => {
+      console.error(`Failed to delete ${noun}:`, error);
+      if (context?.previous) queryClient.setQueryData([table], context.previous);
+      toast.error(`Couldn't delete the selected ${noun}. Please try again.`);
+    },
+    // Reload either way: after a failure some chunks may have gone through
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [table] });
+      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+    },
+  });
+};
+
 /** One drag in "User sort": the list's new order and the item that was dragged */
 export interface ReorderArgs {
   table: 'interests' | 'tasks' | 'events';
@@ -744,6 +787,10 @@ export const useDashboardData = () => {
     }
   });
 
+  const deleteInterests = useBatchDelete('interests', 'interests');
+  const deleteTasks = useBatchDelete('tasks', 'tasks');
+  const deleteEvents = useBatchDelete('events', 'events');
+
   return {
     interests,
     tasks,
@@ -763,9 +810,11 @@ export const useDashboardData = () => {
       createInterest,
       updateInterest,
       deleteInterest,
+      deleteInterests,
       createTask,
       updateTask,
       deleteTask,
+      deleteTasks,
       clearCompletedTasks,
       createDailyTask,
       updateDailyTask,
@@ -773,6 +822,7 @@ export const useDashboardData = () => {
       createEvent,
       updateEvent,
       deleteEvent,
+      deleteEvents,
       clearPastEvents,
       restoreClearedItems,
       reorderItems,

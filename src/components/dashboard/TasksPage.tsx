@@ -46,6 +46,8 @@ interface TasksPageProps {
   onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteTask: (target: DeleteTarget) => void;
+  /** Select mode's Delete: all picked items in one go */
+  onDeleteTasks: (ids: string[], options?: { onSuccess?: () => void }) => void;
   /** The options let the page show Undo only once the clear has gone through */
   onClearCompleted: (ids: string[], options?: { onSuccess?: () => void }) => void;
   onRestoreTasks: (tasks: Task[]) => void;
@@ -219,6 +221,7 @@ export const TasksPage = ({
   onUpdateTask, 
   onReorder,
   onDeleteTask,
+  onDeleteTasks,
   onClearCompleted,
   onRestoreTasks,
   dailyTasks,
@@ -507,10 +510,10 @@ export const TasksPage = ({
   };
 
   const confirmBatchDelete = () => {
-    // Silent: the summary toast below replaces one toast per item
-    selectedIds.forEach(id => onDeleteTask({ id, __silent: true }));
+    // One request for all of them; the summary shows once it went through (a failure says so instead)
+    const count = selectedCount;
+    onDeleteTasks([...selectedIds], { onSuccess: () => toast({ title: `${count} task(s) deleted` }) });
     playDeleteSound();
-    toast({ title: `${selectedCount} task(s) deleted` });
     clearSelection();
     setShowDeleteConfirm(false);
   };

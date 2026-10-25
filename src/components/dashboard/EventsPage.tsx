@@ -41,6 +41,8 @@ interface EventsPageProps {
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onReorder: (args: ReorderArgs) => void;
   onDeleteEvent: (target: DeleteTarget) => void;
+  /** Select mode's Delete: all picked items in one go */
+  onDeleteEvents: (ids: string[], options?: { onSuccess?: () => void }) => void;
   /** The options let the page show Undo only once the clear has gone through */
   onClearPast: (ids: string[], options?: { onSuccess?: () => void }) => void;
   onRestoreEvents: (events: Event[]) => void;
@@ -52,6 +54,7 @@ export const EventsPage = ({
   onUpdateEvent, 
   onReorder,
   onDeleteEvent,
+  onDeleteEvents,
   onClearPast,
   onRestoreEvents
 }: EventsPageProps) => {
@@ -268,10 +271,10 @@ export const EventsPage = ({
   };
 
   const confirmBatchDelete = () => {
-    // Silent: the summary toast below replaces one toast per item
-    selectedIds.forEach(id => onDeleteEvent({ id, __silent: true }));
+    // One request for all of them; the summary shows once it went through (a failure says so instead)
+    const count = selectedCount;
+    onDeleteEvents([...selectedIds], { onSuccess: () => toast({ title: `${count} event(s) deleted` }) });
     playDeleteSound();
-    toast({ title: `${selectedCount} event(s) deleted` });
     clearSelection();
     setShowDeleteConfirm(false);
   };
