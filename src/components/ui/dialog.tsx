@@ -8,6 +8,19 @@ import { playCancelSound } from "@/lib/sounds"
 
 const Dialog = DialogPrimitive.Root
 
+type PointerDownOutside = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>["onPointerDownOutside"]
+/**
+ * A touch on a pop-up message (to swipe it away) isn't a click outside the form: without this the
+ * form would close. The messages are drawn outside the form, so the form sees them as "outside".
+ */
+const ignoreMessages = (handler: PointerDownOutside): PointerDownOutside => (e) => {
+  if ((e.target as Element | null)?.closest?.("[data-sonner-toaster]")) {
+    e.preventDefault()
+    return
+  }
+  handler?.(e)
+}
+
 const DialogTrigger = DialogPrimitive.Trigger
 
 const DialogPortal = DialogPrimitive.Portal
@@ -42,6 +55,7 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}
+      onPointerDownOutside={ignoreMessages(props.onPointerDownOutside)}
       onCloseAutoFocus={(e) => {
         // Keep scroll in place: don't refocus the trigger, which would
         // scroll the page back to it when the dialog closes.
@@ -221,6 +235,7 @@ const ResizableDialogContent = React.forwardRef<
             : { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '90vh' }
         }
         {...props}
+        onPointerDownOutside={ignoreMessages(props.onPointerDownOutside)}
         onScroll={(e) => {
           e.currentTarget.style.setProperty('--dialog-scroll', `${e.currentTarget.scrollTop}px`);
           props.onScroll?.(e);

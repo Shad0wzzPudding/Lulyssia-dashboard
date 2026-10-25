@@ -11,8 +11,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       // Above an open form (z-50) but behind the menu button and its menus (z-[60]), so a message
-      // never covers them; Sonner's own default sits above everything
-      style={{ zIndex: 55 }}
+      // never covers them; Sonner's own default sits above everything. An open form turns off
+      // clicks outside itself; the messages keep them so they can still be swiped away.
+      style={{ zIndex: 55, pointerEvents: "auto" }}
       toastOptions={{
         classNames: {
           toast:
