@@ -132,6 +132,9 @@
     font-style: italic;
     font-weight: 800;
     letter-spacing: -0.01em;
+    /* The heavy italic's own space is very thin (about 2px at 16px), so titles like "Pay the
+       electricity bill" read as one word; widen the gaps between words */
+    word-spacing: 0.15em;
   }
 
   ::selection {
