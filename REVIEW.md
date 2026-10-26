@@ -24,10 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 27 Oct 2026 (branch `cloud-review-2026-10-27`), so nobody has reviewed them yet.
+Newest first. Made during the cloud review of 27 Oct 2026 and the review-only pass after it (branch `cloud-review-2026-10-27`), so nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `b2b4c9b` | Fix : A clear that half fails no longer leaves deleted items on screen |
 | `99fc59a` | Fix : Clear Completed and Clear Past work with hundreds of items |
 | `aef5a5a` | Fix : An attachment removed while another file uploads stays removed |
 
@@ -42,3 +43,4 @@ Newest first. Made during the cloud review of 27 Oct 2026 (branch `cloud-review-
 | 2026-10-25 | `36c0c12..58308d3`: the 15 Oct cloud review's fixes, the plan review-proposals build and its review follow-ups, the 23 Oct editor/tag list/repeating task fixes and the 25 Oct bulk delete (40 commits listed, 50 code commits) | 1 finding fixed (`aee35f4`: Home still said Deadline/Due for an event's end); 2 small proposals put in the roadmap's backlog (the delete question doesn't count folded completed tasks and past events; LINE's starting-soon card says Deadline for events). Checked: tsc, eslint on src, build, and the newest features in a local browser with test data (cloud review, review only) |
 | 2026-10-26 | the 25 Oct cloud review's 3 fixes `aee35f4`, `a85c51c`, `33e1578` (branch `cloud-review-2026-10-25`; cloud session; IDs as replayed onto `main` on 26 Oct) | No new finding. Checked: the diffs with the code around them; tsc, eslint, build |
 | 2026-10-27 | the 8 commits on the waiting list (`85ba844`, `246dbf1`, `86bfd64`, `fcad22f`, `6a00462`, `fff28a5`, `019fd3a`, `fe1bd55`) plus `789692e` (cloud session) | No new finding. Checked: the diffs with the code around them; in a local browser, a title with a run of spaces, the menu button leaving and returning with a form, and a click on a pop-up message keeping the form open |
+| 2026-10-27 | review only, after the cloud review: `main` unchanged since `789692e` (nothing waiting there); re-read this branch's own fixes `aef5a5a`, `99fc59a` | 1 finding in `99fc59a` (a half-failed clear didn't reload its list), fixed in `b2b4c9b` |
