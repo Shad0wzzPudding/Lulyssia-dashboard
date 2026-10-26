@@ -24,7 +24,8 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. The first is the faster bulk delete (25 Oct 2026, branch `feat/fast-bulk-delete`); the next 3
+Newest first. The first 4 are the pop-up messages and the menu button (26 Oct 2026, branch
+`fix/toasts-behind-nav`); the next is the faster bulk delete (25 Oct 2026, branch `feat/fast-bulk-delete`); the next 3
 fix bugs the owner reported on 23 Oct 2026 (branch `fix/editor-repeat-tags`);
 the next 10 were made while reviewing the build of plan review-proposals with the owner (23 Oct 2026;
 branch `review/review-proposals-merged`); the rest during the cloud review of 15 Oct 2026 (branch
@@ -32,6 +33,10 @@ branch `review/review-proposals-merged`); the rest during the cloud review of 15
 
 | Commit | What |
 | --- | --- |
+| `fcad22f` | Fix : The menu button leaves and comes back at once with Side menu effects off or reduced motion |
+| `86bfd64` | Feat : The round menu button slides out while a form is open, and back when it closes |
+| `246dbf1` | Feat : Pop-up messages can be swiped away sideways, also while a form is open |
+| `85ba844` | Fix : Pop-up messages sit behind the menu button instead of covering it |
 | `5f048e6` | Perf : Deleting many picked items at once is one request, and the cards leave right away |
 | `cc21596` | Feat : A repeating task can be finished for good from the message after ticking it |
 | `194410f` | Fix : The tag list in the add/edit forms scrolls again (touch and mouse wheel) |
