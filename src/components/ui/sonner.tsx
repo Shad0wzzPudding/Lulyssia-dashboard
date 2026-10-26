@@ -19,8 +19,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast:
             "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
           description: "group-[.toast]:text-muted-foreground group-[.toast]:italic",
-          // Room for Lulyssia's sticker (Sonner sizes icons at 16px)
-          icon: "group-[.toast]:h-12 group-[.toast]:w-12",
+          // Room for Lulyssia's sticker. Sonner sizes icons at 16px with a rule that, since 2.0,
+          // outranks a plain class and loads after ours, so the size has to be marked important
+          icon: "group-[.toast]:!h-12 group-[.toast]:!w-12",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
