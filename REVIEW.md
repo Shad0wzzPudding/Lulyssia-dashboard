@@ -24,10 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 26 Oct 2026 (branch `cloud-review-2026-10-26`), so nobody has reviewed it yet.
+Newest first. Made during and after the cloud review of 26 Oct 2026 (branch `cloud-review-2026-10-26`), so nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `135a45f` | Fix : Task and event titles show clear gaps between words |
 | `dbf52cd` | Fix : Ticking an overdue repeating task no longer says it comes back at a time already gone |
 
 ## Review history
