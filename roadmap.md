@@ -225,6 +225,14 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 ### Findings
 - [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (bcad0fc)
 
+## Cloud review (26 Oct 2026)
+Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which starts from `cloud-review-2026-10-25` (that branch's work isn't on `main` yet, so merging this branch brings both). Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 26 Oct)". Rounds log: [docs/reviews/2026-10-26-cloud-review.md](docs/reviews/2026-10-26-cloud-review.md).
+
+**Summary (kept up to date during the run).**
+- Phase 1: the 3 fixes from 25 Oct reviewed; no new finding.
+
+### Findings
+
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 
