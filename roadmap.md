@@ -228,11 +228,19 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 ## Cloud review (26 Oct 2026)
 Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which starts from `cloud-review-2026-10-25` (that branch's work isn't on `main` yet, so merging this branch brings both). Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 26 Oct)". Rounds log: [docs/reviews/2026-10-26-cloud-review.md](docs/reviews/2026-10-26-cloud-review.md).
 
-**Summary (kept up to date during the run).**
+**Summary.**
 - Phase 1: the 3 fixes from 25 Oct reviewed; no new finding.
+- Phase 2: 6 rounds (Home, Tasks, Events, Interests, Settings, navigation). 1 bug fixed, no proposals. Stopped after rounds 4–6 found nothing new in a row (round 3 too).
+- To apply: no migration. Functions to deploy: `send-line-daily` and `send-line-reminders` (from the 25 Oct branch, which this branch includes).
+
+**What to do (owner).**
+- [ ] Merge branch `cloud-review-2026-10-26` into `main` (it includes `cloud-review-2026-10-25`, so that one doesn't need merging separately).
+- [ ] Deploy the LINE functions `send-line-daily` and `send-line-reminders` after merging (LINE says "Ends" for events).
+- [ ] The checks by eye listed under "Cloud review (25 Oct 2026)" → "What to do".
+- [ ] Check by eye on Tasks: tick a repeating task; the message says when it comes back, and one whose deadline passed while the app was open just says "This round of "…" is done."
 
 ### Findings
-- [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (this commit)
+- [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (dbf52cd)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
