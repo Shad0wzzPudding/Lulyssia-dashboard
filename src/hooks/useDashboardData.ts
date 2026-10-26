@@ -441,9 +441,12 @@ export const useDashboardData = () => {
       );
     },
     onSuccess: () => {
+      toast.success('Completed tasks cleared!');
+    },
+    // Reload either way: the ids go 100 at a time, so after a failure some may already be gone
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
-      toast.success('Completed tasks cleared!');
     },
     onError: (error) => {
       console.error('Failed to clear completed tasks:', error);
@@ -633,9 +636,12 @@ export const useDashboardData = () => {
       await inChunks(ids, (chunk) => supabase.from('events').delete().eq('user_id', user.id).in('id', chunk));
     },
     onSuccess: () => {
+      toast.success('Past events cleared!');
+    },
+    // Reload either way: the ids go 100 at a time, so after a failure some may already be gone
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activity_log'] });
-      toast.success('Past events cleared!');
     },
     onError: (error) => {
       console.error('Failed to clear past events:', error);

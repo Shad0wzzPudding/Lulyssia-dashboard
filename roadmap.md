@@ -249,6 +249,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Finding
 **Summary.**
 - Phase 1: the 8 commits waiting in REVIEW.md reviewed; no new finding.
 - Phase 2: 15 rounds, one per area, all 15 areas covered (order in the rounds log). 2 bugs fixed, no proposals. Stopped after rounds 6–15 found nothing new.
+- Afterwards (review only, 27 Oct): `main` had nothing new; re-reading this run's own fixes found 1 more (a half-failed clear left deleted items on screen), fixed.
 - To apply: no migration, no function to deploy.
 - Next run: every area was covered in this run; start with the areas whose files change after 27 Oct, then the second pass by angle (long words, double clicks, keyboard, installed app, failed saves, many items, access rules).
 
@@ -260,6 +261,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Finding
 ### Findings
 - [x] Low: Removing an attachment (or switching a picture's preview) in a form while another file is still uploading was undone when the upload finished: the upload added its file to the list as it was when it started. Example: remove "old-notes.pdf", then the photo being uploaded finishes and "old-notes.pdf" is back beside it (seen in a browser with a slow upload); saving then kept it. Done: the upload adds its files to the list as it is when it finishes (aef5a5a)
 - [x] Low: "Clear Completed" and "Clear Past" sent every item's id in one request address, which grows by about 37 characters per item: with 451 completed tasks it was 17,706 characters (measured in a browser), over the roughly 16 KB the server in front of the database accepts (the reason select mode's Delete already sends 100 at a time). With that many items, clearing would fail with "Failed to clear …". Undo's tidy-up of Recent Changes had the same single request. Done: all three send their ids 100 at a time like select mode's Delete (451 tasks: 5 requests of at most 4,017 characters) (99fc59a)
+- [x] Low (found re-reading that fix, 27 Oct): with the ids sent 100 at a time, a clear can now half succeed (one group refused, the others already deleted), but a failed clear didn't reload the list, so the deleted ones stayed on screen until the next reload. Done: Clear Completed and Clear Past reload their list after a failure too, like select mode's Delete (this commit)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
