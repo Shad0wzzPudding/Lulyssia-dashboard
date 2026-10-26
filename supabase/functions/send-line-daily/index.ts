@@ -406,7 +406,7 @@ Deno.serve(async (req) => {
               lines.push(`Name : ${e.title}`);
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
-              lines.push(`Start time - deadline: ${start ?? '-'} - ${due ?? '-'}`);
+              lines.push(`Start time - end: ${start ?? '-'} - ${due ?? '-'}`);
               if (tagStr) lines.push(`🏷 Tag : ${tagStr}`);
               lines.push('');
             }
@@ -434,7 +434,7 @@ Deno.serve(async (req) => {
           date: cardDate(today),
           events: todayEvents.map((e) => ({
             title: e.title,
-            time: timeRange(thTime(e.start_time), thTime(e.deadline)),
+            time: timeRange(thTime(e.start_time), thTime(e.deadline), 'event'),
             detail: formatDetail(e.description),
             tags: formatTags(e.tag_ids),
             edge: CARD.cyan,
@@ -504,7 +504,7 @@ Deno.serve(async (req) => {
             n.push(`Name : ${it.title}`);
             n.push('Detail :');
             n.push(formatDetail(it.description) ?? '-');
-            n.push(`Start time - deadline: ${startStr ?? '-'} - ${dueStr ?? '-'}`);
+            n.push(`${it.kind === '📅 Event' ? 'Start time - end' : 'Start time - deadline'}: ${startStr ?? '-'} - ${dueStr ?? '-'}`);
             const tagStr = formatTags(it.tag_ids);
             if (tagStr) n.push(`🏷 Tag : ${tagStr}`);
             n.push('');
@@ -512,7 +512,11 @@ Deno.serve(async (req) => {
           noticeText = { type: 'text', text: n.join('\n').trim().slice(0, 4900) };
           const toItem = (it: (typeof noticeItems)[number]): CardItem => ({
             title: it.title,
-            time: timeRange(isTomorrow(it.start) ? thTime(it.start) : null, isTomorrow(it.deadline) ? thTime(it.deadline) : null),
+            time: timeRange(
+              isTomorrow(it.start) ? thTime(it.start) : null,
+              isTomorrow(it.deadline) ? thTime(it.deadline) : null,
+              it.kind === '📅 Event' ? 'event' : 'task',
+            ),
             detail: formatDetail(it.description),
             tags: formatTags(it.tag_ids),
             edge: it.kind === '📅 Event' ? CARD.cyan : '#FFFFFF',

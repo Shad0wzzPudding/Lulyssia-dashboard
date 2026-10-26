@@ -40,11 +40,14 @@ export const flexText = (text: string, extra: FlexComponent = {}): FlexComponent
   ...extra,
 });
 
-/** "🕒 16:00 – 18:00", "🕒 Starts 08:00", "🕒 Due 23:59", or null when the item has no times. */
-export function timeRange(start: string | null, due: string | null): string | null {
+/**
+ * "🕒 16:00 – 18:00", "🕒 Starts 08:00", "🕒 Due 23:59", or null when the item has no times.
+ * Events call their second date "End" (as in the app), so `kind: 'event'` gives "🕒 Ends 23:59".
+ */
+export function timeRange(start: string | null, due: string | null, kind: 'task' | 'event' = 'task'): string | null {
   if (start && due) return `🕒 ${start} – ${due}`;
   if (start) return `🕒 Starts ${start}`;
-  if (due) return `🕒 Due ${due}`;
+  if (due) return kind === 'event' ? `🕒 Ends ${due}` : `🕒 Due ${due}`;
   return null;
 }
 

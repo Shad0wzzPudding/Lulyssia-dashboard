@@ -52,7 +52,8 @@ function startingSoonCard(opts: {
         spacing: 'xs',
         contents: [
           ...(start ? [labelRow('Starts', start)] : []),
-          ...(deadline ? [labelRow('Deadline', deadline)] : []),
+          // Events call their second date "End", as in the app
+          ...(deadline ? [labelRow(kind === 'event' ? 'Ends' : 'Deadline', deadline)] : []),
         ],
       },
       ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
@@ -225,7 +226,7 @@ Deno.serve(async (req) => {
             `Name : ${item.title}`,
             'Detail :',
             formatDetail(item.description) ?? '-',
-            `Start time - deadline: ${thTime(occurrenceIso) ?? '-'} - ${thTime(item.deadline) ?? '-'}`,
+            `${item.type === 'event' ? 'Start time - end' : 'Start time - deadline'}: ${thTime(occurrenceIso) ?? '-'} - ${thTime(item.deadline) ?? '-'}`,
             ...(tagStr ? [`🏷 Tag : ${tagStr}`] : []),
           ];
 
