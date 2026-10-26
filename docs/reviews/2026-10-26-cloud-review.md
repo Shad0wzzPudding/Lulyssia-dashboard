@@ -5,7 +5,7 @@ app in a local browser with every backend request answered by test data, migrati
 LINE functions under Deno with LINE and the database faked. Nothing reached the live project.
 
 ## Phase 1
-- Reviewed `bcad0fc`, `040d890`, `9b5a299` (25 Oct): no new finding.
+- Reviewed `aee35f4`, `a85c51c`, `33e1578` (25 Oct): no new finding.
 
 ## Phase 2
 - Round 1 (Home): read HomePage.tsx's today, in-progress, upcoming, Recent Changes and Main Focus logic and the tasks/events query order in useDashboardData.ts (Home's "Upcoming" first 3 are the soonest because the lists load sorted by date); checked in a browser at 360 and 390px (no sideways scroll, no page errors); found no new bug

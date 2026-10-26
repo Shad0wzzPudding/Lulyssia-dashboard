@@ -20,16 +20,24 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `9b5a299` Fix : LINE messages call an event's second time "Ends", like the app (needs function deploy: send-line-daily, send-line-reminders)
+**Last reviewed:** `33e1578` Fix : LINE messages call an event's second time "Ends", like the app (needs function deploy: send-line-daily, send-line-reminders)
 
 ## Waiting for review
 
-Newest first. Made during and after the cloud review of 26 Oct 2026 (branch `cloud-review-2026-10-26`), so nobody has reviewed them yet.
+Newest first. The first 2 were made during the cloud review of 26 Oct 2026 (branch
+`cloud-review-2026-10-26`). The last 4 are the pop-up messages and the menu button (26 Oct 2026,
+branch `fix/toasts-behind-nav`): they reached `main` while that review was running and come before
+"Last reviewed" in the history (the review's commits were replayed on top of them), but nobody has
+reviewed them yet.
 
 | Commit | What |
 | --- | --- |
-| `135a45f` | Fix : Task and event titles show clear gaps between words |
-| `dbf52cd` | Fix : Ticking an overdue repeating task no longer says it comes back at a time already gone |
+| `fff28a5` | Fix : Task and event titles show clear gaps between words |
+| `6a00462` | Fix : Ticking an overdue repeating task no longer says it comes back at a time already gone |
+| `fcad22f` | Fix : The menu button leaves and comes back at once with Side menu effects off or reduced motion |
+| `86bfd64` | Feat : The round menu button slides out while a form is open, and back when it closes |
+| `246dbf1` | Feat : Pop-up messages can be swiped away sideways, also while a form is open |
+| `85ba844` | Fix : Pop-up messages sit behind the menu button instead of covering it |
 
 ## Review history
 
@@ -39,5 +47,5 @@ Newest first. Made during and after the cloud review of 26 Oct 2026 (branch `clo
 | 2026-10-13 | `a9aeb03..a4f4e29` (13 commits, cloud session) | 1 confirmed finding (LINE Settings: a reload already running when a switch is flipped can still show the old value for a moment), in roadmap.md under "Code review (13 Oct 2026, cloud)"; typecheck and lint pass |
 | 2026-10-15 | `a4f4e29..36c0c12` (37 code commits, plus docs and skill commits; cloud session) | 1 confirmed finding (undoing an edit moved the item back to its old place in User sort), fixed in `bfaeaef`. Checked: tsc, eslint, build, deno check on all functions; all migrations replayed on a local Postgres; the editor's formatting and LINE's text cleaning compared on random texts |
 | 2026-10-23 | the build of plan review-proposals (branches `plan/review-proposals/1`..`11`, merged in order) | 1 confirmed finding (after the "Add Task" shortcut, every later visit to Tasks opened the form again), fixed in `6e55a17`; item 9's offline case found waiting instead of failing, changed with the owner in `582d5cd`. Checked: tsc, eslint, build, and all 11 owner checks in the browser. Last reviewed stays at `36c0c12`: the 15 Oct waiting list wasn't part of this review |
-| 2026-10-25 | `36c0c12..58308d3`: the 15 Oct cloud review's fixes, the plan review-proposals build and its review follow-ups, the 23 Oct editor/tag list/repeating task fixes and the 25 Oct bulk delete (40 commits listed, 50 code commits) | 1 finding fixed (`bcad0fc`: Home still said Deadline/Due for an event's end); 2 small proposals put in the roadmap's backlog (the delete question doesn't count folded completed tasks and past events; LINE's starting-soon card says Deadline for events). Checked: tsc, eslint on src, build, and the newest features in a local browser with test data (cloud review, review only) |
-| 2026-10-26 | `58308d3..9b5a299` (the 25 Oct cloud review's 3 fixes, branch `cloud-review-2026-10-25`; cloud session) | No new finding. Checked: the diffs with the code around them; tsc, eslint, build |
+| 2026-10-25 | `36c0c12..58308d3`: the 15 Oct cloud review's fixes, the plan review-proposals build and its review follow-ups, the 23 Oct editor/tag list/repeating task fixes and the 25 Oct bulk delete (40 commits listed, 50 code commits) | 1 finding fixed (`aee35f4`: Home still said Deadline/Due for an event's end); 2 small proposals put in the roadmap's backlog (the delete question doesn't count folded completed tasks and past events; LINE's starting-soon card says Deadline for events). Checked: tsc, eslint on src, build, and the newest features in a local browser with test data (cloud review, review only) |
+| 2026-10-26 | the 25 Oct cloud review's 3 fixes `aee35f4`, `a85c51c`, `33e1578` (branch `cloud-review-2026-10-25`; cloud session; IDs as replayed onto `main` on 26 Oct) | No new finding. Checked: the diffs with the code around them; tsc, eslint, build |

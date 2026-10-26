@@ -211,7 +211,7 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 
 **Summary.**
 - Reviewed: the 40 commits on REVIEW.md's waiting list (`36c0c12..58308d3`, 50 code commits counting the plan build's merges), newest first, each diff read with the code around it. The newest ones (bulk delete, "Done for good", hold-to-undo, editor scroll, tag list scroll, 25 at a time, End wording, reduce-motion switches) were also tried in a local browser with test data; the forms' save checks from the plan build were run again on today's code and still pass. Typecheck, lint (all of src) and build pass.
-- Results: 1 fixed; the 2 small proposals put in the backlog were then built on 26 Oct at the owner's request (`040d890`, `9b5a299`).
+- Results: 1 fixed; the 2 small proposals put in the backlog were then built on 26 Oct at the owner's request (`a85c51c`, `33e1578`).
 - To deploy after merging: functions `send-line-daily` and `send-line-reminders` (LINE says "Ends" for events). No new migration.
 - Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds.
 
@@ -223,7 +223,7 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 - [ ] Check on LINE (after deploying): an event's starting-soon card says "Ends", and the morning letter shows "🕒 Ends …" for an event with only an end time.
 
 ### Findings
-- [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (bcad0fc)
+- [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (aee35f4)
 
 ## Cloud review (26 Oct 2026)
 Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which starts from `cloud-review-2026-10-25` (that branch's work isn't on `main` yet, so merging this branch brings both). Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 26 Oct)". Rounds log: [docs/reviews/2026-10-26-cloud-review.md](docs/reviews/2026-10-26-cloud-review.md).
@@ -240,8 +240,8 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which s
 - [ ] Check by eye on Tasks: tick a repeating task; the message says when it comes back, and one whose deadline passed while the app was open just says "This round of "…" is done."
 
 ### Findings
-- [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (dbf52cd)
-- [x] Low (reported by the owner): Task and event titles looked as if their spaces had been removed ("Pay the electricity bill" read as one word). The spaces were there, but the titles' heavy italic font has a very thin space (about 2px at 16px, a quarter of a letter). Done: headings get a little extra space between words (about 4.4px at 16px); letters and sizes are unchanged and pages still fit 320px phones (135a45f)
+- [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (6a00462)
+- [x] Low (reported by the owner): Task and event titles looked as if their spaces had been removed ("Pay the electricity bill" read as one word). The spaces were there, but the titles' heavy italic font has a very thin space (about 2px at 16px, a quarter of a letter). Done: headings get a little extra space between words (about 4.4px at 16px); letters and sizes are unchanged and pages still fit 320px phones (fff28a5)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
