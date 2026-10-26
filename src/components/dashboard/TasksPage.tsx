@@ -437,7 +437,9 @@ export const TasksPage = ({
     }
     if (repeatingDone) {
       notify.success(
-        task.deadline
+        // It comes back when this round's deadline passes; one already past (the app was open over
+        // it) has no date to name: the next round starts as soon as the list refreshes
+        task.deadline && isAfter(parseISO(task.deadline), new Date())
           ? `This round is done. "${task.title}" comes back on ${format(parseISO(task.deadline), 'MMM d, HH:mm')}.`
           : `This round of "${task.title}" is done.`,
         {
