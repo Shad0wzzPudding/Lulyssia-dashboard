@@ -68,7 +68,8 @@ export const DisplaySettings = () => {
           <div>
             <Label htmlFor="menu-animations" className="text-base">Side menu effects</Label>
             <p className="text-sm text-muted-foreground">
-              Moving water, butterflies, bubbles and sparkles in the side menu (they stay visible when off)
+              Moving water, butterflies, bubbles and sparkles in the side menu (they stay visible when off), and the
+              round menu button sliding away while a form is open
             </p>
           </div>
           <Switch

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Heart, CheckSquare, Calendar, Camera, MessageCircle, X, PanelLeftOpen, ChevronRight, LogOut, Info } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { useMotionNotice, useReduceFlashing } from '@/hooks/usePageTransitions';
+import { useMenuAnimations, useMotionNotice, useReduceFlashing } from '@/hooks/usePageTransitions';
 import { useAnyWindowOpen } from '@/hooks/useWindowOpen';
 import {
   playDrawerCloseSound,
@@ -92,6 +92,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
   const motionNotice = useMotionNotice();
   // A form (or another window) is open: the round menu button slides off to the right until it closes
   const windowOpen = useAnyWindowOpen();
+  // It slides only with Settings' "Side menu effects" on and no reduce-motion request from the device
+  const slideMenuButton = useMenuAnimations() && !reduceMotion;
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -386,7 +388,9 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
         tabIndex={windowOpen ? -1 : undefined}
         className={cn(
           'fixed right-6 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[60] h-14 w-14 rounded-full border-2 border-foreground/80 shadow-[4px_4px_0_0_hsl(var(--foreground)/0.8)] transition-transform duration-300 ease-out hover:scale-105 [&_svg]:size-6',
-          windowOpen && 'pointer-events-none translate-x-[calc(100%+2rem)]'
+          windowOpen && 'pointer-events-none translate-x-[calc(100%+2rem)]',
+          // Otherwise it leaves and comes back at once, without sliding
+          !slideMenuButton && 'transition-none'
         )}
       >
         {open ? <X /> : <MessageCircle />}
