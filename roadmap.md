@@ -243,6 +243,14 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which s
 - [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (6a00462)
 - [x] Low (reported by the owner): Task and event titles looked as if their spaces had been removed ("Pay the electricity bill" read as one word). The spaces were there, but the titles' heavy italic font has a very thin space (about 2px at 16px, a quarter of a letter). Done: headings get a little extra space between words (about 4.4px at 16px); letters and sizes are unchanged and pages still fit 320px phones (fff28a5)
 
+## Cloud review (27 Oct 2026)
+Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 27 Oct)". Rounds log: [docs/reviews/2026-10-27-cloud-review.md](docs/reviews/2026-10-27-cloud-review.md).
+
+**Summary (kept up to date during the run).**
+- Phase 1: the 8 commits waiting in REVIEW.md reviewed; no new finding.
+
+### Findings
+
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 

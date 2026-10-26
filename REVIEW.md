@@ -20,27 +20,14 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `33e1578` Fix : LINE messages call an event's second time "Ends", like the app (needs function deploy: send-line-daily, send-line-reminders)
+**Last reviewed:** `789692e` Chore : /cloud-review remembers which areas earlier runs covered
 
 ## Waiting for review
 
-Newest first. The first keeps typed spaces in titles (27 Oct 2026, branch `fix/title-spaces`). The
-next fixes the sticker size on pop-up messages (26 Oct 2026, after the message library's update). The next 2 were made during the cloud review of 26 Oct 2026 (branch
-`cloud-review-2026-10-26`). The last 4 are the pop-up messages and the menu button (26 Oct 2026,
-branch `fix/toasts-behind-nav`): they reached `main` while that review was running and come before
-"Last reviewed" in the history (the review's commits were replayed on top of them), but nobody has
-reviewed them yet.
+Newest first. Nothing waiting yet (the cloud review of 27 Oct 2026 adds its own commits here when it stops).
 
 | Commit | What |
 | --- | --- |
-| `fe1bd55` | Fix : Titles keep the spaces typed in them |
-| `019fd3a` | Fix : Lulyssia's sticker on pop-up messages is full size again |
-| `fff28a5` | Fix : Task and event titles show clear gaps between words |
-| `6a00462` | Fix : Ticking an overdue repeating task no longer says it comes back at a time already gone |
-| `fcad22f` | Fix : The menu button leaves and comes back at once with Side menu effects off or reduced motion |
-| `86bfd64` | Feat : The round menu button slides out while a form is open, and back when it closes |
-| `246dbf1` | Feat : Pop-up messages can be swiped away sideways, also while a form is open |
-| `85ba844` | Fix : Pop-up messages sit behind the menu button instead of covering it |
 
 ## Review history
 
@@ -52,3 +39,4 @@ reviewed them yet.
 | 2026-10-23 | the build of plan review-proposals (branches `plan/review-proposals/1`..`11`, merged in order) | 1 confirmed finding (after the "Add Task" shortcut, every later visit to Tasks opened the form again), fixed in `6e55a17`; item 9's offline case found waiting instead of failing, changed with the owner in `582d5cd`. Checked: tsc, eslint, build, and all 11 owner checks in the browser. Last reviewed stays at `36c0c12`: the 15 Oct waiting list wasn't part of this review |
 | 2026-10-25 | `36c0c12..58308d3`: the 15 Oct cloud review's fixes, the plan review-proposals build and its review follow-ups, the 23 Oct editor/tag list/repeating task fixes and the 25 Oct bulk delete (40 commits listed, 50 code commits) | 1 finding fixed (`aee35f4`: Home still said Deadline/Due for an event's end); 2 small proposals put in the roadmap's backlog (the delete question doesn't count folded completed tasks and past events; LINE's starting-soon card says Deadline for events). Checked: tsc, eslint on src, build, and the newest features in a local browser with test data (cloud review, review only) |
 | 2026-10-26 | the 25 Oct cloud review's 3 fixes `aee35f4`, `a85c51c`, `33e1578` (branch `cloud-review-2026-10-25`; cloud session; IDs as replayed onto `main` on 26 Oct) | No new finding. Checked: the diffs with the code around them; tsc, eslint, build |
+| 2026-10-27 | the 8 commits on the waiting list (`85ba844`, `246dbf1`, `86bfd64`, `fcad22f`, `6a00462`, `fff28a5`, `019fd3a`, `fe1bd55`) plus `789692e` (cloud session) | No new finding. Checked: the diffs with the code around them; in a local browser, a title with a run of spaces, the menu button leaving and returning with a form, and a click on a pop-up message keeping the form open |
