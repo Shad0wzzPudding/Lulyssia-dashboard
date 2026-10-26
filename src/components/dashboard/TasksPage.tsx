@@ -34,6 +34,7 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
+import { notShownYetNote } from '@/lib/notShownYet';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
@@ -579,6 +580,13 @@ export const TasksPage = ({
         .reduce((count, [items, section]) =>
           count + items.slice(shownCounts[section] ?? SECTION_PAGE_SIZE).filter((task) => selectedIds.has(task.id)).length, 0)
     : 0;
+  // Completed tasks folded under their "+N more" cover (every sort but "User sort") are picked by
+  // "All" too: the delete question counts them as well. The cover says how many it shows.
+  const [completedShown, setCompletedShown] = useState<number | null>(null);
+  const completedFolded = sort === 'user' ? 0 : Math.max(0, completedTasks.length - (completedShown ?? completedTasks.length));
+  const foldedSelectedCount = showDeleteConfirm && completedFolded > 0
+    ? completedTasks.slice(completedTasks.length - completedFolded).filter((task) => selectedIds.has(task.id)).length
+    : 0;
   const renderTaskCard = (task: Task, badge?: string) => (
     <TaskCard
       key={task.id}
@@ -620,9 +628,7 @@ export const TasksPage = ({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
         title={`Delete ${selectedCount} task(s)?`}
-        description={hiddenSelectedCount > 0
-          ? `This will permanently delete the selected tasks, including ${hiddenSelectedCount} not shown yet (behind "Show more").`
-          : 'This will permanently delete the selected tasks.'}
+        description={`This will permanently delete the selected tasks${notShownYetNote(hiddenSelectedCount, foldedSelectedCount, `+${completedFolded} more`)}.`}
         confirmText="Yes, delete them!"
         cancelText="Wait, no!"
       />
@@ -975,6 +981,7 @@ export const TasksPage = ({
                     previewCount={1}
                     label="completed tasks"
                     renderList={(items) => renderSection(items, 'completed')}
+                    onShownChange={setCompletedShown}
                   />
                 )}
               </div>

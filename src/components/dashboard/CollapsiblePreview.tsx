@@ -1,4 +1,4 @@
-import { ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -8,6 +8,8 @@ interface Props<T> {
   previewCount: number;
   renderList: (items: T[]) => ReactNode;
   label?: string;
+  /** Told how many items are on view (the rest are behind the "+N more" cover), whenever that changes */
+  onShownChange?: (shown: number) => void;
 }
 
 // The cover lies on the next row from this far down it (its titles stay readable above)
@@ -43,7 +45,7 @@ const COVER_TINT = `${easedFade('--primary', 0.35)}, ${easedFade('--card', 0.85)
  * button that opens the full list. The cover never sits on the items that count as shown, and
  * with nothing beyond them there is no cover at all.
  */
-export function CollapsiblePreview<T>({ items, previewCount, renderList, label = 'items' }: Props<T>) {
+export function CollapsiblePreview<T>({ items, previewCount, renderList, label = 'items', onShownChange }: Props<T>) {
   const [open, setOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   // Measured from the real layout: how many are shown, and where the next row starts and ends
@@ -84,6 +86,10 @@ export function CollapsiblePreview<T>({ items, previewCount, renderList, label =
   // Until measured, and when everything fits, nothing is covered
   const hidden = layout ? Math.max(0, items.length - layout.shown) : 0;
   const covered = layout !== null && hidden > 0;
+  const shownCount = items.length - hidden;
+  useEffect(() => {
+    onShownChange?.(shownCount);
+  }, [shownCount, onShownChange]);
 
   return (
     <div className="relative">

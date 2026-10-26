@@ -31,6 +31,7 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
+import { notShownYetNote } from '@/lib/notShownYet';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { END_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
@@ -298,9 +299,18 @@ export const EventsPage = ({
   // Picked events still behind a "Show more" ("All" picks them too): the delete question says so.
   // Only worked out while that question is open. Past events count as shown once unfolded.
   const hiddenSelectedCount = showDeleteConfirm
-    ? ([[todayEvents, 'today'], [inProgressEvents, 'in_progress'], [upcomingEvents, 'upcoming'], [pastEvents, 'past']] as const)
+    // Past events have a "Show more" of their own only in "User sort"; otherwise they are folded
+    // under "+N more" (counted below)
+    ? ([[todayEvents, 'today'], [inProgressEvents, 'in_progress'], [upcomingEvents, 'upcoming'], [sort === 'user' ? pastEvents : [], 'past']] as const)
         .reduce((count, [items, section]) =>
           count + items.slice(shownLimit(section)).filter((event) => selectedIds.has(event.id)).length, 0)
+    : 0;
+  // Past events folded under their "+N more" cover (every sort but "User sort") are picked by "All"
+  // too: the delete question counts them as well. The cover says how many it shows.
+  const [pastShown, setPastShown] = useState<number | null>(null);
+  const pastFolded = sort === 'user' ? 0 : Math.max(0, pastEvents.length - (pastShown ?? pastEvents.length));
+  const foldedSelectedCount = showDeleteConfirm && pastFolded > 0
+    ? pastEvents.slice(pastEvents.length - pastFolded).filter((event) => selectedIds.has(event.id)).length
     : 0;
 
   const handleUserReorder = (orderedIds: string[], movedId: string) => {
@@ -500,9 +510,7 @@ export const EventsPage = ({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={confirmBatchDelete}
         title={`Delete ${selectedCount} event(s)?`}
-        description={hiddenSelectedCount > 0
-          ? `This will permanently delete the selected events, including ${hiddenSelectedCount} not shown yet (behind "Show more").`
-          : 'This will permanently delete the selected events.'}
+        description={`This will permanently delete the selected events${notShownYetNote(hiddenSelectedCount, foldedSelectedCount, `+${pastFolded} more`)}.`}
         confirmText="Yes, delete them!"
         cancelText="Wait, no!"
       />
@@ -764,6 +772,7 @@ export const EventsPage = ({
                     items={pastEvents}
                     previewCount={3}
                     label="past events"
+                    onShownChange={setPastShown}
                     renderList={(items) => withShowMore(items, 'past', (shown) => (
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {shown.map((event) => renderEventCard(event, 'past'))}
