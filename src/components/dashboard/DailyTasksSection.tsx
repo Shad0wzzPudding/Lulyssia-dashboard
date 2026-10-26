@@ -215,7 +215,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
                         )}
                       </Button>
                       <div className="flex-1 min-w-0">
-                        <h4 className={`font-semibold break-words ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                        <h4 className={`font-semibold whitespace-pre-wrap break-words ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                           {task.title}
                         </h4>
                         {time && (

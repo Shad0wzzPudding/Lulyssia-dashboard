@@ -142,7 +142,7 @@ const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, sele
               </Button>
             )}
             <div className="flex-1 min-w-0">
-              <h4 className={`font-semibold [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+              <h4 className={`font-semibold whitespace-pre-wrap [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title}
               </h4>
               {/* On phones the badge sits under the title, leaving the title the row's width */}

@@ -49,7 +49,7 @@ export const InProgressCard = ({
             className="flex w-full flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors hover:border-primary dark:border-p5-800/40"
           >
             <div className="flex items-baseline justify-between gap-2">
-              <p className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">{item.title}</p>
+              <p className="min-w-0 text-sm font-medium whitespace-pre-wrap [overflow-wrap:anywhere]">{item.title}</p>
               <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {item.type === 'event' ? '📅 Event' : '📋 Task'}
               </span>

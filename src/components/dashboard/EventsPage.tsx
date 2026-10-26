@@ -373,7 +373,7 @@ export const EventsPage = ({
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-lg [overflow-wrap:anywhere]">{event.title}</h4>
+                  <h4 className="font-semibold text-lg whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</h4>
                   {/* On phones the badge sits under the title, leaving the title the row's width */}
                   {!isSelecting && <div className="mt-1 sm:hidden">{todayBadge}</div>}
                 </div>
@@ -442,7 +442,7 @@ export const EventsPage = ({
                     className="mt-1"
                   />
                 )}
-                <CardTitle className={`min-w-0 [overflow-wrap:anywhere] text-${variant === 'past' ? 'base text-muted-foreground' : 'lg'}`}>{event.title}</CardTitle>
+                <CardTitle className={`min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] text-${variant === 'past' ? 'base text-muted-foreground' : 'lg'}`}>{event.title}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-3">

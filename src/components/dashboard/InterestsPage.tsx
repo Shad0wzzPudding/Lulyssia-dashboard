@@ -268,7 +268,7 @@ export const InterestsPage = ({
                 className="mt-1"
               />
             )}
-            <CardTitle className="min-w-0 text-lg text-main-focus [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            <CardTitle className="min-w-0 text-lg text-main-focus whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
           </div>
           <div className="flex items-center gap-1">
             <Badge variant="secondary" className="bg-main-focus/20 text-main-focus">
@@ -342,7 +342,7 @@ export const InterestsPage = ({
                 className="mt-1"
               />
             )}
-            <CardTitle className="min-w-0 text-lg [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            <CardTitle className="min-w-0 text-lg whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
           </div>
         </div>
       </CardHeader>

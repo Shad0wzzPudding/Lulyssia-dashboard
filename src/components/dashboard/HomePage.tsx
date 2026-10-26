@@ -559,7 +559,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       {list.map(task => (
                       <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <p className="font-medium text-sm [overflow-wrap:anywhere]">{task.title}</p>
+                          <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}</p>
                           {startsToday(task) && (
                             <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
                           )}
@@ -596,7 +596,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <div className="space-y-2">
                       {list.map(event => (
                       <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
-                        <p className="font-medium text-sm [overflow-wrap:anywhere]">{event.title}</p>
+                        <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
                           {event.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
                          )}
@@ -763,7 +763,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                             
                             <div className="ml-2 min-w-0">
                               <div className="flex items-start justify-between mb-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm leading-tight flex-1 mr-2 min-w-0 [overflow-wrap:anywhere]">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm leading-tight flex-1 mr-2 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">
                                   {item.title}
                                 </h4>
                                 <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
@@ -855,7 +855,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 <div className="space-y-2">
                   {upcomingTasks.map(task => (
                     <div key={task.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm [overflow-wrap:anywhere]">{task.title}</p>
+                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Due: {format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm')}
                       </p>
@@ -874,7 +874,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 <div className="space-y-2">
                   {upcomingEvents.map(event => (
                     <div key={event.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm [overflow-wrap:anywhere]">{event.title}</p>
+                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
                       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
                         <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
                         {event.deadline && (
@@ -989,7 +989,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   <Collapsible key={interest.id} open={!collapsedInterests.has(interest.id)}>
                     <div className="p-3 bg-card/80 rounded-lg border border-main-focus/30">
                       <div className="flex items-start justify-between">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 min-w-0 [overflow-wrap:anywhere]">{interest.title}</h4>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</h4>
                         {interest.description && (
                           <CollapsibleTrigger asChild>
                             <Button
@@ -1092,7 +1092,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     if (!log) return null;
                     return (
                       <div key={`undo-${id}`} className="flex items-center justify-between p-2 rounded border border-p5-300 dark:border-p5-700 bg-gradient-to-r from-p5-50 to-p5-50 dark:from-p5-900/20 dark:to-p5-900/20">
-                        <span className="min-w-0 text-sm text-muted-foreground italic [overflow-wrap:anywhere]">Undoing "{log.item_title}" ({log.action_type})...</span>
+                        <span className="min-w-0 text-sm text-muted-foreground italic whitespace-pre-wrap [overflow-wrap:anywhere]">Undoing "{log.item_title}" ({log.action_type})...</span>
                         <Button
                           variant="outline"
                           size="sm"
@@ -1124,7 +1124,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               ) : (
                 <CalendarIcon className="shrink-0 text-secondary" size={20} />
               )}
-              <span className="min-w-0 [overflow-wrap:anywhere]">{selectedItem?.title}</span>
+              <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{selectedItem?.title}</span>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
