@@ -215,6 +215,13 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 - To deploy after merging: functions `send-line-daily` and `send-line-reminders` (LINE says "Ends" for events). No new migration.
 - Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds.
 
+**What to do (owner).**
+- [ ] Merge branch `cloud-review-2026-10-25` into `main`.
+- [ ] Deploy the LINE functions `send-line-daily` and `send-line-reminders` (after merging), so LINE says "Ends" for events. No migration to apply.
+- [ ] Check by eye on Home: the Upcoming Events list says "Ends:" for events, and the calendar's day list and details window say "End" for an event's second time.
+- [ ] Check by eye on Tasks and Events: pick with "All", then Delete; the question mentions items folded under "+N more", e.g. "…including 8 not shown yet (behind "+8 more")".
+- [ ] Check on LINE (after deploying): an event's starting-soon card says "Ends", and the morning letter shows "🕒 Ends …" for an event with only an end time.
+
 ### Findings
 - [x] Low: Events now call their second date "End", but Home still said "Deadline:" for events in the Upcoming Events "From Events" list, and "Due" (badge and "Due:") for an event's end in the calendar's day list and its details window. Done: those say "Ends:", "End" and "End:" for events; tasks keep "Due" (bcad0fc)
 
