@@ -211,8 +211,8 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 
 **Summary.**
 - Reviewed: the 40 commits on REVIEW.md's waiting list (`36c0c12..58308d3`, 50 code commits counting the plan build's merges), newest first, each diff read with the code around it. The newest ones (bulk delete, "Done for good", hold-to-undo, editor scroll, tag list scroll, 25 at a time, End wording, reduce-motion switches) were also tried in a local browser with test data; the forms' save checks from the plan build were run again on today's code and still pass. Typecheck, lint (all of src) and build pass.
-- Results: 1 fixed, 2 proposals waiting in the backlog (both small).
-- To apply before merging: nothing new (no migration, no function change). The earlier migrations from 15 Oct are already listed in that section.
+- Results: 1 fixed; the 2 small proposals put in the backlog were then built on 26 Oct at the owner's request (`040d890`, `9b5a299`).
+- To deploy after merging: functions `send-line-daily` and `send-line-reminders` (LINE says "Ends" for events). No new migration.
 - Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds.
 
 ### Findings

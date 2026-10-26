@@ -24,10 +24,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 25 Oct 2026 (branch `cloud-review-2026-10-25`), so nobody has reviewed it yet.
+Newest first. Made during and after the cloud review of 25 Oct 2026 (branch `cloud-review-2026-10-25`), so nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `9b5a299` | Fix : LINE messages call an event's second time "Ends", like the app (needs function deploy: send-line-daily, send-line-reminders) |
+| `040d890` | Fix : Deleting picked items also mentions the ones folded under "+N more" |
 | `bcad0fc` | Fix : Home calls an event's second date "End" everywhere, like the Events page |
 
 ## Review history
