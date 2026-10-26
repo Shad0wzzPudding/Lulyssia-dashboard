@@ -246,8 +246,16 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which s
 ## Cloud review (27 Oct 2026)
 Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 27 Oct)". Rounds log: [docs/reviews/2026-10-27-cloud-review.md](docs/reviews/2026-10-27-cloud-review.md).
 
-**Summary (kept up to date during the run).**
+**Summary.**
 - Phase 1: the 8 commits waiting in REVIEW.md reviewed; no new finding.
+- Phase 2: 15 rounds, one per area, all 15 areas covered (order in the rounds log). 2 bugs fixed, no proposals. Stopped after rounds 6–15 found nothing new.
+- To apply: no migration, no function to deploy.
+- Next run: every area was covered in this run; start with the areas whose files change after 27 Oct, then the second pass by angle (long words, double clicks, keyboard, installed app, failed saves, many items, access rules).
+
+**What to do (owner).**
+- [ ] Merge branch `cloud-review-2026-10-27` into `main`.
+- [ ] Check by eye: in an add/edit form, start adding a big file, remove another attachment while it uploads; it stays removed when the upload finishes.
+- [ ] Nothing else to check by eye: the other fix (Clear Completed / Clear Past with hundreds of items) only changes how the requests are sent.
 
 ### Findings
 - [x] Low: Removing an attachment (or switching a picture's preview) in a form while another file is still uploading was undone when the upload finished: the upload added its file to the list as it was when it started. Example: remove "old-notes.pdf", then the photo being uploaded finishes and "old-notes.pdf" is back beside it (seen in a browser with a slow upload); saving then kept it. Done: the upload adds its files to the list as it is when it finishes (aef5a5a)

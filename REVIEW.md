@@ -24,10 +24,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Nothing waiting yet (the cloud review of 27 Oct 2026 adds its own commits here when it stops).
+Newest first. Made during the cloud review of 27 Oct 2026 (branch `cloud-review-2026-10-27`), so nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `99fc59a` | Fix : Clear Completed and Clear Past work with hundreds of items |
+| `aef5a5a` | Fix : An attachment removed while another file uploads stays removed |
 
 ## Review history
 
