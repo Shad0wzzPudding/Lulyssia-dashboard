@@ -24,8 +24,8 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. The first fixes the sticker size on pop-up messages (26 Oct 2026, after the message
-library's update). The next 2 were made during the cloud review of 26 Oct 2026 (branch
+Newest first. The first keeps typed spaces in titles (27 Oct 2026, branch `fix/title-spaces`). The
+next fixes the sticker size on pop-up messages (26 Oct 2026, after the message library's update). The next 2 were made during the cloud review of 26 Oct 2026 (branch
 `cloud-review-2026-10-26`). The last 4 are the pop-up messages and the menu button (26 Oct 2026,
 branch `fix/toasts-behind-nav`): they reached `main` while that review was running and come before
 "Last reviewed" in the history (the review's commits were replayed on top of them), but nobody has
@@ -33,6 +33,7 @@ reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `fe1bd55` | Fix : Titles keep the spaces typed in them |
 | `019fd3a` | Fix : Lulyssia's sticker on pop-up messages is full size again |
 | `fff28a5` | Fix : Task and event titles show clear gaps between words |
 | `6a00462` | Fix : Ticking an overdue repeating task no longer says it comes back at a time already gone |
