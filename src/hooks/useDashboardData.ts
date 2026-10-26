@@ -14,8 +14,19 @@ export type DeleteTarget = string | { id: string; __silent?: boolean };
 const deleteArgs = (target: DeleteTarget) =>
   typeof target === 'string' ? { id: target, __silent: false } : { id: target.id, __silent: !!target.__silent };
 
-// Ids per request in a batch delete: they go in the request's address, which mustn't get too long
+// Ids per request when a request names many items (select mode's Delete, Clear Completed, Clear
+// Past): they go in the request's address, which mustn't get too long (the server in front of the
+// database refuses addresses over about 16 KB, which is about 430 ids)
 const BATCH_DELETE_CHUNK = 100;
+
+/** Runs `request` for each group of up to 100 ids (all at once) and throws the first error. */
+const inChunks = async (ids: string[], request: (chunk: string[]) => PromiseLike<{ error: unknown }>) => {
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += BATCH_DELETE_CHUNK) chunks.push(ids.slice(i, i + BATCH_DELETE_CHUNK));
+  const results = await Promise.all(chunks.map(request));
+  const failed = results.find((r) => r.error);
+  if (failed) throw failed.error;
+};
 
 /**
  * Deletes many items of one list at once (select mode's Delete): one request per 100 items instead
@@ -29,13 +40,7 @@ const useBatchDelete = (table: 'tasks' | 'events' | 'interests', noun: string) =
       if (ids.length === 0) return;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      const chunks: string[][] = [];
-      for (let i = 0; i < ids.length; i += BATCH_DELETE_CHUNK) chunks.push(ids.slice(i, i + BATCH_DELETE_CHUNK));
-      const results = await Promise.all(
-        chunks.map((chunk) => supabase.from(table).delete().eq('user_id', user.id).in('id', chunk))
-      );
-      const failed = results.find((r) => r.error);
-      if (failed) throw failed.error;
+      await inChunks(ids, (chunk) => supabase.from(table).delete().eq('user_id', user.id).in('id', chunk));
     },
     onMutate: async (ids) => {
       await queryClient.cancelQueries({ queryKey: [table] });
@@ -424,16 +429,16 @@ export const useDashboardData = () => {
       if (!user) throw new Error('User not authenticated');
       if (ids.length === 0) return;
 
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('user_id', user.id)
-        .in('id', ids)
-        .eq('is_completed', true)
-        // Ticked repeating tasks stay: they come back on their next round
-        .is('recurrence_unit', null);
-      
-      if (error) throw error;
+      await inChunks(ids, (chunk) =>
+        supabase
+          .from('tasks')
+          .delete()
+          .eq('user_id', user.id)
+          .in('id', chunk)
+          .eq('is_completed', true)
+          // Ticked repeating tasks stay: they come back on their next round
+          .is('recurrence_unit', null)
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -625,13 +630,7 @@ export const useDashboardData = () => {
       if (!user) throw new Error('User not authenticated');
       if (ids.length === 0) return;
 
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('user_id', user.id)
-        .in('id', ids);
-
-      if (error) throw error;
+      await inChunks(ids, (chunk) => supabase.from('events').delete().eq('user_id', user.id).in('id', chunk));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
@@ -659,14 +658,19 @@ export const useDashboardData = () => {
         .insert(items.map((item) => ({ ...item, user_id: user.id })) as never);
       if (error) throw error;
 
-      const { error: logError } = await supabase
-        .from('activity_log')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('action_type', 'deleted')
-        .eq('item_type', table)
-        .in('item_id', items.map((item) => item.id));
-      if (logError) console.error('Failed to tidy Recent Changes after restoring:', logError);
+      try {
+        await inChunks(items.map((item) => item.id), (chunk) =>
+          supabase
+            .from('activity_log')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('action_type', 'deleted')
+            .eq('item_type', table)
+            .in('item_id', chunk)
+        );
+      } catch (logError) {
+        console.error('Failed to tidy Recent Changes after restoring:', logError);
+      }
     },
     onSettled: (_data, _error, { table }) => {
       queryClient.invalidateQueries({ queryKey: [table] });
