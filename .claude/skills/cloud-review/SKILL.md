@@ -96,11 +96,20 @@ without asking.
 
 ## Phase 2: bug hunt rounds across the whole site
 
-Run rounds until you run out of tokens, or until three rounds in a row find no new confirmed bug.
+Run rounds until you run out of tokens, or until three rounds in a row find no new confirmed bug (see
+"Counting" below: that stop only counts once every area has been covered recently).
+
+**Before the first round: what earlier runs covered.** Every run leaves a rounds log in docs/reviews/.
+Read them all and note, for each area in the list below, when it was last covered. Treat an area as not
+covered if its files changed since then (`git log --since=<that run's date> -- <its files>`). Then go
+through the areas in this order: never covered first, then changed since covered, then the longest
+ago. Otherwise every run would start from the top of the list, recheck the same recently clean pages,
+stop after three empty rounds and never reach the areas lower down. Write the order you chose at the
+top of this run's rounds log.
 
 **A round:**
 
-1. Pick one area not yet covered in this run, and name it. Suggested order:
+1. Take the next area in that order, and name it. The areas:
    1. Home page
    2. Tasks page (including daily and repeating tasks)
    3. Events page
@@ -147,6 +156,9 @@ is genuinely clean, not to give an easy way out. So:
 
 - A round counts toward the three only if its log lists the files read and the checks run, and its area
   wasn't covered before in this run.
+- The stop only applies once every area in the list has been covered in this run or in one of the two
+  runs before it (with no changes since). Until then, keep going through the areas not covered yet,
+  even after three clean rounds: an area nobody has looked at recently is where bugs are most likely.
 - Don't pick small or easy areas to finish sooner, and don't lower the bar as rounds go on.
 - Re-checking fixes you just made isn't a round.
 - Any round that finds a bug resets the count to zero.
@@ -159,5 +171,6 @@ Whether you finish or run low on tokens, keep enough budget for this:
 2. A short summary sits at the top of the roadmap section, with a link to the rounds log:
    - rounds run, bugs fixed, proposals waiting (with their sizes added up);
    - migrations to apply and functions to deploy, by file and function name;
-   - why you stopped: three clean rounds, or out of tokens, and which area you were on.
+   - why you stopped: three clean rounds, or out of tokens, and which area you were on;
+   - which areas this run covered, and which ones the next run should start with.
 3. REVIEW.md lists all your own commits in its waiting list, newest first.
