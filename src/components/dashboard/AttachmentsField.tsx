@@ -62,6 +62,10 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
   const uploadingRef = useRef(false);
   const onUploadingChangeRef = useRef(onUploadingChange);
   onUploadingChangeRef.current = onUploadingChange;
+  // The list as it is now: a file removed or a preview switched while an upload runs must stay so
+  // when the upload adds its files (the list from when it started would bring them back)
+  const valueRef = useRef(value);
+  valueRef.current = value;
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -101,7 +105,7 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
           size: file.size,
         });
       }
-      if (uploaded.length > 0 && mounted.current) onChange([...(value || []), ...uploaded]);
+      if (uploaded.length > 0 && mounted.current) onChange([...(valueRef.current || []), ...uploaded]);
     } finally {
       uploadingRef.current = false;
       if (mounted.current) {

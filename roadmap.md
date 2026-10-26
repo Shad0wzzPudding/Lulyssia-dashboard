@@ -250,6 +250,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Finding
 - Phase 1: the 8 commits waiting in REVIEW.md reviewed; no new finding.
 
 ### Findings
+- [x] Low: Removing an attachment (or switching a picture's preview) in a form while another file is still uploading was undone when the upload finished: the upload added its file to the list as it was when it started. Example: remove "old-notes.pdf", then the photo being uploaded finishes and "old-notes.pdf" is back beside it (seen in a browser with a slow upload); saving then kept it. Done: the upload adds its files to the list as it is when it finishes (this commit)
 
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
