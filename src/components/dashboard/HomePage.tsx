@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
-import { Interest, Task, Event, ActivityLog } from "@/lib/types";
+import { Interest, Task, Event, ActivityLog, Attachment } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
@@ -20,6 +20,7 @@ import { toast } from "@/lib/toast";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
+import { AttachmentsChips, AttachmentsImages } from "./AttachmentsField";
 interface HomePageProps {
   interests: Interest[];
   tasks: Task[];
@@ -39,6 +40,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     dateTypes: Array<'start' | 'deadline'>;
     times: { start?: string; deadline?: string };
     description?: string;
+    attachments?: Attachment[];
   } | null>(null);
   const [recentChangesCollapsed, setRecentChangesCollapsed] = useState(() => {
     try {
@@ -291,6 +293,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       dateTypes: Array<'start' | 'deadline'>;
       times: { start?: string; deadline?: string };
       description?: string;
+      attachments?: Attachment[];
     }> = new Map();
     
     // Check tasks (only incomplete tasks)
@@ -331,7 +334,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               type: 'task',
               dateTypes,
               times,
-              description: task.description
+              description: task.description,
+              attachments: task.attachments
             });
           }
         }
@@ -375,7 +379,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             type: 'event',
             dateTypes,
             times,
-            description: event.description
+            description: event.description,
+            attachments: event.attachments
           });
         }
       }
@@ -411,13 +416,13 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       .filter(event => event.start_time && event.deadline
         && isBefore(parseISO(event.start_time), startOfToday) && isAfter(parseISO(event.deadline), now))
       .map(event => ({ id: event.id, type: 'event' as const, title: event.title, description: event.description,
-        start: event.start_time as string, end: event.deadline as string, tag_ids: event.tag_ids })),
+        start: event.start_time as string, end: event.deadline as string, tag_ids: event.tag_ids, attachments: event.attachments })),
     ...tasks
       .filter(task => !task.is_completed && !task.recurrence_unit && task.start_date && task.deadline
         && isBefore(parseISO(task.start_date), startOfToday) && isAfter(parseISO(task.deadline), now)
         && !isToday(parseISO(task.deadline)))
       .map(task => ({ id: task.id, type: 'task' as const, title: task.title, description: task.description,
-        start: task.start_date as string, end: task.deadline as string, tag_ids: task.tag_ids })),
+        start: task.start_date as string, end: task.deadline as string, tag_ids: task.tag_ids, attachments: task.attachments })),
   ].sort((a, b) => parseISO(a.end).getTime() - parseISO(b.end).getTime());
 
   // Upcoming events and tasks (excluding today). Like events, a task is upcoming only before it
@@ -629,6 +634,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
           dateTypes: ['start', 'deadline'],
           times: { start: format(parseISO(item.start), 'd MMM, HH:mm'), deadline: format(parseISO(item.end), 'd MMM, HH:mm') },
           description: item.description ?? undefined,
+          attachments: item.attachments,
         })}
       />
 
@@ -1146,6 +1152,14 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Description</h4>
                 <p className="text-sm whitespace-pre-wrap"><FormattedText>{selectedItem.description}</FormattedText></p>
+              </div>
+            )}
+
+            {/* Its pictures and files, as on its Tasks or Events card */}
+            {selectedItem?.attachments && selectedItem.attachments.length > 0 && (
+              <div className="space-y-2">
+                <AttachmentsImages attachments={selectedItem.attachments} />
+                <AttachmentsChips attachments={selectedItem.attachments} />
               </div>
             )}
             
