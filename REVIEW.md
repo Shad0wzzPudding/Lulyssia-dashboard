@@ -28,6 +28,9 @@ Newest first. Made during the cloud review of the home-and-editor build (27 Oct 
 
 | Commit | What |
 | --- | --- |
+| `55a0748` | Feat : Settings > Editor says Android keyboards don't support Quick space (owner's decision) |
+| `ba16917` | Feat : Home's details window has an "Attachments" heading above the pictures and files (owner's decision) |
+| `ff6cd78` | Feat : With Auto •, a new bullet keeps the indent of the line above (owner's decision) |
 | `590871a` | Feat : Today's Tasks and Events show a same-day item's time as the calendar's cyan chip (owner's decision) |
 | `a454282` | Fix : Home's In progress cards are a card with a button over it, so screen readers find the pencil (owner's decision) |
 | `36731eb` | Feat : Esc closes the form from the description box too; Ctrl+M switches what Tab does (owner's decision on plan item 2) |

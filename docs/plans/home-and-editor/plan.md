@@ -1,6 +1,6 @@
 # Plan: Home and description editor
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `9abde7e` (27 Oct 2026)
 **Decided with the owner on:** 27 Oct 2026
 **Built:** 27 Oct 2026, against `main` at `5e4f2a9`; all 8 items built. See `log/summary.md` for the
@@ -324,6 +324,15 @@ proposals (roadmap.md, "Cloud review (27 Oct 2026, home and editor)").
   again later (a bigger invisible tap area, or a bigger pencil).
 - **Item 1, the range in Today's lists:** the same cyan clock chip as the calendar's day list
   ("🕒 09:00 – 13:00"), instead of plain grey text, so a same-day item looks the same everywhere.
+- **Item 4, the Tab button:** kept as built (indent icon + "Tab").
+- **Item 6, the details window:** a small "Attachments" heading above the pictures and file chips
+  (like "Description" and "Times").
+- **Item 8, the Editor card:** kept as built, plus a note that Android phone keyboards don't support
+  Quick space (they often don't say which key was pressed). Testing it on an iPhone is in the
+  roadmap's Backlog.
+- **Auto • bullets (new):** Enter after an indented bullet starts the next bullet with the same indent.
+- **The build's other guesses** (Space with Ctrl/Alt left to the browser; the selection after Space on
+  one line; hand-typed tabs in LINE; the Editor choice shared by open editors): kept as built.
 
 ## If something isn't covered here
 
