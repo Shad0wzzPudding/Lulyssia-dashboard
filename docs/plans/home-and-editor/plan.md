@@ -59,7 +59,37 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 2. Tab on selected lines in the description editor
 - **Owner's idea:** select lines and press Tab to indent the selected lines.
-- **Decision:** Not decided yet
+- **Decision:** as in the preview: Tab indents, Shift+Tab un-indents, Esc then Tab leaves the box.
+- **Branch:** `plan/home-and-editor/2-tab-key`
+- **What it does:** in the description editor (src/components/ui/formatted-textarea.tsx, used by the
+  task, event and interest forms), Tab adds 6 spaces at the start of the caret's line, or of every line
+  the selection touches; Shift+Tab removes up to 6 spaces from the start of each of those lines.
+- **Rules decided:**
+  - 1 tab = 6 plain spaces (not a tab character), so the description shows the same everywhere;
+  - a selection that ends exactly at the start of a line doesn't take that line (as in the preview);
+  - after Tab or Shift+Tab the same lines stay selected, shifted with the text, so Tab can be pressed
+    again; with only a caret, the caret moves with its line;
+  - Shift+Tab removes only spaces (up to 6 per line); a line with fewer removes what it has;
+  - Esc, then Tab, leaves the box for the next field as Tab does today (keyboard users aren't trapped);
+    clicking back in or typing anything else turns Tab back into indenting;
+  - each Tab or Shift+Tab is one step for the editor's undo/redo (Ctrl/Cmd+Z);
+  - the indent keeps the formatting of the text it moves (bold, italic, strikethrough, bullets);
+  - leading spaces must survive saving and showing: the cards already show descriptions with their
+    spaces (whitespace-pre-wrap); check the saved text keeps them.
+- **Preview:** `previews/2-4-indent.html` (the Tab key part). **Intent only:** a plain text box; the real
+  editor keeps its formatting.
+- **Done when:**
+  - [ ] Tab on a caret indents that line by 6 spaces; on a selection over 3 lines, all 3 get 6 spaces
+  - [ ] Shift+Tab removes up to 6 spaces from each of those lines
+  - [ ] after Tab, the same lines are still selected and a second Tab indents them again
+  - [ ] Esc then Tab moves focus to the next field
+  - [ ] Ctrl/Cmd+Z undoes one Tab at a time
+  - [ ] a bold word on an indented line is still bold after saving and reopening
+  - [ ] the saved description keeps the leading spaces, and the card shows them
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** indent a few lines of a task's description with Tab and Shift+Tab.
+- **Needs:** nothing
+- **Depends on:** nothing
 
 ### 3. Space on selected lines in the description editor
 - **Owner's idea:** select lines and press Space to add a space at the start of the selected lines.

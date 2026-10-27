@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Description Indent Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a working copy of the description box with the proposed Tab, Space and Tab-button rules, plus a log of what each key did (intent only: the real editor keeps its bold/italic and bullets) */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 72%);
+    --line: hsl(0 0% 24%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+  .form { background: var(--card); border: 1px solid #333; border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+  .form h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.3rem; margin: 0; }
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tb { font: italic 800 .95rem var(--display); color: var(--fg); background: var(--card); border: 1px solid #444; padding: 6px 12px; cursor: pointer; transform: skewX(-12deg); }
+  .tb > span { display: inline-block; transform: skewX(12deg); }
+  .tb:hover { border-color: var(--cyan); }
+  .tb.new { border-color: var(--cyan); color: var(--cyan); }
+  .tb:focus-visible, textarea:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  textarea { width: 100%; min-height: 220px; resize: vertical; background: hsl(200 14% 6%); color: var(--fg); border: 2px solid var(--cyan); border-radius: 4px; padding: 10px; font: 15px/1.6 var(--body); white-space: pre-wrap; tab-size: 6; }
+  .next { font: 14px var(--body); background: hsl(200 14% 6%); color: var(--fg); border: 1px solid #444; border-radius: 4px; padding: 8px 10px; }
+  .hint { font-size: .8rem; color: var(--muted); }
+  .rules { margin: 0; padding-left: 18px; color: var(--muted); font-size: .88rem; line-height: 1.65; display: grid; gap: 3px; }
+  .rules b { color: var(--fg); font-weight: 600; }
+  kbd { font: 600 .78rem var(--body); background: #1f2a30; border: 1px solid #3a4a52; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--fg); }
+  .log { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); background: hsl(200 14% 6%); border: 1px dashed #333; border-radius: 6px; padding: 8px 10px; min-height: 2.6em; }
+  .log b { color: var(--cyan); font-weight: 600; }
+  .reset { justify-self: start; font: 500 .82rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Indent lines in a description</h1>
+    <p class="lede">A working copy of the description box with the proposed rules. Try them below. Intent only: the real editor keeps its bold, italic, bullets and the rest; only these keys and the new button are new.</p>
+  </header>
+
+  <ul class="rules">
+    <li><kbd>Tab</kbd> <b>indents</b> the line the caret is on, or every selected line, by 6 spaces. <kbd>Shift</kbd>+<kbd>Tab</kbd> takes up to 6 spaces back off.</li>
+    <li><kbd>Space</kbd> with <b>whole lines selected</b> (or a selection running over 2+ lines) adds 1 space at the start of each of those lines instead of replacing the text. Inside one line it types a space as usual.</li>
+    <li><b>⇥ Tab</b> button: the same as the <kbd>Tab</kbd> key (keeps the selection, so you can press it again).</li>
+    <li>To leave the box with the keyboard: <kbd>Esc</kbd>, then <kbd>Tab</kbd> moves on as usual.</li>
+  </ul>
+
+  <div class="form">
+    <h2>Edit Task</h2>
+    <div class="toolbar" role="toolbar" aria-label="Formatting">
+      <button class="tb" type="button" tabindex="-1"><span>☰ Auto •</span></button>
+      <button class="tb" type="button" id="add-bullet"><span>• Add</span></button>
+      <button class="tb new" type="button" id="tab-btn" title="Indent the line (6 spaces)"><span>⇥ Tab</span></button>
+      <button class="tb" type="button" tabindex="-1"><span>S̶</span></button>
+      <button class="tb" type="button" tabindex="-1"><span><b>B</b></span></button>
+      <button class="tb" type="button" tabindex="-1"><span><i>I</i></span></button>
+    </div>
+    <textarea id="ed" aria-label="Description" spellcheck="false"></textarea>
+    <input class="next" id="next" placeholder="The next field (Tab lands here after Esc)" aria-label="Next field">
+    <div class="hint">Select lines with the mouse (or Shift + arrow keys), then press Tab, Shift+Tab or Space, or use the ⇥ Tab button.</div>
+  </div>
+
+  <div class="log" id="log" aria-live="polite">What each key did shows here.</div>
+  <button class="reset" type="button" id="reset">Reset the text</button>
+</div>
+
+<script>
+  const START = 'Chapter 4\n• Summary of the slides\n• Exercises 1-5\nBring:\nlaptop\ncharger\nnotes';
+  const ed = document.getElementById('ed');
+  const log = document.getElementById('log');
+  const TAB = '      ';
+  let released = false;
+  ed.value = START;
+
+  const say = (html) => { log.innerHTML = html; };
+  const lineRange = (text, a, b) => {
+    const start = text.lastIndexOf('\n', a - 1) + 1;
+    let endPos = b;
+    if (b > a && text[b - 1] === '\n') endPos = b - 1; // a selection ending at a line start doesn't take that line
+    let end = text.indexOf('\n', endPos); if (end === -1) end = text.length;
+    return [start, end];
+  };
+  // Add `pad` at the start of every line in the selection (or the caret's line), keeping the selection on them
+  const indent = (pad) => {
+    const t = ed.value, a = ed.selectionStart, b = ed.selectionEnd;
+    const [s, e] = lineRange(t, a, b);
+    const lines = t.slice(s, e).split('\n');
+    const out = lines.map((l) => pad + l).join('\n');
+    ed.value = t.slice(0, s) + out + t.slice(e);
+    if (a === b) ed.setSelectionRange(a + pad.length, a + pad.length);
+    else ed.setSelectionRange(a + pad.length, b + pad.length * lines.length);
+    return lines.length;
+  };
+  const outdent = () => {
+    const t = ed.value, a = ed.selectionStart, b = ed.selectionEnd;
+    const [s, e] = lineRange(t, a, b);
+    let removedFirst = 0, removedAll = 0;
+    const out = t.slice(s, e).split('\n').map((l, i) => {
+      const n = Math.min(6, l.length - l.trimStart().length, (l.match(/^ */) || [''])[0].length);
+      if (i === 0) removedFirst = n; removedAll += n; return l.slice(n);
+    }).join('\n');
+    ed.value = t.slice(0, s) + out + t.slice(e);
+    ed.setSelectionRange(Math.max(s, a - removedFirst), Math.max(s, b - removedAll));
+    return removedAll;
+  };
+  const coversLines = () => {
+    const t = ed.value, a = ed.selectionStart, b = ed.selectionEnd;
+    if (a === b) return false;
+    const sel = t.slice(a, b);
+    if (sel.includes('\n')) return true; // runs over 2+ lines
+    const [s, e] = lineRange(t, a, b);
+    return a === s && b === e; // one whole line selected
+  };
+
+  ed.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') { released = true; say('<b>Esc</b>: Tab now leaves the box (until you click back in or type).'); return; }
+    if (ev.key === 'Tab' && !released) {
+      ev.preventDefault();
+      if (ev.shiftKey) { const n = outdent(); say(`<b>Shift+Tab</b>: removed ${n} space${n === 1 ? '' : 's'}.`); }
+      else { const n = indent(TAB); say(`<b>Tab</b>: indented ${n} line${n === 1 ? '' : 's'} by 6 spaces.`); }
+      return;
+    }
+    if (ev.key === ' ' && !ev.ctrlKey && !ev.metaKey && !ev.altKey && coversLines()) {
+      ev.preventDefault();
+      const n = indent(' ');
+      say(`<b>Space</b> on selected lines: added 1 space to ${n} line${n === 1 ? '' : 's'} (nothing was replaced).`);
+      return;
+    }
+    if (ev.key !== 'Tab') released = false;
+  });
+  ed.addEventListener('mousedown', () => { released = false; });
+  ed.addEventListener('blur', () => { released = false; });
+
+  const tabBtn = document.getElementById('tab-btn');
+  // Keep the text box's selection when the button is pressed
+  tabBtn.addEventListener('mousedown', (e) => e.preventDefault());
+  tabBtn.addEventListener('click', () => { ed.focus(); const n = indent(TAB); say(`<b>⇥ Tab</b> button: indented ${n} line${n === 1 ? '' : 's'} by 6 spaces.`); });
+  document.getElementById('add-bullet').addEventListener('mousedown', (e) => e.preventDefault());
+  document.getElementById('add-bullet').addEventListener('click', () => { ed.focus(); const p = ed.selectionStart; const t = ed.value; const at = p === 0 || t[p - 1] === '\n'; const ins = at ? '• ' : '\n• '; ed.setRangeText(ins, p, ed.selectionEnd, 'end'); say('<b>• Add</b>: a bullet (as now).'); });
+  document.getElementById('reset').addEventListener('click', () => { ed.value = START; say('Text reset.'); });
+</script>
+</body>
+</html>
