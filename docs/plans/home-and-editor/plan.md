@@ -1,8 +1,10 @@
 # Plan: Home and description editor
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `9abde7e` (27 Oct 2026)
 **Decided with the owner on:** 27 Oct 2026
+**Built:** 27 Oct 2026, against `main` at `5e4f2a9`; all 8 items built. See `log/summary.md` for the
+branches, the merge order and the guesses to settle.
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
 https://claude.ai/artifact/6dpfV2yy9tw5gaLXYCDUVb). **Intent only**, like the previews.
 
@@ -314,6 +316,10 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-1. After merging item 7: deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue`.
+Merge order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8, then `plan/home-and-editor/summary` (items 3 and 4 need
+2; 8 needs 3; 5 carries 1 and 6 carries 5; see `log/summary.md`).
+
+1. After merging item 7 (`plan/home-and-editor/7-line-keeps-indents`): deploy `send-line-daily`,
+   `send-line-reminders` and `send-line-overdue`.
 2. Nothing else: no migration (item 8 uses the existing `user_preferences.prefs` field), and the other
    items go out with the next Vercel deploy after merging.
