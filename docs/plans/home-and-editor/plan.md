@@ -93,7 +93,29 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 3. Space on selected lines in the description editor
 - **Owner's idea:** select lines and press Space to add a space at the start of the selected lines.
-- **Decision:** Not decided yet
+- **Decision:** as in the preview: Space on whole or multiple selected lines adds 1 space to each.
+- **Branch:** `plan/home-and-editor/3-space-key`
+- **What it does:** in the description editor, when the selection covers one whole line or runs over two
+  or more lines, Space adds 1 space at the start of each of those lines instead of replacing the
+  selected text. With part of one line selected, or no selection, Space types a space as usual.
+- **Rules decided:**
+  - "whole line": the selection starts at the line's start and ends at its end (the line break itself
+    may or may not be included);
+  - a selection that ends exactly at the start of a line doesn't take that line;
+  - the same lines stay selected afterwards (shifted by one space each), so Space can be pressed again;
+  - only plain Space: with Ctrl, Cmd or Alt held, Space behaves as it does now;
+  - one step for undo/redo, and the formatting of the moved text is kept, as in item 2.
+- **Preview:** `previews/2-4-indent.html` (the Space part). **Intent only.**
+- **Done when:**
+  - [ ] whole line selected + Space: that line gets 1 leading space and its text is still there
+  - [ ] 3 lines selected (even partly) + Space: each gets 1 leading space
+  - [ ] one word selected inside a line + Space: the word is replaced by a space, as before
+  - [ ] the lines stay selected and a second Space adds another space to each
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** select some lines in a description and press Space.
+- **Needs:** nothing
+- **Depends on:** item 2 shares the "lines in the selection" logic; if item 2 isn't built first, build
+  that part here and reuse it there.
 
 ### 4. A Tab button in the editor's toolbar
 - **Owner's idea:** a Tab format button that indents the line; 1 tab = 6 spaces.
