@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { List, Strikethrough, Bold, Italic, IndentIncrease } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -281,9 +281,10 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   // Increases with every edit; only the newest edit's re-render is applied
   const renderTokenRef = useRef(0);
   const applyFormatToggleRef = useRef<(marker: string) => void>(() => {});
-  // After Esc, Tab leaves the box as usual (keyboard users aren't trapped) until the box is
-  // clicked, typed in or left
-  const tabReleasedRef = useRef(false);
+  // Ctrl+M switches Tab between indenting (the default) and moving on to the next field, so
+  // keyboard users aren't trapped in the box (the same key as in VS Code)
+  const [tabMoves, setTabMoves] = useState(false);
+  const tabHintId = useId();
   // Settings > Editor: "Quick space" (Space on selected lines indents them) or "Normal"
   const spaceIndent = useSpaceIndent();
 
@@ -465,36 +466,24 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     commitEdit(writeChars(edit.chars), edit.start, edit.end);
   }, [commitEdit]);
 
-  // Esc in the box frees Tab to move on to the next field. Open forms close on Esc, and listen for
-  // it before the box does, so the first Esc is claimed here (before them); a second one closes as before.
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      const el = editorRef.current;
-      if (e.key !== 'Escape' || e.isComposing || !el || !el.contains(document.activeElement)) return;
-      if (tabReleasedRef.current) return;
-      tabReleasedRef.current = true;
-      e.preventDefault();
-    };
-    window.addEventListener('keydown', handleEscape, true);
-    return () => window.removeEventListener('keydown', handleEscape, true);
-  }, []);
-
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape') return;
     // A word still being composed (phone keyboards, input methods): Tab and Space are left to it
     const composing = e.nativeEvent.isComposing;
     // Undo / Redo — intercept before the browser's native (broken) undo runs.
     const mod = e.ctrlKey || e.metaKey;
 
+    if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      setTabMoves((moves) => !moves);
+      return;
+    }
     if (e.key === 'Tab' && !mod && !e.altKey && !composing) {
-      // After Esc, Tab moves on to the next field as usual
-      if (tabReleasedRef.current) return;
+      // Switched with Ctrl+M: Tab moves on to the next field as usual
+      if (tabMoves) return;
       e.preventDefault();
       shiftLines(e.shiftKey);
       return;
     }
-    // Typing anything else turns Tab back into indenting
-    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) tabReleasedRef.current = false;
 
     // Space with one whole line, or two or more lines, selected adds a space at the start of each
     // line instead of replacing them. Part of one line selected, or the "Normal" setting: Space
@@ -578,7 +567,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       // Normal enter: caret at the start of the new line
       commitEdit(writeChars([...before, ...plainChars('\n'), ...after]), before.length + 1);
     }
-  }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines, spaceIndent]);
+  }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines, spaceIndent, tabMoves]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;
@@ -711,8 +700,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
           onKeyDown={handleKeyDown}
-          onMouseDown={() => { tabReleasedRef.current = false; }}
-          onBlur={() => { tabReleasedRef.current = false; }}
+          aria-describedby={tabMoves ? tabHintId : undefined}
           onPaste={handlePaste}
           data-placeholder={placeholder}
           className={cn(
@@ -725,6 +713,11 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           suppressContentEditableWarning
         />
       </div>
+      {tabMoves && (
+        <p id={tabHintId} role="status" className="text-xs text-muted-foreground">
+          Tab moves to the next field. Press Ctrl+M to indent with Tab again.
+        </p>
+      )}
     </div>
   );
 };

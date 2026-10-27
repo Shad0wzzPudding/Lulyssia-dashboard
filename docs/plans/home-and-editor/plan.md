@@ -308,6 +308,16 @@ Build them in this order. Each one is its own branch and can be merged on its ow
   "Start and end today" after the type badge, with the range (item 1). On another calendar day it
   reads "Start and end 3 Nov" (the owner's choice).
 
+## Decided after the build
+
+Settled with the owner one at a time, from the build's guesses (`log/summary.md`) and the review's
+proposals (roadmap.md, "Cloud review (27 Oct 2026, home and editor)").
+
+- **Item 2, Esc in the description box:** Esc always closes the form, from the box too (the build had
+  made the first Esc only free Tab). To leave the box with the keyboard, **Ctrl+M** switches Tab
+  between indenting and moving to the next field, as in VS Code; while Tab moves on, a hint under the
+  box says so. The Tab button isn't affected.
+
 ## If something isn't covered here
 
 Build the smallest version that fits this plan, write the guess in the item's log under
