@@ -3,6 +3,7 @@ import { Hourglass, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { useTags } from '@/hooks/useTags';
+import type { Attachment } from '@/lib/types';
 
 export type InProgressItem = {
   id: string;
@@ -12,6 +13,7 @@ export type InProgressItem = {
   start: string;
   end: string;
   tag_ids?: string[];
+  attachments?: Attachment[];
 };
 
 /**
