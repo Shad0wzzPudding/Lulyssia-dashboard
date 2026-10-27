@@ -7,15 +7,16 @@
 ## Goal
 
 Make Home and the description editor easier to use: a task or event that starts and ends on the same day
-shows once instead of twice, tasks and events can be edited straight from Home, their pictures show in
-Home's details, and whole lines of a description can be indented with Tab, Space or a Tab button.
+shows one time range, tasks and events can be edited straight from Home, their pictures show in Home's
+details, and whole lines of a description can be indented with Tab, Space or a Tab button. LINE keeps
+those indents, and a Settings choice turns Space's indenting off for anyone who prefers it.
 
 Each item starts as "Not decided yet"; its decisions are written in as soon as the owner makes them, so
 the plan can be picked up again at the first undecided item.
 
 ## Not in this plan
 
-Anything beyond the six ideas below. New ideas that come up go to the roadmap's backlog.
+Anything beyond the items below (six from the owner, two added while planning). New ideas that come up go to the roadmap's backlog.
 
 ## Items
 
@@ -190,7 +191,62 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 6. Pictures in Home's details
 - **Owner's idea:** when a task or event is clicked on Home, its pictures show with its information.
-- **Decision:** Not decided yet
+- **Decision:** option A: the details window shows the item's attachments exactly as its card does.
+- **Branch:** `plan/home-and-editor/6-details-pictures`
+- **What it does:** the window that opens when a task or event is clicked on Home (the calendar's day
+  list, the calendar's details, the "In progress..." cards) shows, under the description, the pictures
+  the item's card shows (the ones with the eye toggle on) and then every attachment as a chip, the same
+  as on its Tasks or Events card. Tapping a picture or chip opens it.
+- **Rules decided:**
+  - reuse the cards' existing components (`AttachmentsImages` and `AttachmentsChips` in
+    src/components/dashboard/AttachmentsField.tsx), so the look, the link renewal, the HEIC conversion
+    and the opening behaviour are the same as on the cards;
+  - the window gets the attachments from the task or event itself (today it only receives the title,
+    times and description), so the item passed to it needs its attachments too (from the calendar's
+    day list and from In progress);
+  - an item with no attachments looks as now;
+  - order inside the window: title, description, pictures, file chips, then the time row;
+  - the window may need to scroll on a phone when there are big pictures; it must not grow wider than
+    the screen.
+- **Preview:** `previews/6-details.html`, option **A**. **Intent only:** use the real components.
+- **Done when:**
+  - [ ] an event and a task with a shown picture and a PDF: the details window shows the picture and both
+    chips, from the calendar's day list and from In progress
+  - [ ] a picture hidden from the card (eye off) isn't shown as a picture in the window, only as a chip
+  - [ ] tapping the picture opens it; tapping the PDF chip opens the PDF
+  - [ ] an item without attachments shows the window as before
+  - [ ] at 375px the window fits the screen and scrolls if needed
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** open a task with a photo from Home's calendar and from In progress.
+- **Needs:** nothing
+- **Depends on:** nothing (item 5 also edits this window: keep both changes)
+
+### 7. LINE keeps the indents (added while planning)
+- **Why:** LINE messages trim the start of every description line, so indents made with items 2–4 would
+  only show in the app.
+- **Decision:** LINE keeps each line's leading spaces.
+- **Branch:** `plan/home-and-editor/7-line-keeps-indents`
+- **What it does:** descriptions in LINE messages (the morning letter, the day-before notice, the
+  starting-soon card and the missed-deadline nudges, through `formatDetail` in
+  supabase/functions/_shared/lineText.ts) keep the spaces at the start of each line.
+- **Rules decided:**
+  - only the start of lines changes: trailing spaces are still trimmed, empty (or spaces-only) lines are
+    still dropped, and the 5-line / ~300-character limit and its "Read full detail in dashboard." note
+    stay as they are;
+  - the first line keeps its indent too (today the whole text is trimmed before it is split into lines);
+  - the plain-text versions of the cards use the same `formatDetail`, so they follow.
+- **Done when:**
+  - [ ] `formatDetail("Bring:\n      laptop\n      charger")` returns those three lines with the six
+    leading spaces kept (checked with a small script under Deno or Node)
+  - [ ] `formatDetail("      indented first line")` keeps the leading spaces
+  - [ ] empty and spaces-only lines are still dropped, trailing spaces still trimmed, the 5-line and
+    300-character limits still apply
+  - [ ] `deno check` passes for send-line-daily, send-line-reminders and send-line-overdue (if Deno is
+    available)
+- **Owner checks by eye:** after deploying, a LINE message for a task whose description has an indented
+  line (e.g. "today" in LINE, or the Settings test button).
+- **Needs:** function deploy: `send-line-daily`, `send-line-reminders`, `send-line-overdue`.
+- **Depends on:** nothing (it works with indents typed by hand too)
 
 ### 8. Editor setting: Quick space or Normal (added while planning)
 - **Owner's idea:** a setting for what Space does with text selected: "Quick space" (default: add one
@@ -230,33 +286,6 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Needs:** nothing (no migration: it uses the existing prefs field)
 - **Depends on:** item 3
 
-### 7. LINE keeps the indents (added while planning)
-- **Why:** LINE messages trim the start of every description line, so indents made with items 2–4 would
-  only show in the app.
-- **Decision:** LINE keeps each line's leading spaces.
-- **Branch:** `plan/home-and-editor/7-line-keeps-indents`
-- **What it does:** descriptions in LINE messages (the morning letter, the day-before notice, the
-  starting-soon card and the missed-deadline nudges, through `formatDetail` in
-  supabase/functions/_shared/lineText.ts) keep the spaces at the start of each line.
-- **Rules decided:**
-  - only the start of lines changes: trailing spaces are still trimmed, empty (or spaces-only) lines are
-    still dropped, and the 5-line / ~300-character limit and its "Read full detail in dashboard." note
-    stay as they are;
-  - the first line keeps its indent too (today the whole text is trimmed before it is split into lines);
-  - the plain-text versions of the cards use the same `formatDetail`, so they follow.
-- **Done when:**
-  - [ ] `formatDetail("Bring:\n      laptop\n      charger")` returns those three lines with the six
-    leading spaces kept (checked with a small script under Deno or Node)
-  - [ ] `formatDetail("      indented first line")` keeps the leading spaces
-  - [ ] empty and spaces-only lines are still dropped, trailing spaces still trimmed, the 5-line and
-    300-character limits still apply
-  - [ ] `deno check` passes for send-line-daily, send-line-reminders and send-line-overdue (if Deno is
-    available)
-- **Owner checks by eye:** after deploying, a LINE message for a task whose description has an indented
-  line (e.g. "today" in LINE, or the Settings test button).
-- **Needs:** function deploy: `send-line-daily`, `send-line-reminders`, `send-line-overdue`.
-- **Depends on:** nothing (it works with indents typed by hand too)
-
 ## Questions answered while planning
 
 - **Q:** Can Space's indenting be turned off? **A:** Yes, item 8: a "Quick space" / "Normal" choice in a
@@ -272,5 +301,6 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-After merging item 7: deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue`. No
-migration so far (more may be added as items 5 and 6 are decided).
+1. After merging item 7: deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue`.
+2. Nothing else: no migration (item 8 uses the existing `user_preferences.prefs` field), and the other
+   items go out with the next Vercel deploy after merging.
