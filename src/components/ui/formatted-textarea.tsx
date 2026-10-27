@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { List, Strikethrough, Bold, Italic } from 'lucide-react';
+import { List, Strikethrough, Bold, Italic, IndentIncrease } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
@@ -651,6 +651,20 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           title="Insert bullet point"
         >
           • Add
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          // Keep the editor's selection, so the button can be pressed again and again
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => shiftLines(false)}
+          className="h-7 px-2 text-xs gap-1"
+          title="Indent the line (6 spaces)"
+          aria-label="Indent the line (6 spaces)"
+        >
+          <IndentIncrease size={14} />
+          Tab
         </Button>
         <Button
           type="button"
