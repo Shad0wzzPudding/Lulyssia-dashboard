@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of 27 Oct 2026 and the review-only pa
 
 | Commit | What |
 | --- | --- |
+| `8255ea5` | Feat : iPhone photos (HEIC) show in every browser and new ones go to LINE (branch `feat/heic-photos`, on top of `cloud-review-2026-10-27`) |
 | `b2b4c9b` | Fix : A clear that half fails no longer leaves deleted items on screen |
 | `99fc59a` | Fix : Clear Completed and Clear Past work with hundreds of items |
 | `aef5a5a` | Fix : An attachment removed while another file uploads stays removed |
