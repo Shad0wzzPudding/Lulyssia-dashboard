@@ -1,5 +1,5 @@
 import { differenceInCalendarDays, format, isToday, parseISO } from 'date-fns';
-import { Hourglass } from 'lucide-react';
+import { Hourglass, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { useTags } from '@/hooks/useTags';
@@ -22,9 +22,12 @@ export type InProgressItem = {
 export const InProgressCard = ({
   items,
   onOpen,
+  onEdit,
 }: {
   items: InProgressItem[];
   onOpen: (item: InProgressItem) => void;
+  /** The pencil after the name: opens the item's edit form */
+  onEdit?: (item: InProgressItem) => void;
 }) => {
   const { tags } = useTags();
   if (items.length === 0) return null;
@@ -42,14 +45,34 @@ export const InProgressCard = ({
         const endsToday = isToday(end);
         const names = (item.tag_ids ?? []).map((id) => tagName.get(id)).filter(Boolean) as string[];
         return (
-          <button
+          // A clickable card rather than a <button>, so the pencil (a button) can sit inside it
+          <div
             key={`${item.type}-${item.id}`}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={() => onOpen(item)}
-            className="flex w-full flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors hover:border-primary dark:border-p5-800/40"
+            onKeyDown={(e) => {
+              if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+              e.preventDefault();
+              onOpen(item);
+            }}
+            className="flex w-full cursor-pointer flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-p5-800/40"
           >
             <div className="flex items-baseline justify-between gap-2">
-              <p className="min-w-0 text-sm font-medium whitespace-pre-wrap [overflow-wrap:anywhere]">{item.title}</p>
+              <p className="min-w-0 text-sm font-medium whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {item.title}
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                    aria-label={item.type === 'task' ? 'Edit task' : 'Edit event'}
+                    title={item.type === 'task' ? 'Edit task' : 'Edit event'}
+                    className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded align-text-bottom text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                )}
+              </p>
               <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {item.type === 'event' ? '📅 Event' : '📋 Task'}
               </span>
@@ -87,7 +110,7 @@ export const InProgressCard = ({
                 ))}
               </div>
             )}
-          </button>
+          </div>
         );
       })}
     </div>
