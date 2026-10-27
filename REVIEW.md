@@ -20,19 +20,16 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `789692e` Chore : /cloud-review remembers which areas earlier runs covered
+**Last reviewed:** `5e4f2a9` Docs : Plan home-and-editor is ready to build
 
 ## Waiting for review
 
-Newest first. The first approves npm's install scripts for esbuild 0.21.5 and fsevents (27 Oct 2026, on the owner's Mac); the next is the HEIC photos change (branch `feat/heic-photos`); the rest were made during the cloud review of 27 Oct 2026 and the review-only pass after it (branch `cloud-review-2026-10-27`). Nobody has reviewed them yet.
+Newest first. Made during the cloud review of the home-and-editor build (27 Oct 2026, branch `cloud-review-2026-10-27-home-and-editor`, which is `main` with the 9 `plan/home-and-editor/*` branches merged in their order). The build's own commits were reviewed in that run (see the history below). Nobody has reviewed these yet.
 
 | Commit | What |
 | --- | --- |
-| `74fc1a2` | Update package.json (npm may run the install scripts of esbuild 0.21.5 and fsevents 2.3.3) |
-| `8255ea5` | Feat : iPhone photos (HEIC) show in every browser and new ones go to LINE (branch `feat/heic-photos`, on top of `cloud-review-2026-10-27`) |
-| `b2b4c9b` | Fix : A clear that half fails no longer leaves deleted items on screen |
-| `99fc59a` | Fix : Clear Completed and Clear Past work with hundreds of items |
-| `aef5a5a` | Fix : An attachment removed while another file uploads stays removed |
+| `41e38f7` | Fix : Enter while a word is still being composed keeps the word again |
+| `bfcfce1` | Fix : The Editor setting follows the account after signing out and in as someone else |
 
 ## Review history
 
@@ -46,3 +43,4 @@ Newest first. The first approves npm's install scripts for esbuild 0.21.5 and fs
 | 2026-10-26 | the 25 Oct cloud review's 3 fixes `aee35f4`, `a85c51c`, `33e1578` (branch `cloud-review-2026-10-25`; cloud session; IDs as replayed onto `main` on 26 Oct) | No new finding. Checked: the diffs with the code around them; tsc, eslint, build |
 | 2026-10-27 | the 8 commits on the waiting list (`85ba844`, `246dbf1`, `86bfd64`, `fcad22f`, `6a00462`, `fff28a5`, `019fd3a`, `fe1bd55`) plus `789692e` (cloud session) | No new finding. Checked: the diffs with the code around them; in a local browser, a title with a run of spaces, the menu button leaving and returning with a form, and a click on a pop-up message keeping the form open |
 | 2026-10-27 | review only, after the cloud review: `main` unchanged since `789692e` (nothing waiting there); re-read this branch's own fixes `aef5a5a`, `99fc59a` | 1 finding in `99fc59a` (a half-failed clear didn't reload its list), fixed in `b2b4c9b` |
+| 2026-10-27 | `789692e..5e4f2a9` on `main` (5 code commits: `aef5a5a`, `99fc59a`, `b2b4c9b`, `8255ea5`, `74fc1a2`, plus docs) and the plan home-and-editor build (the 9 `plan/home-and-editor/*` branches: 13 code commits and 2 merges), cloud session | 2 confirmed findings, both in the build, fixed in `bfcfce1` (Editor setting kept across a change of account) and `41e38f7` (Enter during composition lost the word). Checked: the diffs with the code around them; the fixes in a local browser with test data |
