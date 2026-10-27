@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same-Day Merge Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: each Home spot shown "now" beside two merged options, in the app's dark look (intent only: the build uses the app's real components) */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --item: hsl(215 25% 17%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 72%);
+    --line: hsl(193 40% 22%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --green: #4ade80;
+    --green-bg: rgba(20, 83, 45, .3);
+    --red: #f87171;
+    --red-bg: rgba(127, 29, 29, .3);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: grid; gap: 22px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); max-width: 72ch; line-height: 1.55; font-size: .92rem; }
+  section { display: grid; gap: 10px; }
+  h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.3rem; margin: 0; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .col { display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .tag.rec { color: var(--cyan); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
+
+  /* Calendar day list item */
+  .day { position: relative; background: rgba(31, 41, 55, .6); border: 1px solid rgba(58, 174, 212, .25); border-radius: 8px; padding: 10px 10px 10px 14px; display: grid; gap: 6px; }
+  .day::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; background: var(--edge, var(--cyan)); }
+  .row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .t { font-weight: 600; font-size: .88rem; }
+  .badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .b { font-size: .68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; line-height: 1.5; white-space: nowrap; }
+  .b.type { background: #374151; color: #e5e7eb; }
+  .b.start { border: 1px solid #6b7280; color: #e5e7eb; }
+  .b.end { background: #dc2626; color: #fff; }
+  .b.today { background: var(--cyan); color: var(--on-cyan); }
+  .b.starting { border: 1px solid #22c55e; color: #86efac; }
+  .times { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: .74rem; font-weight: 500; border-radius: 4px; padding: 1px 6px; }
+  .chip.g { color: var(--green); background: var(--green-bg); }
+  .chip.r { color: var(--red); background: var(--red-bg); }
+  .chip.range { background: linear-gradient(90deg, var(--green-bg), var(--red-bg)); }
+  .chip.range .s { color: var(--green); }
+  .chip.range .e { color: var(--red); }
+  .chip.cyan { color: var(--cyan); background: rgba(58, 174, 212, .15); }
+  .desc { font-size: .74rem; color: #cbd5e1; }
+
+  /* Today lists */
+  .todo { background: hsla(200, 14%, 8%, .9); border: 1px solid rgba(248, 113, 113, .3); border-radius: 6px; padding: 10px 12px; display: grid; gap: 4px; }
+  .todo.ev { border-color: rgba(58, 174, 212, .3); }
+  .todo .head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .todo .when { font-size: .74rem; color: #9ca3af; }
+  .todo .when b { color: var(--fg); font-weight: 500; }
+
+  /* Details window */
+  .dlg { background: var(--card); border: 1px solid #333; border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+  .dlg .title { font-weight: 600; display: flex; gap: 8px; align-items: center; }
+  .trow { display: flex; gap: 8px; align-items: center; font-size: .85rem; }
+  .lbl { display: inline-flex; gap: 4px; align-items: center; border-radius: 4px; padding: 2px 8px; font-weight: 500; }
+  .lbl.g { color: var(--green); background: var(--green-bg); }
+  .lbl.r { color: var(--red); background: var(--red-bg); }
+  .lbl.c { color: var(--cyan); background: rgba(58, 174, 212, .15); }
+
+  .notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: .86rem; line-height: 1.6; display: grid; gap: 2px; max-width: 80ch; }
+  .notes b { color: var(--fg); font-weight: 600; }
+  svg { flex: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Same-day merge</h1>
+    <p class="lede">A task or event that starts and ends on the same day, in each place on Home: how it looks now, and two ways to merge its two times into one. Intent only: the build uses the app's real badges and colours. Example: "Team meeting", an event from 09:00 to 13:00 today.</p>
+  </header>
+
+  <section>
+    <h2>Calendar: the day's list</h2>
+    <div class="cols">
+      <div class="col"><span class="tag">Now</span>
+        <div class="panel"><div class="day" style="--edge:linear-gradient(#22c55e 50%, #ef4444 50%)">
+          <div class="row"><span class="t">Team meeting</span><span class="badges"><span class="b type">event</span><span class="b start">Start</span><span class="b end">End</span></span></div>
+          <div class="desc">• Room 218</div>
+          <div class="times"><span class="chip g">🕒 09:00</span><span class="chip r">🕒 13:00</span></div>
+        </div></div>
+      </div>
+      <div class="col"><span class="tag rec">A · "Today" + one range (recommended)</span>
+        <div class="panel"><div class="day" style="--edge:var(--cyan)">
+          <div class="row"><span class="t">Team meeting</span><span class="badges"><span class="b type">event</span><span class="b today">Today</span></span></div>
+          <div class="desc">• Room 218</div>
+          <div class="times"><span class="chip range">🕒 <span class="s">09:00</span> – <span class="e">13:00</span></span></div>
+        </div></div>
+      </div>
+      <div class="col"><span class="tag">B · No extra badge, one range</span>
+        <div class="panel"><div class="day" style="--edge:linear-gradient(#22c55e 50%, #ef4444 50%)">
+          <div class="row"><span class="t">Team meeting</span><span class="badges"><span class="b type">event</span></span></div>
+          <div class="desc">• Room 218</div>
+          <div class="times"><span class="chip cyan">🕒 09:00 – 13:00</span></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Calendar: the details window</h2>
+    <div class="cols">
+      <div class="col"><span class="tag">Now</span>
+        <div class="dlg"><div class="title">📅 Team meeting <span class="b type">event</span></div>
+          <div class="trow"><span class="lbl g">🕒 Start:</span> 09:00</div>
+          <div class="trow"><span class="lbl r">🕒 End:</span> 13:00</div>
+        </div>
+      </div>
+      <div class="col"><span class="tag rec">A (recommended)</span>
+        <div class="dlg"><div class="title">📅 Team meeting <span class="b type">event</span> <span class="b today">Today</span></div>
+          <div class="trow"><span class="lbl c">🕒 Time:</span> 09:00 – 13:00</div>
+        </div>
+      </div>
+      <div class="col"><span class="tag">B</span>
+        <div class="dlg"><div class="title">📅 Team meeting <span class="b type">event</span></div>
+          <div class="trow"><span class="lbl c">🕒 Time:</span> 09:00 – 13:00</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Today's Tasks</h2>
+    <div class="cols">
+      <div class="col"><span class="tag">Now</span>
+        <div class="todo"><div class="head"><span class="t">Write the lab report</span><span class="b starting">Starting</span><span class="b end">Deadline</span></div>
+          <div class="when">Starts: 09:00 · Due: 13:00</div></div>
+      </div>
+      <div class="col"><span class="tag rec">A (recommended)</span>
+        <div class="todo"><div class="head"><span class="t">Write the lab report</span><span class="b today">Today</span></div>
+          <div class="when"><b>09:00 – 13:00</b></div></div>
+      </div>
+      <div class="col"><span class="tag">B</span>
+        <div class="todo"><div class="head"><span class="t">Write the lab report</span></div>
+          <div class="when"><b>09:00 – 13:00</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Today's Events</h2>
+    <div class="cols">
+      <div class="col"><span class="tag">Now</span>
+        <div class="todo ev"><span class="t">Team meeting</span>
+          <div class="when">Starts: 09:00<br>Ends: 13:00</div></div>
+      </div>
+      <div class="col"><span class="tag rec">A (recommended)</span>
+        <div class="todo ev"><div class="head"><span class="t">Team meeting</span><span class="b today">Today</span></div>
+          <div class="when"><b>09:00 – 13:00</b></div></div>
+      </div>
+      <div class="col"><span class="tag">B</span>
+        <div class="todo ev"><span class="t">Team meeting</span>
+          <div class="when"><b>09:00 – 13:00</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <ul class="notes">
+    <li><b>Only same-day items change.</b> A task or event that only starts, or only ends, on that day keeps today's look ("Starting" / "Deadline" / "Starts:" / "Ends:").</li>
+    <li><b>A</b> keeps a badge so a same-day item still stands out in the list, and the range chip keeps the green start and red end colours. <b>B</b> is quieter: no badge, one cyan range.</li>
+    <li>The calendar's day list and details window also apply to days other than today: "Today" would read "Same day" there (e.g. a meeting next Tuesday 09:00–13:00).</li>
+  </ul>
+</div>
+</body>
+</html>
