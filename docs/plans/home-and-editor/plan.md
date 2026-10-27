@@ -49,8 +49,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
     "Starts: … · Due: …" becomes the range;
   - Today's Events: the "Start and end today" badge after the name, and "Starts: …" / "Ends: …" become
     the range;
-  - on a calendar day other than today the badge reads "Start and end same day" (Claude's choice while
-    planning, since "today" would be wrong there; the owner can change it at review);
+  - on a calendar day other than today the badge names that day instead: "Start and end 3 Nov" (day,
+    then the short month, in English as the rest of the app; date-fns `d MMM`);
   - only items that start and end on the same day change; one that only starts or only ends that day
     keeps today's look; this also holds for days other than today in the calendar;
   - the range chip's colour follows preview option B (cyan); the exact style may use the app's
@@ -60,7 +60,7 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Done when:**
   - [ ] a same-day task and a same-day event show "HH:mm – HH:mm" once and the badge "Start and end
     today" in each of the four places, with no Start/End or Starting/Deadline badges
-  - [ ] on another calendar day the badge reads "Start and end same day"
+  - [ ] on another calendar day the badge reads "Start and end <d MMM>", e.g. "Start and end 3 Nov"
   - [ ] the calendar's day list keeps the half-green, half-red side stripe for them
   - [ ] an item that only starts or only ends that day looks as before in all four places
   - [ ] typecheck, lint and build pass
@@ -303,7 +303,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Q:** Do indents show in LINE? **A:** Not until item 7; LINE trimmed each line. The owner chose to
   keep them (item 7).
 - **Q:** Should a same-day item still be marked as one? **A:** Yes (asked after the summary): a badge
-  "Start and end today" after the type badge, with the range (item 1).
+  "Start and end today" after the type badge, with the range (item 1). On another calendar day it
+  reads "Start and end 3 Nov" (the owner's choice).
 
 ## If something isn't covered here
 
