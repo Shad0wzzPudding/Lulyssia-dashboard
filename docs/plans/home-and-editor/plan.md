@@ -320,6 +320,8 @@ proposals (roadmap.md, "Cloud review (27 Oct 2026, home and editor)").
 - **Item 5, In progress cards:** a plain card with a real button laid over all of it (opens the
   details) and the pencil on top, instead of a clickable box holding the pencil. Looks and works the
   same; screen readers get two separate buttons: the item, and "Edit task".
+- **Item 5, the pencil's size:** kept at 20×20 px for now; the roadmap's Backlog has a line to ask
+  again later (a bigger invisible tap area, or a bigger pencil).
 
 ## If something isn't covered here
 
