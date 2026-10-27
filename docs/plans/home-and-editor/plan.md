@@ -145,7 +145,46 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 5. Edit tasks and events from Home
 - **Owner's idea:** a pencil icon right after a task's or event's name on Home opens its edit form.
-- **Decision:** Not decided yet
+- **Decision:** the edit form opens right on Home (no page change); the pencil is in every place on Home
+  that shows a task or event.
+- **Branch:** `plan/home-and-editor/5-edit-from-home`
+- **What it does:** a small pencil button right after the name of each task and event on Home opens the
+  same edit form the Tasks or Events page uses, on top of Home. Update saves and closes it; Cancel closes
+  it; either way you stay on Home, and Home shows the change.
+- **Where:** Today's Tasks, Today's Events, the "In progress..." cards, the Upcoming Events list (and
+  any tasks it shows), the calendar's day list, and the calendar's details window (next to its title).
+- **Rules decided:**
+  - the forms are moved out of TasksPage.tsx and EventsPage.tsx into shared components (for example
+    `TaskFormDialog` and `EventFormDialog`) that both pages and Home use, so there is one form per kind
+    and everything the forms do now keeps working the same: the date checks (no deadline before the
+    start), "Saving…" and keeping the text when a save fails, offline refusal, attachments and the
+    upload wait, tags, repeating tasks, "Notice before", sounds;
+  - the Tasks and Events pages must look and behave exactly as before after the move;
+  - the pencil's click only opens the form: it doesn't also open the details window or do what clicking
+    the item does (In progress and the calendar's day list open the details window when the item
+    itself is clicked; that stays);
+  - in the calendar's details window, the pencil closes the details window and opens the form;
+  - pencil look: a small icon button (lucide Pencil or the Edit icon the pages already use), muted
+    until hovered, with the name "Edit task" / "Edit event" for screen readers and as a tooltip; it
+    sits right after the name and wraps with it on narrow screens;
+  - Home's interests (Main Focus) are not part of this item;
+  - completed tasks aren't listed on Home, so nothing changes for them.
+- **Preview:** none needed for the form (it's the existing one). The pencil's place is shown in
+  `previews/6-details.html` (see item 6). **Intent only.**
+- **Done when:**
+  - [ ] each of the six places shows a pencil after a task's or event's name
+  - [ ] clicking it opens that item's edit form on Home, filled in; saving changes the item and Home
+    shows the new value without a reload; Cancel changes nothing; the page stays Home
+  - [ ] clicking the pencil in In progress or the calendar's day list doesn't open the details window
+  - [ ] the Tasks and Events pages' own add, edit and copy forms work as before (same checks as before:
+    dates, saving, offline, attachments, tags, repeat, notice)
+  - [ ] keyboard: the pencil can be reached with Tab and opened with Enter
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** edit a task and an event from Home (from Today's lists and from the
+  calendar), and edit one on the Tasks page to see it's unchanged.
+- **Needs:** nothing
+- **Depends on:** nothing. This is the biggest item; if item 1 or item 6 is built first, keep their
+  changes when editing HomePage.tsx.
 
 ### 6. Pictures in Home's details
 - **Owner's idea:** when a task or event is clicked on Home, its pictures show with its information.
