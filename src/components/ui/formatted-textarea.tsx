@@ -559,8 +559,10 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           return;
         }
 
-        // New bullet line; the caret goes after the "• " so typing lands in the bullet
-        commitEdit(writeChars([...before, ...plainChars('\n• '), ...after]), before.length + 3);
+        // New bullet line, indented like the line it follows; the caret goes after the "• " so
+        // typing lands in the bullet
+        const indent = currentLine.match(/^ */)?.[0] ?? '';
+        commitEdit(writeChars([...before, ...plainChars(`\n${indent}• `), ...after]), before.length + 3 + indent.length);
         return;
       }
 
