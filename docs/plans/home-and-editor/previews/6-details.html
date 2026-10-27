@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home Details Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: Home's details window now, then with pictures in two ways; plus the pencil after names in a Today list (intent only: the build uses the app's real components and the cards' existing picture strip) */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 72%);
+    --line: hsl(193 40% 22%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: grid; gap: 22px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); max-width: 74ch; line-height: 1.55; font-size: .92rem; }
+  h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.3rem; margin: 0; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .col { display: grid; gap: 6px; min-width: 0; }
+  .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .tag.rec { color: var(--cyan); }
+
+  .dlg { background: var(--card); border: 1px solid #333; border-radius: 10px; padding: 16px; display: grid; gap: 12px; position: relative; }
+  .dlg .x { position: absolute; right: 12px; top: 10px; color: var(--muted); font-size: 1.1rem; }
+  .title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.05rem; padding-right: 22px; flex-wrap: wrap; }
+  .pen { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; color: var(--muted); border: 1px solid transparent; cursor: pointer; }
+  .pen:hover { color: var(--cyan); border-color: rgba(58, 174, 212, .5); }
+  .b { font-size: .68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; line-height: 1.5; background: #374151; color: #e5e7eb; }
+  .desc { font-size: .88rem; color: #e5e7eb; line-height: 1.5; }
+  .row { display: flex; gap: 8px; align-items: center; font-size: .85rem; }
+  .lbl { display: inline-flex; gap: 4px; align-items: center; border-radius: 4px; padding: 2px 8px; font-weight: 500; color: var(--cyan); background: rgba(58, 174, 212, .15); }
+  .pics { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pic { width: 128px; height: 96px; border-radius: 6px; border: 1px solid #333; display: grid; place-items: end start; padding: 4px; font-size: .62rem; color: #fff; text-shadow: 0 1px 2px #000; }
+  .pic.a { background: linear-gradient(135deg, #1e5f74, #133b5c 60%, #0b2233); }
+  .pic.b { background: linear-gradient(135deg, #6b4f2a, #3d2b16); }
+  .pic.c { background: linear-gradient(135deg, #3b3f73, #1b1d3a); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; gap: 4px; align-items: center; font-size: .72rem; border: 1px solid #3a4a52; border-radius: 999px; padding: 2px 8px; color: #e5e7eb; }
+  .muted { color: var(--muted); font-size: .75rem; }
+
+  .list { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
+  .item { background: hsla(200, 14%, 8%, .9); border: 1px solid rgba(58, 174, 212, .3); border-radius: 6px; padding: 10px 12px; display: grid; gap: 4px; }
+  .item .name { display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: .9rem; flex-wrap: wrap; }
+  .item .when { font-size: .74rem; color: #9ca3af; }
+
+  .notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: .86rem; line-height: 1.6; display: grid; gap: 2px; max-width: 82ch; }
+  .notes b { color: var(--fg); font-weight: 600; }
+  svg { flex: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Home: details and pencil</h1>
+    <p class="lede">The window that opens when you click a task or event in the calendar's day list or in "In progress...". Item 6 adds its pictures; item 5 adds the pencil after the name; item 1's single time range is shown too. Intent only: the build uses the app's real window and the cards' existing picture strip and file chips. Pictures here are placeholders.</p>
+  </header>
+
+  <section class="cols">
+    <div class="col"><span class="tag">Now</span>
+      <div class="dlg"><span class="x">✕</span>
+        <div class="title">📅 Team meeting <span class="b">event</span></div>
+        <div class="desc">Bring the slides and the printed agenda.</div>
+        <div class="row"><span class="lbl">🕒 Time:</span> 09:00 – 13:00</div>
+      </div>
+    </div>
+    <div class="col"><span class="tag rec">A · Like the card (recommended)</span>
+      <div class="dlg"><span class="x">✕</span>
+        <div class="title">📅 Team meeting <span class="pen" title="Edit event" aria-label="Edit event"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span> <span class="b">event</span></div>
+        <div class="desc">Bring the slides and the printed agenda.</div>
+        <div class="pics"><div class="pic a">room-map.jpg</div><div class="pic b">agenda.png</div></div>
+        <div class="chips"><span class="chip">🖼 room-map.jpg</span><span class="chip">🖼 agenda.png</span><span class="chip">📄 budget.pdf</span></div>
+        <div class="row"><span class="lbl">🕒 Time:</span> 09:00 – 13:00</div>
+      </div>
+      <span class="muted">The pictures shown on the card (its eye toggle), then every file as a chip, as on the card. Tapping a picture or chip opens it.</span>
+    </div>
+    <div class="col"><span class="tag">B · Every picture, no chips</span>
+      <div class="dlg"><span class="x">✕</span>
+        <div class="title">📅 Team meeting <span class="pen" title="Edit event"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span> <span class="b">event</span></div>
+        <div class="desc">Bring the slides and the printed agenda.</div>
+        <div class="pics"><div class="pic a">room-map.jpg</div><div class="pic b">agenda.png</div><div class="pic c">whiteboard.jpg</div></div>
+        <div class="row"><span class="lbl">🕒 Time:</span> 09:00 – 13:00</div>
+      </div>
+      <span class="muted">Every picture, even ones hidden from the card; other files (PDF…) aren't listed.</span>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>The pencil in a Today list (item 5)</h2>
+    <div class="list" style="max-width:520px">
+      <div class="item"><div class="name">Write the lab report <span class="pen" title="Edit task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span></div><div class="when">09:00 – 13:00</div></div>
+      <div class="item"><div class="name">Team meeting <span class="pen" title="Edit event"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span></div><div class="when">Starts: 15:00</div></div>
+    </div>
+    <span class="muted">Muted until hovered; the same pencil goes after the name in In progress, Upcoming and the calendar's day list.</span>
+  </section>
+
+  <ul class="notes">
+    <li><b>A</b> shows exactly what the item's card shows on its page, so the two never disagree, and other files (a PDF) are listed too.</li>
+    <li><b>B</b> shows every picture, even ones hidden from the card with the eye toggle, and leaves other files out.</li>
+  </ul>
+</div>
+</body>
+</html>

@@ -116,6 +116,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Needs:** nothing
 - **Depends on:** item 2 shares the "lines in the selection" logic; if item 2 isn't built first, build
   that part here and reuse it there.
+- **Setting (added later):** item 8 adds an account setting that can turn this off ("Normal"); this item
+  is the "Quick space" behaviour, which stays the default.
 
 ### 4. A Tab button in the editor's toolbar
 - **Owner's idea:** a Tab format button that indents the line; 1 tab = 6 spaces.
@@ -190,6 +192,44 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Owner's idea:** when a task or event is clicked on Home, its pictures show with its information.
 - **Decision:** Not decided yet
 
+### 8. Editor setting: Quick space or Normal (added while planning)
+- **Owner's idea:** a setting for what Space does with text selected: "Quick space" (default: add one
+  space to the selected lines, item 3) or "Normal" (Space replaces the selected text, as in other
+  editors).
+- **Decision:** a new "Editor" card in Settings, saved to the account so it follows the owner to every
+  device; Quick space keeps item 3's rule (whole lines or 2+ lines only).
+- **Branch:** `plan/home-and-editor/8-editor-setting`
+- **What it does:** Settings gets a new card, "Editor", at the end (after Sound), with one choice,
+  "Space with lines selected":
+  - **Quick space** (default): item 3's behaviour: whole lines or 2+ selected lines get one space at
+    their start; part of one line selected is replaced as usual;
+  - **Normal**: Space always replaces the selected text, as before item 3.
+- **Rules decided:**
+  - saved in the account, in `user_preferences.prefs` (the JSON field that already holds the sort
+    choices, see src/hooks/useSortPreference.ts), e.g. `prefs.editor.spaceIndent = "quick" | "normal"`;
+    no migration: read and write it the way useSortPreference does (read prefs, change one key, upsert),
+    keeping every other key in prefs;
+  - a missing or unknown value means Quick space;
+  - the editor reads the setting when it opens; changing it in Settings applies to editors opened after
+    that (and to an open one if that's simple);
+  - Tab, Shift+Tab and the Tab button (items 2 and 4) are not affected by this setting;
+  - card colour: white (`theme-light`), so Settings keeps alternating black and white (Name black,
+    LINE white, Tags black, Animating menu white, Sound black, Editor white); the choice is a pair of
+    radio options or a switch with a one-line explanation of each, in the style of the other cards;
+  - card text says it's saved to the account (the Animating menu and Sound cards say "this device").
+- **Done when:**
+  - [ ] Settings shows the Editor card last, white, with Quick space selected for an account that never
+    chose
+  - [ ] choosing Normal saves to `user_preferences.prefs` without removing the saved sort choices (check
+    prefs before and after)
+  - [ ] with Normal, whole lines selected + Space replaces them with a space; with Quick space, item 3's
+    behaviour
+  - [ ] the choice is still there after a reload (and on another browser signed in to the same account)
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the new card, and Space in a description with each choice.
+- **Needs:** nothing (no migration: it uses the existing prefs field)
+- **Depends on:** item 3
+
 ### 7. LINE keeps the indents (added while planning)
 - **Why:** LINE messages trim the start of every description line, so indents made with items 2–4 would
   only show in the app.
@@ -219,6 +259,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ## Questions answered while planning
 
+- **Q:** Can Space's indenting be turned off? **A:** Yes, item 8: a "Quick space" / "Normal" choice in a
+  new Editor card in Settings, saved to the account; Quick space is the default.
 - **Q:** Do indents show in LINE? **A:** Not until item 7; LINE trimmed each line. The owner chose to
   keep them (item 7).
 
