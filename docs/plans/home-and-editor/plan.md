@@ -151,9 +151,37 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Owner's idea:** when a task or event is clicked on Home, its pictures show with its information.
 - **Decision:** Not decided yet
 
+### 7. LINE keeps the indents (added while planning)
+- **Why:** LINE messages trim the start of every description line, so indents made with items 2–4 would
+  only show in the app.
+- **Decision:** LINE keeps each line's leading spaces.
+- **Branch:** `plan/home-and-editor/7-line-keeps-indents`
+- **What it does:** descriptions in LINE messages (the morning letter, the day-before notice, the
+  starting-soon card and the missed-deadline nudges, through `formatDetail` in
+  supabase/functions/_shared/lineText.ts) keep the spaces at the start of each line.
+- **Rules decided:**
+  - only the start of lines changes: trailing spaces are still trimmed, empty (or spaces-only) lines are
+    still dropped, and the 5-line / ~300-character limit and its "Read full detail in dashboard." note
+    stay as they are;
+  - the first line keeps its indent too (today the whole text is trimmed before it is split into lines);
+  - the plain-text versions of the cards use the same `formatDetail`, so they follow.
+- **Done when:**
+  - [ ] `formatDetail("Bring:\n      laptop\n      charger")` returns those three lines with the six
+    leading spaces kept (checked with a small script under Deno or Node)
+  - [ ] `formatDetail("      indented first line")` keeps the leading spaces
+  - [ ] empty and spaces-only lines are still dropped, trailing spaces still trimmed, the 5-line and
+    300-character limits still apply
+  - [ ] `deno check` passes for send-line-daily, send-line-reminders and send-line-overdue (if Deno is
+    available)
+- **Owner checks by eye:** after deploying, a LINE message for a task whose description has an indented
+  line (e.g. "today" in LINE, or the Settings test button).
+- **Needs:** function deploy: `send-line-daily`, `send-line-reminders`, `send-line-overdue`.
+- **Depends on:** nothing (it works with indents typed by hand too)
+
 ## Questions answered while planning
 
-(Filled in as we go.)
+- **Q:** Do indents show in LINE? **A:** Not until item 7; LINE trimmed each line. The owner chose to
+  keep them (item 7).
 
 ## If something isn't covered here
 
@@ -163,4 +191,5 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-Filled in as items are decided.
+After merging item 7: deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue`. No
+migration so far (more may be added as items 5 and 6 are decided).
