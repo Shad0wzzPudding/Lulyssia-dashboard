@@ -6,6 +6,7 @@ import { PageIcon } from './PageIcon';
 import { NameSettings } from './NameSettings';
 import { DisplaySettings } from './DisplaySettings';
 import { SoundSettings } from './SoundSettings';
+import { EditorSettings } from './EditorSettings';
 
 /** lineFocus: set (a new number each time) when Settings should jump to the LINE card */
 export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }) => {
@@ -27,6 +28,9 @@ export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }
         <DisplaySettings />
       </div>
       <SoundSettings />
+      <div className="theme-light">
+        <EditorSettings />
+      </div>
     </div>
   );
 };

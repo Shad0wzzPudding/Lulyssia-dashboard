@@ -4,6 +4,7 @@ import { List, Strikethrough, Bold, Italic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
+import { useSpaceIndent } from '@/hooks/useEditorSettings';
 
 interface FormattedTextareaProps {
   value: string;
@@ -283,6 +284,8 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   // After Esc, Tab leaves the box as usual (keyboard users aren't trapped) until the box is
   // clicked, typed in or left
   const tabReleasedRef = useRef(false);
+  // Settings > Editor: "Quick space" (Space on selected lines indents them) or "Normal"
+  const spaceIndent = useSpaceIndent();
 
   // Undo/redo history: stack of {value, cursor} snapshots (cursor = visible offset).
   const historyRef = useRef<{ value: string; cursor: number }[]>([{ value, cursor: 0 }]);
@@ -492,8 +495,9 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) tabReleasedRef.current = false;
 
     // Space with one whole line, or two or more lines, selected adds a space at the start of each
-    // line instead of replacing them. Part of one line selected: Space types as usual.
-    if (e.key === ' ' && !mod && !e.altKey) {
+    // line instead of replacing them. Part of one line selected, or the "Normal" setting: Space
+    // types as usual.
+    if (e.key === ' ' && !mod && !e.altKey && spaceIndent === 'quick') {
       const el = editorRef.current;
       const range = el && selectionInside(el) ? getSelectionVisibleRange(el) : null;
       if (el && range && range.end > range.start) {
@@ -572,7 +576,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       // Normal enter: caret at the start of the new line
       commitEdit(writeChars([...before, ...plainChars('\n'), ...after]), before.length + 1);
     }
-  }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines]);
+  }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines, spaceIndent]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;
