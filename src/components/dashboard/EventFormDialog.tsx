@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useId, useImperativeHandle, useRef, useState, type ReactNode } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Event, FormSaveCallbacks, FormSaveMarker, Attachment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,8 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
   // "The deadline is before the start": shown once Create/Update was pressed with the dates that
   // way round, and gone as soon as they are fixed
   const [dateErrorShown, setDateErrorShown] = useState(false);
+  const startId = useId();
+  const endId = useId();
   const saveRun = useRef(0);
   const closeForm = () => {
     saveRun.current += 1;
@@ -157,37 +159,45 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
             value={formData.description}
             onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
           />
-          <Input
-            type="datetime-local"
-            placeholder="Start time (optional)"
-            value={formData.start_time}
-            onChange={(e) => {
-              const v = e.target.value;
-              setFormData(prev => {
-                const next = { ...prev, start_time: v };
-                // The deadline follows the start (+5 h) until it is set by hand
-                if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time))) {
-                  next.deadline = autoDeadline(v);
-                }
-                return next;
-              });
-            }}
-          />
-          <Input
-            type="datetime-local"
-            placeholder="End (optional)"
-            value={formData.deadline}
-            onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-            // Earliest choice: the start. The browser's own check would block saving with its
-            // own bubble, so show the form's message instead
-            min={formData.start_time || undefined}
-            onInvalid={(e) => {
-              if (!deadlineBeforeStart(formData.start_time, formData.deadline)) return;
-              e.preventDefault();
-              setDateErrorShown(true);
-            }}
-            aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline)}
-          />
+          <div className="space-y-2">
+            <label htmlFor={startId} className="text-sm font-medium block">Start <span className="text-muted-foreground">(optional)</span></label>
+            <Input
+              id={startId}
+              type="datetime-local"
+              placeholder="Start time (optional)"
+              value={formData.start_time}
+              onChange={(e) => {
+                const v = e.target.value;
+                setFormData(prev => {
+                  const next = { ...prev, start_time: v };
+                  // The deadline follows the start (+5 h) until it is set by hand
+                  if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time))) {
+                    next.deadline = autoDeadline(v);
+                  }
+                  return next;
+                });
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor={endId} className="text-sm font-medium block">End <span className="text-muted-foreground">(optional)</span></label>
+            <Input
+              id={endId}
+              type="datetime-local"
+              placeholder="End (optional)"
+              value={formData.deadline}
+              onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+              // Earliest choice: the start. The browser's own check would block saving with its
+              // own bubble, so show the form's message instead
+              min={formData.start_time || undefined}
+              onInvalid={(e) => {
+                if (!deadlineBeforeStart(formData.start_time, formData.deadline)) return;
+                e.preventDefault();
+                setDateErrorShown(true);
+              }}
+              aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline)}
+            />
+          </div>
           {dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline) && (
             <p role="alert" className="-mt-2 text-sm text-destructive">{END_BEFORE_START_MESSAGE}</p>
           )}
