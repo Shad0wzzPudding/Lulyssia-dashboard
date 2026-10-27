@@ -119,7 +119,29 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 
 ### 4. A Tab button in the editor's toolbar
 - **Owner's idea:** a Tab format button that indents the line; 1 tab = 6 spaces.
-- **Decision:** Not decided yet
+- **Decision:** one "⇥ Tab" button right after "• Add", doing what the Tab key does.
+- **Branch:** `plan/home-and-editor/4-tab-button`
+- **What it does:** the editor's toolbar gets a "⇥ Tab" button between "• Add" and the strikethrough
+  button. Pressing it indents the caret's line, or every selected line, by 6 spaces, exactly like the
+  Tab key in item 2 (useful on phones, which have no Tab key).
+- **Rules decided:**
+  - same look as the other toolbar buttons (slanted, outlined); title/tooltip "Indent the line (6
+    spaces)" and a screen reader name;
+  - pressing it keeps the editor's selection (the button doesn't take the selection away), so it can be
+    pressed several times in a row;
+  - if the caret was never placed in the editor, it indents the last line (like "• Add" adds at the end);
+  - no "Untab" button: removing an indent is Shift+Tab or deleting the spaces.
+- **Preview:** `previews/2-4-indent.html` (the toolbar). **Intent only:** use the toolbar's real button
+  style; the "⇥" sign can be a matching icon from the icon set already used (lucide), e.g. IndentIncrease.
+- **Done when:**
+  - [ ] the button shows after "• Add" in the task, event and interest forms
+  - [ ] pressing it with a caret indents that line by 6 spaces; with 3 lines selected, all 3
+  - [ ] pressing it twice in a row indents twice (the selection stays)
+  - [ ] it works on a phone-sized screen (tap)
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** the button in the toolbar on a computer and a phone.
+- **Needs:** nothing
+- **Depends on:** item 2 (it uses the same indent action)
 
 ### 5. Edit tasks and events from Home
 - **Owner's idea:** a pencil icon right after a task's or event's name on Home opens its edit form.
