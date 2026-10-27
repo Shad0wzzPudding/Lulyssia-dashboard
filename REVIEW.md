@@ -28,6 +28,8 @@ Newest first. Made during the cloud review of the home-and-editor build (27 Oct 
 
 | Commit | What |
 | --- | --- |
+| `b1dc582` | Fix : Event cards on the Events page are only as tall as their content (owner's report, 27 Oct, local session) |
+| `de1375c` | Fix : The event form labels its dates Start and End (owner's request, 27 Oct, local session) |
 | `55a0748` | Feat : Settings > Editor says Android keyboards don't support Quick space (owner's decision) |
 | `ba16917` | Feat : Home's details window has an "Attachments" heading above the pictures and files (owner's decision) |
 | `ff6cd78` | Feat : With Auto •, a new bullet keeps the indent of the line above (owner's decision) |
