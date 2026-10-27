@@ -47,19 +47,18 @@ export const InProgressCard = ({
         const endsToday = isToday(end);
         const names = (item.tag_ids ?? []).map((id) => tagName.get(id)).filter(Boolean) as string[];
         return (
-          // A clickable card rather than a <button>, so the pencil (a button) can sit inside it
+          // A plain card with a real button laid over all of it (opens the details), and the pencil
+          // on top of that button: a button can't hold another button
           <div
             key={`${item.type}-${item.id}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => onOpen(item)}
-            onKeyDown={(e) => {
-              if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
-              e.preventDefault();
-              onOpen(item);
-            }}
-            className="flex w-full cursor-pointer flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-p5-800/40"
+            className="relative flex w-full flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring hover:border-primary dark:border-p5-800/40"
           >
+            <button
+              type="button"
+              onClick={() => onOpen(item)}
+              aria-label={`${item.title}, ${item.type}, day ${day} of ${days}, ${item.type === 'event' ? 'ends' : 'due'} ${endsToday ? `today, ${format(end, 'HH:mm')}` : format(end, 'EEE d MMM, HH:mm')}`}
+              className="absolute inset-0 z-0 cursor-pointer rounded focus-visible:outline-none"
+            />
             <div className="flex items-baseline justify-between gap-2">
               <p className="min-w-0 text-sm font-medium whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {item.title}
@@ -69,7 +68,7 @@ export const InProgressCard = ({
                     onClick={(e) => { e.stopPropagation(); onEdit(item); }}
                     aria-label={item.type === 'task' ? 'Edit task' : 'Edit event'}
                     title={item.type === 'task' ? 'Edit task' : 'Edit event'}
-                    className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded align-text-bottom text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="relative z-10 ml-1 inline-flex h-5 w-5 items-center justify-center rounded align-text-bottom text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Pencil size={12} />
                   </button>

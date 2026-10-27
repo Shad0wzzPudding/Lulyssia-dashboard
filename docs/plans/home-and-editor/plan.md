@@ -317,6 +317,9 @@ proposals (roadmap.md, "Cloud review (27 Oct 2026, home and editor)").
   made the first Esc only free Tab). To leave the box with the keyboard, **Ctrl+M** switches Tab
   between indenting and moving to the next field, as in VS Code; while Tab moves on, a hint under the
   box says so. The Tab button isn't affected.
+- **Item 5, In progress cards:** a plain card with a real button laid over all of it (opens the
+  details) and the pencil on top, instead of a clickable box holding the pencil. Looks and works the
+  same; screen readers get two separate buttons: the item, and "Edit task".
 
 ## If something isn't covered here
 
