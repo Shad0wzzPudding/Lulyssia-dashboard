@@ -480,11 +480,13 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape' || e.nativeEvent.isComposing) return;
+    if (e.key === 'Escape') return;
+    // A word still being composed (phone keyboards, input methods): Tab and Space are left to it
+    const composing = e.nativeEvent.isComposing;
     // Undo / Redo — intercept before the browser's native (broken) undo runs.
     const mod = e.ctrlKey || e.metaKey;
 
-    if (e.key === 'Tab' && !mod && !e.altKey) {
+    if (e.key === 'Tab' && !mod && !e.altKey && !composing) {
       // After Esc, Tab moves on to the next field as usual
       if (tabReleasedRef.current) return;
       e.preventDefault();
@@ -497,7 +499,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     // Space with one whole line, or two or more lines, selected adds a space at the start of each
     // line instead of replacing them. Part of one line selected, or the "Normal" setting: Space
     // types as usual.
-    if (e.key === ' ' && !mod && !e.altKey && spaceIndent === 'quick') {
+    if (e.key === ' ' && !mod && !e.altKey && !composing && spaceIndent === 'quick') {
       const el = editorRef.current;
       const range = el && selectionInside(el) ? getSelectionVisibleRange(el) : null;
       if (el && range && range.end > range.start) {
