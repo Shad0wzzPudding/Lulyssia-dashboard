@@ -20,6 +20,26 @@ import { toast } from "@/lib/toast";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
+
+// An item in the calendar's day list and the details window
+type DayItem = {
+  id: string;
+  title: string;
+  type: 'task' | 'event';
+  dateTypes: Array<'start' | 'deadline'>;
+  times: { start?: string; deadline?: string };
+  description?: string;
+  // Set when the item starts and ends on the same day: its badge, "Start and end today" or "Start and end 3 Nov"
+  sameDayLabel?: string;
+};
+
+const sameDayLabel = (day: Date) => isToday(day) ? 'Start and end today' : `Start and end ${format(day, 'd MMM')}`;
+
+// The outlined badge beside the type for an item that starts and ends on the same day
+const SameDayBadge = ({ label, className }: { label: string; className?: string }) => (
+  <Badge variant="outline" className={className}>{label}</Badge>
+);
+
 interface HomePageProps {
   interests: Interest[];
   tasks: Task[];
@@ -32,14 +52,7 @@ interface HomePageProps {
 
 export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog }: HomePageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedItem, setSelectedItem] = useState<{
-    id: string;
-    title: string;
-    type: 'task' | 'event';
-    dateTypes: Array<'start' | 'deadline'>;
-    times: { start?: string; deadline?: string };
-    description?: string;
-  } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<DayItem | null>(null);
   const [recentChangesCollapsed, setRecentChangesCollapsed] = useState(() => {
     try {
       return localStorage.getItem('recentChangesCollapsed') === 'true';
@@ -284,14 +297,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   
   // Get events and tasks for a specific date (grouped by item ID)
   const getDateDetails = (date: Date) => {
-    const itemsMap: Map<string, {
-      id: string;
-      title: string;
-      type: 'task' | 'event';
-      dateTypes: Array<'start' | 'deadline'>;
-      times: { start?: string; deadline?: string };
-      description?: string;
-    }> = new Map();
+    const itemsMap: Map<string, DayItem> = new Map();
     
     // Check tasks (only incomplete tasks)
     tasks.forEach(task => {
@@ -381,7 +387,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       }
     });
     
-    return Array.from(itemsMap.values());
+    // Starting and ending on this day: one range and one badge instead of the two times
+    const items = Array.from(itemsMap.values());
+    items.forEach(item => {
+      if (item.dateTypes.length === 2) item.sameDayLabel = sameDayLabel(date);
+    });
+    return items;
   };
   
   // A task is overdue as soon as its deadline passes, even earlier today
@@ -560,19 +571,27 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}</p>
-                          {startsToday(task) && (
-                            <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                          {startsToday(task) && dueToday(task) ? (
+                            <SameDayBadge label={sameDayLabel(now)} className="text-xs" />
+                          ) : (
+                            <>
+                              {startsToday(task) && (
+                                <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                              )}
+                              {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
+                            </>
                           )}
-                          {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
                         </div>
                           {task.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
                          )}
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {[
-                            startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
-                            dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
-                          ].filter(Boolean).join(' · ')}
+                          {startsToday(task) && dueToday(task)
+                            ? `${format(parseISO(task.start_date as string), 'HH:mm')} – ${format(parseISO(task.deadline as string), 'HH:mm')}`
+                            : [
+                              startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
+                              dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
+                            ].filter(Boolean).join(' · ')}
                         </p>
                       </div>
                       ))}
@@ -594,20 +613,36 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   label="today's events"
                   renderList={(list) => (
                     <div className="space-y-2">
-                      {list.map(event => (
+                      {list.map(event => {
+                      const endsToday = !!event.deadline && isToday(parseISO(event.deadline));
+                      return (
                       <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
-                        <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
+                        {endsToday ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
+                            <SameDayBadge label={sameDayLabel(now)} className="text-xs" />
+                          </div>
+                        ) : (
+                          <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
+                        )}
                           {event.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
                          )}
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                          <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
-                          {event.deadline && (
-                            <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                          {endsToday ? (
+                            <p>{format(parseISO(event.start_time), 'HH:mm')} – {format(parseISO(event.deadline as string), 'HH:mm')}</p>
+                          ) : (
+                            <>
+                              <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
+                              {event.deadline && (
+                                <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 />
@@ -773,7 +808,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                   >
                                     {item.type}
                                   </Badge>
-                                  {item.dateTypes.map((dt) => (
+                                  {item.sameDayLabel ? (
+                                    <SameDayBadge label={item.sameDayLabel} className="text-xs px-1.5 py-0.5 h-5" />
+                                  ) : item.dateTypes.map((dt) => (
                                     <Badge 
                                       key={dt}
                                       variant={dt === 'deadline' ? 'destructive' : 'outline'}
@@ -793,6 +830,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                )}
                               
                               <div className="flex flex-wrap gap-2">
+                                {item.sameDayLabel ? (
+                                  <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/15 rounded px-1.5 py-0.5 w-fit">
+                                    <Clock size={10} />
+                                    {item.times.start} – {item.times.deadline}
+                                  </div>
+                                ) : (<>
                                 {item.times.start && (
                                   <div className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-1.5 py-0.5 w-fit">
                                     <Clock size={10} />
@@ -805,6 +848,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                     {item.times.deadline}
                                   </div>
                                 )}
+                                </>)}
                               </div>
                             </div>
                           </div>
@@ -1132,7 +1176,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               <Badge variant={selectedItem?.type === 'task' ? 'default' : 'secondary'}>
                 {selectedItem?.type}
               </Badge>
-              {selectedItem?.dateTypes.map((dt) => (
+              {selectedItem?.sameDayLabel ? (
+                <SameDayBadge label={selectedItem.sameDayLabel} />
+              ) : selectedItem?.dateTypes.map((dt) => (
                 <Badge 
                   key={dt}
                   variant={dt === 'deadline' ? 'destructive' : 'outline'}
@@ -1152,6 +1198,15 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-2">Times</h4>
               <div className="space-y-2">
+                {selectedItem?.sameDayLabel ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-1 text-primary bg-primary/15 rounded px-2 py-1">
+                      <Clock size={14} />
+                      <span className="font-medium">Time:</span>
+                    </div>
+                    <span>{selectedItem.times.start} – {selectedItem.times.deadline}</span>
+                  </div>
+                ) : (<>
                 {selectedItem?.times.start && (
                   <div className="flex items-center gap-2 text-sm">
                     <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-2 py-1">
@@ -1170,6 +1225,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <span>{selectedItem.times.deadline}</span>
                   </div>
                 )}
+                </>)}
               </div>
             </div>
           </div>
