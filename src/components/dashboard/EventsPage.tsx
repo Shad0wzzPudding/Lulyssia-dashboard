@@ -1,15 +1,11 @@
-import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Event, FormSaveCallbacks, FormSaveMarker } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormattedTextarea } from '@/components/ui/formatted-textarea';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Clock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Calendar, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
 import { format, parseISO, isAfter, isBefore, isToday, startOfDay } from 'date-fns';
@@ -19,9 +15,9 @@ import { SelectModeOverlay } from './SelectionCorners';
 import { cardSurface } from '@/lib/selectMode';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { playSuccessSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
-import { TagPicker, TagChip } from './TagPicker';
-import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
+import { playDeleteSound, playDuplicateSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
+import { TagChip } from './TagPicker';
+import { AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
@@ -32,9 +28,7 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
-import { autoDeadline } from '@/lib/autoDeadline';
-import { END_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
-import { refuseSaveOffline } from '@/lib/formSave';
+import { EventFormDialog, type EventFormHandle } from './EventFormDialog';
 
 interface EventsPageProps {
   events: Event[];
@@ -60,22 +54,8 @@ export const EventsPage = ({
   onRestoreEvents
 }: EventsPageProps) => {
   const { toast } = useToast();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // A file still uploading: saving waits, or the item would be saved without it
-  const [uploading, setUploading] = useState(false);
-  // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
-  // tells a late answer apart from the form opened since (closing the form lets go of the save).
-  const [saving, setSaving] = useState(false);
-  // "The deadline is before the start": shown once Create/Update was pressed with the dates that
-  // way round, and gone as soon as they are fixed
-  const [dateErrorShown, setDateErrorShown] = useState(false);
-  const saveRun = useRef(0);
-  const closeForm = () => {
-    saveRun.current += 1;
-    setSaving(false);
-    setIsCreateOpen(false);
-  };
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  // The add/edit form (shared with Home)
+  const eventForm = useRef<EventFormHandle>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clearedEvents, setClearedEvents] = useState<Event[]>([]);
@@ -83,15 +63,6 @@ export const EventsPage = ({
   // After Undo, the Clear button comes back where Undo was: keep it out of reach for 2 seconds so a
   // click running on from Undo can't open the "Clear …?" question again
   const [clearHeld, holdClear] = useBriefHold(2000);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    start_time: '',
-    deadline: '',
-    tag_ids: [] as string[],
-    attachments: [] as import('@/lib/types').Attachment[],
-    notice_before: false,
-  });
   const [sort, setSort] = useSortPreference('events');
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -163,73 +134,7 @@ export const EventsPage = ({
     });
   };
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      start_time: '',
-      deadline: '',
-      tag_ids: [],
-      attachments: [],
-      notice_before: false,
-    });
-    setEditingEvent(null);
-    setDateErrorShown(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (uploading || saving) return;
-    if (deadlineBeforeStart(formData.start_time, formData.deadline)) {
-      setDateErrorShown(true);
-      return;
-    }
-    if (refuseSaveOffline(editingEvent ? 'Update' : 'Create')) return;
-    
-    const submissionData = {
-      ...formData,
-      start_time: formData.start_time ? new Date(formData.start_time).toISOString() : null,
-      // null (not undefined) so clearing the deadline while editing really removes it
-      deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
-    };
-
-    // The form closes once the save went through; on a failure it stays open with everything kept
-    const run = ++saveRun.current;
-    setSaving(true);
-    const callbacks: FormSaveCallbacks = {
-      onSuccess: () => {
-        if (saveRun.current !== run) return;
-        closeForm();
-        resetForm();
-      },
-      onError: () => {
-        if (saveRun.current === run) setSaving(false);
-      },
-    };
-    if (editingEvent) {
-      onUpdateEvent({ id: editingEvent.id, ...submissionData, __form: 'Update' }, callbacks);
-      playUpdateSound();
-    } else {
-      onCreateEvent({ ...submissionData, __form: 'Create' }, callbacks);
-      playSuccessSound();
-    }
-  };
-
-  const handleEdit = (event: Event) => {
-    playEditSound();
-    setEditingEvent(event);
-    setDateErrorShown(false);
-    setFormData({
-      title: event.title,
-      description: event.description || '',
-      start_time: event.start_time ? format(parseISO(event.start_time), "yyyy-MM-dd'T'HH:mm") : '',
-      deadline: event.deadline ? format(parseISO(event.deadline), "yyyy-MM-dd'T'HH:mm") : '',
-      tag_ids: event.tag_ids || [],
-      attachments: event.attachments || [],
-      notice_before: !!event.notice_before,
-    });
-    setIsCreateOpen(true);
-  };
+  const handleEdit = (event: Event) => eventForm.current?.openEdit(event);
 
   const handleCopy = (event: Event) => {
     onCreateEvent({
@@ -561,92 +466,20 @@ export const EventsPage = ({
               Select
             </Button>
           )}
-          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
-            <DialogTrigger asChild>
+          <EventFormDialog
+            ref={eventForm}
+            onCreateEvent={onCreateEvent}
+            onUpdateEvent={onUpdateEvent}
+            trigger={
               <Button 
-                onClick={() => { playAddSound(); resetForm(); }}
+                onClick={() => { playAddSound(); eventForm.current?.openNew(); }}
                 className="bg-events-theme hover:bg-events-theme/80 text-white"
               >
                 <Plus size={16} className="mr-2" />
                 Add Event
               </Button>
-            </DialogTrigger>
-          <ResizableDialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingEvent ? 'Edit Event' : 'Create New Event'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                placeholder="Event title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                required
-              />
-              <FormattedTextarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-              />
-              <Input
-                type="datetime-local"
-                placeholder="Start time (optional)"
-                value={formData.start_time}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setFormData(prev => {
-                    const next = { ...prev, start_time: v };
-                    // The deadline follows the start (+5 h) until it is set by hand
-                    if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time))) {
-                      next.deadline = autoDeadline(v);
-                    }
-                    return next;
-                  });
-                }}
-              />
-              <Input
-                type="datetime-local"
-                placeholder="End (optional)"
-                value={formData.deadline}
-                onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                // Earliest choice: the start. The browser's own check would block saving with its
-                // own bubble, so show the form's message instead
-                min={formData.start_time || undefined}
-                onInvalid={(e) => {
-                  if (!deadlineBeforeStart(formData.start_time, formData.deadline)) return;
-                  e.preventDefault();
-                  setDateErrorShown(true);
-                }}
-                aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline)}
-              />
-              {dateErrorShown && deadlineBeforeStart(formData.start_time, formData.deadline) && (
-                <p role="alert" className="-mt-2 text-sm text-destructive">{END_BEFORE_START_MESSAGE}</p>
-              )}
-              <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tags</label>
-                <TagPicker
-                  selected={formData.tag_ids}
-                  onChange={(ids) => setFormData(prev => ({ ...prev, tag_ids: ids }))}
-                />
-              </div>
-              <AttachmentsField
-                value={formData.attachments}
-                onChange={(atts) => setFormData(prev => ({ ...prev, attachments: atts }))}
-                onUploadingChange={setUploading}
-              />
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1" disabled={uploading || saving}>
-                  {uploading ? 'Uploading file…' : saving ? 'Saving…' : editingEvent ? 'Update' : 'Create'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeForm(); }}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </ResizableDialogContent>
-        </Dialog>
+            }
+          />
         </div>
       </div>
 
@@ -790,7 +623,7 @@ export const EventsPage = ({
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground mb-4">No events yet! Add your first event to get started.</p>
-            <Button onClick={() => { playAddSound(); resetForm(); setIsCreateOpen(true); }}>
+            <Button onClick={() => { playAddSound(); eventForm.current?.openNew(); }}>
               <Plus size={16} className="mr-2" />
               Add Your First Event
             </Button>
