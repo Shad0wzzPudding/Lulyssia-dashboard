@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { List, Strikethrough, Bold, Italic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
+import { TAB_SPACES, indentLines, outdentLines } from '@/lib/lineIndent';
 
 interface FormattedTextareaProps {
   value: string;
@@ -279,6 +280,9 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
   // Increases with every edit; only the newest edit's re-render is applied
   const renderTokenRef = useRef(0);
   const applyFormatToggleRef = useRef<(marker: string) => void>(() => {});
+  // After Esc, Tab leaves the box as usual (keyboard users aren't trapped) until the box is
+  // clicked, typed in or left
+  const tabReleasedRef = useRef(false);
 
   // Undo/redo history: stack of {value, cursor} snapshots (cursor = visible offset).
   const historyRef = useRef<{ value: string; cursor: number }[]>([{ value, cursor: 0 }]);
@@ -443,9 +447,50 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     handleInput();
   }, [handleInput]);
 
+  /**
+   * Tab / Shift+Tab: indent or un-indent the caret's line, or every line the selection touches, by
+   * one tab (6 spaces). The same lines stay selected so it can be pressed again.
+   */
+  const shiftLines = useCallback((outdent: boolean) => {
+    const el = editorRef.current;
+    if (!el) return;
+    const chars = domChars(el);
+    const range = selectionInside(el) ? getSelectionVisibleRange(el) : null;
+    const start = Math.min(range?.start ?? chars.length, chars.length);
+    const end = Math.min(Math.max(range?.end ?? start, start), chars.length);
+    const edit = (outdent ? outdentLines : indentLines)(chars, start, end, TAB_SPACES);
+    commitEdit(writeChars(edit.chars), edit.start, edit.end);
+  }, [commitEdit]);
+
+  // Esc in the box frees Tab to move on to the next field. Open forms close on Esc, and listen for
+  // it before the box does, so the first Esc is claimed here (before them); a second one closes as before.
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      const el = editorRef.current;
+      if (e.key !== 'Escape' || e.isComposing || !el || !el.contains(document.activeElement)) return;
+      if (tabReleasedRef.current) return;
+      tabReleasedRef.current = true;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', handleEscape, true);
+    return () => window.removeEventListener('keydown', handleEscape, true);
+  }, []);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape' || e.nativeEvent.isComposing) return;
     // Undo / Redo — intercept before the browser's native (broken) undo runs.
     const mod = e.ctrlKey || e.metaKey;
+
+    if (e.key === 'Tab' && !mod && !e.altKey) {
+      // After Esc, Tab moves on to the next field as usual
+      if (tabReleasedRef.current) return;
+      e.preventDefault();
+      shiftLines(e.shiftKey);
+      return;
+    }
+    // Typing anything else turns Tab back into indenting
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) tabReleasedRef.current = false;
+
     if (mod && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
       e.preventDefault();
       performUndo();
@@ -509,7 +554,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       // Normal enter: caret at the start of the new line
       commitEdit(writeChars([...before, ...plainChars('\n'), ...after]), before.length + 1);
     }
-  }, [autoBullet, commitEdit, performRedo, performUndo]);
+  }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;
@@ -628,6 +673,8 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
           onKeyDown={handleKeyDown}
+          onMouseDown={() => { tabReleasedRef.current = false; }}
+          onBlur={() => { tabReleasedRef.current = false; }}
           onPaste={handlePaste}
           data-placeholder={placeholder}
           className={cn(
