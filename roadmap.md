@@ -269,30 +269,22 @@ Unattended review (`/cloud-review home and editor`) of the plan home-and-editor 
 `cloud-review-2026-10-27-home-and-editor` (from `main` with the 9 plan branches merged in their order).
 Rounds log: [docs/reviews/2026-10-27-home-and-editor-cloud-review.md](docs/reviews/2026-10-27-home-and-editor-cloud-review.md).
 
+**Summary.** Phase 1 (main's 5 waiting commits and the whole build) and 12 rounds. 3 bugs fixed, all in
+the build; 2 proposals waiting (both small, about 1–2 hours together). Nothing to apply or deploy for
+this branch's fixes (the build itself still needs its LINE function deploys after item 7). Merge order:
+the 9 `plan/home-and-editor/*` branches as the build summary says, then this branch. Stopped after
+rounds 10–12 found no new bug in a row, with every area covered in this run or in today's earlier run
+with nothing changed since. Covered here: Home, editor, Settings, Tasks, Events, data hooks,
+attachments, LINE functions, phones and accessibility, navigation, Interests, time zones. The next run
+can start with migrations and access rules, select mode, and Recent Changes (covered earlier today,
+unchanged). Worth trying on a real phone (couldn't be run here): Space on selected lines with an Android
+keyboard (they often don't report which key was pressed, so Quick space may act like Normal there), and
+an old iPhone HEIC photo shown in Chrome.
+
+
 ### Findings
 - [x] Medium: Settings > Editor's choice stayed with the browser tab, not the account: after signing out and signing in as someone else (the page doesn't reload), the new account got the previous account's choice, and if the previous one had changed it, the new account's own saved choice was never read. Example: account A picks "Normal", signs out; account B, who never chose, opens Settings and sees "Normal", and Space replaces selected lines for them. Done: the choice is read again whenever a different account is signed in, and a change is only saved for the account it was read for (`bfcfce1`)
 - [x] High: In the description editor, Enter pressed while a word was still being composed (phone keyboards compose each word as it's typed; also input methods) lost that word, since the Tab/Space change (plan item 2) made the editor ignore every key during composition. Example: with Auto • on, type "• milk" on a phone keyboard and press Enter: the line became "• " without "milk" (main gives "• milk" and a new bullet; reproduced with a simulated composition in the browser). Done: only Tab and Space step aside while a word is composed; Enter, undo and the shortcuts work as before (`41e38f7`)
 - [x] Low: Choosing "Normal" or "Quick space" in Settings > Editor when the save failed (e.g. a dropped connection) looked saved but wasn't: no message, and after a reload the old choice was back. A failed first read also counted as Quick space for the rest of the visit. Example: offline, pick Normal → the radio shows Normal, nothing is saved, the next visit has Quick space (reproduced with a refused save in the browser). Done: a failed save puts the saved choice back and shows "Couldn't save the Editor setting. Check your connection and try again."; a failed read is asked again the next time an editor or Settings opens (this commit)
-
-## Persona theme polish (menu and drawer)
-Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
-
-1. More real choices in the side drawer, so the scene has more to show than one link
-   - [x] Sign out (moved from the header)
-   - [x] About Lulyssia link (opens the About page)
-   - [x] ~~Quick "Animating menu" on/off switch~~ dropped: tried as a 4th row and as a header chip, both crowd the drawer and Lulyssia's art covers the buttons; the switch stays in Settings
-   - [x] LINE status: linked shows a chip beside MENU (white on LINE green with the daily message on, grey with it off); not linked adds "LINE not linked yet" under Settings and a "!" on the drawer tab and the Settings slab; tapping any of them opens Settings
-   - [x] Bigger, bolder items: slanted slabs (heavy outline, white icon block, hard cyan shadow, bold italic labels); chosen from a preview over matching the message menu's bubbles
-2. Game-style cursor in the message menu and the drawer
-   - [x] Up/Down arrow keys move between choices, Enter picks one
-   - [x] A highlight that slides from choice to choice
-   - [x] A soft tick sound on each move or hover
-3. [x] More dramatic drawer opening: a fast diagonal slash wipe (about 0.3 s), then the items snap into place, instead of the current fade-in scene and plain slide-in panel
-4. [x] ~~Less clutter in the drawer scene (about eight effects at once now)~~ kept as is: the drawer scene looks right as it is (bubbles, dotted wedge and KEEP OUT tape stay)
-5. [x] ~~A calm Persona 3 touch: a slow light ripple moving across the drawer's water~~ dropped: a light sweep was tried, but the drawer is busy enough that it was barely noticeable
-6. [x] Persona 5-style mixed-letter title for "MENU" only: each letter in its own slanted cut-out block (our own lettering in that style, not taken from the games)
-7. [x] Not needed (checked on a laptop and a phone: the rows stay readable over her art). Readability: Lulyssia's art sits in front of the drawer items (her layer is above them on purpose), so on short screens keep the items clear of her art instead of adding a backing behind them
-
-## Optional (maybe later)
-Ideas worth keeping, not planned yet.
-- [ ] LINE safeguard near the monthly limit: once the bot's 300 messages a month are used up, LINE refuses every automatic message (morning letter, day-before notice, reminders, nudges) until the next month; only replies still work. When few are left, the bot could skip the less important ones (e.g. starting-soon reminders, then the day-before notice) so the morning letters last the whole month. Needs a choice of threshold and order
+- [ ] Low: Home's In progress cards became clickable cards with `role="button"` so the new pencil could sit in them (plan home-and-editor item 5). A screen reader now reads each card's name with "Edit task" in the middle ("Long task Edit task 📋 Task Day 3 of 5 …", seen in Chromium's accessibility tree), and ARIA treats a button's contents as plain text, so Safari/VoiceOver may not offer the pencil at all. Needs decision: (a) keep the card a plain box, put a real button over the whole card for "open the details", and the pencil above it (looks and works the same; recommended); (b) leave it as it is. Size: small
+- [ ] Low: The new pencils on Home are 20×20 px to tap, under the usual 24×24 px minimum, and they sit right after the name, so a tap on the name's end can land on the pencil (or miss it). Needs decision: (a) keep the icon as it looks but give it an invisible 24×24 px (or larger) tap area; recommended; (b) a visibly bigger pencil. Size: small, needs a preview for (b)
