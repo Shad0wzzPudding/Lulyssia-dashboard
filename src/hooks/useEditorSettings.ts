@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/lib/toast';
 
 /**
  * What Space does in the description editor with whole lines (or several lines) selected:
@@ -25,11 +26,12 @@ const subscribe = (listener: () => void) => {
 };
 
 const readPrefs = async (userId: string) => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('user_preferences')
     .select('prefs')
     .eq('user_id', userId)
     .maybeSingle();
+  if (error) throw error;
   return (data?.prefs ?? {}) as Record<string, unknown>;
 };
 
@@ -41,7 +43,15 @@ const load = async () => {
   chosen = false;
   spaceIndent = 'quick';
   notify();
-  const editor = ((await readPrefs(user.id)).editor ?? {}) as Record<string, unknown>;
+  let editor: Record<string, unknown>;
+  try {
+    editor = ((await readPrefs(user.id)).editor ?? {}) as Record<string, unknown>;
+  } catch (error) {
+    // Not read (e.g. offline): Quick space for now, and the next editor or Settings visit asks again
+    console.error('Reading the Editor setting failed:', error);
+    if (loadedFor === user.id) loadedFor = null;
+    return;
+  }
   if (chosen || loadedFor !== user.id) return;
   spaceIndent = editor.spaceIndent === 'normal' ? 'normal' : 'quick';
   notify();
@@ -56,15 +66,27 @@ export function useSpaceIndent(): SpaceIndent {
 
 /** Change the choice: open editors follow at once, and it's saved to the account (other settings kept). */
 export async function setSpaceIndent(next: SpaceIndent) {
+  const previous = spaceIndent;
   chosen = true;
   spaceIndent = next;
   notify();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.id !== loadedFor) return;
-  const prefs = await readPrefs(user.id);
-  const editor = (prefs.editor ?? {}) as Record<string, unknown>;
-  prefs.editor = { ...editor, spaceIndent: next };
-  await supabase
-    .from('user_preferences')
-    .upsert([{ user_id: user.id, prefs: prefs as never }], { onConflict: 'user_id' });
+  try {
+    const prefs = await readPrefs(user.id);
+    const editor = (prefs.editor ?? {}) as Record<string, unknown>;
+    prefs.editor = { ...editor, spaceIndent: next };
+    const { error } = await supabase
+      .from('user_preferences')
+      .upsert([{ user_id: user.id, prefs: prefs as never }], { onConflict: 'user_id' });
+    if (error) throw error;
+  } catch (error) {
+    // Not saved: back to the choice that is saved, and say so
+    console.error('Saving the Editor setting failed:', error);
+    if (spaceIndent === next && loadedFor === user.id) {
+      spaceIndent = previous;
+      notify();
+    }
+    toast.error("Couldn't save the Editor setting. Check your connection and try again.");
+  }
 }
