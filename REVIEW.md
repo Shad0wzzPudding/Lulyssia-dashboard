@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of the home-and-editor build (27 Oct 
 
 | Commit | What |
 | --- | --- |
+| `a454282` | Fix : Home's In progress cards are a card with a button over it, so screen readers find the pencil (owner's decision) |
 | `36731eb` | Feat : Esc closes the form from the description box too; Ctrl+M switches what Tab does (owner's decision on plan item 2) |
 | `2f00e3c` | Fix : A failed save of the Editor setting says so instead of looking saved |
 | `41e38f7` | Fix : Enter while a word is still being composed keeps the word again |
