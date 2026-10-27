@@ -28,6 +28,7 @@ Newest first. Made during the cloud review of the home-and-editor build (27 Oct 
 
 | Commit | What |
 | --- | --- |
+| `36731eb` | Feat : Esc closes the form from the description box too; Ctrl+M switches what Tab does (owner's decision on plan item 2) |
 | `2f00e3c` | Fix : A failed save of the Editor setting says so instead of looking saved |
 | `41e38f7` | Fix : Enter while a word is still being composed keeps the word again |
 | `bfcfce1` | Fix : The Editor setting follows the account after signing out and in as someone else |
