@@ -48,6 +48,9 @@ export const EditorSettings = () => {
             </div>
           ))}
         </RadioGroup>
+        <p className="text-sm text-muted-foreground">
+          Android phone keyboards don't support Quick space: there, Space replaces the selected text as in Normal.
+        </p>
       </CardContent>
     </Card>
   );
