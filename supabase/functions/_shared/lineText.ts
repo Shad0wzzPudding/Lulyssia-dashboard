@@ -9,6 +9,11 @@ const ESC_BACKSLASH = '\u0007';
 const SEPARATOR = '\u0010';
 
 export function stripMarkdown(text: string): string {
+  return stripMarks(text).trim();
+}
+
+// The marks removed, with the text's spaces (and line breaks) kept as they are
+function stripMarks(text: string): string {
   return text
     // One pass, so "\\*" is an escaped backslash followed by a marker
     .replace(/\\([\\*~|])/g, (_, c) =>
@@ -21,8 +26,7 @@ export function stripMarkdown(text: string): string {
     .split(ESC_STAR).join('*')
     .split(ESC_TILDE).join('~')
     .split(ESC_BACKSLASH).join('\\')
-    .split(SEPARATOR).join('')
-    .trim();
+    .split(SEPARATOR).join('');
 }
 
 // A long description could make a card too big for LINE (it then falls back to plain text, which has
@@ -31,12 +35,15 @@ const MAX_DETAIL_LINES = 5;
 const MAX_DETAIL_CHARS = 300;
 const CUT_NOTE = '...\nRead full detail in dashboard.';
 
-/** The description cleaned for LINE: at most 5 non-empty lines and about 300 characters. */
+/**
+ * The description cleaned for LINE: at most 5 non-empty lines and about 300 characters. Each line
+ * keeps the spaces at its start (indents made in the editor); spaces at the end are trimmed.
+ */
 export function formatDetail(text: string | null): string | null {
   if (!text) return null;
-  const clean = stripMarkdown(text).trim();
-  if (!clean) return null;
-  const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
+  const clean = stripMarks(text);
+  if (!clean.trim()) return null;
+  const lines = clean.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim());
   if (lines.length === 0) return null;
   let detail = lines.slice(0, MAX_DETAIL_LINES).join('\n');
   let cut = lines.length > MAX_DETAIL_LINES;
