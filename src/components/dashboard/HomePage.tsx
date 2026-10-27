@@ -1268,9 +1268,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
 
             {/* Its pictures and files, as on its Tasks or Events card */}
             {selectedItem?.attachments && selectedItem.attachments.length > 0 && (
-              <div className="space-y-2">
-                <AttachmentsImages attachments={selectedItem.attachments} />
-                <AttachmentsChips attachments={selectedItem.attachments} />
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Attachments</h4>
+                <div className="space-y-2">
+                  <AttachmentsImages attachments={selectedItem.attachments} />
+                  <AttachmentsChips attachments={selectedItem.attachments} />
+                </div>
               </div>
             )}
             
