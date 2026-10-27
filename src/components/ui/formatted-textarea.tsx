@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { List, Strikethrough, Bold, Italic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
-import { TAB_SPACES, indentLines, outdentLines } from '@/lib/lineIndent';
+import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
 
 interface FormattedTextareaProps {
   value: string;
@@ -490,6 +490,24 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     }
     // Typing anything else turns Tab back into indenting
     if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) tabReleasedRef.current = false;
+
+    // Space with one whole line, or two or more lines, selected adds a space at the start of each
+    // line instead of replacing them. Part of one line selected: Space types as usual.
+    if (e.key === ' ' && !mod && !e.altKey) {
+      const el = editorRef.current;
+      const range = el && selectionInside(el) ? getSelectionVisibleRange(el) : null;
+      if (el && range && range.end > range.start) {
+        const chars = domChars(el);
+        const start = Math.min(range.start, chars.length);
+        const end = Math.min(range.end, chars.length);
+        if (isWholeLine(chars, start, end) || linesInSelection(chars, start, end).length > 1) {
+          e.preventDefault();
+          const edit = indentLines(chars, start, end, 1);
+          commitEdit(writeChars(edit.chars), edit.start, edit.end);
+          return;
+        }
+      }
+    }
 
     if (mod && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
       e.preventDefault();

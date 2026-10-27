@@ -1,7 +1,7 @@
 /**
- * Indenting whole lines of a description (the editor's Tab and Shift+Tab keys). Works on the editor's
- * styled characters, so the text keeps its formatting; the added spaces are plain spaces, so the
- * description looks the same everywhere it's shown.
+ * Indenting whole lines of a description (the editor's Tab, Shift+Tab and Space keys). Works on the
+ * editor's styled characters, so the text keeps its formatting; the added spaces are plain spaces, so
+ * the description looks the same everywhere it's shown.
  */
 import { plainChars, type StyledChar } from './inlineFormat';
 
@@ -24,6 +24,16 @@ export const linesInSelection = (chars: StyledChar[], start: number, end: number
   return starts;
 };
 
+/** True when the selection covers exactly one whole line (its line break may or may not be included). */
+export const isWholeLine = (chars: StyledChar[], start: number, end: number): boolean => {
+  if (end <= start) return false;
+  const lines = linesInSelection(chars, start, end);
+  if (lines.length !== 1 || start !== lines[0]) return false;
+  let lineEnd = start;
+  while (lineEnd < chars.length && chars[lineEnd].ch !== '\n') lineEnd++;
+  return end === lineEnd || end === lineEnd + 1;
+};
+
 export interface LineEdit {
   chars: StyledChar[];
   start: number;
@@ -32,7 +42,8 @@ export interface LineEdit {
 
 /**
  * Add `count` spaces at the start of every line in the selection. The same lines stay selected:
- * a selection that started at a line's start still does, and a caret moves with its text.
+ * a selection that started at a line's start still does (so a whole line stays whole), and a caret
+ * moves with its text.
  */
 export const indentLines = (chars: StyledChar[], start: number, end: number, count: number): LineEdit => {
   const lines = linesInSelection(chars, start, end);
