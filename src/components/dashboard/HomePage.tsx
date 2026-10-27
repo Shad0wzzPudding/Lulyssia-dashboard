@@ -44,6 +44,14 @@ const SameDayBadge = ({ label, className }: { label: string; className?: string 
   <Badge variant="outline" className={className}>{label}</Badge>
 );
 
+// Its time as one cyan chip, "🕒 09:00 – 13:00" (the calendar's day list and Today's lists)
+const TimeRangeChip = ({ start, end, className = '' }: { start: string; end: string; className?: string }) => (
+  <div className={`flex items-center gap-1 text-xs font-medium text-primary bg-primary/15 rounded px-1.5 py-0.5 w-fit ${className}`}>
+    <Clock size={10} />
+    {start} – {end}
+  </div>
+);
+
 /**
  * The pencil after a task's or event's name: opens its edit form on Home. It sits inside the name
  * (so it wraps with it) and only opens the form, not what clicking the item does.
@@ -629,14 +637,20 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           {task.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
                          )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {startsToday(task) && dueToday(task)
-                            ? `${format(parseISO(task.start_date as string), 'HH:mm')} – ${format(parseISO(task.deadline as string), 'HH:mm')}`
-                            : [
+                        {startsToday(task) && dueToday(task) ? (
+                          <TimeRangeChip
+                            start={format(parseISO(task.start_date as string), 'HH:mm')}
+                            end={format(parseISO(task.deadline as string), 'HH:mm')}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {[
                               startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
                               dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
                             ].filter(Boolean).join(' · ')}
-                        </p>
+                          </p>
+                        )}
                       </div>
                       ))}
                     </div>
@@ -672,18 +686,20 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           {event.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
                          )}
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                          {endsToday ? (
-                            <p>{format(parseISO(event.start_time), 'HH:mm')} – {format(parseISO(event.deadline as string), 'HH:mm')}</p>
-                          ) : (
-                            <>
-                              <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
-                              {event.deadline && (
-                                <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
-                              )}
-                            </>
-                          )}
-                        </div>
+                        {endsToday ? (
+                          <TimeRangeChip
+                            start={format(parseISO(event.start_time), 'HH:mm')}
+                            end={format(parseISO(event.deadline as string), 'HH:mm')}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                            <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
+                            {event.deadline && (
+                              <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       );
                       })}
@@ -877,10 +893,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                               
                               <div className="flex flex-wrap gap-2">
                                 {item.sameDayLabel ? (
-                                  <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/15 rounded px-1.5 py-0.5 w-fit">
-                                    <Clock size={10} />
-                                    {item.times.start} – {item.times.deadline}
-                                  </div>
+                                  <TimeRangeChip start={item.times.start as string} end={item.times.deadline as string} />
                                 ) : (<>
                                 {item.times.start && (
                                   <div className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-1.5 py-0.5 w-fit">

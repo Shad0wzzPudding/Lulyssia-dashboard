@@ -322,6 +322,8 @@ proposals (roadmap.md, "Cloud review (27 Oct 2026, home and editor)").
   same; screen readers get two separate buttons: the item, and "Edit task".
 - **Item 5, the pencil's size:** kept at 20×20 px for now; the roadmap's Backlog has a line to ask
   again later (a bigger invisible tap area, or a bigger pencil).
+- **Item 1, the range in Today's lists:** the same cyan clock chip as the calendar's day list
+  ("🕒 09:00 – 13:00"), instead of plain grey text, so a same-day item looks the same everywhere.
 
 ## If something isn't covered here
 
