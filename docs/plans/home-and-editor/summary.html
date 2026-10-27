@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home and Editor Build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,700;1,800;1,900&family=Kanit:wght@400;500&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: the dashboard's own dark, slanted Persona look; summary tiles first, then three groups (Home, Editor, LINE), each change as a before → after strip */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --raise: hsl(200 14% 11%);
+    --fg: hsl(0 0% 97%);
+    --muted: hsl(200 8% 66%);
+    --line: hsl(193 40% 20%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --green: #4ade80;
+    --red: #f87171;
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", "Kanit", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 30px; }
+
+  header { display: grid; gap: 10px; }
+  .p5 { position: relative; isolation: isolate; justify-self: start; font-family: var(--display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(1.6rem, 4vw, 2.3rem); padding: .1em .9em .15em .7em; color: var(--on-cyan); margin: 0; }
+  .p5::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cyan); transform: skewX(-14deg); box-shadow: 6px 6px 0 var(--fg); }
+  .lede { margin: 6px 0 0; color: var(--muted); max-width: 66ch; line-height: 1.6; }
+  .lede b { color: var(--fg); font-weight: 600; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: 5px 5px 0 color-mix(in srgb, var(--cyan) 50%, transparent); padding: 14px 16px; display: grid; gap: 2px; }
+  .tile .n { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 2.4rem; line-height: 1; color: var(--cyan); font-variant-numeric: tabular-nums; }
+  .tile .l { font-size: .84rem; color: var(--muted); }
+
+  .group { display: grid; gap: 14px; }
+  .ghead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .ghead h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.7rem; margin: 0; text-wrap: balance; }
+  .ghead span { color: var(--muted); font-size: .88rem; }
+
+  .change { background: var(--card); border: 1px solid #263239; border-radius: 10px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+  .change .txt { display: grid; gap: 8px; min-width: 0; }
+  .num { display: inline-flex; align-items: center; gap: 8px; }
+  .num i { font-style: italic; font-family: var(--display); font-weight: 900; font-size: 1rem; background: var(--fg); color: var(--page); padding: 0 8px; transform: skewX(-12deg); }
+  h3 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.25rem; margin: 0; text-wrap: balance; }
+  .change p { margin: 0; color: #d6dee2; line-height: 1.55; font-size: .92rem; max-width: 60ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: 2px 9px; border: 1px solid #3a4a52; color: var(--muted); }
+  .pill.size { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 60%, transparent); }
+  .pill.deploy { color: #fbbf24; border-color: #a16207; }
+  .where { font-size: .8rem; color: var(--muted); }
+  .where b { color: var(--fg); font-weight: 500; }
+
+  .demo { background: var(--raise); border: 1px dashed #33434b; border-radius: 8px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
+  .ba { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; align-items: center; }
+  .ba .k { font-size: .66rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .ba .k.after { color: var(--cyan); }
+
+  /* mini pieces of the app */
+  .mini { position: relative; background: rgba(31, 41, 55, .55); border: 1px solid rgba(58, 174, 212, .25); border-radius: 7px; padding: 8px 10px 8px 13px; display: grid; gap: 5px; min-width: 0; }
+  .mini.stripe::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 7px 0 0 7px; background: linear-gradient(#22c55e 50%, #ef4444 50%); }
+  .mrow { display: flex; justify-content: space-between; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .mt { font-weight: 600; font-size: .84rem; display: inline-flex; align-items: center; gap: 4px; }
+  .b { font-size: .64rem; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: #374151; color: #e5e7eb; }
+  .b.s { background: transparent; border: 1px solid #6b7280; }
+  .b.e { background: #dc2626; color: #fff; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; border-radius: 4px; padding: 1px 6px; }
+  .chip.g { color: var(--green); background: rgba(20, 83, 45, .35); }
+  .chip.r { color: var(--red); background: rgba(127, 29, 29, .35); }
+  .chip.c { color: var(--cyan); background: rgba(58, 174, 212, .15); }
+  .pen { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; color: var(--cyan); border: 1px solid color-mix(in srgb, var(--cyan) 50%, transparent); }
+  .code { font: 12.5px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; background: hsl(200 14% 6%); border: 1px solid #2b3a42; border-radius: 6px; padding: 8px 10px; overflow-x: auto; color: #e2e8f0; }
+  .code .sp { background: rgba(58, 174, 212, .22); color: var(--cyan); }
+  .code .sel { background: rgba(96, 165, 250, .3); }
+  kbd { font: 600 .74rem var(--body); background: #1f2a30; border: 1px solid #3a4a52; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--fg); }
+  .tb { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  .tb span { font: italic 800 .78rem var(--display); border: 1px solid #444; padding: 3px 9px; transform: skewX(-12deg); color: #cbd5e1; }
+  .tb span.new { border-color: var(--cyan); color: var(--cyan); }
+  .pics { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pic { width: 74px; height: 54px; border-radius: 5px; border: 1px solid #333; background: linear-gradient(135deg, #1e5f74, #0b2233); }
+  .pic.b2 { background: linear-gradient(135deg, #6b4f2a, #3d2b16); }
+  .fchip { font-size: .66rem; border: 1px solid #3a4a52; border-radius: 999px; padding: 1px 7px; color: #e5e7eb; }
+  .line-msg { background: #f5f5f5; color: #111; border-radius: 12px 12px 12px 3px; padding: 8px 10px; font-size: .78rem; line-height: 1.5; white-space: pre; font-family: var(--body); overflow-x: auto; }
+  .set { background: #f5f5f5; color: #111; border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+  .set h4 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1rem; }
+  .opt { display: flex; gap: 8px; align-items: flex-start; font-size: .78rem; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #3a3a3a; flex: none; margin-top: 1px; }
+  .dot.on { border-color: #1b7f9f; background: radial-gradient(#1b7f9f 45%, transparent 50%); }
+  .opt b { font-weight: 600; }
+  .opt span { color: #444; }
+
+  .after { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+  .after h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.5rem; margin: 0; }
+  .steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; line-height: 1.55; font-size: .92rem; color: #d6dee2; }
+  .steps b { color: var(--fg); }
+  .cmd { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: hsl(200 14% 5%); border: 1px solid #2b3a42; border-radius: 6px; padding: 8px 10px; color: var(--cyan); overflow-x: auto; white-space: pre; }
+
+  @media (max-width: 720px) { .change { grid-template-columns: 1fr; } }
+  svg { flex: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="p5">Home &amp; Editor build</h1>
+    <p class="lede">What changes in Lulyssia once the plan <b>home-and-editor</b> is built and merged: three changes on Home, four in the description editor and Settings, and one on LINE. Decided together on 27 Oct 2026; the cloud build follows <b>docs/plans/home-and-editor/plan.md</b>.</p>
+  </header>
+
+  <section class="tiles" aria-label="At a glance">
+    <div class="tile"><span class="n">8</span><span class="l">changes, each on its own branch</span></div>
+    <div class="tile"><span class="n">3</span><span class="l">LINE functions to deploy after item 7</span></div>
+    <div class="tile"><span class="n">0</span><span class="l">database migrations</span></div>
+    <div class="tile"><span class="n">1</span><span class="l">new Settings card (Editor)</span></div>
+  </section>
+
+  <!-- HOME -->
+  <section class="group">
+    <div class="ghead"><h2>Home</h2><span>Items 1, 5 and 6</span></div>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>1</i><h3>Same-day items show one time range</h3></span>
+        <p>A task or event that starts and ends on the same day shows "09:00 – 13:00" instead of a start and an end side by side. The half-green, half-red stripe on the calendar's list stays as its sign.</p>
+        <p class="where">Where: <b>calendar's day list and details window, Today's Tasks, Today's Events</b></p>
+        <div class="meta"><span class="pill size">small</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="mini stripe"><div class="mrow"><span class="mt">Team meeting</span><span><span class="b">event</span> <span class="b s">Start</span> <span class="b e">End</span></span></div><div><span class="chip g">🕒 09:00</span> <span class="chip r">🕒 13:00</span></div></div>
+          <span class="k after">After</span>
+          <div class="mini stripe"><div class="mrow"><span class="mt">Team meeting</span><span class="b">event</span></div><div><span class="chip c">🕒 09:00 – 13:00</span></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>5</i><h3>Edit tasks and events right from Home</h3></span>
+        <p>A pencil after each task's and event's name opens its edit form on top of Home. Update or Cancel and you're still on Home, with the change shown. The form is the same one the Tasks and Events pages use, so everything in it works the same.</p>
+        <p class="where">Where: <b>Today's Tasks and Events, In progress, Upcoming, the calendar's day list and details window</b></p>
+        <div class="meta"><span class="pill size">large</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="mini"><span class="mt">Write the lab report</span><span style="font-size:.7rem;color:var(--muted)">To edit: go to Tasks, find it, press ✎</span></div>
+          <span class="k after">After</span>
+          <div class="mini"><span class="mt">Write the lab report <span class="pen" aria-hidden="true"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span></span><span style="font-size:.7rem;color:var(--muted)">Pencil → the edit form opens here</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>6</i><h3>Pictures in Home's details window</h3></span>
+        <p>Clicking a task or event in the calendar or In progress opens its details. That window now shows its pictures and file chips, exactly as its card does. Tap one to open it.</p>
+        <p class="where">Where: <b>the details window on Home</b></p>
+        <div class="meta"><span class="pill size">small–medium</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="mini"><span class="mt">📅 Team meeting</span><span style="font-size:.72rem;color:#cbd5e1">Bring the slides.</span><span class="chip c">🕒 09:00 – 13:00</span></div>
+          <span class="k after">After</span>
+          <div class="mini"><span class="mt">📅 Team meeting</span><span style="font-size:.72rem;color:#cbd5e1">Bring the slides.</span><div class="pics"><div class="pic"></div><div class="pic b2"></div></div><div style="display:flex;gap:4px;flex-wrap:wrap"><span class="fchip">🖼 room-map.jpg</span><span class="fchip">📄 budget.pdf</span></div><span class="chip c">🕒 09:00 – 13:00</span></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="group">
+    <div class="ghead"><h2>Description editor &amp; Settings</h2><span>Items 2, 3, 4 and 8</span></div>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>2</i><h3>Tab indents lines</h3></span>
+        <p><kbd>Tab</kbd> adds 6 spaces to the start of the caret's line, or of every selected line. <kbd>Shift</kbd>+<kbd>Tab</kbd> takes up to 6 back off. The lines stay selected, so you can press it again. To leave the box with the keyboard: <kbd>Esc</kbd>, then <kbd>Tab</kbd>.</p>
+        <p class="where">Where: <b>task, event and interest forms</b> · Today Tab jumps to the next field</p>
+        <div class="meta"><span class="pill size">small–medium</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Select</span>
+          <div class="code">Bring:
+<span class="sel">laptop
+charger</span></div>
+          <span class="k after">Tab</span>
+          <div class="code">Bring:
+<span class="sp">      </span>laptop
+<span class="sp">      </span>charger</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>3</i><h3>Space adds a space to selected lines</h3></span>
+        <p>With whole lines (or 2+ lines) selected, <kbd>Space</kbd> adds one space to the start of each line instead of deleting them. With only part of a line selected, Space works as usual. This is "Quick space", the default.</p>
+        <p class="where">Where: <b>the same editor</b></p>
+        <div class="meta"><span class="pill size">small</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="code"><span class="sel">laptop
+charger</span>  →  " " (both lines gone)</div>
+          <span class="k after">After</span>
+          <div class="code"><span class="sp"> </span>laptop
+<span class="sp"> </span>charger</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>4</i><h3>A Tab button in the toolbar</h3></span>
+        <p>A new <b>⇥ Tab</b> button after "• Add" does what the Tab key does: handy on a phone, which has no Tab key.</p>
+        <p class="where">Where: <b>the editor's toolbar</b></p>
+        <div class="meta"><span class="pill size">small</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="tb"><span>☰ Auto •</span><span>• Add</span><span>S̶</span><span>B</span><span>I</span></div>
+          <span class="k after">After</span>
+          <div class="tb"><span>☰ Auto •</span><span>• Add</span><span class="new">⇥ Tab</span><span>S̶</span><span>B</span><span>I</span></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>8</i><h3>Editor setting: Quick space or Normal</h3></span>
+        <p>A new white <b>Editor</b> card at the end of Settings chooses what Space does with lines selected. Quick space (item 3) is the default; Normal makes Space replace the selection as in other editors. Saved to your account, so it follows you to every device. Tab and the Tab button aren't affected.</p>
+        <p class="where">Where: <b>Settings, after Sound</b></p>
+        <div class="meta"><span class="pill size">small–medium</span></div>
+      </div>
+      <div class="demo">
+        <div class="set">
+          <h4>Editor</h4>
+          <div style="font-size:.74rem;color:#444">Space with lines selected · saved to your account</div>
+          <div class="opt"><span class="dot on"></span><div><b>Quick space</b> <span>adds one space to the start of each selected line</span></div></div>
+          <div class="opt"><span class="dot"></span><div><b>Normal</b> <span>replaces the selected text, like other editors</span></div></div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- LINE -->
+  <section class="group">
+    <div class="ghead"><h2>LINE</h2><span>Item 7</span></div>
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>7</i><h3>LINE keeps the indents</h3></span>
+        <p>Descriptions in LINE messages (morning letter, day-before notice, starting-soon card, missed-deadline nudges) keep each line's leading spaces, so what you indent in the app is indented on LINE too. The 5-line and 300-character limits stay.</p>
+        <p class="where">Where: <b>every LINE message with a description</b></p>
+        <div class="meta"><span class="pill size">small</span><span class="pill deploy">deploy 3 functions</span></div>
+      </div>
+      <div class="demo">
+        <div class="ba"><span class="k">Now</span>
+          <div class="line-msg">Bring:
+laptop
+charger</div>
+          <span class="k after">After</span>
+          <div class="line-msg">Bring:
+      laptop
+      charger</div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="after">
+    <h2>After the build</h2>
+    <ol class="steps">
+      <li><b>Build:</b> in a cloud session, run the command below. Each item gets its own branch, plus a summary branch with the order to merge them.</li>
+      <li><b>Check and merge:</b> come back to Claude, which checks each branch with you and merges them in order.</li>
+      <li><b>Deploy:</b> after item 7 is merged, deploy <b>send-line-daily</b>, <b>send-line-reminders</b> and <b>send-line-overdue</b>. No migration. Everything else goes out with the next Vercel deploy.</li>
+      <li><b>Look and try:</b> a same-day item on Home, editing from Home, pictures in the details window, Tab / Space / ⇥ Tab in a description, the Editor card, and an indented description on LINE.</li>
+    </ol>
+    <div class="cmd">/cloud-build home-and-editor</div>
+  </section>
+</div>
+</body>
+</html>
