@@ -260,7 +260,7 @@ export const EventsPage = ({
     return (
       <Card 
         key={event.id} 
-        className={`${getBorderColor(status)} relative transition-all flex flex-col h-full min-h-[200px] ${
+        className={`${getBorderColor(status)} relative transition-all flex flex-col h-full ${
           cardSurface(isSelecting, isSelected(event.id))
         } ${isSelected(event.id) ? 'ring-2 ring-events-theme shadow-lg' : ''}`}
         onClick={() => handleCardClick(event)}
