@@ -59,7 +59,7 @@
   .demo { background: var(--raise); border: 1px dashed #33434b; border-radius: 8px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
   .ba { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; align-items: center; }
   .ba .k { font-size: .66rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
-  .ba .k.after { color: var(--cyan); }
+  .ba .k.aft { color: var(--cyan); }
 
   /* mini pieces of the app */
   .mini { position: relative; background: rgba(31, 41, 55, .55); border: 1px solid rgba(58, 174, 212, .25); border-radius: 7px; padding: 8px 10px 8px 13px; display: grid; gap: 5px; min-width: 0; }
@@ -69,6 +69,7 @@
   .b { font-size: .64rem; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: #374151; color: #e5e7eb; }
   .b.s { background: transparent; border: 1px solid #6b7280; }
   .b.e { background: #dc2626; color: #fff; }
+  .b.same { background: transparent; border: 1px solid #6b7280; }
   .chip { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; border-radius: 4px; padding: 1px 6px; }
   .chip.g { color: var(--green); background: rgba(20, 83, 45, .35); }
   .chip.r { color: var(--red); background: rgba(127, 29, 29, .35); }
@@ -125,15 +126,15 @@
     <article class="change">
       <div class="txt">
         <span class="num"><i>1</i><h3>Same-day items show one time range</h3></span>
-        <p>A task or event that starts and ends on the same day shows "09:00 – 13:00" instead of a start and an end side by side. The half-green, half-red stripe on the calendar's list stays as its sign.</p>
+        <p>A task or event that starts and ends on the same day shows "09:00 – 13:00" instead of a start and an end side by side, with a <b>Start and end today</b> badge beside its type. The half-green, half-red stripe on the calendar's list stays. On another calendar day the badge reads "Start and end same day".</p>
         <p class="where">Where: <b>calendar's day list and details window, Today's Tasks, Today's Events</b></p>
         <div class="meta"><span class="pill size">small</span></div>
       </div>
       <div class="demo">
         <div class="ba"><span class="k">Now</span>
           <div class="mini stripe"><div class="mrow"><span class="mt">Team meeting</span><span><span class="b">event</span> <span class="b s">Start</span> <span class="b e">End</span></span></div><div><span class="chip g">🕒 09:00</span> <span class="chip r">🕒 13:00</span></div></div>
-          <span class="k after">After</span>
-          <div class="mini stripe"><div class="mrow"><span class="mt">Team meeting</span><span class="b">event</span></div><div><span class="chip c">🕒 09:00 – 13:00</span></div></div>
+          <span class="k aft">After</span>
+          <div class="mini stripe"><div class="mrow"><span class="mt">Team meeting</span><span><span class="b">event</span> <span class="b same">Start and end today</span></span></div><div><span class="chip c">🕒 09:00 – 13:00</span></div></div>
         </div>
       </div>
     </article>
@@ -148,7 +149,7 @@
       <div class="demo">
         <div class="ba"><span class="k">Now</span>
           <div class="mini"><span class="mt">Write the lab report</span><span style="font-size:.7rem;color:var(--muted)">To edit: go to Tasks, find it, press ✎</span></div>
-          <span class="k after">After</span>
+          <span class="k aft">After</span>
           <div class="mini"><span class="mt">Write the lab report <span class="pen" aria-hidden="true"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg></span></span><span style="font-size:.7rem;color:var(--muted)">Pencil → the edit form opens here</span></div>
         </div>
       </div>
@@ -164,7 +165,7 @@
       <div class="demo">
         <div class="ba"><span class="k">Now</span>
           <div class="mini"><span class="mt">📅 Team meeting</span><span style="font-size:.72rem;color:#cbd5e1">Bring the slides.</span><span class="chip c">🕒 09:00 – 13:00</span></div>
-          <span class="k after">After</span>
+          <span class="k aft">After</span>
           <div class="mini"><span class="mt">📅 Team meeting</span><span style="font-size:.72rem;color:#cbd5e1">Bring the slides.</span><div class="pics"><div class="pic"></div><div class="pic b2"></div></div><div style="display:flex;gap:4px;flex-wrap:wrap"><span class="fchip">🖼 room-map.jpg</span><span class="fchip">📄 budget.pdf</span></div><span class="chip c">🕒 09:00 – 13:00</span></div>
         </div>
       </div>
@@ -187,7 +188,7 @@
           <div class="code">Bring:
 <span class="sel">laptop
 charger</span></div>
-          <span class="k after">Tab</span>
+          <span class="k aft">Tab</span>
           <div class="code">Bring:
 <span class="sp">      </span>laptop
 <span class="sp">      </span>charger</div>
@@ -206,7 +207,7 @@ charger</span></div>
         <div class="ba"><span class="k">Now</span>
           <div class="code"><span class="sel">laptop
 charger</span>  →  " " (both lines gone)</div>
-          <span class="k after">After</span>
+          <span class="k aft">After</span>
           <div class="code"><span class="sp"> </span>laptop
 <span class="sp"> </span>charger</div>
         </div>
@@ -223,7 +224,7 @@ charger</span>  →  " " (both lines gone)</div>
       <div class="demo">
         <div class="ba"><span class="k">Now</span>
           <div class="tb"><span>☰ Auto •</span><span>• Add</span><span>S̶</span><span>B</span><span>I</span></div>
-          <span class="k after">After</span>
+          <span class="k aft">After</span>
           <div class="tb"><span>☰ Auto •</span><span>• Add</span><span class="new">⇥ Tab</span><span>S̶</span><span>B</span><span>I</span></div>
         </div>
       </div>
@@ -262,7 +263,7 @@ charger</span>  →  " " (both lines gone)</div>
           <div class="line-msg">Bring:
 laptop
 charger</div>
-          <span class="k after">After</span>
+          <span class="k aft">After</span>
           <div class="line-msg">Bring:
       laptop
       charger</div>
