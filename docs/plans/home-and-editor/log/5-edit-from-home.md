@@ -1,7 +1,7 @@
 # 5. Edit tasks and events from Home
 
 **Status:** Built
-**Branch:** `plan/home-and-editor/5-edit-from-home` (based on `main`)
+**Branch:** `plan/home-and-editor/5-edit-from-home` (based on `main`, with item 1's branch merged in: merge item 1 first)
 
 ## Done when
 - [x] each of the six places shows a pencil after a task's or event's name — browser check (local dev server, test data, nothing reaches the live project): Today's Tasks, Today's Events, In progress, Upcoming (tasks and events) show 6 pencils; picking a calendar day adds the day list's pencils (8); the details window has one next to its title
@@ -26,4 +26,4 @@ nothing
 
 ## Notes
 - Two commits: first the forms move out of TasksPage.tsx and EventsPage.tsx into `TaskFormDialog.tsx` and `EventFormDialog.tsx` unchanged (checked line by line: only the indentation, the "Add" button now passed in from the page, and the `Attachment` type import differ); then Home's pencils.
-- Items 1 and 6 also change HomePage.tsx; see the build summary for merging them together.
+- The plan says to keep item 1's Home changes when item 1 is built first. Both change the same lines of HomePage.tsx (the Today lists, the calendar list and the details window), so item 1's branch is merged into this one, with the conflicts resolved by hand: the result is item 1's Home plus this item's pencils (checked by comparing the changes line by line). Item 1's and this item's browser checks were run again on the result and passed (the pencil also sits after the name in item 1's "Start and end today" lines).
