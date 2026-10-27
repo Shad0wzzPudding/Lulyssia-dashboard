@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2 } from "lucide-react";
+import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2, Pencil } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
-import { Interest, Task, Event, ActivityLog, Attachment } from "@/lib/types";
+import { Interest, Task, Event, ActivityLog, Attachment, FormSaveCallbacks, FormSaveMarker } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
@@ -21,6 +21,49 @@ import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
 import { AttachmentsChips, AttachmentsImages } from "./AttachmentsField";
+import { TaskFormDialog, type TaskFormHandle } from "./TaskFormDialog";
+import { EventFormDialog, type EventFormHandle } from "./EventFormDialog";
+
+// An item in the calendar's day list and the details window
+type DayItem = {
+  id: string;
+  title: string;
+  type: 'task' | 'event';
+  dateTypes: Array<'start' | 'deadline'>;
+  times: { start?: string; deadline?: string };
+  description?: string;
+  attachments?: Attachment[];
+  // Set when the item starts and ends on the same day: its badge, "Start and end today" or "Start and end 3 Nov"
+  sameDayLabel?: string;
+};
+
+const sameDayLabel = (day: Date) => isToday(day) ? 'Start and end today' : `Start and end ${format(day, 'd MMM')}`;
+
+// The outlined badge beside the type for an item that starts and ends on the same day
+const SameDayBadge = ({ label, className }: { label: string; className?: string }) => (
+  <Badge variant="outline" className={className}>{label}</Badge>
+);
+
+/**
+ * The pencil after a task's or event's name: opens its edit form on Home. It sits inside the name
+ * (so it wraps with it) and only opens the form, not what clicking the item does.
+ */
+const EditButton = ({ type, onEdit }: { type: 'task' | 'event'; onEdit: () => void }) => {
+  const label = type === 'task' ? 'Edit task' : 'Edit event';
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onEdit(); }}
+      onKeyDown={(e) => e.stopPropagation()}
+      aria-label={label}
+      title={label}
+      className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded align-text-bottom text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Pencil size={12} />
+    </button>
+  );
+};
+
 interface HomePageProps {
   interests: Interest[];
   tasks: Task[];
@@ -29,19 +72,16 @@ interface HomePageProps {
   onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
   onDeleteActivityLog?: (id: string) => void;
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
+  // Saving from the edit forms opened on Home (the same as the Tasks and Events pages)
+  onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateTask: (data: Partial<Task> & { id: string } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateEvent: (data: Partial<Event> & { id: string } & FormSaveMarker, options?: FormSaveCallbacks) => void;
 }
 
-export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog }: HomePageProps) => {
+export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onCreateTask, onUpdateTask, onCreateEvent, onUpdateEvent }: HomePageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedItem, setSelectedItem] = useState<{
-    id: string;
-    title: string;
-    type: 'task' | 'event';
-    dateTypes: Array<'start' | 'deadline'>;
-    times: { start?: string; deadline?: string };
-    description?: string;
-    attachments?: Attachment[];
-  } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<DayItem | null>(null);
   const [recentChangesCollapsed, setRecentChangesCollapsed] = useState(() => {
     try {
       return localStorage.getItem('recentChangesCollapsed') === 'true';
@@ -50,6 +90,19 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     }
   });
   const audioUnlockedRef = useRef(false);
+
+  // The edit forms (the same ones as on the Tasks and Events pages), opened by the pencils
+  const taskForm = useRef<TaskFormHandle>(null);
+  const eventForm = useRef<EventFormHandle>(null);
+  const editItem = (type: 'task' | 'event', id: string) => {
+    if (type === 'task') {
+      const task = tasks.find(t => t.id === id);
+      if (task) taskForm.current?.openEdit(task);
+    } else {
+      const event = events.find(e => e.id === id);
+      if (event) eventForm.current?.openEdit(event);
+    }
+  };
   
   // Unlock audio on first touch (iOS requirement)
   useEffect(() => {
@@ -286,15 +339,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   
   // Get events and tasks for a specific date (grouped by item ID)
   const getDateDetails = (date: Date) => {
-    const itemsMap: Map<string, {
-      id: string;
-      title: string;
-      type: 'task' | 'event';
-      dateTypes: Array<'start' | 'deadline'>;
-      times: { start?: string; deadline?: string };
-      description?: string;
-      attachments?: Attachment[];
-    }> = new Map();
+    const itemsMap: Map<string, DayItem> = new Map();
     
     // Check tasks (only incomplete tasks)
     tasks.forEach(task => {
@@ -386,7 +431,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       }
     });
     
-    return Array.from(itemsMap.values());
+    // Starting and ending on this day: one range and one badge instead of the two times
+    const items = Array.from(itemsMap.values());
+    items.forEach(item => {
+      if (item.dateTypes.length === 2) item.sameDayLabel = sameDayLabel(date);
+    });
+    return items;
   };
   
   // A task is overdue as soon as its deadline passes, even earlier today
@@ -564,20 +614,28 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       {list.map(task => (
                       <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}</p>
-                          {startsToday(task) && (
-                            <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                          <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}<EditButton type="task" onEdit={() => taskForm.current?.openEdit(task)} /></p>
+                          {startsToday(task) && dueToday(task) ? (
+                            <SameDayBadge label={sameDayLabel(now)} className="text-xs" />
+                          ) : (
+                            <>
+                              {startsToday(task) && (
+                                <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                              )}
+                              {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
+                            </>
                           )}
-                          {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
                         </div>
                           {task.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
                          )}
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {[
-                            startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
-                            dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
-                          ].filter(Boolean).join(' · ')}
+                          {startsToday(task) && dueToday(task)
+                            ? `${format(parseISO(task.start_date as string), 'HH:mm')} – ${format(parseISO(task.deadline as string), 'HH:mm')}`
+                            : [
+                              startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
+                              dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
+                            ].filter(Boolean).join(' · ')}
                         </p>
                       </div>
                       ))}
@@ -599,20 +657,36 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   label="today's events"
                   renderList={(list) => (
                     <div className="space-y-2">
-                      {list.map(event => (
+                      {list.map(event => {
+                      const endsToday = !!event.deadline && isToday(parseISO(event.deadline));
+                      return (
                       <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
-                        <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
+                        {endsToday ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
+                            <SameDayBadge label={sameDayLabel(now)} className="text-xs" />
+                          </div>
+                        ) : (
+                          <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
+                        )}
                           {event.description && (
                             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
                          )}
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                          <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
-                          {event.deadline && (
-                            <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                          {endsToday ? (
+                            <p>{format(parseISO(event.start_time), 'HH:mm')} – {format(parseISO(event.deadline as string), 'HH:mm')}</p>
+                          ) : (
+                            <>
+                              <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
+                              {event.deadline && (
+                                <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 />
@@ -627,6 +701,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       {/* In progress (hidden when nothing is) */}
       <InProgressCard
         items={inProgressItems}
+        onEdit={(item) => editItem(item.type, item.id)}
         onOpen={(item) => setSelectedItem({
           id: item.id,
           title: item.title,
@@ -770,7 +845,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                             <div className="ml-2 min-w-0">
                               <div className="flex items-start justify-between mb-1">
                                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm leading-tight flex-1 mr-2 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">
-                                  {item.title}
+                                  {item.title}<EditButton type={item.type} onEdit={() => editItem(item.type, item.id)} />
                                 </h4>
                                 <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
                                   <Badge 
@@ -779,7 +854,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                   >
                                     {item.type}
                                   </Badge>
-                                  {item.dateTypes.map((dt) => (
+                                  {item.sameDayLabel ? (
+                                    <SameDayBadge label={item.sameDayLabel} className="text-xs px-1.5 py-0.5 h-5" />
+                                  ) : item.dateTypes.map((dt) => (
                                     <Badge 
                                       key={dt}
                                       variant={dt === 'deadline' ? 'destructive' : 'outline'}
@@ -799,6 +876,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                )}
                               
                               <div className="flex flex-wrap gap-2">
+                                {item.sameDayLabel ? (
+                                  <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/15 rounded px-1.5 py-0.5 w-fit">
+                                    <Clock size={10} />
+                                    {item.times.start} – {item.times.deadline}
+                                  </div>
+                                ) : (<>
                                 {item.times.start && (
                                   <div className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-1.5 py-0.5 w-fit">
                                     <Clock size={10} />
@@ -811,6 +894,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                     {item.times.deadline}
                                   </div>
                                 )}
+                                </>)}
                               </div>
                             </div>
                           </div>
@@ -861,7 +945,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 <div className="space-y-2">
                   {upcomingTasks.map(task => (
                     <div key={task.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}</p>
+                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}<EditButton type="task" onEdit={() => taskForm.current?.openEdit(task)} /></p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Due: {format(parseISO(task.deadline), 'MMM dd, yyyy HH:mm')}
                       </p>
@@ -880,7 +964,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 <div className="space-y-2">
                   {upcomingEvents.map(event => (
                     <div key={event.id} className="p-2 bg-p5-50 dark:bg-p5-950/20 rounded border border-p5-200 dark:border-p5-800">
-                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</p>
+                      <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
                       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
                         <p>Starts: {format(parseISO(event.start_time), 'MMM dd, yyyy HH:mm')}</p>
                         {event.deadline && (
@@ -1130,7 +1214,19 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               ) : (
                 <CalendarIcon className="shrink-0 text-secondary" size={20} />
               )}
-              <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{selectedItem?.title}</span>
+              <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {selectedItem?.title}
+                {selectedItem && (
+                  <EditButton
+                    type={selectedItem.type}
+                    // The details window closes and the edit form opens in its place
+                    onEdit={() => {
+                      setSelectedItem(null);
+                      editItem(selectedItem.type, selectedItem.id);
+                    }}
+                  />
+                )}
+              </span>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -1138,7 +1234,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               <Badge variant={selectedItem?.type === 'task' ? 'default' : 'secondary'}>
                 {selectedItem?.type}
               </Badge>
-              {selectedItem?.dateTypes.map((dt) => (
+              {selectedItem?.sameDayLabel ? (
+                <SameDayBadge label={selectedItem.sameDayLabel} />
+              ) : selectedItem?.dateTypes.map((dt) => (
                 <Badge 
                   key={dt}
                   variant={dt === 'deadline' ? 'destructive' : 'outline'}
@@ -1166,6 +1264,15 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-2">Times</h4>
               <div className="space-y-2">
+                {selectedItem?.sameDayLabel ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-1 text-primary bg-primary/15 rounded px-2 py-1">
+                      <Clock size={14} />
+                      <span className="font-medium">Time:</span>
+                    </div>
+                    <span>{selectedItem.times.start} – {selectedItem.times.deadline}</span>
+                  </div>
+                ) : (<>
                 {selectedItem?.times.start && (
                   <div className="flex items-center gap-2 text-sm">
                     <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 rounded px-2 py-1">
@@ -1184,11 +1291,15 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <span>{selectedItem.times.deadline}</span>
                   </div>
                 )}
+                </>)}
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <TaskFormDialog ref={taskForm} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} />
+      <EventFormDialog ref={eventForm} onCreateEvent={onCreateEvent} onUpdateEvent={onUpdateEvent} />
     </div>
   );
 };

@@ -1,18 +1,13 @@
-import { NoticeBeforeToggle } from './NoticeBeforeToggle';
 import { memo, useDeferredValue, useState, useEffect, useMemo, useRef } from 'react';
 import { Task, DailyTask, FormSaveCallbacks, FormSaveMarker, Tag } from '@/lib/types';
 import type { DeleteTarget, ReorderArgs } from '@/hooks/useDashboardData';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FormattedTextarea } from '@/components/ui/formatted-textarea';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, X, CheckSquare, Repeat, Hourglass } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, CheckSquare, Repeat, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { toast as notify } from '@/lib/toast';
@@ -21,9 +16,9 @@ import { SelectModeOverlay } from './SelectionCorners';
 import { cardSurface } from '@/lib/selectMode';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { playSuccessSound, playCompletionSound, playCancelSound, playDeleteSound, playDuplicateSound, playUpdateSound, playEditSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
-import { TagPicker, TagChip } from './TagPicker';
-import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './AttachmentsField';
+import { playCompletionSound, playDeleteSound, playDuplicateSound, playUpdateSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
+import { TagChip } from './TagPicker';
+import { AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
@@ -33,13 +28,9 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { DailyTasksSection } from './DailyTasksSection';
+import { TaskFormDialog, type TaskFormHandle } from './TaskFormDialog';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
-import { autoDeadline } from '@/lib/autoDeadline';
-import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
-import { refuseSaveOffline } from '@/lib/formSave';
-
-type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
 interface TasksPageProps {
   tasks: Task[];
@@ -233,22 +224,8 @@ export const TasksPage = ({
   newTaskRequest = null,
 }: TasksPageProps) => {
   const { toast } = useToast();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // A file still uploading: saving waits, or the item would be saved without it
-  const [uploading, setUploading] = useState(false);
-  // A save sent from the form and not answered yet: the form waits for it ("Saving…"). The number
-  // tells a late answer apart from the form opened since (closing the form lets go of the save).
-  const [saving, setSaving] = useState(false);
-  // "The deadline is before the start": shown once Create/Update was pressed with the dates that
-  // way round, and gone as soon as they are fixed
-  const [dateErrorShown, setDateErrorShown] = useState(false);
-  const saveRun = useRef(0);
-  const closeForm = () => {
-    saveRun.current += 1;
-    setSaving(false);
-    setIsCreateOpen(false);
-  };
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  // The add/edit form (shared with Home)
+  const taskForm = useRef<TaskFormHandle>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [clearedTasks, setClearedTasks] = useState<Task[]>([]);
@@ -256,19 +233,6 @@ export const TasksPage = ({
   // After Undo, the Clear button comes back where Undo was: keep it out of reach for 2 seconds so a
   // click running on from Undo can't open the "Clear …?" question again
   const [clearHeld, holdClear] = useBriefHold(2000);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    start_date: '',
-    deadline: '',
-    is_completed: false,
-    tag_ids: [] as string[],
-    recurrence_unit: '' as RecurrenceUnit,
-    // '' while the box is being retyped; saving turns it into a whole number of at least 1
-    recurrence_interval: 1 as number | '',
-    attachments: [] as import('@/lib/types').Attachment[],
-    notice_before: false,
-  });
   const [sort, setSort] = useSortPreference('tasks');
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -319,107 +283,13 @@ export const TasksPage = ({
     });
   };
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      start_date: '',
-      deadline: '',
-      is_completed: false,
-      tag_ids: [],
-      recurrence_unit: '',
-      recurrence_interval: 1,
-      attachments: [],
-      notice_before: false,
-    });
-    setEditingTask(null);
-    setDateErrorShown(false);
-  };
-
   // Asked from outside (the "Add Task" shortcut): open the empty new-task form
   useEffect(() => {
     if (newTaskRequest === null) return;
-    resetForm();
-    setIsCreateOpen(true);
+    taskForm.current?.openNew();
   }, [newTaskRequest]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (uploading || saving) return;
-    if (deadlineBeforeStart(formData.start_date, formData.deadline)) {
-      setDateErrorShown(true);
-      return;
-    }
-    if (refuseSaveOffline(editingTask ? 'Update' : 'Create')) return;
-    
-    const deadline = formData.deadline ? new Date(formData.deadline).toISOString() : null;
-    const recurrenceUnit = formData.recurrence_unit || null;
-    const recurrenceInterval = formData.recurrence_unit ? Math.max(1, Math.round(Number(formData.recurrence_interval)) || 1) : 1;
-    // A repeating task counts its repeats from its first deadline. Editing keeps that anchor
-    // unless the deadline (to the minute) or the repeat setting changed.
-    const minute = (iso?: string | null) => (iso ? Math.floor(new Date(iso).getTime() / 60000) : null);
-    const keepAnchor = !!editingTask?.recurrence_anchor
-      && minute(editingTask.deadline) === minute(deadline)
-      && editingTask.recurrence_unit === recurrenceUnit
-      && (editingTask.recurrence_interval || 1) === recurrenceInterval;
-    const submissionData = {
-      ...formData,
-      // null (not undefined) so clearing a date while editing really removes it
-      start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
-      deadline,
-      recurrence_unit: recurrenceUnit,
-      recurrence_interval: recurrenceInterval,
-      recurrence_anchor: !recurrenceUnit ? null : keepAnchor ? (editingTask?.recurrence_anchor ?? deadline) : deadline,
-    };
-
-    // The form closes once the save went through; on a failure it stays open with everything kept
-    const run = ++saveRun.current;
-    setSaving(true);
-    const callbacks: FormSaveCallbacks = {
-      onSuccess: () => {
-        if (saveRun.current !== run) return;
-        closeForm();
-        resetForm();
-      },
-      onError: () => {
-        if (saveRun.current === run) setSaving(false);
-      },
-    };
-    if (editingTask) {
-      // "Done" is only saved when it was changed in the form, so a tick made elsewhere (e.g. from
-      // LINE) while the form was open isn't undone
-      const { is_completed, ...rest } = submissionData;
-      onUpdateTask({
-        id: editingTask.id,
-        ...rest,
-        ...(is_completed !== editingTask.is_completed ? { is_completed } : {}),
-        __form: 'Update',
-      }, callbacks);
-      playUpdateSound();
-    } else {
-      onCreateTask({ ...submissionData, __form: 'Create' }, callbacks);
-      playSuccessSound();
-    }
-  };
-
-  const handleEdit = (task: Task) => {
-    playEditSound();
-    setEditingTask(task);
-    setDateErrorShown(false);
-    setFormData({
-      title: task.title,
-      description: task.description || '',
-      start_date: task.start_date ? format(parseISO(task.start_date), "yyyy-MM-dd'T'HH:mm") : '',
-      deadline: task.deadline ? format(parseISO(task.deadline), "yyyy-MM-dd'T'HH:mm") : '',
-      is_completed: task.is_completed,
-      tag_ids: task.tag_ids || [],
-      recurrence_unit: (task.recurrence_unit as RecurrenceUnit) || '',
-      recurrence_interval: task.recurrence_interval || 1,
-      attachments: task.attachments || [],
-      notice_before: !!task.notice_before,
-    });
-    setIsCreateOpen(true);
-  };
+  const handleEdit = (task: Task) => taskForm.current?.openEdit(task);
 
   const handleToggleComplete = (task: Task) => {
     const isCompleting = !task.is_completed;
@@ -681,189 +551,20 @@ export const TasksPage = ({
               Select
             </Button>
           )}
-          <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
-            <DialogTrigger asChild>
+          <TaskFormDialog
+            ref={taskForm}
+            onCreateTask={onCreateTask}
+            onUpdateTask={onUpdateTask}
+            trigger={
               <Button 
-                onClick={() => { playAddSound(); resetForm(); }}
+                onClick={() => { playAddSound(); taskForm.current?.openNew(); }}
                 className="bg-upcoming-events hover:bg-upcoming-events/80 text-white"
               >
                 <Plus size={16} className="mr-2" />
                 Add Task
               </Button>
-            </DialogTrigger>
-          <ResizableDialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingTask ? 'Edit Task' : 'Create New Task'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                placeholder="Task title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                required
-              />
-              <FormattedTextarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-              />
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start Date <span className="text-muted-foreground">(optional)</span></label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="datetime-local"
-                    placeholder="When task becomes active"
-                    value={formData.start_date}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setFormData(prev => {
-                        const next = { ...prev, start_date: v };
-                        // The deadline follows the start (+5 h) until it is set by hand
-                        if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_date))) {
-                          next.deadline = autoDeadline(v);
-                        }
-                        return next;
-                      });
-                    }}
-                    className="flex-1 h-9 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => formData.start_date && setFormData(prev => ({ ...prev, start_date: '' }))}
-                    aria-label="Clear start date"
-                    className={`shrink-0 h-9 w-9 rounded-md border flex items-center justify-center transition-colors ${
-                      formData.start_date 
-                        ? 'bg-rose-500 border-rose-500 text-white hover:bg-rose-600 cursor-pointer' 
-                        : 'bg-white dark:bg-background border-input cursor-default'
-                    }`}
-                  >
-                    {formData.start_date && <X size={16} />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Deadline <span className="text-muted-foreground">(optional)</span></label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="datetime-local"
-                    placeholder="When task is due"
-                    value={formData.deadline}
-                    onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                    // Earliest choice: the start. The browser's own check would block saving with
-                    // its own bubble, so show the form's message instead
-                    min={formData.start_date || undefined}
-                    onInvalid={(e) => {
-                      if (!deadlineBeforeStart(formData.start_date, formData.deadline)) return;
-                      e.preventDefault();
-                      setDateErrorShown(true);
-                    }}
-                    aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_date, formData.deadline)}
-                    className="flex-1 h-9 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => formData.deadline && setFormData(prev => ({ ...prev, deadline: '' }))}
-                    aria-label="Clear deadline"
-                    className={`shrink-0 h-9 w-9 rounded-md border flex items-center justify-center transition-colors ${
-                      formData.deadline 
-                        ? 'bg-rose-500 border-rose-500 text-white hover:bg-rose-600 cursor-pointer' 
-                        : 'bg-white dark:bg-background border-input cursor-default'
-                    }`}
-                  >
-                    {formData.deadline && <X size={16} />}
-                  </button>
-                </div>
-                {dateErrorShown && deadlineBeforeStart(formData.start_date, formData.deadline) && (
-                  <p role="alert" className="text-sm text-destructive">{DEADLINE_BEFORE_START_MESSAGE}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-1">
-                  <Repeat size={14} /> Task Type
-                </label>
-                <Select
-                  value={formData.recurrence_unit === '' ? 'one_time' : 'recurring'}
-                  onValueChange={(val) =>
-                    setFormData(prev => ({
-                      ...prev,
-                      recurrence_unit: val === 'one_time' ? '' : (prev.recurrence_unit || 'week'),
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="one_time">One-time task</SelectItem>
-                    <SelectItem value="recurring">Every X (recurring)</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formData.recurrence_unit !== '' && (
-                  <div className="flex gap-2 items-center">
-                    <span className="text-sm text-muted-foreground">Every</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={formData.recurrence_interval}
-                      // The box may be empty while a new number is typed (forcing 1 there turned "3" into "13");
-                      // saving makes it a whole number of at least 1
-                      onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: e.target.value === '' ? '' : Number(e.target.value) }))}
-                      className="w-20 h-9 text-sm"
-                    />
-                    <Select
-                      value={formData.recurrence_unit}
-                      onValueChange={(val) => setFormData(prev => ({ ...prev, recurrence_unit: val as RecurrenceUnit }))}
-                    >
-                      <SelectTrigger className="flex-1 h-9 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="day">Day(s)</SelectItem>
-                        <SelectItem value="week">Week(s)</SelectItem>
-                        <SelectItem value="month">Month(s)</SelectItem>
-                        <SelectItem value="year">Year(s)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                {formData.recurrence_unit !== '' && !formData.deadline && (
-                  <p className="text-xs text-amber-500">Recurring tasks need a deadline to renew.</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="is_completed"
-                  checked={formData.is_completed}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_completed: !!checked }))}
-                />
-                <label htmlFor="is_completed" className="text-sm">Mark as completed</label>
-              </div>
-              <NoticeBeforeToggle checked={formData.notice_before} onChange={(v) => setFormData(prev => ({ ...prev, notice_before: v }))} />
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tags</label>
-                <TagPicker
-                  selected={formData.tag_ids}
-                  onChange={(ids) => setFormData(prev => ({ ...prev, tag_ids: ids }))}
-                />
-              </div>
-              <AttachmentsField
-                value={formData.attachments}
-                onChange={(atts) => setFormData(prev => ({ ...prev, attachments: atts }))}
-                onUploadingChange={setUploading}
-              />
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1" disabled={uploading || saving}>
-                  {uploading ? 'Uploading file…' : saving ? 'Saving…' : editingTask ? 'Update' : 'Create'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => { playCancelSound(); closeForm(); }}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </ResizableDialogContent>
-        </Dialog>
+            }
+          />
         </div>
       </div>
 
@@ -996,7 +697,7 @@ export const TasksPage = ({
         <Card className="text-center py-12">
           <CardContent>
             <p className="text-muted-foreground mb-4">No tasks yet! Add your first task to get started.</p>
-            <Button onClick={() => { playAddSound(); resetForm(); setIsCreateOpen(true); }}>
+            <Button onClick={() => { playAddSound(); taskForm.current?.openNew(); }}>
               <Plus size={16} className="mr-2" />
               Add Your First Task
             </Button>
