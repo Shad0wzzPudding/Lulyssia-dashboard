@@ -264,6 +264,14 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Finding
 - [x] Low: "Clear Completed" and "Clear Past" sent every item's id in one request address, which grows by about 37 characters per item: with 451 completed tasks it was 17,706 characters (measured in a browser), over the roughly 16 KB the server in front of the database accepts (the reason select mode's Delete already sends 100 at a time). With that many items, clearing would fail with "Failed to clear …". Undo's tidy-up of Recent Changes had the same single request. Done: all three send their ids 100 at a time like select mode's Delete (451 tasks: 5 requests of at most 4,017 characters) (99fc59a)
 - [x] Low (found re-reading that fix, 27 Oct): with the ids sent 100 at a time, a clear can now half succeed (one group refused, the others already deleted), but a failed clear didn't reload the list, so the deleted ones stayed on screen until the next reload. Done: Clear Completed and Clear Past reload their list after a failure too, like select mode's Delete (b2b4c9b)
 
+## Cloud review (27 Oct 2026, home and editor)
+Unattended review (`/cloud-review home and editor`) of the plan home-and-editor build, on branch
+`cloud-review-2026-10-27-home-and-editor` (from `main` with the 9 plan branches merged in their order).
+Rounds log: [docs/reviews/2026-10-27-home-and-editor-cloud-review.md](docs/reviews/2026-10-27-home-and-editor-cloud-review.md).
+
+### Findings
+- [x] Medium: Settings > Editor's choice stayed with the browser tab, not the account: after signing out and signing in as someone else (the page doesn't reload), the new account got the previous account's choice, and if the previous one had changed it, the new account's own saved choice was never read. Example: account A picks "Normal", signs out; account B, who never chose, opens Settings and sees "Normal", and Space replaces selected lines for them. Done: the choice is read again whenever a different account is signed in, and a change is only saved for the account it was read for (this commit)
+
 ## Persona theme polish (menu and drawer)
 Goal: feel more like a Persona 3 / 5 game menu. Suggested order: 1 and 2 first.
 
