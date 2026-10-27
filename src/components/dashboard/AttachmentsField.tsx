@@ -4,6 +4,7 @@ import { Attachment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Paperclip, X, Loader2, FileText, Image as ImageIcon, Download, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { heicFileToJpeg, heicPreviewUrl, isHeic } from '@/lib/heic';
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25MB
 // Picture previews on cards: how long their links last, and when they are renewed
@@ -84,7 +85,18 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       const uploaded: Attachment[] = [];
-      for (const file of Array.from(files)) {
+      for (const picked of Array.from(files)) {
+        // iPhone photos (HEIC) become JPEG, which every browser and LINE can show. If that fails,
+        // the original is kept (Safari can still show it)
+        let file = picked;
+        if (isHeic(picked)) {
+          try {
+            file = await heicFileToJpeg(picked);
+          } catch (err) {
+            console.error('HEIC conversion failed:', err);
+            toast.error(`Couldn't convert ${picked.name} to JPEG; it's saved as HEIC, which only Safari shows`);
+          }
+        }
         if (file.size > MAX_SIZE) {
           toast.error(`${file.name} exceeds 25MB`);
           continue;
@@ -228,6 +240,8 @@ interface AttachmentsImagesProps {
 export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
   const shown = (attachments || []).filter(isDisplayed);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  // HEIC photos converted for this browser (see showHeicAsJpeg): kept when the links are renewed
+  const previews = useRef<Record<string, string>>({});
   const key = shown.map((a) => a.path).join('|');
   // The links last an hour: renew them before then, and when the app comes back into view after
   // being away (timers barely run in the background), so a page left open keeps its pictures
@@ -257,7 +271,8 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
         const { data } = await supabase.storage
           .from('attachments')
           .createSignedUrl(a.path, LINK_LIFETIME_S);
-        if (data?.signedUrl) next[a.path] = data.signedUrl;
+        if (previews.current[a.path]) next[a.path] = previews.current[a.path];
+        else if (data?.signedUrl) next[a.path] = data.signedUrl;
       }
       if (!cancelled) setUrls(next);
     })();
@@ -267,6 +282,21 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, renewal]);
 
+  // A HEIC photo saved before uploads were converted: Safari shows it as it is; elsewhere the
+  // picture fails to load, so convert it here and show that instead (once per photo)
+  const converted = useRef(new Set<string>());
+  const showHeicAsJpeg = (a: Attachment) => {
+    const signed = urls[a.path];
+    if (!signed || !isHeic(a) || converted.current.has(a.path)) return;
+    converted.current.add(a.path);
+    heicPreviewUrl(a.path, signed)
+      .then((preview) => {
+        previews.current[a.path] = preview;
+        setUrls((prev) => ({ ...prev, [a.path]: preview }));
+      })
+      .catch((err) => console.error('Showing HEIC photo failed:', err));
+  };
+
   if (shown.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
@@ -274,7 +304,8 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
         <button
           key={a.path}
           type="button"
-          onClick={() => openAttachment(a)}
+          // A converted HEIC photo opens as the JPEG shown (the file itself would only download)
+          onClick={() => (previews.current[a.path] ? window.open(previews.current[a.path], '_blank', 'noopener') : openAttachment(a))}
           className="block rounded-md overflow-hidden border border-border bg-muted/40 hover:opacity-90 transition-opacity"
           title={String(a.name)}
         >
@@ -284,6 +315,7 @@ export function AttachmentsImages({ attachments }: AttachmentsImagesProps) {
               alt={String(a.name)}
               className="max-h-48 max-w-full object-contain"
               loading="lazy"
+              onError={() => showHeicAsJpeg(a)}
             />
           ) : (
             <div className="w-32 h-24 flex items-center justify-center text-xs text-muted-foreground">
