@@ -1,8 +1,8 @@
 # Plan: Home and description editor
 
-**Status:** Draft <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `9abde7e` (27 Oct 2026)
-**Decided with the owner on:** 27 Oct 2026 (in progress)
+**Decided with the owner on:** 27 Oct 2026
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
 https://claude.ai/artifact/6dpfV2yy9tw5gaLXYCDUVb). **Intent only**, like the previews.
 
