@@ -24,10 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 27 Oct 2026 and the review-only pass after it (branch `cloud-review-2026-10-27`), so nobody has reviewed them yet.
+Newest first. The first approves npm's install scripts for esbuild 0.21.5 and fsevents (27 Oct 2026, on the owner's Mac); the next is the HEIC photos change (branch `feat/heic-photos`); the rest were made during the cloud review of 27 Oct 2026 and the review-only pass after it (branch `cloud-review-2026-10-27`). Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `74fc1a2` | Update package.json (npm may run the install scripts of esbuild 0.21.5 and fsevents 2.3.3) |
 | `8255ea5` | Feat : iPhone photos (HEIC) show in every browser and new ones go to LINE (branch `feat/heic-photos`, on top of `cloud-review-2026-10-27`) |
 | `b2b4c9b` | Fix : A clear that half fails no longer leaves deleted items on screen |
 | `99fc59a` | Fix : Clear Completed and Clear Past work with hundreds of items |
