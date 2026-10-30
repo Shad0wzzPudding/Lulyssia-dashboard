@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wrapped Line Indent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: the same description in three narrow boxes (now, A, B), with a width slider to watch lines wrap; intent only */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 72%);
+    --cyan: hsl(193 61% 52%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: grid; gap: 20px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); max-width: 76ch; line-height: 1.55; font-size: .92rem; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: .86rem; color: var(--muted); }
+  .ctl input[type=range] { width: 200px; accent-color: hsl(193 61% 52%); }
+  .ctl button { font: 600 .82rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .ctl button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+  .col { display: grid; gap: 6px; min-width: 0; }
+  .tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .tag.rec { color: var(--cyan); }
+  .box { width: var(--w, 330px); max-width: 100%; background: hsl(200 14% 6%); border: 2px solid var(--cyan); border-radius: 4px; padding: 10px; font: 15px/1.6 var(--body); }
+  .ln { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.6em; }
+  .muted { color: var(--muted); font-size: .78rem; line-height: 1.5; }
+  .notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: .88rem; line-height: 1.6; display: grid; gap: 3px; max-width: 86ch; }
+  .notes b { color: var(--fg); font-weight: 600; }
+  .guide { background: linear-gradient(90deg, transparent calc(var(--g) - 1px), rgba(58,174,212,.55) calc(var(--g) - 1px), rgba(58,174,212,.55) var(--g), transparent var(--g)); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Wrapped lines and indents</h1>
+    <p class="lede">When a long line wraps, where should the wrapped part start? Same text in each box: "Test tab behavior" after pressing Tab on its first point. Drag the width to see more or less wrapping. Intent only: the build keeps the editor's own look; only where wrapped rows start changes. The thin cyan guide marks where each line's wrapped rows begin.</p>
+  </header>
+
+  <div class="ctl">
+    <label>Box width <input type="range" id="w" min="220" max="560" value="330"></label>
+    <button type="button" id="guides" aria-pressed="true">Guides on</button>
+  </div>
+
+  <section class="cols">
+    <div class="col"><span class="tag">Now</span><div class="box" data-mode="now"></div>
+      <span class="muted">Wrapped rows always start at the left edge, even under an indented line.</span></div>
+    <div class="col"><span class="tag">A · Under the indent</span><div class="box" data-mode="indent"></div>
+      <span class="muted">Wrapped rows start where the line's first character is (after its spaces). Lines with no spaces stay as now.</span></div>
+    <div class="col"><span class="tag rec">B · Under the text after the bullet (recommended, like Word)</span><div class="box" data-mode="bullet"></div>
+      <span class="muted">As A, and for a line starting with a bullet ("- ", "• ", "1. "), wrapped rows start under the text, so the bullet stands out on its own. Works with no Tab too.</span></div>
+  </section>
+
+  <ul class="notes">
+    <li><b>Only how it looks changes.</b> The text saved stays exactly the same (spaces and line breaks); nothing is added to it.</li>
+    <li>It would apply in the <b>description editor</b> and everywhere a description is shown: <b>Tasks, Events and Interests cards</b>, and <b>Home</b> (Today lists, calendar, details window).</li>
+    <li><b>LINE</b> can't do this: LINE wraps the message itself, so a wrapped row there still starts at the left.</li>
+  </ul>
+</div>
+
+<script>
+  const TEXT = 'Quality of life\n      - Able to cover the line and press Tab to tab the selected line.\n- Able to cover the line and press space to space the selected line. \n- Add Tab format button that will be able to tab the line. (1 tab = space 6 times.)\n      • A bullet made with Auto •, indented once, also long enough to wrap onto the next row.';
+  const BULLET = /^( *)((?:[-•*]|\d+[.)])\s+)?/;
+  const measure = document.createElement('span');
+  measure.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:15px/1.6 Inter, system-ui, sans-serif';
+  document.body.appendChild(measure);
+  const widthOf = (s) => { measure.textContent = s; return measure.getBoundingClientRect().width; };
+  let guides = true;
+
+  function draw() {
+    document.querySelectorAll('.box').forEach((box) => {
+      const mode = box.dataset.mode;
+      box.innerHTML = '';
+      TEXT.split('\n').forEach((line) => {
+        const d = document.createElement('div');
+        d.className = 'ln';
+        d.textContent = line;
+        const m = line.match(BULLET);
+        const prefix = mode === 'indent' ? m[1] : mode === 'bullet' ? m[0] : '';
+        if (prefix) {
+          const px = widthOf(prefix);
+          d.style.paddingLeft = px + 'px';
+          d.style.textIndent = -px + 'px';
+          if (guides) { d.classList.add('guide'); d.style.setProperty('--g', px + 'px'); }
+        }
+        box.appendChild(d);
+      });
+    });
+  }
+  document.getElementById('w').addEventListener('input', (e) => document.documentElement.style.setProperty('--w', e.target.value + 'px'));
+  document.getElementById('guides').addEventListener('click', (e) => {
+    guides = !guides; e.currentTarget.setAttribute('aria-pressed', guides); e.currentTarget.textContent = guides ? 'Guides on' : 'Guides off'; draw();
+  });
+  document.fonts.ready.then(draw); draw();
+</script>
+</body>
+</html>
