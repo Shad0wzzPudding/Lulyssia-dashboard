@@ -519,7 +519,7 @@ export const EventsPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search events…"
+          searchPlaceholder="Search events… e.g. meeting, party, !online"
           dateLabel="Start time"
         />
       )}

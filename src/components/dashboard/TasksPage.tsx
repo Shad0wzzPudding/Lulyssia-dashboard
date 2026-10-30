@@ -604,7 +604,7 @@ export const TasksPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search tasks…"
+          searchPlaceholder="Search tasks… e.g. report, slides, !draft"
         />
       )}
 
