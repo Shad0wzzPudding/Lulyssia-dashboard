@@ -219,10 +219,10 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-25`: t
 - Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds.
 
 **What to do (owner).**
-- [ ] Merge branch `cloud-review-2026-10-25` into `main`.
-- [ ] Deploy the LINE functions `send-line-daily` and `send-line-reminders` (after merging), so LINE says "Ends" for events. No migration to apply.
-- [ ] Check by eye on Home: the Upcoming Events list says "Ends:" for events, and the calendar's day list and details window say "End" for an event's second time.
-- [ ] Check by eye on Tasks and Events: pick with "All", then Delete; the question mentions items folded under "+N more", e.g. "…including 8 not shown yet (behind "+8 more")".
+- [x] Merge branch `cloud-review-2026-10-25` into `main`. (done: its commits are on `main`)
+- [x] Deploy the LINE functions `send-line-daily` and `send-line-reminders` (after merging), so LINE says "Ends" for events. No migration to apply. (done: deployed 27 Oct 2026, checked 30 Oct)
+- [x] Check by eye on Home: the Upcoming Events list says "Ends:" for events, and the calendar's day list and details window say "End" for an event's second time. (checked 30 Oct 2026 on the test account: "Ends:", "End", "End:")
+- [x] Check by eye on Tasks and Events: pick with "All", then Delete; the question mentions items folded under "+N more", e.g. "…including 8 not shown yet (behind "+8 more")". (checked 30 Oct 2026: "+11 more" on Tasks, "+9 more" on Events)
 - [ ] Check on LINE (after deploying): an event's starting-soon card says "Ends", and the morning letter shows "🕒 Ends …" for an event with only an end time.
 
 ### Findings
@@ -237,10 +237,10 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-26`, which s
 - To apply: no migration. Functions to deploy: `send-line-daily` and `send-line-reminders` (from the 25 Oct branch, which this branch includes).
 
 **What to do (owner).**
-- [ ] Merge branch `cloud-review-2026-10-26` into `main` (it includes `cloud-review-2026-10-25`, so that one doesn't need merging separately).
-- [ ] Deploy the LINE functions `send-line-daily` and `send-line-reminders` after merging (LINE says "Ends" for events).
-- [ ] The checks by eye listed under "Cloud review (25 Oct 2026)" → "What to do".
-- [ ] Check by eye on Tasks: tick a repeating task; the message says when it comes back, and one whose deadline passed while the app was open just says "This round of "…" is done."
+- [x] Merge branch `cloud-review-2026-10-26` into `main` (it includes `cloud-review-2026-10-25`, so that one doesn't need merging separately). (done: its commits are on `main`)
+- [x] Deploy the LINE functions `send-line-daily` and `send-line-reminders` after merging (LINE says "Ends" for events). (done: deployed 27 Oct 2026, checked 30 Oct)
+- [x] The checks by eye listed under "Cloud review (25 Oct 2026)" → "What to do". (done 30 Oct 2026, except the LINE check above, which needs the phone)
+- [x] Check by eye on Tasks: tick a repeating task; the message says when it comes back, and one whose deadline passed while the app was open just says "This round of "…" is done." (checked 30 Oct 2026: both messages as described)
 
 ### Findings
 - [x] Low: Ticking a repeating task whose deadline passed while the app was open said it "comes back on" a time already gone (at 02:42: "comes back on Oct 26, 01:42"); the next round actually starts as soon as the list refreshes. Done: with the deadline already past, the message says "This round of "…" is done." without a date; the "Done for good" button stays (6a00462)
@@ -257,9 +257,9 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-27`. Finding
 - Next run: every area was covered in this run; start with the areas whose files change after 27 Oct, then the second pass by angle (long words, double clicks, keyboard, installed app, failed saves, many items, access rules).
 
 **What to do (owner).**
-- [ ] Merge branch `cloud-review-2026-10-27` into `main`.
-- [ ] Check by eye: in an add/edit form, start adding a big file, remove another attachment while it uploads; it stays removed when the upload finishes.
-- [ ] Nothing else to check by eye: the other fix (Clear Completed / Clear Past with hundreds of items) only changes how the requests are sent.
+- [x] Merge branch `cloud-review-2026-10-27` into `main`. (done: merged)
+- [x] Check by eye: in an add/edit form, start adding a big file, remove another attachment while it uploads; it stays removed when the upload finishes. (checked 30 Oct 2026: the removed attachment stayed removed)
+- [x] Nothing else to check by eye: the other fix (Clear Completed / Clear Past with hundreds of items) only changes how the requests are sent.
 
 ### Findings
 - [x] Low: Removing an attachment (or switching a picture's preview) in a form while another file is still uploading was undone when the upload finished: the upload added its file to the list as it was when it started. Example: remove "old-notes.pdf", then the photo being uploaded finishes and "old-notes.pdf" is back beside it (seen in a browser with a slow upload); saving then kept it. Done: the upload adds its files to the list as it is when it finishes (aef5a5a)
@@ -297,8 +297,8 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-30`: t
 **Summary.** Reviewed the 11 waiting commits (up to `aed71e7`): 1 bug fixed, no proposals. Nothing to apply or deploy (no migration, no function change). Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds, so the next full run starts where the 27 Oct run left off (all areas covered then; the editor, Home and Events changed since).
 
 **What to do (owner).**
-- [ ] Merge branch `cloud-review-2026-10-30` into `main`.
-- [ ] Nothing to check by eye unless you want to: with the connection off when the app opens, then on, changing Settings > Editor saves (it stays after a reload).
+- [x] Merge branch `cloud-review-2026-10-30` into `main`. (done: merged)
+- [x] Nothing to check by eye unless you want to: with the connection off when the app opens, then on, changing Settings > Editor saves (it stays after a reload). (not tried; optional)
 
 ### Findings
 - [x] Low: If reading the Editor setting failed when the app opened (e.g. offline for a moment), changing it in Settings afterwards looked done but was never saved and said nothing; after a reload the old choice was back. Seen in a browser: "Normal" picked, no save request, no message. Done: the change is saved even when the first read failed (the save reads the latest settings first, so nothing else is overwritten); if the save fails too, the choice goes back and the usual message shows (`23443fc`; `99a057f` on the review branch)
