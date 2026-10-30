@@ -1,14 +1,19 @@
-# Plan: Wrapped lines keep their indent
+# Plan: Wrapped lines keep their indent, and a filter-style search
 
 **Status:** Draft <!-- Draft → Ready to build → Building → Built → Reviewed -->
-**Written against:** `main` at `aed71e7` (30 Oct 2026)
+**Written against:** `main` at `d26091b` (30 Oct 2026)
 **Decided with the owner on:** 30 Oct 2026 (in progress)
+**Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
+https://claude.ai/artifact/EsSRKd4C5V3WdYyMow8VFw). **Intent only**, like the previews.
 
 ## Goal
 
 When a long line in a description wraps onto the next row, the wrapped part lines up under the line's
 text, as in Word, instead of going back to the left edge. An indented line stays indented all the way
 down, and a bullet ("- ", "• ", "1. ") stands out on its own with its text lined up beside it.
+
+The search bar on the Tasks, Events and Interests pages works like a filter: several words separated
+by commas (any of them), and `!word` to hide items with that word.
 
 ## Not in this plan
 
@@ -123,6 +128,9 @@ Build them in this order. Each one is its own branch and can be merged on its ow
     words to hide, with a small "or" between two or more words to find (as in the preview). A plain
     search shows no chips, so the bar looks as now. The chips are only a display (not buttons); the
     row is announced politely to screen readers;
+  - **the placeholder shows an example** (decided: option A): "Search tasks… e.g. report, slides,
+    !draft", "Search events… e.g. …" and "Search interests… e.g. …" with words that fit each page
+    (the build picks them); on a narrow phone the end may be cut off, which is fine;
   - everything built on the search keeps working: tag filter, sort, picked items being unpicked when
     hidden, "Show more" resetting, Tasks' deferred search.
 - **Preview:** `previews/3-search-filter.html` (published at
@@ -145,6 +153,7 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Q:** In the search, does a comma mean any or all of the words? **A:** Any (option A).
 - **Q:** Should the app show how it read a search? **A:** Yes, as chips under the bar, but only when
   the search has a comma or `!`.
+- **Q:** How do people learn the syntax? **A:** An example in the search bar's placeholder.
 
 ## If something isn't covered here
 
