@@ -63,7 +63,9 @@ const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');
 const applyHangingIndents = (el: HTMLElement) => {
   el.querySelectorAll<HTMLElement>(':scope > div').forEach((line) => {
     const lead = line.querySelector<HTMLElement>(':scope > span[data-lead]');
-    const indent = lead ? hangingIndent(lead.getBoundingClientRect().width, line.clientWidth) : 0;
+    // offsetWidth, not the on-screen box: the forms open with a short zoom (drawn 5% smaller), which
+    // would make the indent too small for good
+    const indent = lead ? hangingIndent(lead.offsetWidth, line.clientWidth) : 0;
     if (indent) {
       line.style.paddingLeft = `${indent}px`;
       line.style.textIndent = `-${indent}px`;

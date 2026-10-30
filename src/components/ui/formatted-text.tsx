@@ -31,7 +31,9 @@ const HangingLine = ({ lead, rest }: { lead: StyledChar[]; rest: StyledChar[] })
     const line = lineRef.current;
     const leadEl = leadRef.current;
     if (!line || !leadEl) return;
-    const measure = () => setIndent(hangingIndent(leadEl.getBoundingClientRect().width, line.clientWidth));
+    // offsetWidth, not the on-screen box: windows open with a short zoom (drawn 5% smaller), which
+    // would make the indent too small for good
+    const measure = () => setIndent(hangingIndent(leadEl.offsetWidth, line.clientWidth));
     measure();
     // Again when the box's width changes (the half-width cap) or the font finishes loading
     const observer = new ResizeObserver(measure);
