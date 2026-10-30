@@ -1,8 +1,8 @@
 # Plan: Wrapped lines keep their indent, and a filter-style search
 
-**Status:** Draft <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `d26091b` (30 Oct 2026)
-**Decided with the owner on:** 30 Oct 2026 (in progress)
+**Decided with the owner on:** 30 Oct 2026
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
 https://claude.ai/artifact/EsSRKd4C5V3WdYyMow8VFw). **Intent only**, like the previews.
 
