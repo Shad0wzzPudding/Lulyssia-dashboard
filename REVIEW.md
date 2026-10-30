@@ -20,26 +20,16 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `5e4f2a9` Docs : Plan home-and-editor is ready to build
+**Last reviewed:** `aed71e7` Docs : REVIEW.md waiting list adds the event form labels and card height fixes
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of the home-and-editor build (27 Oct 2026, branch `cloud-review-2026-10-27-home-and-editor`, which is `main` with the 9 `plan/home-and-editor/*` branches merged in their order). The build's own commits were reviewed in that run (see the history below). Nobody has reviewed these yet.
+Newest first. The first was made during the cloud review of 30 Oct 2026 (review only, branch `cloud-review-2026-10-30`); the second was committed on `main` the same morning, after that review had started. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
-| `e240ea1` | Chore : The database types no longer list the removed push_subscriptions table (30 Oct, local session) |
-| `b1dc582` | Fix : Event cards on the Events page are only as tall as their content (owner's report, 27 Oct, local session) |
-| `de1375c` | Fix : The event form labels its dates Start and End (owner's request, 27 Oct, local session) |
-| `55a0748` | Feat : Settings > Editor says Android keyboards don't support Quick space (owner's decision) |
-| `ba16917` | Feat : Home's details window has an "Attachments" heading above the pictures and files (owner's decision) |
-| `ff6cd78` | Feat : With Auto •, a new bullet keeps the indent of the line above (owner's decision) |
-| `590871a` | Feat : Today's Tasks and Events show a same-day item's time as the calendar's cyan chip (owner's decision) |
-| `a454282` | Fix : Home's In progress cards are a card with a button over it, so screen readers find the pencil (owner's decision) |
-| `36731eb` | Feat : Esc closes the form from the description box too; Ctrl+M switches what Tab does (owner's decision on plan item 2) |
-| `2f00e3c` | Fix : A failed save of the Editor setting says so instead of looking saved |
-| `41e38f7` | Fix : Enter while a word is still being composed keeps the word again |
-| `bfcfce1` | Fix : The Editor setting follows the account after signing out and in as someone else |
+| `23443fc` | Fix : Changing the Editor setting saves it even if reading it failed earlier |
+| `e240ea1` | Chore : The database types no longer list the removed push_subscriptions table |
 
 ## Review history
 
@@ -54,3 +44,4 @@ Newest first. Made during the cloud review of the home-and-editor build (27 Oct 
 | 2026-10-27 | the 8 commits on the waiting list (`85ba844`, `246dbf1`, `86bfd64`, `fcad22f`, `6a00462`, `fff28a5`, `019fd3a`, `fe1bd55`) plus `789692e` (cloud session) | No new finding. Checked: the diffs with the code around them; in a local browser, a title with a run of spaces, the menu button leaving and returning with a form, and a click on a pop-up message keeping the form open |
 | 2026-10-27 | review only, after the cloud review: `main` unchanged since `789692e` (nothing waiting there); re-read this branch's own fixes `aef5a5a`, `99fc59a` | 1 finding in `99fc59a` (a half-failed clear didn't reload its list), fixed in `b2b4c9b` |
 | 2026-10-27 | `789692e..5e4f2a9` on `main` (5 code commits: `aef5a5a`, `99fc59a`, `b2b4c9b`, `8255ea5`, `74fc1a2`, plus docs) and the plan home-and-editor build (the 9 `plan/home-and-editor/*` branches: 13 code commits and 2 merges), cloud session | Phase 1: 2 confirmed findings, both in the build, fixed in `bfcfce1` (Editor setting kept across a change of account) and `41e38f7` (Enter during composition lost the word); the bug hunt after it fixed 1 more (`2f00e3c`) and proposed 2 (roadmap.md, "Cloud review (27 Oct 2026, home and editor)"). Checked: the diffs with the code around them; the fixes in a local browser with test data |
+| 2026-10-30 | the 11 commits on the waiting list (`bfcfce1`, `41e38f7`, `2f00e3c`, `36731eb`, `a454282`, `590871a`, `ff6cd78`, `ba16917`, `55a0748`, `de1375c`, `b1dc582`), up to `aed71e7` (cloud session, review only) | 1 finding fixed (`23443fc`, `99a057f` on the review branch: after a failed first read, a change of the Editor setting was silently not saved). Checked: the diffs with the code around them; tsc, eslint on src, build; in a local browser the Editor setting with its read failing and then working, and the event form's Start/End labels and End message |

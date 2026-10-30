@@ -294,6 +294,12 @@ an old iPhone HEIC photo shown in Chrome.
 ## Cloud review (30 Oct 2026)
 Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-30`: the 11 commits waiting in REVIEW.md. Findings that need a decision go to "Backlog from the bug hunt" above, marked "(cloud review 30 Oct)".
 
+**Summary.** Reviewed the 11 waiting commits (up to `aed71e7`): 1 bug fixed, no proposals. Nothing to apply or deploy (no migration, no function change). Stopped after Phase 1, as asked ("review only"); no bug-hunt rounds, so the next full run starts where the 27 Oct run left off (all areas covered then; the editor, Home and Events changed since).
+
+**What to do (owner).**
+- [ ] Merge branch `cloud-review-2026-10-30` into `main`.
+- [ ] Nothing to check by eye unless you want to: with the connection off when the app opens, then on, changing Settings > Editor saves (it stays after a reload).
+
 ### Findings
-- [x] Low: If reading the Editor setting failed when the app opened (e.g. offline for a moment), changing it in Settings afterwards looked done but was never saved and said nothing; after a reload the old choice was back. Seen in a browser: "Normal" picked, no save request, no message. Done: the change is saved even when the first read failed (the save reads the latest settings first, so nothing else is overwritten); if the save fails too, the choice goes back and the usual message shows (99a057f)
+- [x] Low: If reading the Editor setting failed when the app opened (e.g. offline for a moment), changing it in Settings afterwards looked done but was never saved and said nothing; after a reload the old choice was back. Seen in a browser: "Normal" picked, no save request, no message. Done: the change is saved even when the first read failed (the save reads the latest settings first, so nothing else is overwritten); if the save fails too, the choice goes back and the usual message shows (`23443fc`; `99a057f` on the review branch)
 
