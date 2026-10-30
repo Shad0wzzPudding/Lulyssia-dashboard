@@ -310,6 +310,14 @@ Unattended review (`/cloud-review`) of `main`'s waiting list and the plan wrap-i
 their order). Rounds log:
 [docs/reviews/2026-10-30-wrap-indent-cloud-review.md](docs/reviews/2026-10-30-wrap-indent-cloud-review.md).
 
+**Summary.** Phase 1 (`main`'s 2 waiting commits and the whole wrap-indent build) and 11 rounds. 2 bugs
+fixed (one in the build, one in Monday's Editor setting fix), no proposals. Nothing to apply or deploy.
+Merge order: the 4 `plan/wrap-indent/*` branches (1 → 3, then summary), then this branch. Stopped
+after rounds 9–11 found no new bug in a row, with every area covered in this run or the "home and
+editor" run with nothing changed since. Covered here: editor, Home, search/sort/filters, Tasks, Events,
+Interests, data hooks, Settings, phones and accessibility, Recent Changes, migrations and access rules.
+The next run can start with navigation, attachments, LINE functions and time zones.
+
 ### Findings
 - [x] Medium: In the windows (Home's details window and the task, event and interest forms), an indented line's wrapped rows started a little left of its text: the windows open with a short zoom, and the indent was measured while they were still drawn 5% smaller. Example: a bullet with 18 spaces before it got a 79 px indent for an 83 px lead, so its second row sat 4 px left of the text (seen in the browser); on cards it was right. Done: the lead is measured without the zoom (`31c33bf`)
 - [x] Low: If the app opened offline (the Editor setting couldn't be read) and picking a choice in Settings > Editor then failed too, the setting stayed on Quick space for the rest of the visit, even after the connection came back and "Normal" was saved for the account. Example: open offline, pick Normal (refused, back to Quick space), come back online, open Settings again: it still shows Quick space and Space acts as Quick space (reproduced in the browser). Done: a failed save of a never-read setting leaves it unread, so the next editor or Settings visit reads the saved choice (this commit)
