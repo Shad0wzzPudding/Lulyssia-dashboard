@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
 import { useSpaceIndent } from '@/hooks/useEditorSettings';
+import { hangingIndent, lineLead } from '@/lib/lineLead';
 
 interface FormattedTextareaProps {
   value: string;
@@ -16,25 +17,60 @@ interface FormattedTextareaProps {
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/**
- * Stored text (with **bold**, *italic*, ~~strike~~ markers) -> editor HTML.
- * Parsing is shared with the cards (src/lib/inlineFormat.ts) so both always agree.
- */
-const toHTML = (text: string): string => {
-  if (!text) return '';
-  const chars = parseChars(text);
-  let html = toSegments(chars)
+const runsHTML = (chars: StyledChar[]): string =>
+  toSegments(chars)
     .map((seg) => {
-      let h = escapeHtml(seg.text).replace(/\n/g, '<br>');
+      let h = escapeHtml(seg.text);
       if (seg.i) h = `<em class="italic">${h}</em>`;
       if (seg.b) h = `<strong class="font-bold">${h}</strong>`;
       if (seg.s) h = `<s class="line-through opacity-60">${h}</s>`;
       return h;
     })
     .join('');
-  // A trailing line break is invisible in contentEditable; add an extra one so the caret can land there
-  if (chars.length > 0 && chars[chars.length - 1].ch === '\n') html += '<br>';
-  return html;
+
+/**
+ * Stored text (with **bold**, *italic*, ~~strike~~ markers) -> editor HTML.
+ * Parsing is shared with the cards (src/lib/inlineFormat.ts) so both always agree.
+ * Each line is its own <div> (an empty one holds a <br> so it keeps its height and the caret can
+ * land there), and a line's lead (leading spaces and bullet, src/lib/lineLead.ts) is wrapped in
+ * <span data-lead>, so its wrapped rows can line up under its text, as on the cards
+ * (applyHangingIndents).
+ */
+const toHTML = (text: string): string => {
+  if (!text) return '';
+  const lines: StyledChar[][] = [[]];
+  for (const c of parseChars(text)) {
+    if (c.ch === '\n') lines.push([]);
+    else lines[lines.length - 1].push(c);
+  }
+  return lines
+    .map((line) => {
+      if (line.length === 0) return '<div><br></div>';
+      const lead = lineLead(line.map((c) => c.ch).join(''));
+      const leadHTML = lead ? `<span data-lead="">${runsHTML(line.slice(0, lead))}</span>` : '';
+      return `<div>${leadHTML}${runsHTML(line.slice(lead))}</div>`;
+    })
+    .join('');
+};
+
+/** The editor's HTML without the measured indents (to compare it with toHTML's). */
+const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');
+
+/**
+ * Give each line with a lead its hanging indent: the lead's drawn width (at most half the box), so
+ * the line's wrapped rows start under its text. Run after every redraw and when the box resizes.
+ */
+const applyHangingIndents = (el: HTMLElement) => {
+  el.querySelectorAll<HTMLElement>(':scope > div').forEach((line) => {
+    const lead = line.querySelector<HTMLElement>(':scope > span[data-lead]');
+    const indent = lead ? hangingIndent(lead.getBoundingClientRect().width, line.clientWidth) : 0;
+    if (indent) {
+      line.style.paddingLeft = `${indent}px`;
+      line.style.textIndent = `-${indent}px`;
+    } else if (line.hasAttribute('style')) {
+      line.removeAttribute('style');
+    }
+  });
 };
 
 /**
@@ -75,26 +111,11 @@ const domChars = (el: HTMLElement, stripTrailingNewline = true): StyledChar[] =>
 const toPlainText = (el: HTMLElement): string => writeChars(domChars(el));
 
 /**
- * Count caret position as the number of characters/<br>s in the rendered DOM
- * up to the caret. This mirrors restoreCursor's traversal so save→restore is symmetric.
+ * Count caret position as the number of characters in the rendered DOM up to the caret, counted
+ * exactly as domChars reads them (line <div>s and <br>s as line breaks). restoreCursor walks the
+ * same way, so save→restore is symmetric.
  */
-const measureDomOffset = (root: Node): number => {
-  let count = 0;
-  const walk = (node: Node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      count += (node.textContent || '').length;
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const tag = (node as HTMLElement).tagName.toLowerCase();
-      if (tag === 'br') {
-        count += 1;
-      } else {
-        node.childNodes.forEach(walk);
-      }
-    }
-  };
-  root.childNodes.forEach(walk);
-  return count;
-};
+const measureDomOffset = (root: HTMLElement): number => domChars(root, false).length;
 
 /**
  * Save and restore cursor position in contentEditable.
@@ -170,51 +191,64 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
   const sel = window.getSelection();
   if (!sel) return;
 
+  // Counted as domChars counts: text, <br>s, and a line break where a line <div> starts after text
   let currentPos = 0;
-  let lastBreakNode: Node | null = null;
+  let afterBreak = false;
   const walk = (node: Node): boolean => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const len = (node.textContent || '').length;
-      if (pos <= currentPos + len) {
+      const text = node.textContent || '';
+      if (pos <= currentPos + text.length) {
         setCaretAt(sel, node, Math.max(0, pos - currentPos));
         return true;
       }
-      currentPos += len;
+      currentPos += text.length;
+      if (text) afterBreak = text.endsWith('\n');
       return false;
     }
+    if (node.nodeType !== Node.ELEMENT_NODE) return false;
+    const tag = (node as HTMLElement).tagName.toLowerCase();
 
-    if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName.toLowerCase() === 'br') {
-      lastBreakNode = node;
+    if (tag === 'br') {
       if (pos === currentPos) {
         setCaretBeforeNode(sel, node);
         return true;
       }
-
       currentPos += 1;
-      if (pos === currentPos) {
+      afterBreak = true;
+      // A <br> inside a line (not the one holding an empty line open, or ending a line): the next
+      // line starts right after it
+      if (pos === currentPos && node.nextSibling) {
         setCaretAfterNode(sel, node);
         return true;
       }
-
       return false;
     }
 
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      for (const child of Array.from(node.childNodes)) {
-        if (walk(child)) return true;
+    if ((tag === 'div' || tag === 'p') && currentPos > 0 && !afterBreak) {
+      currentPos += 1;
+      afterBreak = true;
+      if (pos === currentPos) {
+        setCaretAt(sel, node, 0);
+        return true;
       }
     }
-
+    for (const child of Array.from(node.childNodes)) {
+      if (walk(child)) return true;
+    }
     return false;
   };
 
-  if (walk(el)) return;
-
-  if (pos === currentPos && lastBreakNode) {
-    setCaretAfterNode(sel, lastBreakNode);
-    return;
+  for (const child of Array.from(el.childNodes)) {
+    if (walk(child)) return;
   }
 
+  // Past the end: the end of the last line
+  const last = el.lastChild;
+  if (last instanceof HTMLElement && last.tagName === 'DIV') {
+    if (last.lastChild instanceof HTMLElement && last.lastChild.tagName === 'BR') setCaretBeforeNode(sel, last.lastChild);
+    else setCaretAt(sel, last, last.childNodes.length);
+    return;
+  }
   setCaretAt(sel, el, el.childNodes.length);
 };
 
@@ -225,6 +259,7 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
 const redraw = (el: HTMLElement, html: string) => {
   const top = el.scrollTop;
   el.innerHTML = html;
+  applyHangingIndents(el);
   el.scrollTop = top;
 };
 
@@ -383,6 +418,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     if (currentText !== value) {
       const pos = saveCursor(el);
       el.innerHTML = toHTML(value);
+      applyHangingIndents(el);
       restoreCursor(el, pos);
       // External value replaced the editor contents (e.g. editing a different
       // item) — reset undo history so we don't rewind into unrelated state.
@@ -391,6 +427,17 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       historyIndexRef.current = 0;
     }
   }, [value, flushPendingSnapshot]);
+
+  // The hanging indents depend on the box's width (the half-width cap) and the font: measure again
+  // when either changes
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => applyHangingIndents(el));
+    observer.observe(el);
+    document.fonts?.ready.then(() => applyHangingIndents(el)).catch(() => {});
+    return () => observer.disconnect();
+  }, []);
 
   /**
    * Save an edit made by a button or key (not typing): report the new text,
@@ -434,7 +481,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     requestAnimationFrame(() => {
       if (token !== renderTokenRef.current) return;
       const html = toHTML(plainText);
-      if (el.innerHTML !== html) {
+      if (withoutIndents(el.innerHTML) !== html) {
         redraw(el, html);
         restoreCursor(el, pos);
       }
