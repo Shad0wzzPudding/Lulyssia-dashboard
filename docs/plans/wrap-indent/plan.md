@@ -1,8 +1,10 @@
 # Plan: Wrapped lines keep their indent, and a filter-style search
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `d26091b` (30 Oct 2026)
 **Decided with the owner on:** 30 Oct 2026
+**Built:** 30 Oct 2026, against `main` at `48da2b3`; all 3 items built. See `log/summary.md` for the
+branches, the merge order and the guesses to settle.
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
 https://claude.ai/artifact/EsSRKd4C5V3WdYyMow8VFw). **Intent only**, like the previews.
 
@@ -162,5 +164,7 @@ Build the smallest version that fits this plan, write the guess in the item's lo
 skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
+
+Merge order: 1 → 2 → 3, then `plan/wrap-indent/summary` (item 2 needs item 1).
 
 Nothing to deploy or migrate: every item goes out with the next Vercel deploy after merging.
