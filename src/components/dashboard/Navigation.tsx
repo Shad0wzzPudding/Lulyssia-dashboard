@@ -94,6 +94,11 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
   const windowOpen = useAnyWindowOpen();
   // It slides only with Settings' "Side menu effects" on and no reduce-motion request from the device
   const slideMenuButton = useMenuAnimations() && !reduceMotion;
+  // A form opened from the keyboard (Tab past the choices, Enter on a pencil) closes the menu, or its
+  // choices and portrait would stay drawn over the form
+  useEffect(() => {
+    if (windowOpen) setOpen(false);
+  }, [windowOpen]);
   const cursorTransition = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 600, damping: 40 };
 
   // Drawer sounds for opening and for closing it yourself (X, outside click, Esc).
@@ -102,6 +107,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
     if (next) {
       playDrawerOpenSound();
       setDrawerCursor(null);
+      // Reached from the keyboard with the menu still open: the menu would stay over the drawer
+      setOpen(false);
     } else playDrawerCloseSound();
     setDrawerOpen(next);
   };
