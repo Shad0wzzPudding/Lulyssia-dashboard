@@ -74,7 +74,8 @@ export async function setSpaceIndent(next: SpaceIndent) {
   if (!user) return;
   // Never read for this account (its read failed, e.g. offline): save it anyway; the save reads
   // the latest settings first, so it keeps the others. Only another account's choice is skipped.
-  if (loadedFor === null) loadedFor = user.id;
+  const neverRead = loadedFor === null;
+  if (neverRead) loadedFor = user.id;
   if (user.id !== loadedFor) return;
   try {
     const prefs = await readPrefs(user.id);
@@ -90,6 +91,11 @@ export async function setSpaceIndent(next: SpaceIndent) {
     if (spaceIndent === next && loadedFor === user.id) {
       spaceIndent = previous;
       notify();
+    }
+    // Still never read for this account: the next editor or Settings visit asks again
+    if (neverRead && loadedFor === user.id) {
+      loadedFor = null;
+      chosen = false;
     }
     toast.error("Couldn't save the Editor setting. Check your connection and try again.");
   }
