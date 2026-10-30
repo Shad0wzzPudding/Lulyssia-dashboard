@@ -118,12 +118,18 @@ Build them in this order. Each one is its own branch and can be merged on its ow
     phrase; the quote marks themselves aren't searched;
   - matching is as now: title and on-screen description, ignoring capitals (`searchItems` keeps its
     `parseChars` handling); a plain search with no comma, `!` or quotes gives exactly today's results;
+  - **chips under the bar** (decided: option A): when the search has a comma or a `!`, a row under the
+    bar shows how it was read: one chip per part, green for words to find, red and crossed out for
+    words to hide, with a small "or" between two or more words to find (as in the preview). A plain
+    search shows no chips, so the bar looks as now. The chips are only a display (not buttons); the
+    row is announced politely to screen readers;
   - everything built on the search keeps working: tag filter, sort, picked items being unpicked when
     hidden, "Show more" resetting, Tasks' deferred search.
 - **Preview:** `previews/3-search-filter.html` (published at
   https://claude.ai/artifact/M6ZnnDchmvwARjxCiQ8ZDZ), option **A**. **Intent only:** use the app's
   real search bar.
 - **Done when:**
+  - [ ] chips show for `lab, !draft` and not for `lab`
   - [ ] the examples in the preview's "Try" row give the same items on the Tasks page as in the preview
   - [ ] a search without commas, `!` or quotes gives the same results as on main (unit-test
     `searchItems` or check in the browser)
@@ -137,6 +143,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Q:** Where should wrapped rows start? **A:** Option B: under the text after the leading spaces and
   the bullet, like Word.
 - **Q:** In the search, does a comma mean any or all of the words? **A:** Any (option A).
+- **Q:** Should the app show how it read a search? **A:** Yes, as chips under the bar, but only when
+  the search has a comma or `!`.
 
 ## If something isn't covered here
 
