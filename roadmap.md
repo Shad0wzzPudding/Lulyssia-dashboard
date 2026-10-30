@@ -324,5 +324,11 @@ The next run can start with navigation, attachments, LINE functions and time zon
 
 ## Cloud review (30 Oct 2026, night)
 
+Full run (nothing new to review on `main`, so straight to the bug hunt): 5 rounds, 1 bug fixed, no proposals waiting. Nothing to apply or deploy: no migrations, no function changes. Stopped after three clean rounds in a row (attachments, LINE functions, time zones), with every area now covered in this run or the wrap-indent run. Covered: editor, navigation, attachments, LINE functions, time zones. The next run can start with the second pass by angle (long words, double clicks, keyboard only, installed app, failed saves, many items, access rules). Rounds log: [docs/reviews/2026-10-30-night-cloud-review.md](docs/reviews/2026-10-30-night-cloud-review.md).
+
+What to do (owner):
+- [ ] Merge `cloud-review-2026-10-30-night` (it contains the evening branch)
+- [ ] With a keyboard: open the menu, Tab to a card's pencil, press Enter: the form opens with the menu closed
+
 ### Findings
 - [x] Low: With the keyboard, the round menu stayed open over a form or the side drawer. Example: open the menu with Enter, press Tab past the four choices to a card's pencil and press Enter: the edit form opens with the menu's choices and Lulyssia's portrait drawn over its lower half (on a 390px phone they cover the Repeat, Every and Tags fields; seen in the browser). Same with Tab to the drawer tab. A mouse or a tap closed the menu first, so only the keyboard reached this. Done: opening a form or the drawer closes the menu (this commit)

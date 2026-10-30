@@ -24,10 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Nothing waiting.
+Newest first.
 
 | Commit | What |
 | --- | --- |
+| `77d409a` | Fix : The round menu closes when a form or the side drawer opens from the keyboard (cloud review 30 Oct night) |
 
 ## Review history
 
