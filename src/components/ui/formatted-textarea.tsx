@@ -755,7 +755,10 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onPaste={handlePaste}
           data-placeholder={placeholder}
           className={cn(
-            "min-h-[80px] max-h-[240px] overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
+            // Phones: 16px text, or an iPhone zooms the page in when the box is tapped (and a zoomed page
+            // pans instead of letting the selection handles move), and room to grow to half the screen,
+            // so a selection over several lines doesn't hit the box's edge as soon. Computers: 14px, 240px.
+            "min-h-[80px] max-h-[50svh] sm:max-h-[240px] overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm ring-offset-background",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             "whitespace-pre-wrap break-words [overflow-wrap:anywhere]",
             "empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none",
