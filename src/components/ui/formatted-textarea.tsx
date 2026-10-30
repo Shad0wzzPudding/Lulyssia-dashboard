@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
-import { List, Strikethrough, Bold, Italic, IndentIncrease } from 'lucide-react';
+import { List, Strikethrough, Bold, Italic, IndentIncrease, IndentDecrease } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
@@ -710,6 +710,20 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           aria-label="Indent the line (6 spaces)"
         >
           <IndentIncrease size={14} />
+          Tab
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          // Shift+Tab as a button: phone keyboards have no Tab key. Keeps the selection like Tab.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => shiftLines(true)}
+          className="h-7 px-2 text-xs gap-1"
+          title="Move the line back out (6 spaces)"
+          aria-label="Move the line back out (6 spaces)"
+        >
+          <IndentDecrease size={14} />
           Tab
         </Button>
         <Button
