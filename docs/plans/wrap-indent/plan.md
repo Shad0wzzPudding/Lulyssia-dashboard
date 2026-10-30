@@ -95,10 +95,48 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Needs:** nothing
 - **Depends on:** item 1 (shares its lead rule; put the rule in one place, e.g. `src/lib/`)
 
+### 3. The search bar takes several words and exclusions
+
+- **Owner's idea:** like Wireshark's filter bar, the search bar takes an expression: several words
+  (`word1, word2`) and exclusions (`!word1`).
+- **Found while planning:** the Tasks, Events and Interests pages share one search bar
+  (`SortAndFilterBar.tsx`) and one matching rule (`searchItems` in `src/lib/sortAndFilter.ts`), which
+  looks for the whole text as one phrase in the title and the description as shown on screen.
+- **Decision:** preview option **A**: a comma means "any of these".
+- **Branch:** `plan/wrap-indent/3-search-filter`
+- **What it does:** on the Tasks, Events and Interests pages, the search can list several words and
+  words to hide:
+  - `report, slides`: items with "report" **or** "slides";
+  - `!draft`: every item except those with "draft";
+  - `lab, !draft`: items with "lab" that don't have "draft" (a word to hide always wins).
+- **Rules decided:**
+  - the search is split on commas; spaces around each part are ignored; empty parts (`a,,b`, a
+    trailing comma) are ignored;
+  - a part starting with `!` hides items that contain the rest of it; a lone `!` is ignored;
+  - words without a comma stay together as now: `report slides` is one phrase;
+  - quotes keep a comma or `!` as text: `"!important"` finds "!important", `"milk, eggs"` finds that
+    phrase; the quote marks themselves aren't searched;
+  - matching is as now: title and on-screen description, ignoring capitals (`searchItems` keeps its
+    `parseChars` handling); a plain search with no comma, `!` or quotes gives exactly today's results;
+  - everything built on the search keeps working: tag filter, sort, picked items being unpicked when
+    hidden, "Show more" resetting, Tasks' deferred search.
+- **Preview:** `previews/3-search-filter.html` (published at
+  https://claude.ai/artifact/M6ZnnDchmvwARjxCiQ8ZDZ), option **A**. **Intent only:** use the app's
+  real search bar.
+- **Done when:**
+  - [ ] the examples in the preview's "Try" row give the same items on the Tasks page as in the preview
+  - [ ] a search without commas, `!` or quotes gives the same results as on main (unit-test
+    `searchItems` or check in the browser)
+  - [ ] typecheck, lint and build pass
+- **Owner checks by eye:** a few searches on Tasks, Events and Interests, on a computer and a phone.
+- **Needs:** nothing
+- **Depends on:** nothing (it doesn't touch items 1 and 2)
+
 ## Questions answered while planning
 
 - **Q:** Where should wrapped rows start? **A:** Option B: under the text after the leading spaces and
   the bullet, like Word.
+- **Q:** In the search, does a comma mean any or all of the words? **A:** Any (option A).
 
 ## If something isn't covered here
 
@@ -108,4 +146,4 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-Nothing to deploy or migrate: both items go out with the next Vercel deploy after merging.
+Nothing to deploy or migrate: every item goes out with the next Vercel deploy after merging.

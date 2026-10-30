@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Filter Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a working search bar over sample tasks; a switch for what the comma means; the parsed filter shown as chips; intent only */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 70%);
+    --cyan: hsl(193 61% 52%);
+    --green: #4ade80;
+    --red: #f87171;
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .86rem; color: var(--muted); }
+  .seg button { font: 600 .82rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .seg button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); background: rgba(58,174,212,.1); }
+  .bar { background: var(--card); border: 1px solid hsl(193 40% 20%); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
+  .field { position: relative; }
+  .field input { width: 100%; font: 14px var(--body); color: var(--fg); background: hsl(200 14% 5%); border: 1px solid #3a4a52; border-radius: 6px; padding: 9px 12px 9px 32px; outline: none; }
+  .field input:focus-visible { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(58,174,212,.35); }
+  .field svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 22px; align-items: center; font-size: .78rem; color: var(--muted); }
+  .chip { border-radius: 999px; padding: 2px 9px; font-weight: 600; font-size: .74rem; }
+  .chip.inc { color: var(--green); background: rgba(20,83,45,.35); border: 1px solid rgba(74,222,128,.35); }
+  .chip.exc { color: var(--red); background: rgba(127,29,29,.35); border: 1px solid rgba(248,113,113,.35); text-decoration: line-through; }
+  .try { display: flex; flex-wrap: wrap; gap: 6px; font-size: .78rem; color: var(--muted); align-items: center; }
+  .try button { font: 500 .76rem ui-monospace, Menlo, monospace; color: var(--cyan); background: rgba(58,174,212,.1); border: 1px solid rgba(58,174,212,.3); border-radius: 4px; padding: 2px 7px; cursor: pointer; }
+  .list { display: grid; gap: 8px; }
+  .item { background: #d8e0e6; color: #111; border-radius: 4px; padding: 10px 12px; display: grid; gap: 2px; }
+  .item b { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.02rem; }
+  .item span { font-size: .82rem; color: #333; }
+  mark { background: #fde68a; color: inherit; border-radius: 2px; }
+  .count { font-size: .82rem; color: var(--muted); }
+  .rules { margin: 0; padding-left: 18px; color: var(--muted); font-size: .88rem; line-height: 1.65; display: grid; gap: 3px; }
+  .rules b, .rules code { color: var(--fg); }
+  code { font: .84rem ui-monospace, Menlo, monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Search as a filter</h1>
+    <p class="lede">A working search bar over sample tasks. Type words separated by commas, and put <code>!</code> before a word to hide items that have it. The chips under the box show how your search was read. Intent only: the build uses the app's real search bar.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="What the comma means">
+    <span>A comma means:</span>
+    <button type="button" data-mode="any" aria-pressed="true">A · any of the words (recommended)</button>
+    <button type="button" data-mode="all" aria-pressed="false">B · all of the words</button>
+  </div>
+
+  <div class="bar">
+    <div class="field">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" placeholder="Search tasks…  e.g. report, slides, !draft" aria-label="Search tasks" autocomplete="off">
+    </div>
+    <div class="chips" id="chips" aria-live="polite"></div>
+    <div class="try">Try: <button>report, slides</button><button>!done</button><button>lab, !draft</button><button>report slides</button><button>"!important"</button></div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="list" id="list"></div>
+
+  <ul class="rules">
+    <li><b>A</b>: <code>report, slides</code> shows items with "report" <i>or</i> "slides". <b>B</b>: only items with both.</li>
+    <li><code>!draft</code> hides every item with "draft"; with other words, <code>lab, !draft</code> means: has "lab", and not "draft".</li>
+    <li>Words without a comma stay together as now: <code>report slides</code> looks for that exact phrase.</li>
+    <li>To look for a comma or a <code>!</code> itself, put it in quotes: <code>"!important"</code>.</li>
+    <li>Title and description are searched, ignoring capitals, as now.</li>
+  </ul>
+</div>
+
+<script>
+  const ITEMS = [
+    ['Write the lab report', 'Draft first, then check the graphs.'],
+    ['Lab report: final version', 'Send to the teacher.'],
+    ['Team meeting slides', 'Bring the slides and the printed agenda.'],
+    ['Buy groceries', 'Milk, eggs, bread.'],
+    ['Draft the club poster', 'Use the blue template.'],
+    ['Read chapter 4', 'Summary of the slides, exercises 1-5.'],
+    ['Done list cleanup', 'Remove old done items.'],
+    ['Call the dentist', '!important: before Friday.'],
+  ];
+  let mode = 'any';
+  const q = document.getElementById('q');
+
+  // Split on commas outside quotes; a leading ! (outside quotes) means exclude
+  function parse(text) {
+    const parts = []; let cur = '', inQ = false;
+    for (const ch of text) {
+      if (ch === '"') { inQ = !inQ; cur += ch; continue; }
+      if (ch === ',' && !inQ) { parts.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    parts.push(cur);
+    return parts.map((p) => p.trim()).filter(Boolean).map((p) => {
+      let exc = false;
+      if (p.startsWith('!')) { exc = true; p = p.slice(1).trim(); }
+      if (p.length >= 2 && p.startsWith('"') && p.endsWith('"')) p = p.slice(1, -1);
+      return { word: p.toLowerCase(), exc };
+    }).filter((t) => t.word);
+  }
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  function hl(text, words) {
+    let out = esc(text);
+    words.forEach((w) => {
+      const re = new RegExp(esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      out = out.replace(re, (m) => `<mark>${m}</mark>`);
+    });
+    return out;
+  }
+  function draw() {
+    const terms = parse(q.value);
+    const inc = terms.filter((t) => !t.exc).map((t) => t.word);
+    const exc = terms.filter((t) => t.exc).map((t) => t.word);
+    const chips = document.getElementById('chips');
+    chips.innerHTML = terms.length
+      ? terms.map((t) => `<span class="chip ${t.exc ? 'exc' : 'inc'}">${esc(t.word)}</span>`).join(inc.length > 1 ? `<span>${mode === 'any' ? 'or' : 'and'}</span>` : ' ')
+      : 'Nothing typed: every item shows.';
+    const shown = ITEMS.filter(([t, d]) => {
+      const s = (t + '\n' + d).toLowerCase();
+      if (exc.some((w) => s.includes(w))) return false;
+      if (!inc.length) return true;
+      return mode === 'any' ? inc.some((w) => s.includes(w)) : inc.every((w) => s.includes(w));
+    });
+    document.getElementById('count').textContent = `${shown.length} of ${ITEMS.length} tasks`;
+    document.getElementById('list').innerHTML = shown.map(([t, d]) => `<div class="item"><b>${hl(t, inc)}</b><span>${hl(d, inc)}</span></div>`).join('');
+  }
+  q.addEventListener('input', draw);
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    draw();
+  }));
+  document.querySelectorAll('.try button').forEach((b) => b.addEventListener('click', () => { q.value = b.textContent; draw(); q.focus(); }));
+  draw();
+</script>
+</body>
+</html>
