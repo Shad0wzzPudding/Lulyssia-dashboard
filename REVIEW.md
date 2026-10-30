@@ -24,10 +24,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of the wrap-indent build (30 Oct 2026, branch `cloud-review-2026-10-30-wrap-indent`, which is `main` with the 4 `plan/wrap-indent/*` branches merged in their order). The build's own commits were reviewed in that run (see the history below). Nobody has reviewed these yet.
+Newest first. The first 2 make indenting easier on an iPhone (30 Oct 2026, branch `fix/iphone-editor-selection`); the other 2 were made during the cloud review of the wrap-indent build (30 Oct 2026, branch `cloud-review-2026-10-30-wrap-indent`, which is `main` with the 4 `plan/wrap-indent/*` branches merged in their order). The build's own commits were reviewed in that run (see the history below). Nobody has reviewed these yet.
 
 | Commit | What |
 | --- | --- |
+| `b921686` | Feat : The description editor has a button to move a line back out (Shift+Tab) |
+| `cd2300d` | Fix : On phones the description box uses 16px text and can grow to half the screen |
 | `22b039b` | Fix : The Editor setting is read again after a failed save while it was never read |
 | `31c33bf` | Fix : Wrapped rows line up exactly in windows too (details window and the forms) |
 
