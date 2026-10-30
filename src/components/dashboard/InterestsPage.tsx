@@ -506,7 +506,7 @@ export const InterestsPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search interests…"
+          searchPlaceholder="Search interests… e.g. music, books, !someday"
         />
       )}
       <>

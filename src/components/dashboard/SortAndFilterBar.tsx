@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowUpDown, X, Sparkles, Image as ImageIcon, Search } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { playSuccessSound } from '@/lib/sounds';
-import type { SortOption } from '@/lib/sortAndFilter';
+import { parseSearch, searchHasFilter, type SortOption } from '@/lib/sortAndFilter';
 import { useUserNames } from '@/hooks/useUserNames';
 import { fillNames } from '@/lib/names';
 
@@ -210,6 +210,39 @@ export const SortAndFilterBar = ({
           )}
         </div>
       )}
+      {onSearchChange && <SearchChips search={search ?? ''} />}
+    </div>
+  );
+};
+
+/**
+ * How a search with a comma or "!" was read: green chips for the words to find (with "or" between
+ * them), then red, crossed-out chips for the words to hide. Only a display; read out politely to
+ * screen readers. A plain search shows nothing, so the bar looks as before.
+ */
+const SearchChips = ({ search }: { search: string }) => {
+  const terms = searchHasFilter(search) ? parseSearch(search) : [];
+  const find = terms.filter((t) => !t.hide);
+  const hide = terms.filter((t) => t.hide);
+  return (
+    <div aria-live="polite" className={terms.length ? 'flex flex-wrap items-center gap-1.5 text-xs' : 'sr-only'}>
+      {terms.length > 0 && <span className="sr-only">{find.length ? 'Showing items with ' : 'Showing items '}</span>}
+      {find.map((t, k) => (
+        <span key={`find-${k}`} className="flex items-center gap-1.5">
+          {k > 0 && <span className="text-muted-foreground">or</span>}
+          <span className="max-w-full rounded-full border border-green-500/40 bg-green-500/15 px-2 py-0.5 font-semibold text-green-700 [overflow-wrap:anywhere] dark:text-green-400">
+            {t.word}
+          </span>
+        </span>
+      ))}
+      {hide.map((t, k) => (
+        <span key={`hide-${k}`} className="flex items-center gap-1.5">
+          <span className="sr-only">{k > 0 ? 'or' : find.length ? 'but not' : 'without'}</span>
+          <span className="max-w-full rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 font-semibold text-red-700 line-through [overflow-wrap:anywhere] dark:text-red-400">
+            {t.word}
+          </span>
+        </span>
+      ))}
     </div>
   );
 };

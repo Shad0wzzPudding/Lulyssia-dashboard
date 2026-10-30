@@ -65,17 +65,60 @@ export const filterByTags = <T extends { tag_ids?: string[] }>(
   return items.filter((i) => i.tag_ids?.some((id) => tagIds.includes(id)));
 };
 
+/** One part of a search: a word (or phrase) to find, or one to hide (typed with "!"). */
+export type SearchTerm = { word: string; hide: boolean };
+
+/**
+ * Reads a search like a filter: parts separated by commas mean "any of these", and a part starting
+ * with "!" hides items that contain the rest of it ("lab, !draft"). Words without a comma stay one
+ * phrase, as before. Quotes keep a comma or "!" as text ("\"!important\"", "\"milk, eggs\""); the
+ * quote marks themselves aren't searched. Empty parts and a lone "!" are ignored.
+ */
+export const parseSearch = (query: string): SearchTerm[] => {
+  const parts: string[] = [];
+  let part = '';
+  let quoted = false;
+  for (const ch of query) {
+    if (ch === '"') quoted = !quoted;
+    if (ch === ',' && !quoted) {
+      parts.push(part);
+      part = '';
+    } else {
+      part += ch;
+    }
+  }
+  parts.push(part);
+  return parts
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const hide = p.startsWith('!');
+      let word = hide ? p.slice(1).trim() : p;
+      if (word.length >= 2 && word.startsWith('"') && word.endsWith('"')) word = word.slice(1, -1);
+      return { word: word.toLowerCase(), hide };
+    })
+    .filter((t) => t.word);
+};
+
+/** The search bar shows how it read a search (chips) only when it has a comma or a "!". */
+export const searchHasFilter = (query: string) => /[,!]/.test(query);
+
 export const searchItems = <T extends { title: string; description?: string | null }>(
   items: T[],
   query: string
 ): T[] => {
-  const q = query.trim().toLowerCase();
-  if (!q) return items;
-  return items.filter(
-    (i) =>
-      i.title.toLowerCase().includes(q) ||
-      // The description as it reads on screen: without the bold/italic/strike marks, and with the
-      // stored escapes turned back into the * ~ and backslash typed (so "5*3" or a bold word is found)
-      parseChars(i.description || '').map((c) => c.ch).join('').toLowerCase().includes(q)
-  );
+  const terms = parseSearch(query);
+  if (terms.length === 0) return items;
+  const find = terms.filter((t) => !t.hide).map((t) => t.word);
+  const hide = terms.filter((t) => t.hide).map((t) => t.word);
+  return items.filter((i) => {
+    const title = i.title.toLowerCase();
+    // The description as it reads on screen: without the bold/italic/strike marks, and with the
+    // stored escapes turned back into the * ~ and backslash typed (so "5*3" or a bold word is found)
+    const description = parseChars(i.description || '').map((c) => c.ch).join('').toLowerCase();
+    const has = (word: string) => title.includes(word) || description.includes(word);
+    // A word to hide always wins; then any of the words to find (none: everything else shows)
+    if (hide.some(has)) return false;
+    return find.length === 0 || find.some(has);
+  });
 };
