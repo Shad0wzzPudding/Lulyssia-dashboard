@@ -303,3 +303,12 @@ Review only (`/cloud-review review only`) on branch `cloud-review-2026-10-30`: t
 ### Findings
 - [x] Low: If reading the Editor setting failed when the app opened (e.g. offline for a moment), changing it in Settings afterwards looked done but was never saved and said nothing; after a reload the old choice was back. Seen in a browser: "Normal" picked, no save request, no message. Done: the change is saved even when the first read failed (the save reads the latest settings first, so nothing else is overwritten); if the save fails too, the choice goes back and the usual message shows (`23443fc`; `99a057f` on the review branch)
 
+
+## Cloud review (30 Oct 2026, wrap-indent)
+Unattended review (`/cloud-review`) of `main`'s waiting list and the plan wrap-indent build, on branch
+`cloud-review-2026-10-30-wrap-indent` (from `main` with the 4 `plan/wrap-indent/*` branches merged in
+their order). Rounds log:
+[docs/reviews/2026-10-30-wrap-indent-cloud-review.md](docs/reviews/2026-10-30-wrap-indent-cloud-review.md).
+
+### Findings
+- [x] Medium: In the windows (Home's details window and the task, event and interest forms), an indented line's wrapped rows started a little left of its text: the windows open with a short zoom, and the indent was measured while they were still drawn 5% smaller. Example: a bullet with 18 spaces before it got a 79 px indent for an 83 px lead, so its second row sat 4 px left of the text (seen in the browser); on cards it was right. Done: the lead is measured without the zoom (`31c33bf`)
