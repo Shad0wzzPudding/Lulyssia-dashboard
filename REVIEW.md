@@ -20,18 +20,14 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `48da2b3` Docs : Cloud review of 30 Oct (review only): REVIEW.md, summary and what to do
+**Last reviewed:** `20750cd` Docs : REVIEW.md waiting list adds the iPhone editor changes, roadmap.md closes the iPhone note
 
 ## Waiting for review
 
-Newest first. The first 2 make indenting easier on an iPhone (30 Oct 2026, branch `fix/iphone-editor-selection`); the other 2 were made during the cloud review of the wrap-indent build (30 Oct 2026, branch `cloud-review-2026-10-30-wrap-indent`, which is `main` with the 4 `plan/wrap-indent/*` branches merged in their order). The build's own commits were reviewed in that run (see the history below). Nobody has reviewed these yet.
+Newest first. Nothing waiting.
 
 | Commit | What |
 | --- | --- |
-| `b921686` | Feat : The description editor has a button to move a line back out (Shift+Tab) |
-| `cd2300d` | Fix : On phones the description box uses 16px text and can grow to half the screen |
-| `22b039b` | Fix : The Editor setting is read again after a failed save while it was never read |
-| `31c33bf` | Fix : Wrapped rows line up exactly in windows too (details window and the forms) |
 
 ## Review history
 
@@ -48,3 +44,4 @@ Newest first. The first 2 make indenting easier on an iPhone (30 Oct 2026, branc
 | 2026-10-27 | `789692e..5e4f2a9` on `main` (5 code commits: `aef5a5a`, `99fc59a`, `b2b4c9b`, `8255ea5`, `74fc1a2`, plus docs) and the plan home-and-editor build (the 9 `plan/home-and-editor/*` branches: 13 code commits and 2 merges), cloud session | Phase 1: 2 confirmed findings, both in the build, fixed in `bfcfce1` (Editor setting kept across a change of account) and `41e38f7` (Enter during composition lost the word); the bug hunt after it fixed 1 more (`2f00e3c`) and proposed 2 (roadmap.md, "Cloud review (27 Oct 2026, home and editor)"). Checked: the diffs with the code around them; the fixes in a local browser with test data |
 | 2026-10-30 | the 11 commits on the waiting list (`bfcfce1`, `41e38f7`, `2f00e3c`, `36731eb`, `a454282`, `590871a`, `ff6cd78`, `ba16917`, `55a0748`, `de1375c`, `b1dc582`), up to `aed71e7` (cloud session, review only) | 1 finding fixed (`23443fc`, `99a057f` on the review branch: after a failed first read, a change of the Editor setting was silently not saved). Checked: the diffs with the code around them; tsc, eslint on src, build; in a local browser the Editor setting with its read failing and then working, and the event form's Start/End labels and End message |
 | 2026-10-30 | `aed71e7..48da2b3` on `main` (2 code commits: `23443fc`, `e240ea1`, plus docs) and the plan wrap-indent build (the 4 `plan/wrap-indent/*` branches: 3 code commits), cloud session | Phase 1: 1 confirmed finding, in the build, fixed in `31c33bf` (indents measured during the windows' opening zoom came out a few pixels short); the bug hunt after it fixed 1 more (`22b039b`, in `23443fc`'s path: the Editor setting stuck on Quick space after a failed read and a failed save), no proposals. Checked: the diffs with the code around them; in a local browser with test data, the editor's keys on the old and new editor (same text after every step) |
+| 2026-10-30 | the 4 commits on the waiting list (`31c33bf`, `22b039b`, `cd2300d`, `b921686`), up to `20750cd` (cloud session, review only) | No new finding. Checked: the diffs with the code around them; tsc, eslint on src, build; in a local browser at 390px the description box (16px text, up to half the screen, toolbar fits) and the new move-back-out button (12 spaces → 6 → 0, then stays) |
