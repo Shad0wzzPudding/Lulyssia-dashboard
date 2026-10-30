@@ -71,7 +71,11 @@ export async function setSpaceIndent(next: SpaceIndent) {
   spaceIndent = next;
   notify();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.id !== loadedFor) return;
+  if (!user) return;
+  // Never read for this account (its read failed, e.g. offline): save it anyway; the save reads
+  // the latest settings first, so it keeps the others. Only another account's choice is skipped.
+  if (loadedFor === null) loadedFor = user.id;
+  if (user.id !== loadedFor) return;
   try {
     const prefs = await readPrefs(user.id);
     const editor = (prefs.editor ?? {}) as Record<string, unknown>;
