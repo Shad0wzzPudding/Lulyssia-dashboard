@@ -1,6 +1,6 @@
 # Plan: Wrapped lines keep their indent, and a filter-style search
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `d26091b` (30 Oct 2026)
 **Decided with the owner on:** 30 Oct 2026
 **Built:** 30 Oct 2026, against `main` at `48da2b3`; all 3 items built. See `log/summary.md` for the
@@ -156,6 +156,16 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Q:** Should the app show how it read a search? **A:** Yes, as chips under the bar, but only when
   the search has a comma or `!`.
 - **Q:** How do people learn the syntax? **A:** An example in the search bar's placeholder.
+
+## Decided after the build
+
+Settled with the owner on 30 Oct 2026, from the build's guesses (`log/summary.md`) and the cloud
+review (roadmap.md, "Cloud review (30 Oct 2026, wrap-indent)", 2 bugs fixed, no proposals).
+
+- **All 8 guesses in `log/summary.md`:** kept as built.
+- **Strikethrough across lines (guess 3):** the format reader lets a hand-typed `~~…~~` run across a
+  line break while `**…**` and `*…*` stop at the line's end; the B, I and S buttons always save marks
+  line by line. Kept as it is, so no saved description changes how it looks.
 
 ## If something isn't covered here
 
