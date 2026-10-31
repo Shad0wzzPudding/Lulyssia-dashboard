@@ -1,6 +1,6 @@
 # Plan: Today sections with tabs, and checklists in descriptions
 
-**Status:** Draft <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `3359d35` (31 Oct 2026)
 **Decided with the owner on:** 31 Oct 2026
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
