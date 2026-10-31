@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, Copy, Trash, Undo2, CheckSquare, Repeat, Hourglass } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarClock, CalendarDays, Copy, Trash, Undo2, CheckSquare, Repeat, Hourglass } from 'lucide-react';
 import { PageIcon } from './PageIcon';
-import { format, parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, isToday, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { toast as notify } from '@/lib/toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
@@ -31,6 +31,8 @@ import { DailyTasksSection } from './DailyTasksSection';
 import { TaskFormDialog, type TaskFormHandle } from './TaskFormDialog';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
+import { TodayTabs } from './TodayTabs';
+import { emptyTabText, itemsForTab, type TodayTab } from '@/lib/todayTabs';
 
 interface TasksPageProps {
   tasks: Task[];
@@ -405,23 +407,36 @@ export const TasksPage = ({
     () => sortItems(searchItems(filterByTags(tasks, filterTagIds), deferredSearch), sort, tagsById),
     [tasks, filterTagIds, deferredSearch, sort, tagsById]
   );
-  // A search or tag filter that hides picked items also unpicks them
-  useEffect(() => {
-    keepOnly(visibleTasks);
-  }, [visibleTasks, keepOnly]);
   const pendingTasks = visibleTasks.filter(task => !task.is_completed);
   const completedTasks = visibleTasks.filter(task => task.is_completed);
   
-  const overdueTasks = pendingTasks.filter(task => task.deadline && isBefore(parseISO(task.deadline), now));
-  // In progress: started on an earlier day and not due yet (like Home's "In progress..." and the
-  // Events page). Each unfinished task shows in one place: overdue, in progress or upcoming.
+  const isOverdueTask = (task: Task) => !!task.deadline && isBefore(parseISO(task.deadline), now);
+  const overdueTasks = pendingTasks.filter(isOverdueTask);
+  // Today: starts or is due today (and isn't overdue yet). Each unfinished task shows in one place:
+  // overdue, today, in progress or upcoming.
+  const startsToday = (task: Task) => !!task.start_date && isToday(parseISO(task.start_date));
+  const dueToday = (task: Task) => !!task.deadline && isToday(parseISO(task.deadline));
+  const isTodayTask = (task: Task) => !isOverdueTask(task) && (startsToday(task) || dueToday(task));
+  const todayTasks = pendingTasks.filter(isTodayTask);
+  // Today's tabs: all of today's tasks, those that start today, or those due today
+  const [todayTab, setTodayTab] = useState<TodayTab>('all');
+  const todayTabTasks = itemsForTab(todayTasks, todayTab, startsToday, dueToday);
+  // In progress: started on an earlier day and due after today (like Home's "In progress..." and
+  // the Events page)
   const startOfToday = startOfDay(now);
   const isInProgressTask = (task: Task) =>
     !!task.start_date && !!task.deadline
-    && isBefore(parseISO(task.start_date), startOfToday) && !isBefore(parseISO(task.deadline), now);
+    && isBefore(parseISO(task.start_date), startOfToday) && !isBefore(parseISO(task.deadline), now)
+    && !isTodayTask(task);
   const inProgressTasks = pendingTasks.filter(isInProgressTask);
   const upcomingTasks = pendingTasks.filter(task =>
-    (!task.deadline || isAfter(parseISO(task.deadline), now)) && !isInProgressTask(task));
+    (!task.deadline || isAfter(parseISO(task.deadline), now)) && !isInProgressTask(task) && !isTodayTask(task));
+  // What's on the page: a tab that hides some of today's tasks hides them like a search does
+  const shownTasks = todayTab === 'all' ? visibleTasks : visibleTasks.filter((task) => !todayTasks.includes(task) || todayTabTasks.includes(task));
+  // A search, tag filter or tab that hides picked items also unpicks them
+  useEffect(() => {
+    keepOnly(shownTasks);
+  }, [shownTasks, keepOnly]);
 
   // The cards' buttons, as one object that never changes: the cards can skip redrawing, and each
   // call still reaches the latest handlers
@@ -448,7 +463,7 @@ export const TasksPage = ({
   // Picked tasks still behind a "Show more" ("All" picks them too): the delete question says so.
   // Only worked out while that question is open.
   const hiddenSelectedCount = showDeleteConfirm
-    ? ([[overdueTasks, 'overdue'], [inProgressTasks, 'inProgress'], [upcomingTasks, 'upcoming']] as const)
+    ? ([[overdueTasks, 'overdue'], [todayTabTasks, 'today'], [inProgressTasks, 'inProgress'], [upcomingTasks, 'upcoming']] as const)
         .reduce((count, [items, section]) =>
           count + items.slice(shownCounts[section] ?? SECTION_PAGE_SIZE).filter((task) => selectedIds.has(task.id)).length, 0)
     : 0;
@@ -569,7 +584,13 @@ export const TasksPage = ({
       </div>
 
       {/* Task Statistics */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
+        <Card className="text-center">
+          <CardContent className="pt-6 px-1 sm:px-6">
+            <div className="text-2xl font-bold text-amber-400 dark:text-amber-300">{todayTasks.length}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground truncate">Today</div>
+          </CardContent>
+        </Card>
         <Card className="text-center">
           <CardContent className="pt-6 px-1 sm:px-6">
             <div className="text-2xl font-bold text-violet-400 dark:text-violet-300">{inProgressTasks.length}</div>
@@ -656,6 +677,32 @@ export const TasksPage = ({
               onUpdate={onUpdateDailyTask}
               onDelete={onDeleteDailyTask}
             />
+            <div>
+              <h3 className="text-lg font-semibold text-amber-400 dark:text-amber-300 mb-3 flex items-center gap-2">
+                <CalendarDays size={16} />
+                Today's Tasks ({todayTasks.length}){sort === 'user' ? ' — drag to arrange' : ''}
+              </h3>
+              {todayTasks.length > 0 ? (
+                <>
+                  <TodayTabs
+                    value={todayTab}
+                    onChange={setTodayTab}
+                    counts={{ all: todayTasks.length, start: todayTasks.filter(startsToday).length, end: todayTasks.filter(dueToday).length }}
+                  />
+                  {todayTabTasks.length > 0 ? (
+                    renderSection(todayTabTasks, undefined, 'today')
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{emptyTabText(todayTab)}</p>
+                  )}
+                </>
+              ) : (
+                <Card className="text-center py-8">
+                  <CardContent>
+                    <p className="text-muted-foreground">No tasks for today</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
             {inProgressTasks.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-violet-400 dark:text-violet-300 mb-3 flex items-center gap-2">
@@ -709,7 +756,7 @@ export const TasksPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onSelectAll={() => selectAll(visibleTasks)}
+        onSelectAll={() => selectAll(shownTasks)}
         totalCount={tasks.length}
       />
     </div>

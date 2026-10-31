@@ -28,6 +28,8 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
+import { TodayTabs } from './TodayTabs';
+import { emptyTabText, itemsForTab, type TodayTab } from '@/lib/todayTabs';
 import { EventFormDialog, type EventFormHandle } from './EventFormDialog';
 
 interface EventsPageProps {
@@ -77,18 +79,31 @@ export const EventsPage = ({
     () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById, (e) => e.start_time ?? e.deadline),
     [events, filterTagIds, search, sort, tagsById]
   );
-  // A search or tag filter that hides picked items also unpicks them
-  useEffect(() => {
-    keepOnly(visibleEvents);
-  }, [visibleEvents, keepOnly]);
   const startOfToday = startOfDay(now);
-  // Started on an earlier day and not over yet (its deadline is still ahead), like Home's "In progress..."
-  const isInProgressEvent = (event: Event) =>
+  // Today: starts or ends today (an event that ended earlier today stays until the day ends)
+  const startsToday = (event: Event) => !!event.start_time && isToday(parseISO(event.start_time));
+  const endsToday = (event: Event) => !!event.deadline && isToday(parseISO(event.deadline));
+  const isTodayEvent = (event: Event) => startsToday(event) || endsToday(event);
+  // Started on an earlier day and not over yet (its deadline is still ahead)
+  const runsOn = (event: Event) =>
     !!event.start_time && !!event.deadline
     && isBefore(parseISO(event.start_time), startOfToday) && !isBefore(parseISO(event.deadline), now);
+  // In progress: started on an earlier day and ends after today, like Home's "In progress..."
+  const isInProgressEvent = (event: Event) => runsOn(event) && !isTodayEvent(event);
   // Over: started on an earlier day and ended (its deadline, or its start if it has none, has passed)
+  // on an earlier day
   const isPastEvent = (event: Event) =>
-    !!event.start_time && isBefore(parseISO(event.start_time), startOfToday) && !isInProgressEvent(event);
+    !!event.start_time && isBefore(parseISO(event.start_time), startOfToday) && !runsOn(event) && !isTodayEvent(event);
+  const todayEvents = visibleEvents.filter(isTodayEvent);
+  // Today's tabs: all of today's events, those that start today, or those that end today
+  const [todayTab, setTodayTab] = useState<TodayTab>('all');
+  const todayTabEvents = itemsForTab(todayEvents, todayTab, startsToday, endsToday);
+  // What's on the page: a tab that hides some of today's events hides them like a search does
+  const shownEvents = todayTab === 'all' ? visibleEvents : visibleEvents.filter((event) => !todayEvents.includes(event) || todayTabEvents.includes(event));
+  // A search, tag filter or tab that hides picked items also unpicks them
+  useEffect(() => {
+    keepOnly(shownEvents);
+  }, [shownEvents, keepOnly]);
   const inProgressEvents = visibleEvents.filter(isInProgressEvent);
   // Past events shown on the page (respects search and tag filters)
   const pastEvents = visibleEvents.filter(isPastEvent);
@@ -191,8 +206,7 @@ export const EventsPage = ({
     }
   };
 
-  const todayEvents = visibleEvents.filter(event => event.start_time && isToday(parseISO(event.start_time)));
-  const upcomingEvents = visibleEvents.filter(event => !event.start_time || (isAfter(parseISO(event.start_time), now) && !isToday(parseISO(event.start_time))));
+  const upcomingEvents = visibleEvents.filter(event => !isTodayEvent(event) && (!event.start_time || isAfter(parseISO(event.start_time), now)));
 
   // Long sections show 25 events at a time ("Show more" adds 25); back to 25 when the search,
   // tag filter or sort changes
@@ -206,7 +220,7 @@ export const EventsPage = ({
   const hiddenSelectedCount = showDeleteConfirm
     // Past events have a "Show more" of their own only in "User sort"; otherwise they are folded
     // under "+N more" (counted below)
-    ? ([[todayEvents, 'today'], [inProgressEvents, 'in_progress'], [upcomingEvents, 'upcoming'], [sort === 'user' ? pastEvents : [], 'past']] as const)
+    ? ([[todayTabEvents, 'today'], [inProgressEvents, 'in_progress'], [upcomingEvents, 'upcoming'], [sort === 'user' ? pastEvents : [], 'past']] as const)
         .reduce((count, [items, section]) =>
           count + items.slice(shownLimit(section)).filter((event) => selectedIds.has(event.id)).length, 0)
     : 0;
@@ -223,9 +237,9 @@ export const EventsPage = ({
   };
 
   const getEventStatus = (event: Event) => {
+    if (isTodayEvent(event)) return 'today';
     if (!event.start_time) return 'upcoming';
     const eventDate = parseISO(event.start_time);
-    if (isToday(eventDate)) return 'today';
     if (isAfter(eventDate, now)) return 'upcoming';
     if (isInProgressEvent(event)) return 'in_progress';
     return 'past';
@@ -569,7 +583,18 @@ export const EventsPage = ({
                 Today's Events ({todayEvents.length}){sort === 'user' ? ' — drag to arrange' : ''}
               </h3>
               {todayEvents.length > 0 ? (
-                renderSection(todayEvents, 'today', 'space-y-3')
+                <>
+                  <TodayTabs
+                    value={todayTab}
+                    onChange={setTodayTab}
+                    counts={{ all: todayEvents.length, start: todayEvents.filter(startsToday).length, end: todayEvents.filter(endsToday).length }}
+                  />
+                  {todayTabEvents.length > 0 ? (
+                    renderSection(todayTabEvents, 'today', 'space-y-3')
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{emptyTabText(todayTab)}</p>
+                  )}
+                </>
               ) : (
                 <Card className="text-center py-8">
                   <CardContent>
@@ -635,7 +660,7 @@ export const EventsPage = ({
         selectedCount={selectedCount}
         onCopy={handleBatchCopy}
         onDelete={handleBatchDelete}
-        onSelectAll={() => selectAll(visibleEvents)}
+        onSelectAll={() => selectAll(shownEvents)}
         totalCount={events.length}
       />
     </div>
