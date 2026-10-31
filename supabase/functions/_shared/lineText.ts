@@ -48,7 +48,7 @@ export function formatDetail(text: string | null): string | null {
   if (!text) return null;
   const clean = stripMarks(text);
   if (!clean.trim()) return null;
-  const lines = clean.split('\n').map((l) => checkBox(l.trimEnd())).filter((l) => l.trim());
+  const lines = clean.split('\n').map((l) => checkBox(l).trimEnd()).filter((l) => l.trim());
   if (lines.length === 0) return null;
   let detail = lines.slice(0, MAX_DETAIL_LINES).join('\n');
   let cut = lines.length > MAX_DETAIL_LINES;
