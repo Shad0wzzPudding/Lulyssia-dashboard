@@ -338,8 +338,21 @@ Unattended review (`/cloud-review`) of `main`'s waiting list and the plan in-pro
 on branch `cloud-review-2026-10-31` (from `main` with the plan branch and its 3 build branches merged in
 their order). Rounds log: [docs/reviews/2026-10-31-cloud-review.md](docs/reviews/2026-10-31-cloud-review.md).
 
+**Summary.** Phase 1 (main's 4 commits and the build's 7) and 11 bug-hunt rounds. 4 bugs fixed (1 High,
+1 Medium, 2 Low), 1 proposal waiting (small). Nothing to apply to the database. Functions to deploy
+after merging: send-line-daily, send-line-reminders and send-line-overdue (the build's ☐/☑ boxes and
+`cf574d9`; Deno wasn't available, so `deno check` didn't run on them). Stopped after three clean rounds
+in a row (hooks, time zones, Recent Changes), with every area covered in this run or the two 30 Oct
+runs and unchanged since. This run covered areas 1-4, 7, 8, 10-12, 14 and 15; the next run should start
+with 5 Settings, 9 Attachments, 13 Migrations and 6 Navigation (covered longest ago), then the second
+pass by angle.
+
+Merge order: `plan/in-progress-and-checklist/1-today-tabs`, `.../2-checklist`, `.../summary`, then
+`cloud-review-2026-10-31` (it contains all three, so merging it alone is enough).
+
 ### Findings
 - [x] Medium: On the Events page, an event in Today's Events that started on an earlier day showed its start as if it were today, and one ending on a later day showed its end without the day. Example at 10:00 on 31 Oct: "Hackathon" (29 Oct 09:00 – today 16:00) read "09:00 - Today • End: 16:00"; "Book fair" (today 09:00 – 2 Nov 17:00) read "End: 17:00". The build's item 1 put events ending today into this section, so the first case is new. Done: the part that isn't today names its day ("29 Oct, 09:00 • End: 16:00", "09:00 - Today • End: 2 Nov, 17:00") (da0ae72)
 - [x] High: Ticking several checklist boxes on a card quickly kept only the last tick. Each tick was worked out from the card as it was before the previous tick had saved. Example: ticking Tent, Torch and Food on "Pack" within half a second on a slow connection saved "[ ] Tent / [ ] Torch / [x] Food", and the bar went back to 1 of 3. The same happened on Home, Events and Interests. Done: a tick shows on the card at once, the next tick builds on it, and saves for one item run one at a time with the latest ticks (three quick ticks now save all three). A save that fails puts the card back to what is saved and shows the usual message (0678f06)
 - [x] Low: In LINE messages, an empty checklist line ("[ ] " with nothing after it yet) showed as "[ ]" instead of a box, because the line was trimmed before its box was drawn. Example: "Pack:\n[ ] \n[x] Torch" read "[ ]" on the second line. Done: the box is drawn first, so it reads "☐" (needs function deploy: send-line-daily, send-line-reminders, send-line-overdue) (cf574d9)
-- [x] Low: A screen reader called every checklist box on a card just "Tick" or "Untick", so going from box to box with Tab never said which item a box was for. Example: "Pack" with Tent, Torch and Food read "Tick, checkbox" three times. Done: each box is named by its item ("Tent, checkbox, not checked"; a box with no text yet is "Checklist item") (this commit)
+- [x] Low: A screen reader called every checklist box on a card just "Tick" or "Untick", so going from box to box with Tab never said which item a box was for. Example: "Pack" with Tent, Torch and Food read "Tick, checkbox" three times. Done: each box is named by its item ("Tent, checkbox, not checked"; a box with no text yet is "Checklist item") (1e772fd)
+- [ ] Low: On the Events page, an event with no start time whose end has passed stays under Upcoming Events for good, and "Clear past events" never removes it (only events with a start time can be past). Example: "Pay deposit" with no start and an end of 28 Oct still shows under Upcoming on 31 Oct. This was so before the build (the Today section now takes it only on its end day). Needs decision: (a) such an event counts as past once its end's day is over, so it moves to Past Events and is cleared with them (recommended); (b) keep it in Upcoming, as an undated reminder. Size: small
