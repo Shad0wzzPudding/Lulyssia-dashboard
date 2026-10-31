@@ -57,7 +57,30 @@ so the plan can be picked up again at the first undecided item.
 
 ### 2. Checklists in descriptions, with a progress bar above the name
 
-Not decided yet.
+- **Owner's idea:** (37) a checklist in the description editor, with a progress bar that can be seen
+  above the task's name (outside the editor).
+- **Decision:** preview option **A** for both questions: a thin bar with "2 / 5 done" above the name,
+  green when everything is ticked; the boxes can be ticked straight from the card too.
+- **Branch:** `plan/in-progress-and-checklist/2-checklist`
+- **What it does:** (being decided)
+- **Rules decided:**
+  - tasks, events and interests all get checklists (the description box is the same for all three);
+  - a "☑ Check" button in the description box's toolbar adds a checklist line; the boxes can be
+    ticked in the box and on the cards;
+  - above an item's name, when its description has checklist lines: a thin bar and "N / M done";
+    green when all are ticked;
+  - wherever a description is shown (the Tasks, Events and Interests cards; Home's Today lists, Main
+    Focus and details window) its boxes show and can be ticked, and the bar is above the name; Home's
+    In progress cards (which show no description) show only the bar;
+  - ticking a box on a card saves at once, like ticking a task done;
+  - (more being decided)
+- **Preview:** `previews/2-checklist.html` (published at
+  https://claude.ai/artifact/USympPEHXV8Ktnfnw7nQVW), options **A** and **A**. **Intent only:** the
+  build uses the app's real editor, cards and sizes.
+- **Done when:** (being decided)
+- **Owner checks by eye:** (being decided)
+- **Needs:** (being decided)
+- **Depends on:** nothing
 
 ## Questions answered while planning
 
@@ -70,6 +93,10 @@ Not decided yet.
   Progress.
 - **Q:** A Today count tile on the Tasks page? **A:** Yes, first of five.
 - **Q:** Today's Tasks with nothing today? **A:** A "No tasks for today" card; the section stays.
+- **Q:** How does the checklist's progress look above the name? **A:** A bar with "N / M done" (A).
+- **Q:** Tick boxes on the card, or only in the edit form? **A:** On the card too (A).
+- **Q:** Which items get checklists? **A:** Tasks, events and interests.
+- **Q:** On Home too? **A:** Yes, wherever a description is shown; Home's In progress cards get the bar.
 
 ## If something isn't covered here
 
