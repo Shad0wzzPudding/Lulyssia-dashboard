@@ -80,6 +80,14 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
     setEditing(false);
   };
 
+  // Start from the tag as it is now: it may have been renamed or recoloured elsewhere (another
+  // device) since this row first showed, and saving the old name would quietly undo that
+  const startEditing = () => {
+    setName(tag.name);
+    setColor(tag.color);
+    setEditing(true);
+  };
+
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 p-2 rounded-lg hover:bg-muted/50 group">
@@ -93,7 +101,7 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
           >
             {count} {count === 1 ? 'item' : 'items'}
           </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100" onClick={() => setEditing(true)} aria-label={`Rename tag ${tag.name}`} title="Rename">
+          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100" onClick={startEditing} aria-label={`Rename tag ${tag.name}`} title="Rename">
             <Pencil size={13} />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-60 group-hover:opacity-100" onClick={() => onDelete(tag)} aria-label={`Delete tag ${tag.name}`} title="Delete">
