@@ -44,6 +44,8 @@ so the plan can be picked up again at the first undecided item.
   - Tasks page count tiles: a **Today** tile is added first, so five tiles: Today, In progress,
     Upcoming, Overdue, Completed (like the Events page's Today tile); on a phone they stay readable
     (narrower, or two rows);
+  - a day with nothing for today: Today's Tasks stays, with a small card "No tasks for today" (like
+    Today's Events' "No events scheduled for today");
   - (more being decided)
 - **Preview:** `previews/1-in-progress.html` (published at
   https://claude.ai/artifact/M1KCkMerU2nvJGC2CLeKEs), option **X** on both pages. **Intent only:** the
@@ -67,6 +69,7 @@ Not decided yet.
 - **Q:** Where does Today's Tasks sit on the Tasks page? **A:** After the Daily tasks, before In
   Progress.
 - **Q:** A Today count tile on the Tasks page? **A:** Yes, first of five.
+- **Q:** Today's Tasks with nothing today? **A:** A "No tasks for today" card; the section stays.
 
 ## If something isn't covered here
 

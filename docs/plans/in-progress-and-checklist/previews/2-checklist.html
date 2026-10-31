@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Description Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: the description box with a checklist button beside the task's card with its progress bar; intent only (the build uses the app's real editor, card and sizes) */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 68%);
+    --line: hsl(193 40% 22%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 16px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.2rem; margin: 0 0 8px; }
+  .lede { margin: 4px 0 0; color: var(--muted); max-width: 76ch; line-height: 1.55; font-size: .92rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar .label { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; margin-right: 4px; }
+  .bar button { font: 600 .85rem var(--body); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--cyan); color: var(--on-cyan); border-color: var(--cyan); }
+  .rec { font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; margin-left: 6px; opacity: .8; }
+  .explain { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: .88rem; line-height: 1.55; color: #d4d4d8; }
+  .explain b { color: var(--fg); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; align-items: start; }
+  /* The form */
+  .form { background: var(--card); border: 1px solid #333; border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+  .title-input { border: 1px solid #333; border-radius: 6px; padding: 8px 10px; font-size: .9rem; }
+  .tools { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tools span { font: italic 700 .74rem var(--body); border: 1px solid #555; padding: 3px 9px; transform: skewX(-10deg); color: #e5e7eb; }
+  .tools button { font: italic 700 .74rem var(--body); border: 1px solid var(--cyan); padding: 3px 9px; transform: skewX(-10deg); color: var(--cyan); background: transparent; cursor: pointer; }
+  .tools button:hover { background: rgba(58,174,212,.15); }
+  .editor { border: 1px solid #333; border-radius: 6px; padding: 8px 10px; min-height: 140px; font-size: .88rem; line-height: 1.6; display: grid; align-content: start; }
+  .row { display: flex; gap: 8px; align-items: flex-start; }
+  .box { width: 16px; height: 16px; border: 1.5px solid #9ca3af; border-radius: 3px; margin-top: 3px; flex: none; display: grid; place-items: center; cursor: pointer; background: transparent; padding: 0; color: var(--on-cyan); font-size: 11px; font-weight: 700; }
+  .box.on { background: var(--cyan); border-color: var(--cyan); }
+  .done { text-decoration: line-through; color: #8b8b8b; }
+  .editor .new { color: var(--muted); font-style: italic; }
+  .hint { font-size: .74rem; color: var(--muted); }
+  /* The card (white, as on the Tasks page) */
+  .tcard { background: #f8fafc; color: #0f172a; border: 1px solid #e0f2fe; border-radius: 10px; padding: 16px; display: grid; gap: 8px; }
+  .thead { display: flex; gap: 12px; align-items: flex-start; }
+  .circle { width: 20px; height: 20px; border: 2px solid #9ca3af; border-radius: 50%; margin-top: 2px; flex: none; }
+  .tbody { display: grid; gap: 6px; flex: 1; min-width: 0; }
+  .tname { font-weight: 700; font-size: 1rem; }
+  .prog { display: flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 600; color: #0369a1; }
+  .prog .track { flex: 1; height: 6px; border-radius: 999px; background: #e2e8f0; overflow: hidden; max-width: 220px; }
+  .prog .fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #22d3ee); border-radius: 999px; transition: width .25s; }
+  .prog.full { color: #047857; }
+  .prog.full .fill { background: #10b981; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 600; color: #0369a1; background: #e0f2fe; border-radius: 999px; padding: 1px 9px; justify-self: start; }
+  .tdesc { font-size: .85rem; color: #475569; display: grid; gap: 2px; }
+  .tdesc .box { border-color: #94a3b8; color: #fff; }
+  .tdesc .box.on { background: #0ea5e9; border-color: #0ea5e9; }
+  .tdate { font-size: .78rem; color: #0369a1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Checklists in descriptions</h1>
+    <p class="lede">A task's description can hold checklist lines. Its card shows how far along it is, above the task's name. Tick the
+      boxes in the description box on the left and watch the card. Intent only: the build uses the app's real editor and card.</p>
+  </header>
+  <div class="bar" role="group" aria-label="Progress look" id="looks"><span class="label">Progress above the name</span></div>
+  <div class="bar" role="group" aria-label="Ticking on the card" id="ticks"><span class="label">Ticking on the card</span></div>
+  <div class="explain" id="explain"></div>
+  <div class="grid">
+    <section>
+      <h2>Edit task</h2>
+      <div class="form">
+        <div class="title-input">Pack for the camping trip</div>
+        <div class="tools"><span>☰ Auto •</span><span>• Add</span><button type="button" id="add">☑ Check</button><span>⇥ Tab</span><span>S</span><span>B</span><span>I</span></div>
+        <div class="editor" id="editor"></div>
+        <p class="hint">"☑ Check" adds a checklist line (or turns the selected lines into checklist lines). Click a box to tick it.</p>
+      </div>
+    </section>
+    <section>
+      <h2>Its card on the Tasks page</h2>
+      <div class="tcard">
+        <div class="thead"><span class="circle" aria-hidden="true"></span>
+          <div class="tbody"><div id="progress"></div><div class="tname">Pack for the camping trip</div></div></div>
+        <div class="tdesc" id="cardDesc"></div>
+        <div class="tdate">🕒 Deadline: Fri 6 Nov, 18:00</div>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+  const items = [
+    { text: 'Tent and sleeping bag', done: true },
+    { text: 'Torch and batteries', done: true },
+    { text: 'Food for two days', done: false },
+    { text: 'Rain jacket', done: false },
+    { text: 'First-aid kit', done: false },
+  ];
+  const LOOKS = [['bar', 'A · Bar with "2 / 5"', true], ['chip', 'B · Small "☑ 2/5" tag']];
+  const TICKS = [['yes', 'A · Tick on the card too', true], ['no', 'B · Only in the edit form']];
+  let look = 'bar', tick = 'yes';
+  const EXPLAIN = {
+    bar: '<b>A · Bar (recommended):</b> a thin bar with "2 / 5 done" above the name; it turns green when everything is ticked.',
+    chip: '<b>B · Tag:</b> a small "☑ 2/5" tag above the name, no bar.',
+    yes: ' <b>Tick on the card (recommended):</b> the boxes in the card\'s description can be ticked straight away (it saves at once, like ticking a task done).',
+    no: ' <b>Only in the edit form:</b> the card\'s boxes are just shown; to tick one, open the task with the edit button.',
+  };
+  const box = (on, k, where) => `<button type="button" class="box ${on ? 'on' : ''}" data-k="${k}" data-where="${where}" aria-label="${on ? 'Untick' : 'Tick'}">${on ? '✓' : ''}</button>`;
+  const draw = () => {
+    document.getElementById('looks').innerHTML = '<span class="label">Progress above the name</span>' + LOOKS.map(([k, l, r]) => `<button data-look="${k}" aria-pressed="${look === k}">${l}${r ? '<span class="rec">recommended</span>' : ''}</button>`).join('');
+    document.getElementById('ticks').innerHTML = '<span class="label">Ticking on the card</span>' + TICKS.map(([k, l, r]) => `<button data-tick="${k}" aria-pressed="${tick === k}">${l}${r ? '<span class="rec">recommended</span>' : ''}</button>`).join('');
+    document.getElementById('explain').innerHTML = EXPLAIN[look] + EXPLAIN[tick];
+    document.getElementById('editor').innerHTML = '<div>What to bring:</div>' + items.map((it, k) =>
+      `<div class="row">${box(it.done, k, 'editor')}<span class="${it.done ? 'done' : ''}">${it.text}</span></div>`).join('');
+    const n = items.filter((i) => i.done).length, total = items.length, full = n === total;
+    document.getElementById('progress').innerHTML = look === 'bar'
+      ? `<div class="prog ${full ? 'full' : ''}"><div class="track"><div class="fill" style="width:${(n / total) * 100}%"></div></div><span>${n} / ${total} done</span></div>`
+      : `<span class="chip">☑ ${n}/${total}</span>`;
+    document.getElementById('cardDesc').innerHTML = '<div>What to bring:</div>' + items.map((it, k) =>
+      `<div class="row">${tick === 'yes' ? box(it.done, k, 'card') : `<span class="box ${it.done ? 'on' : ''}" style="cursor:default">${it.done ? '✓' : ''}</span>`}<span class="${it.done ? 'done' : ''}">${it.text}</span></div>`).join('');
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.look) look = b.dataset.look;
+    else if (b.dataset.tick) tick = b.dataset.tick;
+    else if (b.dataset.k !== undefined) items[+b.dataset.k].done = !items[+b.dataset.k].done;
+    else if (b.id === 'add') items.push({ text: 'New item ' + (items.length + 1), done: false });
+    else return;
+    draw();
+  });
+  draw();
+</script>
+</body>
+</html>
