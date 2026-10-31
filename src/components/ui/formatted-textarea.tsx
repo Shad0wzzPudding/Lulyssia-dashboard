@@ -1,11 +1,12 @@
 import { useRef, useState, useCallback, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
-import { List, Strikethrough, Bold, Italic, IndentIncrease, IndentDecrease } from 'lucide-react';
+import { List, Strikethrough, Bold, Italic, IndentIncrease, IndentDecrease, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseChars, plainChars, toggleStyle, toSegments, writeChars, type StyledChar } from '@/lib/inlineFormat';
 import { TAB_SPACES, indentLines, isWholeLine, linesInSelection, outdentLines } from '@/lib/lineIndent';
 import { useSpaceIndent } from '@/hooks/useEditorSettings';
 import { hangingIndent, lineLead } from '@/lib/lineLead';
+import { lineBox, toggleChecklistLines } from '@/lib/checklist';
 
 interface FormattedTextareaProps {
   value: string;
@@ -46,12 +47,22 @@ const toHTML = (text: string): string => {
   return lines
     .map((line) => {
       if (line.length === 0) return '<div><br></div>';
-      const lead = lineLead(line.map((c) => c.ch).join(''));
-      const leadHTML = lead ? `<span data-lead="">${runsHTML(line.slice(0, lead))}</span>` : '';
+      const text = line.map((c) => c.ch).join('');
+      const lead = lineLead(text);
+      // A checklist line's "[ ]" / "[x]" is drawn as a box (read back as those three characters)
+      const box = lineBox(text);
+      const leadInner = box
+        ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${runsHTML(line.slice(box.at + 3, lead))}`
+        : runsHTML(line.slice(0, lead));
+      const leadHTML = lead ? `<span data-lead="">${leadInner}</span>` : '';
       return `<div>${leadHTML}${runsHTML(line.slice(lead))}</div>`;
     })
     .join('');
 };
+
+/** A checklist box in the editor: not typed into; clicking it ticks it (see handleEditorClick). */
+const boxHTML = (ticked: boolean) =>
+  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="mx-0.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border align-[-2px] indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
 
 /** The editor's HTML without the measured indents (to compare it with toHTML's). */
 const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');
@@ -93,6 +104,12 @@ const domChars = (el: HTMLElement, stripTrailingNewline = true): StyledChar[] =>
     const tag = (node as HTMLElement).tagName.toLowerCase();
     if (tag === 'br') {
       out.push(newline());
+      return;
+    }
+    // A checklist box: the "[ ]" / "[x]" it stands for
+    const check = (node as HTMLElement).getAttribute('data-check');
+    if (check !== null) {
+      for (const ch of `[${check === 'x' ? 'x' : ' '}]`) out.push({ ch, b, i, s });
       return;
     }
     // Browsers sometimes wrap new lines in <div>/<p>
@@ -209,6 +226,21 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return false;
     const tag = (node as HTMLElement).tagName.toLowerCase();
+
+    // A checklist box stands for 3 characters; the caret goes before or after it, never inside
+    if ((node as HTMLElement).hasAttribute('data-check')) {
+      if (pos <= currentPos) {
+        setCaretBeforeNode(sel, node);
+        return true;
+      }
+      if (pos <= currentPos + 3) {
+        setCaretAfterNode(sel, node);
+        return true;
+      }
+      currentPos += 3;
+      afterBreak = false;
+      return false;
+    }
 
     if (tag === 'br') {
       if (pos === currentPos) {
@@ -597,6 +629,25 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       const before = chars.slice(0, start);
       const after = chars.slice(end);
 
+      // At the end of a checklist line's text: a new checklist line with the same indent (Auto • on or
+      // off); on an empty checklist line, the list ends: the box goes, leaving a plain line
+      {
+        const lineStart = lineStartOf(before);
+        const lineEnd = after.findIndex((c) => c.ch === '\n');
+        const line = [...before.slice(lineStart), ...(lineEnd === -1 ? after : after.slice(0, lineEnd))].map((c) => c.ch).join('');
+        const box = lineBox(line);
+        if (box && before.length - lineStart >= box.at + 4) {
+          if (!line.slice(box.at + 4).trim()) {
+            const kept = before.slice(0, lineStart);
+            commitEdit(writeChars([...kept, ...after.slice(lineEnd === -1 ? after.length : lineEnd)]), kept.length);
+            return;
+          }
+          const indent = ' '.repeat(box.at);
+          commitEdit(writeChars([...before, ...plainChars(`\n${indent}[ ] `), ...after]), before.length + 5 + indent.length);
+          return;
+        }
+      }
+
       if (autoBullet) {
         const lineStart = lineStartOf(before);
         const currentLine = before.slice(lineStart).map((c) => c.ch).join('');
@@ -619,6 +670,40 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       commitEdit(writeChars([...before, ...plainChars('\n'), ...after]), before.length + 1);
     }
   }, [autoBullet, commitEdit, performRedo, performUndo, shiftLines, spaceIndent, tabMoves]);
+
+  /**
+   * "☑ Check": a box at the start of the caret's line, or of every selected line; when they all have
+   * one already, the boxes go (so it toggles). With the caret never placed, a new checklist line at
+   * the end.
+   */
+  const toggleChecklist = useCallback(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const chars = domChars(el);
+    const range = selectionInside(el) ? getSelectionVisibleRange(el) : null;
+    if (!range) {
+      const added = plainChars(chars.length === 0 ? '[ ] ' : '\n[ ] ');
+      commitEdit(writeChars([...chars, ...added]), chars.length + added.length);
+      return;
+    }
+    const start = Math.min(range.start, chars.length);
+    const end = Math.min(Math.max(range.end, start), chars.length);
+    const edit = toggleChecklistLines(chars, linesInSelection(chars, start, end));
+    commitEdit(writeChars(edit.chars), edit.shift(start), edit.shift(end));
+  }, [commitEdit]);
+
+  // A click on a checklist box ticks or unticks it (one undo step); the caret goes just after it
+  const handleEditorClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = editorRef.current;
+    const box = (e.target as HTMLElement).closest('[data-check]');
+    if (!el || !box || !el.contains(box) || !box.parentNode) return;
+    e.preventDefault();
+    const at = getVisibleOffset(el, box.parentNode, Array.from(box.parentNode.childNodes).indexOf(box as ChildNode));
+    const chars = domChars(el);
+    if (!chars[at + 1]) return;
+    chars[at + 1] = { ...chars[at + 1], ch: chars[at + 1].ch === ' ' ? 'x' : ' ' };
+    commitEdit(writeChars(chars), at + 3);
+  }, [commitEdit]);
 
   const insertBullet = useCallback(() => {
     const el = editorRef.current;
@@ -730,6 +815,20 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           type="button"
           variant="outline"
           size="sm"
+          // Keep the editor's selection, so the button can be pressed on the selected lines
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={toggleChecklist}
+          className="h-7 px-2 text-xs gap-1"
+          title="Checklist: a box at the start of the line"
+          aria-label="Checklist: a box at the start of the line"
+        >
+          <ListChecks size={14} />
+          Check
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
           onClick={() => applyFormatToggle('~~')}
           className="h-7 px-2 text-xs gap-1"
           title="Strikethrough: ~~text~~"
@@ -765,6 +864,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
           onKeyDown={handleKeyDown}
+          onClick={handleEditorClick}
           aria-describedby={tabMoves ? tabHintId : undefined}
           onPaste={handlePaste}
           data-placeholder={placeholder}
