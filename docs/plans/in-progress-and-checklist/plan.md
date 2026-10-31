@@ -1,8 +1,10 @@
 # Plan: Today sections with tabs, and checklists in descriptions
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `3359d35` (31 Oct 2026)
 **Decided with the owner on:** 31 Oct 2026
+**Built:** 31 Oct 2026, against `main` at `3359d35`; both items built. See `log/summary.md` for the
+branches, the merge order and the guesses to settle.
 **Summary:** `summary.html`: the whole build at a glance, now → after for every item (published at
 https://claude.ai/artifact/8fcSsPpF1YCy5d54QtTR3v). **Intent only**, like the previews.
 
@@ -183,6 +185,10 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 Filled in during planning where known, and completed by the build.
 
-1. After merging item 2: deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue`.
+Merge order: this plan's branch, then items 1 and 2 (either order), then
+`plan/in-progress-and-checklist/summary`.
+
+1. After merging item 2 (`plan/in-progress-and-checklist/2-checklist`): deploy `send-line-daily`,
+   `send-line-reminders` and `send-line-overdue`.
 2. Nothing else: no migration (the checklist lives in the existing description text); item 1 goes out
    with the next Vercel deploy after merging.
