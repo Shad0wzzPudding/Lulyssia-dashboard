@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800;1,900&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one "Now → After" pair per change, grouped by where it lives in the app, then what happens after the build; intent only */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 68%);
+    --line: hsl(193 40% 22%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --violet: #a78bfa;
+    --amber: #fbbf24;
+    --sky: #38bdf8;
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); line-height: 1.5; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 64px; display: grid; gap: 26px; }
+  .p5 { position: relative; isolation: isolate; justify-self: start; font-family: var(--display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(1.5rem, 4vw, 2.2rem); padding: .1em .9em .15em .7em; color: var(--on-cyan); margin: 0; }
+  .p5::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cyan); transform: skewX(-14deg); box-shadow: 6px 6px 0 var(--fg); }
+  .lede { color: var(--muted); max-width: 72ch; margin: 0; font-size: .95rem; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; box-shadow: 4px 4px 0 color-mix(in srgb, var(--cyan) 45%, transparent); }
+  .tile .n { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 2.1rem; line-height: 1; color: var(--cyan); }
+  .tile .l { font-size: .8rem; color: var(--muted); }
+  h2 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.4rem; margin: 0; color: var(--cyan); }
+  .group { display: grid; gap: 14px; }
+  .change { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 820px) { .change { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); } }
+  .num { display: flex; align-items: center; gap: 10px; }
+  .num i { font: normal 800 .8rem var(--body); background: var(--cyan); color: var(--on-cyan); border-radius: 999px; padding: 1px 9px; }
+  .num h3 { margin: 0; font-size: 1.02rem; }
+  .txt p { margin: 6px 0 0; font-size: .88rem; color: #d4d4d8; }
+  .where { color: var(--muted) !important; font-size: .8rem !important; }
+  .where b { color: var(--fg); }
+  .pill { display: inline-block; margin-top: 8px; font-size: .7rem; font-weight: 600; border: 1px solid color-mix(in srgb, var(--cyan) 60%, transparent); color: var(--cyan); border-radius: 999px; padding: 1px 9px; }
+  .ba { display: grid; gap: 6px; }
+  .k { font-size: .66rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
+  .k.aft { color: var(--cyan); }
+  .mini { background: hsl(200 14% 5%); border: 1px solid #22323a; border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; font-size: .8rem; }
+  .sec { font-weight: 600; font-size: .8rem; }
+  .sec.violet { color: var(--violet); } .sec.amber { color: var(--amber); } .sec.sky { color: var(--sky); } .sec.rose { color: #fb7185; }
+  .items { color: #cbd5e1; font-size: .76rem; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tabs span { font-size: .68rem; font-weight: 600; border: 1px solid #4c3d7a; padding: 1px 8px; transform: skewX(-12deg); }
+  .tabs span.on { background: var(--violet); color: #1e1533; border-color: var(--violet); }
+  .tl { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tl span { background: #111c21; border: 1px solid #22323a; border-radius: 6px; padding: 4px 8px; font-size: .7rem; text-align: center; }
+  .tl span b { display: block; font-size: .95rem; }
+  .tl span.new { border-color: var(--amber); color: var(--amber); }
+  .wcard { background: #f8fafc; color: #0f172a; border-radius: 8px; padding: 10px 12px; display: grid; gap: 5px; }
+  .prog { display: flex; align-items: center; gap: 8px; font-size: .68rem; font-weight: 600; color: #0369a1; }
+  .prog .tr { width: 120px; height: 5px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+  .prog .tr i { display: block; height: 100%; width: 40%; background: linear-gradient(90deg, #0ea5e9, #22d3ee); }
+  .wname { font-weight: 700; font-size: .85rem; }
+  .ck { display: flex; gap: 6px; align-items: center; font-size: .74rem; color: #475569; }
+  .ck b { width: 12px; height: 12px; border: 1.5px solid #94a3b8; border-radius: 3px; display: inline-grid; place-items: center; font-size: 9px; color: #fff; }
+  .ck b.on { background: #0ea5e9; border-color: #0ea5e9; }
+  .ck.done span { text-decoration: line-through; color: #94a3b8; }
+  .tb { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tb span { font: italic 700 .66rem var(--body); border: 1px solid #555; padding: 2px 7px; transform: skewX(-10deg); }
+  .tb span.new { border-color: var(--cyan); color: var(--cyan); }
+  .toast { justify-self: start; background: #111c21; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: .74rem; display: flex; gap: 8px; align-items: center; }
+  .toast button { font: 600 .7rem var(--body); background: var(--cyan); color: var(--on-cyan); border: 0; border-radius: 4px; padding: 2px 8px; }
+  .line { font: .76rem ui-monospace, SFMono-Regular, Menlo, monospace; color: #e2e8f0; white-space: pre; overflow-x: auto; }
+  .after { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+  .after ol, .after ul { margin: 0; padding-left: 20px; font-size: .9rem; color: #d4d4d8; display: grid; gap: 6px; }
+  .after code { color: var(--cyan); }
+  a { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="p5">Today &amp; checklists</h1>
+  <p class="lede">Plan <b>in-progress-and-checklist</b>: everything decided, as it will look after the build. Drawn in the app's look,
+    intent only: the build uses the app's real cards and sizes.</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="n">2</div><div class="l">items, each its own branch</div></div>
+    <div class="tile"><div class="n">2</div><div class="l">pages change (Tasks, Events), plus every card with a description</div></div>
+    <div class="tile"><div class="n">3</div><div class="l">LINE functions to deploy (item 2)</div></div>
+    <div class="tile"><div class="n">0</div><div class="l">migrations</div></div>
+  </div>
+
+  <section class="group">
+    <h2>Tasks page</h2>
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>1</i><h3>A Today's Tasks section with tabs</h3></span>
+        <p>Every unfinished task that starts or is due today moves into a new <b>Today's Tasks</b> section, after the Daily tasks. Tabs: <b>All</b>, <b>Start today</b>, <b>End today</b>. In Progress keeps what started on an earlier day and ends later. A task already past its deadline stays in Overdue.</p>
+        <p class="where">Where: <b>Tasks page</b>, sections and the count tiles (a Today tile first)</p>
+        <span class="pill">medium</span>
+      </div>
+      <div class="ba">
+        <span class="k">Now</span>
+        <div class="mini"><span class="sec violet">⏳ In Progress (2)</span><span class="items">Essay draft (due today) · Science project</span>
+          <span class="sec sky">Upcoming Tasks (5)</span><span class="items">Lab report (starts today) · Buy a gift (today) · Call the dentist (today) · Read chapter 4 (due today) · Piano practice</span></div>
+        <span class="k aft">After</span>
+        <div class="mini">
+          <div class="tl"><span class="new"><b>5</b>Today</span><span><b>1</b>In progress</span><span><b>1</b>Upcoming</span><span><b>0</b>Overdue</span><span><b>3</b>Completed</span></div>
+          <span class="sec amber">📅 Today's Tasks (5)</span>
+          <div class="tabs"><span class="on">All 5</span><span>Start today 3</span><span>End today 3</span></div>
+          <span class="items">Lab report · Buy a gift · Call the dentist · Essay draft · Read chapter 4</span>
+          <span class="sec violet">⏳ In Progress (1)</span><span class="items">Science project</span>
+          <span class="sec sky">Upcoming Tasks (1)</span><span class="items">Piano practice</span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="group">
+    <h2>Events page</h2>
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>1</i><h3>Today's Events also holds what ends today, with tabs</h3></span>
+        <p>Today's Events lists events that start <b>or end</b> today (an event that ends today leaves In Progress), with the same three tabs. Nothing today: the section stays with its "No events scheduled for today" card, and Today's Tasks gets a matching "No tasks for today".</p>
+        <p class="where">Where: <b>Events page</b>, Today's Events and In Progress</p>
+        <span class="pill">small (same item as the Tasks page)</span>
+      </div>
+      <div class="ba">
+        <span class="k">Now</span>
+        <div class="mini"><span class="sec amber">📅 Today's Events (2)</span><span class="items">Team meeting · Book fair</span>
+          <span class="sec violet">⏳ In Progress (2)</span><span class="items">Hackathon (ends today) · Art exhibition</span></div>
+        <span class="k aft">After</span>
+        <div class="mini"><span class="sec amber">📅 Today's Events (3)</span>
+          <div class="tabs"><span class="on">All 3</span><span>Start today 2</span><span>End today 2</span></div>
+          <span class="items">Hackathon · Team meeting · Book fair</span>
+          <span class="sec violet">⏳ In Progress (1)</span><span class="items">Art exhibition</span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="group">
+    <h2>Descriptions: the form, every card, Home</h2>
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>2</i><h3>Checklists, with a progress bar above the name</h3></span>
+        <p>A <b>☑ Check</b> button (after ⇥ Tab) turns lines into checklist lines; Enter on one starts the next. Tick the boxes in the description box or straight on the card. Above the name, a thin bar shows "N / M done", green when all are ticked; ticking a task's last box offers to mark it done.</p>
+        <p class="where">Where: <b>task, event and interest forms</b>; their <b>cards</b>; Home's <b>Today lists, Main Focus, details window</b>; Home's <b>In progress</b> cards (bar only)</p>
+        <span class="pill">large</span>
+      </div>
+      <div class="ba">
+        <span class="k">Now</span>
+        <div class="wcard"><span class="wname">Pack for the camping trip</span><span class="ck"><span>- Tent and sleeping bag (done?)</span></span><span class="ck"><span>- Torch and batteries</span></span><span class="ck"><span>- Food for two days</span></span></div>
+        <span class="k aft">After</span>
+        <div class="tb"><span>☰ Auto •</span><span>• Add</span><span>⇥ Tab</span><span class="new">☑ Check</span><span>S</span><span>B</span><span>I</span></div>
+        <div class="wcard"><div class="prog"><span class="tr"><i></i></span>2 / 5 done</div><span class="wname">Pack for the camping trip</span>
+          <span class="ck done"><b class="on">✓</b><span>Tent and sleeping bag</span></span><span class="ck done"><b class="on">✓</b><span>Torch and batteries</span></span><span class="ck"><b></b><span>Food for two days</span></span></div>
+        <div class="toast">All ticked: mark the task done? <button type="button">Mark done</button></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="group">
+    <h2>LINE</h2>
+    <article class="change">
+      <div class="txt">
+        <span class="num"><i>2</i><h3>Checklist lines show as boxes</h3></span>
+        <p>In the morning letter, reminders and nudges, a checklist line shows as ☐ or ☑. Nothing else in the messages changes.</p>
+        <p class="where">Where: <b>LINE messages</b> (needs the three functions deployed)</p>
+        <span class="pill">small (part of item 2)</span>
+      </div>
+      <div class="ba">
+        <span class="k">Now</span><div class="mini line">[x] Tent and sleeping bag
+[ ] Food for two days</div>
+        <span class="k aft">After</span><div class="mini line">☑ Tent and sleeping bag
+☐ Food for two days</div>
+      </div>
+    </article>
+  </section>
+
+  <section class="after">
+    <h2>After the build</h2>
+    <ol>
+      <li>Merge the two branches (each can go in on its own), then the build's summary branch.</li>
+      <li>After merging item 2: deploy <code>send-line-daily</code>, <code>send-line-reminders</code> and <code>send-line-overdue</code>. No migration.</li>
+    </ol>
+    <ul>
+      <li><b>Check by eye (1):</b> the Tasks and Events pages with your real data on a computer and a phone: the Today sections, the tabs, the five count tiles.</li>
+      <li><b>Check by eye (2):</b> a checklist in a task, an event and an interest: the ☑ Check button, ticking in the box and on the cards, the bar turning green, the "mark done?" message; a LINE message with a checklist after deploying.</li>
+    </ul>
+    <p class="lede">Previews: <a href="https://claude.ai/artifact/M1KCkMerU2nvJGC2CLeKEs">Today and In Progress</a> (option X) · <a href="https://claude.ai/artifact/USympPEHXV8Ktnfnw7nQVW">Checklists</a> (A and A).</p>
+  </section>
+</div>
+</body>
+</html>
