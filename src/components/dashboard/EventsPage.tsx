@@ -342,10 +342,14 @@ export const EventsPage = ({
                   )}
                   <div className={`flex items-center gap-1 text-sm mt-2 ${getStatusColor(status, !isSelecting)}`}>
                     <Clock size={12} />
-                    {event.start_time ? `${format(parseISO(event.start_time), 'HH:mm')} - Today` : 'No start time'}
+                    {/* Today's events also include ones that started on an earlier day or end on a later
+                        one: the part that isn't today names its day */}
+                    {event.start_time
+                      ? startsToday(event) ? `${format(parseISO(event.start_time), 'HH:mm')} - Today` : format(parseISO(event.start_time), 'd MMM, HH:mm')
+                      : 'No start time'}
                     {event.deadline && (
                       <span className="ml-2 text-xs text-muted-foreground">
-                        • End: {format(parseISO(event.deadline), 'HH:mm')}
+                        • End: {format(parseISO(event.deadline), endsToday(event) ? 'HH:mm' : 'd MMM, HH:mm')}
                       </span>
                     )}
                   </div>

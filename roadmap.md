@@ -332,3 +332,11 @@ What to do (owner):
 
 ### Findings
 - [x] Low: With the keyboard, the round menu stayed open over a form or the side drawer. Example: open the menu with Enter, press Tab past the four choices to a card's pencil and press Enter: the edit form opens with the menu's choices and Lulyssia's portrait drawn over its lower half (on a 390px phone they cover the Repeat, Every and Tags fields; seen in the browser). Same with Tab to the drawer tab. A mouse or a tap closed the menu first, so only the keyboard reached this. Done: opening a form or the drawer closes the menu (this commit)
+
+## Cloud review (31 Oct 2026)
+Unattended review (`/cloud-review`) of `main`'s waiting list and the plan in-progress-and-checklist build,
+on branch `cloud-review-2026-10-31` (from `main` with the plan branch and its 3 build branches merged in
+their order). Rounds log: [docs/reviews/2026-10-31-cloud-review.md](docs/reviews/2026-10-31-cloud-review.md).
+
+### Findings
+- [x] Medium: On the Events page, an event in Today's Events that started on an earlier day showed its start as if it were today, and one ending on a later day showed its end without the day. Example at 10:00 on 31 Oct: "Hackathon" (29 Oct 09:00 – today 16:00) read "09:00 - Today • End: 16:00"; "Book fair" (today 09:00 – 2 Nov 17:00) read "End: 17:00". The build's item 1 put events ending today into this section, so the first case is new. Done: the part that isn't today names its day ("29 Oct, 09:00 • End: 16:00", "09:00 - Today • End: 2 Nov, 17:00") (this commit)
