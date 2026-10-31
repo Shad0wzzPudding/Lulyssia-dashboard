@@ -35,6 +35,11 @@ const MAX_DETAIL_LINES = 5;
 const MAX_DETAIL_CHARS = 300;
 const CUT_NOTE = '...\nRead full detail in dashboard.';
 
+// A checklist line ("[ ] item" / "[x] item" after its leading spaces, as the dashboard stores it)
+// shows its box: "☐ item" / "☑ item"
+const checkBox = (line: string) =>
+  line.replace(/^( *)\[([ xX])\] /, (_, spaces: string, mark: string) => `${spaces}${mark === ' ' ? '☐' : '☑'} `);
+
 /**
  * The description cleaned for LINE: at most 5 non-empty lines and about 300 characters. Each line
  * keeps the spaces at its start (indents made in the editor); spaces at the end are trimmed.
@@ -43,7 +48,7 @@ export function formatDetail(text: string | null): string | null {
   if (!text) return null;
   const clean = stripMarks(text);
   if (!clean.trim()) return null;
-  const lines = clean.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim());
+  const lines = clean.split('\n').map((l) => checkBox(l.trimEnd())).filter((l) => l.trim());
   if (lines.length === 0) return null;
   let detail = lines.slice(0, MAX_DETAIL_LINES).join('\n');
   let cut = lines.length > MAX_DETAIL_LINES;
