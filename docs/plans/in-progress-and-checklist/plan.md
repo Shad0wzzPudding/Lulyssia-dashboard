@@ -40,6 +40,10 @@ so the plan can be picked up again at the first undecided item.
   - both Today sections get three tabs: **All** (everything in the section), **Start today**, **End
     today**; a task or event that starts and ends today is under both tabs;
   - In Progress on both pages keeps only what started on an earlier day and ends after today;
+  - Tasks page order: Overdue, Daily tasks, **Today's Tasks**, In Progress, Upcoming, Completed;
+  - Tasks page count tiles: a **Today** tile is added first, so five tiles: Today, In progress,
+    Upcoming, Overdue, Completed (like the Events page's Today tile); on a phone they stay readable
+    (narrower, or two rows);
   - (more being decided)
 - **Preview:** `previews/1-in-progress.html` (published at
   https://claude.ai/artifact/M1KCkMerU2nvJGC2CLeKEs), option **X** on both pages. **Intent only:** the
@@ -60,6 +64,9 @@ Not decided yet.
 - **Q:** Should tasks that start today move into In Progress? **A:** No: into a new Today's Tasks
   section on the Tasks page.
 - **Q:** Where do the tabs go? **A:** On the Today sections (option X).
+- **Q:** Where does Today's Tasks sit on the Tasks page? **A:** After the Daily tasks, before In
+  Progress.
+- **Q:** A Today count tile on the Tasks page? **A:** Yes, first of five.
 
 ## If something isn't covered here
 
