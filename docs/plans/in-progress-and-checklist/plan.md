@@ -1,6 +1,6 @@
 # Plan: Today sections with tabs, and checklists in descriptions
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `3359d35` (31 Oct 2026)
 **Decided with the owner on:** 31 Oct 2026
 **Built:** 31 Oct 2026, against `main` at `3359d35`; both items built. See `log/summary.md` for the
@@ -192,3 +192,22 @@ Merge order: this plan's branch, then items 1 and 2 (either order), then
    `send-line-reminders` and `send-line-overdue`.
 2. Nothing else: no migration (the checklist lives in the existing description text); item 1 goes out
    with the next Vercel deploy after merging.
+
+## After the build
+
+Reviewed on 31 Oct 2026. A cloud review (branch `cloud-review-2026-10-31`) reviewed the build and fixed
+4 bugs (`da0ae72`, `0678f06`, `cf574d9`, `1e772fd`). Then, with the owner: typecheck, lint, build and
+`deno check` on the four LINE functions all pass (Deno wasn't available during the build), and both
+items were checked in the browser on the test account (Today sections and tabs on Tasks and Events,
+ticking boxes on a card, the bar going green, the "mark done?" message).
+
+**Decided with the owner**
+- The build's 11 guesses: all kept as built.
+- The cloud review's proposal: an event with no start time is past once its end's day is over, so it
+  moves to Past Events and Clear Past takes it (`d339a65`).
+- Found while checking: a message's own button ("Mark done", "Done for good") sat half under the round
+  menu button; messages now start just above that button (`9f266e3`).
+
+**Still to do**
+- Deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue` (the ☐ / ☑ boxes in LINE).
+- On a phone, by eye: the Today sections, the two-row count tiles, and ticking a checklist.

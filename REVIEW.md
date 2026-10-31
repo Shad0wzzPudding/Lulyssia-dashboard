@@ -28,6 +28,8 @@ Newest first.
 
 | Commit | What |
 | --- | --- |
+| `d339a65` | Fix : An event with no start time moves to Past Events once its end's day is over (owner review of the 31 Oct cloud review) |
+| `9f266e3` | Fix : Pop-up messages sit above the round menu button, so their own button isn't half under it (owner review, 31 Oct) |
 | `1e772fd` | Fix : A screen reader names each checklist box by its item (cloud review 31 Oct, branch `cloud-review-2026-10-31`) |
 | `cf574d9` | Fix : LINE shows an empty checklist line as a box (needs function deploy: send-line-daily, send-line-reminders, send-line-overdue; cloud review 31 Oct) |
 | `0678f06` | Fix : Quick ticks on a checklist card are all saved (cloud review 31 Oct, branch `cloud-review-2026-10-31`) |
