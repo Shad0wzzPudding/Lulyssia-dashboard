@@ -49,10 +49,11 @@ const toHTML = (text: string): string => {
       if (line.length === 0) return '<div><br></div>';
       const text = line.map((c) => c.ch).join('');
       const lead = lineLead(text);
-      // A checklist line's "[ ]" / "[x]" is drawn as a box (read back as those three characters)
+      // A checklist line's "[ ] " / "[x] " is drawn as a box (read back as those four characters, so
+      // the caret after a box is always at the start of its text)
       const box = lineBox(text);
       const leadInner = box
-        ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${runsHTML(line.slice(box.at + 3, lead))}`
+        ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${runsHTML(line.slice(box.at + 4, lead))}`
         : runsHTML(line.slice(0, lead));
       const leadHTML = lead ? `<span data-lead="">${leadInner}</span>` : '';
       return `<div>${leadHTML}${runsHTML(line.slice(lead))}</div>`;
@@ -62,7 +63,7 @@ const toHTML = (text: string): string => {
 
 /** A checklist box in the editor: not typed into; clicking it ticks it (see handleEditorClick). */
 const boxHTML = (ticked: boolean) =>
-  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="mx-0.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border align-[-2px] indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
+  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="ml-0.5 mr-1.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border align-[-2px] indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
 
 /** The editor's HTML without the measured indents (to compare it with toHTML's). */
 const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');
@@ -106,10 +107,10 @@ const domChars = (el: HTMLElement, stripTrailingNewline = true): StyledChar[] =>
       out.push(newline());
       return;
     }
-    // A checklist box: the "[ ]" / "[x]" it stands for
+    // A checklist box: the "[ ] " / "[x] " it stands for
     const check = (node as HTMLElement).getAttribute('data-check');
     if (check !== null) {
-      for (const ch of `[${check === 'x' ? 'x' : ' '}]`) out.push({ ch, b, i, s });
+      for (const ch of `[${check === 'x' ? 'x' : ' '}] `) out.push({ ch, b, i, s });
       return;
     }
     // Browsers sometimes wrap new lines in <div>/<p>
@@ -227,17 +228,17 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
     if (node.nodeType !== Node.ELEMENT_NODE) return false;
     const tag = (node as HTMLElement).tagName.toLowerCase();
 
-    // A checklist box stands for 3 characters; the caret goes before or after it, never inside
+    // A checklist box stands for 4 characters; the caret goes before or after it, never inside
     if ((node as HTMLElement).hasAttribute('data-check')) {
       if (pos <= currentPos) {
         setCaretBeforeNode(sel, node);
         return true;
       }
-      if (pos <= currentPos + 3) {
+      if (pos <= currentPos + 4) {
         setCaretAfterNode(sel, node);
         return true;
       }
-      currentPos += 3;
+      currentPos += 4;
       afterBreak = false;
       return false;
     }
@@ -702,7 +703,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const chars = domChars(el);
     if (!chars[at + 1]) return;
     chars[at + 1] = { ...chars[at + 1], ch: chars[at + 1].ch === ' ' ? 'x' : ' ' };
-    commitEdit(writeChars(chars), at + 3);
+    commitEdit(writeChars(chars), at + 4);
   }, [commitEdit]);
 
   const insertBullet = useCallback(() => {
