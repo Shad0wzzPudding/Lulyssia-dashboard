@@ -73,13 +73,18 @@ so the plan can be picked up again at the first undecided item.
     Focus and details window) its boxes show and can be ticked, and the bar is above the name; Home's
     In progress cards (which show no description) show only the bar;
   - ticking a box on a card saves at once, like ticking a task done;
+  - ticking a task's last box shows a small message "All ticked: mark the task done?" with a button
+    that ticks the task done (as its own Done button does); ignoring it changes nothing; events and
+    interests have no "done", so they only get the green bar;
+  - LINE messages show checklist lines as "☐ item" and "☑ item" (the three LINE functions need a
+    deploy after merging); nothing else in the messages changes;
   - (more being decided)
 - **Preview:** `previews/2-checklist.html` (published at
   https://claude.ai/artifact/USympPEHXV8Ktnfnw7nQVW), options **A** and **A**. **Intent only:** the
   build uses the app's real editor, cards and sizes.
 - **Done when:** (being decided)
 - **Owner checks by eye:** (being decided)
-- **Needs:** (being decided)
+- **Needs:** function deploy: `send-line-daily`, `send-line-reminders`, `send-line-overdue`
 - **Depends on:** nothing
 
 ## Questions answered while planning
@@ -97,6 +102,8 @@ so the plan can be picked up again at the first undecided item.
 - **Q:** Tick boxes on the card, or only in the edit form? **A:** On the card too (A).
 - **Q:** Which items get checklists? **A:** Tasks, events and interests.
 - **Q:** On Home too? **A:** Yes, wherever a description is shown; Home's In progress cards get the bar.
+- **Q:** When every box is ticked, mark the task done? **A:** Ask with a message that has a button.
+- **Q:** Checklists in LINE? **A:** As ☐ / ☑ boxes.
 
 ## If something isn't covered here
 
