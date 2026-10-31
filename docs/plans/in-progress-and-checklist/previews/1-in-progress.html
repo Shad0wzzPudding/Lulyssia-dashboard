@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In Progress Tabs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: the Tasks and Events pages' sections, now and after, with working In Progress tabs; intent only (the build uses the app's real cards and sizes) */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 68%);
+    --line: hsl(193 40% 22%);
+    --cyan: hsl(193 61% 52%);
+    --on-cyan: hsl(200 20% 4%);
+    --violet: #a78bfa;
+    --sky: #38bdf8;
+    --amber: #fbbf24;
+    --rose: #fb7185;
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 16px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); max-width: 76ch; line-height: 1.55; font-size: .92rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar .label { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; margin-right: 4px; }
+  .bar button { font: 600 .85rem var(--body); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--cyan); color: var(--on-cyan); border-color: var(--cyan); }
+  .rec { font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; margin-left: 6px; opacity: .8; }
+  .explain { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: .88rem; line-height: 1.55; color: #d4d4d8; }
+  .explain b { color: var(--fg); }
+  .page { display: grid; gap: 20px; }
+  h3 { margin: 0 0 10px; font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .violet { color: var(--violet); } .sky { color: var(--sky); } .amber { color: var(--amber); } .rose { color: var(--rose); } .slate { color: #94a3b8; }
+  .list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .c { background: var(--card); border: 1px solid #1f3a44; border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+  .c .t { font-weight: 600; }
+  .c .d { font-size: .78rem; color: #9ca3af; display: grid; gap: 2px; }
+  .new { justify-self: start; font-size: .68rem; font-weight: 600; color: var(--cyan); border: 1px solid rgba(58,174,212,.5); border-radius: 999px; padding: 0 8px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tabs button { font: 600 .78rem var(--body); color: var(--fg); background: transparent; border: 1px solid #4c3d7a; padding: 4px 12px; cursor: pointer; transform: skewX(-12deg); }
+  .tabs button > span { display: inline-block; transform: skewX(12deg); }
+  .tabs button[aria-selected="true"] { background: var(--violet); color: #1e1533; border-color: var(--violet); }
+  .tabs .n { font-weight: 500; opacity: .75; margin-left: 4px; }
+  .empty { font-size: .82rem; color: var(--muted); background: var(--card); border: 1px dashed #2b3a42; border-radius: 8px; padding: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Today and In Progress: where the tabs go</h1>
+    <p class="lede">The Tasks and Events pages at 10:00 on Saturday 31 Oct, with sample items. Pick a page and a version, then try the
+      In Progress tabs. Intent only: the build uses the app's real cards, which show more than these.</p>
+  </header>
+
+  <div class="bar" role="group" aria-label="Page"><span class="label">Page</span>
+    <button data-page="tasks">Tasks</button><button data-page="events">Events</button></div>
+  <div class="bar" role="group" aria-label="Version" id="versions"></div>
+  <div class="explain" id="explain"></div>
+  <div class="page" id="page"></div>
+</div>
+<script>
+  // Saturday 31 Oct 2026, 10:00 (hours counted from 1 Oct)
+  const NOW = 31 * 24 + 10;
+  const at = (day, hour) => day * 24 + hour;
+  const dayOf = (h) => Math.floor(h / 24);
+  const fmt = (h) => {
+    const d = dayOf(h), hh = String(h % 24).padStart(2, '0') + ':00';
+    const name = d === 31 ? 'Today' : ({ 27: 'Tue 27 Oct', 28: 'Wed 28 Oct', 29: 'Thu 29 Oct', 33: 'Mon 2 Nov', 34: 'Tue 3 Nov', 35: 'Wed 4 Nov', 39: 'Sun 8 Nov' })[d];
+    return `${name}, ${hh}`;
+  };
+  const TASKS = [
+    { title: 'Lab report', start: at(31, 9), end: at(34, 17) },
+    { title: 'Buy a birthday gift', start: at(31, 14), end: at(31, 18) },
+    { title: 'Call the dentist', start: at(31, 11), end: null },
+    { title: 'Essay draft', start: at(28, 9), end: at(31, 17) },
+    { title: 'Science project', start: at(27, 9), end: at(35, 17) },
+    { title: 'Read chapter 4', start: null, end: at(31, 20) },
+    { title: 'Piano practice', start: at(33, 16), end: at(33, 18) },
+  ];
+  const EVENTS = [
+    { title: 'Hackathon', start: at(29, 9), end: at(31, 16) },
+    { title: 'Art exhibition', start: at(28, 10), end: at(39, 18) },
+    { title: 'Team meeting', start: at(31, 13), end: at(31, 14) },
+    { title: 'Book fair', start: at(31, 9), end: at(33, 17) },
+    { title: 'Movie night', start: at(34, 19), end: at(34, 22) },
+  ];
+  const startsToday = (i) => i.start !== null && dayOf(i.start) === 31;
+  const endsToday = (i) => i.end !== null && dayOf(i.end) === 31;
+  const startedEarlier = (i) => i.start !== null && dayOf(i.start) < 31;
+
+  const VERSIONS = {
+    tasks: [['now', 'Now'], ['x', 'X · Tabs on Today', true], ['y', 'Y · Tabs on In Progress']],
+    events: [['now', 'Now'], ['x', 'X · Tabs on Today', true], ['y', 'Y · Tabs on In Progress']],
+  };
+  const EXPLAIN = {
+    'tasks-now': '<b>Now:</b> In Progress shows tasks that started on an earlier day and aren\'t due yet. A task that starts today is in Upcoming; one due today is in In Progress (if it started earlier) or Upcoming. No Today section, no tabs.',
+    'tasks-x': '<b>X · Tabs on Today (recommended):</b> a new <b>Today\'s Tasks</b> section, like Today\'s Events, holds every task that starts or ends today, with the tabs <b>All</b>, <b>Start today</b> and <b>End today</b>. In Progress keeps the tasks that started on an earlier day and end later. Each task shows in one place.',
+    'tasks-y': '<b>Y · Tabs on In Progress:</b> a new <b>Today\'s Tasks</b> section holds the tasks that start today (no tabs). In Progress gets the tabs and lists everything running, today\'s tasks too, so a task that starts today shows in both sections.',
+    'events-now': '<b>Now:</b> events that start today are in Today\'s Events; In Progress shows events that started on an earlier day and aren\'t over yet (also one ending today). No tabs.',
+    'events-x': '<b>X · Tabs on Today (recommended):</b> Today\'s Events holds every event that starts or ends today, with the tabs <b>All</b>, <b>Start today</b> and <b>End today</b>. In Progress keeps the events that started on an earlier day and end later. Each event shows in one place.',
+    'events-y': '<b>Y · Tabs on In Progress:</b> Today\'s Events stays as now (no tabs). In Progress gets the tabs and lists everything running, today\'s events too, so an event that starts today shows in both sections.',
+  };
+
+  let page = 'tasks', version = 'x', tab = 'all';
+  const card = (i, isNew) => `<div class="c"><span class="t">${i.title}</span><span class="d">${i.start !== null ? `<span>Start: ${fmt(i.start)}</span>` : ''}${i.end !== null ? `<span>${page === 'tasks' ? 'Deadline' : 'End'}: ${fmt(i.end)}</span>` : ''}</span>${isNew ? '<span class="new">new in this section</span>' : ''}</div>`;
+  const section = (cls, title, items, opts = {}) => {
+    const tabs = opts.tabs ? `<div class="tabs" role="tablist">${[['all', 'All', items], ['start', 'Start today', items.filter(startsToday)], ['end', 'End today', items.filter(endsToday)]]
+      .map(([k, label, list]) => `<button role="tab" aria-selected="${tab === k}" data-tab="${k}"><span>${label}<span class="n">${list.length}</span></span></button>`).join('')}</div>` : '';
+    const shown = !opts.tabs || tab === 'all' ? items : items.filter(tab === 'start' ? startsToday : endsToday);
+    const body = shown.length ? `<div class="list">${shown.map((i) => card(i, opts.isNew && opts.isNew(i))).join('')}</div>` : `<div class="empty">${opts.empty || 'Nothing here'}</div>`;
+    return `<section><h3 class="${cls}">${opts.icon || ''}${title} (${items.length})</h3>${tabs}${body}</section>`;
+  };
+
+  const draw = () => {
+    document.querySelectorAll('[data-page]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.page === page)));
+    document.getElementById('versions').innerHTML = '<span class="label">Version</span>' + VERSIONS[page]
+      .map(([k, label, rec]) => `<button data-version="${k}" aria-pressed="${version === k}">${label}${rec ? '<span class="rec">recommended</span>' : ''}</button>`).join('');
+    document.getElementById('explain').innerHTML = EXPLAIN[`${page}-${version}`];
+    let html = '';
+    const list = page === 'tasks' ? TASKS : EVENTS;
+    const noun = page === 'tasks' ? 'Tasks' : 'Events';
+    const live = list.filter((i) => i.end === null ? i.start === null || i.start >= NOW - 24 * 3 : i.end > NOW);
+    const today = (i) => startsToday(i) || endsToday(i);
+    const running = (i) => startedEarlier(i) && i.end !== null && i.end >= NOW;
+    if (version === 'now') {
+      if (page === 'events') html += section('amber', "Today's Events", live.filter(startsToday), { icon: '📅 ', empty: 'No events scheduled for today' });
+      const ip = live.filter(page === 'tasks' ? running : running);
+      html += section('violet', 'In Progress', ip, { icon: '⏳ ' });
+      html += section('sky', `Upcoming ${noun}`, live.filter((i) => !ip.includes(i) && !(page === 'events' && startsToday(i))));
+    } else if (version === 'x') {
+      const td = live.filter(today);
+      html += section('amber', `Today's ${noun}`, td, { icon: '📅 ', tabs: true, isNew: (i) => page === 'tasks' || endsToday(i) && !startsToday(i), empty: `No ${noun.toLowerCase()} for today` });
+      const ip = live.filter((i) => running(i) && !today(i));
+      html += section('violet', 'In Progress', ip, { icon: '⏳ ' });
+      html += section('sky', `Upcoming ${noun}`, live.filter((i) => !td.includes(i) && !ip.includes(i)));
+    } else {
+      const td = live.filter(startsToday);
+      html += section('amber', `Today's ${noun}`, td, { icon: '📅 ', isNew: () => page === 'tasks', empty: `No ${noun.toLowerCase()} for today` });
+      const ip = live.filter((i) => running(i) || startsToday(i));
+      html += section('violet', 'In Progress', ip, { icon: '⏳ ', tabs: true, isNew: (i) => startsToday(i) });
+      html += section('sky', `Upcoming ${noun}`, live.filter((i) => !td.includes(i) && !ip.includes(i)));
+    }
+    document.getElementById('page').innerHTML = html;
+  };
+  document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => { page = b.dataset.page; tab = 'all'; draw(); }));
+  document.getElementById('versions').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { version = b.dataset.version; tab = 'all'; draw(); } });
+  document.getElementById('page').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { tab = b.dataset.tab; draw(); } });
+  draw();
+</script>
+</body>
+</html>
