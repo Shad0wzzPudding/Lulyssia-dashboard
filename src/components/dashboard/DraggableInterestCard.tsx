@@ -6,12 +6,15 @@ import { format, parseISO } from "date-fns";
 import { Interest } from "@/lib/types";
 import { playUnpinSound } from "@/lib/sounds";
 import { FormattedText } from '@/components/ui/formatted-text';
+import { ChecklistProgress } from './ChecklistProgress';
 
 interface DraggableInterestCardProps {
   interest: Interest;
   isCollapsed: boolean;
   onToggleCollapse: (id: string) => void;
   onUnpin: (interest: Interest) => void;
+  /** Ticks or unticks a checklist box in the interest's description */
+  onTickCheck?: (interest: Interest, line: number) => void;
   index: number;
   onDragStart: (index: number) => void;
   onDragOver: (index: number) => void;
@@ -25,6 +28,7 @@ export const DraggableInterestCard = ({
   isCollapsed,
   onToggleCollapse,
   onUnpin,
+  onTickCheck,
   index,
   onDragStart,
   onDragOver,
@@ -161,6 +165,7 @@ export const DraggableInterestCard = ({
             </div>
             
             <div className="flex-1 min-w-0">
+              <ChecklistProgress description={interest.description} className="mb-1" />
               <div className="flex items-start justify-between">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">
                   {interest.title}
@@ -205,7 +210,7 @@ export const DraggableInterestCard = ({
               <CollapsibleContent>
                 {interest.description && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 whitespace-pre-wrap">
-                    <FormattedText>{interest.description}</FormattedText>
+                    <FormattedText onToggleCheck={onTickCheck && ((line) => onTickCheck(interest, line))}>{interest.description}</FormattedText>
                   </p>
                 )}
               </CollapsibleContent>

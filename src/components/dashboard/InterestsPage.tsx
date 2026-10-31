@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormattedTextarea } from '@/components/ui/formatted-textarea';
 import { FormattedText } from '@/components/ui/formatted-text';
+import { tickFromCard } from '@/lib/checklistTick';
+import { ChecklistProgress } from './ChecklistProgress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -249,6 +251,10 @@ export const InterestsPage = ({
     onReorder({ table: 'interests', orderedIds, movedId });
   };
 
+  // A checklist box ticked on a card: saved at once
+  const handleTickCheck = (interest: Interest, line: number) =>
+    tickFromCard(interest.description || '', line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }));
+
   const renderPinnedCard = (interest: Interest) => (
     <Card
       key={interest.id}
@@ -268,7 +274,10 @@ export const InterestsPage = ({
                 className="mt-1"
               />
             )}
-            <CardTitle className="min-w-0 text-lg text-main-focus whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            <div className="min-w-0">
+              <ChecklistProgress description={interest.description} className="mb-1" />
+              <CardTitle className="min-w-0 text-lg text-main-focus whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <Badge variant="secondary" className="bg-main-focus/20 text-main-focus">
@@ -279,7 +288,7 @@ export const InterestsPage = ({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3">
         {interest.description && (
-          <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{interest.description}</FormattedText></p>
+          <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText onToggleCheck={(line) => handleTickCheck(interest, line)}>{interest.description}</FormattedText></p>
         )}
         <AttachmentsImages attachments={interest.attachments} />
         <AttachmentsChips attachments={interest.attachments} />
@@ -342,13 +351,16 @@ export const InterestsPage = ({
                 className="mt-1"
               />
             )}
-            <CardTitle className="min-w-0 text-lg whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            <div className="min-w-0">
+              <ChecklistProgress description={interest.description} className="mb-1" />
+              <CardTitle className="min-w-0 text-lg whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</CardTitle>
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3">
         {interest.description && (
-          <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{interest.description}</FormattedText></p>
+          <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText onToggleCheck={(line) => handleTickCheck(interest, line)}>{interest.description}</FormattedText></p>
         )}
         <AttachmentsImages attachments={interest.attachments} />
         <AttachmentsChips attachments={interest.attachments} />
