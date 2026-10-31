@@ -28,7 +28,7 @@ Newest first.
 
 | Commit | What |
 | --- | --- |
-| `2c237ef` | Fix : LINE fetches the cleaned "contemplate" sticker (asset version 4; needs function deploy: send-line-daily, line-webhook) |
+| `2c237ef` | Fix : LINE fetches the cleaned "contemplate" sticker (asset version 4; send-line-daily and line-webhook deployed 31 Oct) |
 | `8fe98e3` | Fix : The "contemplate" sticker no longer has white specks between its hair strands |
 | `c04d02f` | Fix : The LINE morning letter says which part of an event or task is today (31 Oct; send-line-daily deployed 31 Oct) |
 | `77d409a` | Fix : The round menu closes when a form or the side drawer opens from the keyboard (cloud review 30 Oct night) |
