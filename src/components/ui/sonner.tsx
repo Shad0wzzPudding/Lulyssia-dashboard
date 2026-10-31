@@ -14,6 +14,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       // never covers them; Sonner's own default sits above everything. An open form turns off
       // clicks outside itself; the messages keep them so they can still be swiped away.
       style={{ zIndex: 55, pointerEvents: "auto" }}
+      // Start above the round menu button (1.5rem from the bottom, 3.5rem tall), so a message's own
+      // button ("Mark done", "Done for good") is never half under it
+      offset={{ bottom: "calc(6rem + env(safe-area-inset-bottom))" }}
+      mobileOffset={{ bottom: "calc(6rem + env(safe-area-inset-bottom))" }}
       toastOptions={{
         classNames: {
           toast:
