@@ -56,7 +56,9 @@ const toHTML = (text: string): string => {
         ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${runsHTML(line.slice(box.at + 4, lead))}`
         : runsHTML(line.slice(0, lead));
       const leadHTML = lead ? `<span data-lead="">${leadInner}</span>` : '';
-      return `<div>${leadHTML}${runsHTML(line.slice(lead))}</div>`;
+      // A ticked checklist line's text: muted and crossed out (only drawn so; not saved as ~~strike~~)
+      const rest = runsHTML(line.slice(lead));
+      return `<div>${leadHTML}${box?.ticked ? `<span data-done="" class="text-muted-foreground line-through">${rest}</span>` : rest}</div>`;
     })
     .join('');
 };
