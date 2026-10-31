@@ -26,13 +26,13 @@ import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
+import { toggleTaskDone } from '@/lib/taskDone';
+import { offerTaskDone, tickFromCard } from '@/lib/checklistTick';
+import { ChecklistProgress } from './ChecklistProgress';
 import { DailyTasksSection } from './DailyTasksSection';
 import { TaskFormDialog, type TaskFormHandle } from './TaskFormDialog';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
-import { toggleTaskDone } from '@/lib/taskDone';
-import { offerTaskDone, tickFromCard } from '@/lib/checklistTick';
-import { ChecklistProgress } from './ChecklistProgress';
 
 interface TasksPageProps {
   tasks: Task[];

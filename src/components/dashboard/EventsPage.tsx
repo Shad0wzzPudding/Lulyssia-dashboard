@@ -26,10 +26,10 @@ import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
-import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
-import { notShownYetNote } from '@/lib/notShownYet';
 import { tickFromCard } from '@/lib/checklistTick';
 import { ChecklistProgress } from './ChecklistProgress';
+import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
+import { notShownYetNote } from '@/lib/notShownYet';
 import { EventFormDialog, type EventFormHandle } from './EventFormDialog';
 
 interface EventsPageProps {
