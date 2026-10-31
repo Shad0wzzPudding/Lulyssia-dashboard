@@ -28,7 +28,7 @@ Newest first.
 
 | Commit | What |
 | --- | --- |
-| `c04d02f` | Fix : The LINE morning letter says which part of an event or task is today (31 Oct; needs function deploy: send-line-daily) |
+| `c04d02f` | Fix : The LINE morning letter says which part of an event or task is today (31 Oct; send-line-daily deployed 31 Oct) |
 | `77d409a` | Fix : The round menu closes when a form or the side drawer opens from the keyboard (cloud review 30 Oct night) |
 
 ## Review history
