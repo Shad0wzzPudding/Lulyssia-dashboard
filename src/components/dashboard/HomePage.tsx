@@ -23,7 +23,8 @@ import { STICKERS } from '@/lib/stickers';
 import { AttachmentsChips, AttachmentsImages } from "./AttachmentsField";
 import { TaskFormDialog, type TaskFormHandle } from "./TaskFormDialog";
 import { ChecklistProgress } from "./ChecklistProgress";
-import { offerTaskDone, tickFromCard } from "@/lib/checklistTick";
+import { offerTaskDone } from "@/lib/checklistTick";
+import { useChecklistTick } from "@/hooks/useChecklistTick";
 import { toggleTaskDone } from "@/lib/taskDone";
 import { EventFormDialog, type EventFormHandle } from "./EventFormDialog";
 
@@ -105,20 +106,22 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   // The edit forms (the same ones as on the Tasks and Events pages), opened by the pencils
   const taskForm = useRef<TaskFormHandle>(null);
   const eventForm = useRef<EventFormHandle>(null);
+  const tickCard = useChecklistTick();
   // A checklist box ticked on Home: saved at once, as on the Tasks, Events and Interests pages;
   // ticking an unfinished task's last box offers to mark the task done
   const tickTask = (task: Task, line: number) =>
-    tickFromCard(
-      task.description || '',
+    tickCard(
+      'tasks',
+      task.id,
       line,
       (description) => onUpdateTask({ id: task.id, description, __silent: true }),
       task.is_completed ? undefined : () => offerTaskDone(task.title, () => toggleTaskDone({ ...task, is_completed: false }, onUpdateTask))
     );
   const tickEvent = (event: Event, line: number) =>
-    tickFromCard(event.description || '', line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
+    tickCard('events', event.id, line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
   const tickInterest = onUpdateInterest
     ? (interest: Interest, line: number) =>
-      tickFromCard(interest.description || '', line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }))
+      tickCard('interests', interest.id, line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }))
     : undefined;
 
   // The details window's item as it is now (the window keeps what it was opened with)

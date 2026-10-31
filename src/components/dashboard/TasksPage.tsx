@@ -27,7 +27,8 @@ import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { toggleTaskDone } from '@/lib/taskDone';
-import { offerTaskDone, tickFromCard } from '@/lib/checklistTick';
+import { offerTaskDone } from '@/lib/checklistTick';
+import { useChecklistTick } from '@/hooks/useChecklistTick';
 import { ChecklistProgress } from './ChecklistProgress';
 import { DailyTasksSection } from './DailyTasksSection';
 import { TaskFormDialog, type TaskFormHandle } from './TaskFormDialog';
@@ -300,11 +301,13 @@ export const TasksPage = ({
 
   const handleToggleComplete = (task: Task) => toggleTaskDone(task, onUpdateTask);
 
+  const tickCard = useChecklistTick();
   // A checklist box ticked on a card: saved at once; ticking an unfinished task's last box offers
   // to mark the task done
   const handleTickCheck = (task: Task, line: number) =>
-    tickFromCard(
-      task.description || '',
+    tickCard(
+      'tasks',
+      task.id,
       line,
       (description) => onUpdateTask({ id: task.id, description, __silent: true }),
       task.is_completed ? undefined : () => offerTaskDone(task.title, () => toggleTaskDone({ ...task, is_completed: false }, onUpdateTask))

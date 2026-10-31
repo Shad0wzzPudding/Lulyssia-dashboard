@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormattedTextarea } from '@/components/ui/formatted-textarea';
 import { FormattedText } from '@/components/ui/formatted-text';
-import { tickFromCard } from '@/lib/checklistTick';
+import { useChecklistTick } from '@/hooks/useChecklistTick';
 import { ChecklistProgress } from './ChecklistProgress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -251,9 +251,10 @@ export const InterestsPage = ({
     onReorder({ table: 'interests', orderedIds, movedId });
   };
 
+  const tickCard = useChecklistTick();
   // A checklist box ticked on a card: saved at once
   const handleTickCheck = (interest: Interest, line: number) =>
-    tickFromCard(interest.description || '', line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }));
+    tickCard('interests', interest.id, line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }));
 
   const renderPinnedCard = (interest: Interest) => (
     <Card

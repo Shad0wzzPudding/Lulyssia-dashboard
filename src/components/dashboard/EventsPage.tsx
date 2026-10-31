@@ -26,7 +26,7 @@ import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
-import { tickFromCard } from '@/lib/checklistTick';
+import { useChecklistTick } from '@/hooks/useChecklistTick';
 import { ChecklistProgress } from './ChecklistProgress';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
@@ -202,9 +202,10 @@ export const EventsPage = ({
     setShowDeleteConfirm(false);
   };
 
+  const tickCard = useChecklistTick();
   // A checklist box ticked on a card: saved at once
   const handleTickCheck = (event: Event, line: number) =>
-    tickFromCard(event.description || '', line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
+    tickCard('events', event.id, line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
 
   const handleCardClick = (event: Event) => {
     if (isSelecting) {
