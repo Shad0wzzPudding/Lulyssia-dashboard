@@ -1,11 +1,12 @@
 /**
  * A description line's "lead": its leading spaces, then optionally a bullet ("-", "•", "*", or a
- * number followed by "." or ")") with at least one space after it. When the line wraps, the wrapped
+ * number followed by "." or ")") or a checklist box ("[ ]", "[x]", src/lib/checklist.ts), with at
+ * least one space after it. When the line wraps, the wrapped
  * rows start under the text after the lead (a hanging indent, as in Word); a lead wider than half
  * the box is capped at half, so the text keeps room. Used where descriptions are shown
  * (FormattedText) and in the editor, so a description wraps the same way in both.
  */
-const LEAD = /^( *)((?:[-•*]|\d+[.)]) +)?/;
+const LEAD = /^( *)((?:[-•*]|\d+[.)]|\[[ xX]\]) +)?/;
 
 /** How many characters at the start of `line` (one line, no '\n') are its lead; 0 if none. */
 export const lineLead = (line: string): number => {

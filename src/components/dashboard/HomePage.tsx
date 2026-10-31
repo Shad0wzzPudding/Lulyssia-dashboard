@@ -22,6 +22,9 @@ import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
 import { AttachmentsChips, AttachmentsImages } from "./AttachmentsField";
 import { TaskFormDialog, type TaskFormHandle } from "./TaskFormDialog";
+import { ChecklistProgress } from "./ChecklistProgress";
+import { offerTaskDone, tickFromCard } from "@/lib/checklistTick";
+import { toggleTaskDone } from "@/lib/taskDone";
 import { EventFormDialog, type EventFormHandle } from "./EventFormDialog";
 
 // An item in the calendar's day list and the details window
@@ -82,9 +85,9 @@ interface HomePageProps {
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
   // Saving from the edit forms opened on Home (the same as the Tasks and Events pages)
   onCreateTask: (data: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
-  onUpdateTask: (data: Partial<Task> & { id: string } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
-  onUpdateEvent: (data: Partial<Event> & { id: string } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
 }
 
 export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onCreateTask, onUpdateTask, onCreateEvent, onUpdateEvent }: HomePageProps) => {
@@ -102,6 +105,30 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   // The edit forms (the same ones as on the Tasks and Events pages), opened by the pencils
   const taskForm = useRef<TaskFormHandle>(null);
   const eventForm = useRef<EventFormHandle>(null);
+  // A checklist box ticked on Home: saved at once, as on the Tasks, Events and Interests pages;
+  // ticking an unfinished task's last box offers to mark the task done
+  const tickTask = (task: Task, line: number) =>
+    tickFromCard(
+      task.description || '',
+      line,
+      (description) => onUpdateTask({ id: task.id, description, __silent: true }),
+      task.is_completed ? undefined : () => offerTaskDone(task.title, () => toggleTaskDone({ ...task, is_completed: false }, onUpdateTask))
+    );
+  const tickEvent = (event: Event, line: number) =>
+    tickFromCard(event.description || '', line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
+  const tickInterest = onUpdateInterest
+    ? (interest: Interest, line: number) =>
+      tickFromCard(interest.description || '', line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }))
+    : undefined;
+
+  // The details window's item as it is now (the window keeps what it was opened with)
+  const detailsTask = selectedItem?.type === 'task' ? tasks.find(t => t.id === selectedItem.id) : undefined;
+  const detailsEvent = selectedItem?.type === 'event' ? events.find(e => e.id === selectedItem.id) : undefined;
+  const detailsDescription = (detailsTask ?? detailsEvent)?.description ?? selectedItem?.description;
+  const detailsTick = detailsTask
+    ? (line: number) => tickTask(detailsTask, line)
+    : detailsEvent ? (line: number) => tickEvent(detailsEvent, line) : undefined;
+
   const editItem = (type: 'task' | 'event', id: string) => {
     if (type === 'task') {
       const task = tasks.find(t => t.id === id);
@@ -621,6 +648,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     <div className="space-y-2">
                       {list.map(task => (
                       <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
+                        <ChecklistProgress description={task.description} className="mb-1" />
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}<EditButton type="task" onEdit={() => taskForm.current?.openEdit(task)} /></p>
                           {startsToday(task) && dueToday(task) ? (
@@ -635,7 +663,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           )}
                         </div>
                           {task.description && (
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{task.description}</FormattedText></p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText onToggleCheck={(line) => tickTask(task, line)}>{task.description}</FormattedText></p>
                          )}
                         {startsToday(task) && dueToday(task) ? (
                           <TimeRangeChip
@@ -675,6 +703,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       const endsToday = !!event.deadline && isToday(parseISO(event.deadline));
                       return (
                       <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
+                        <ChecklistProgress description={event.description} className="mb-1" />
                         {endsToday ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
@@ -684,7 +713,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
                         )}
                           {event.description && (
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText>{event.description}</FormattedText></p>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText onToggleCheck={(line) => tickEvent(event, line)}>{event.description}</FormattedText></p>
                          )}
                         {endsToday ? (
                           <TimeRangeChip
@@ -1081,6 +1110,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     isCollapsed={collapsedInterests.has(interest.id)}
                     onToggleCollapse={toggleInterestCollapse}
                     onUnpin={(i) => onUpdateInterest({ id: i.id, is_pinned: false })}
+                    onTickCheck={tickInterest}
                     index={index}
                     onDragStart={handleInterestDragStart}
                     onDragOver={handleInterestDragOver}
@@ -1091,6 +1121,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 ) : (
                   <Collapsible key={interest.id} open={!collapsedInterests.has(interest.id)}>
                     <div className="p-3 bg-card/80 rounded-lg border border-main-focus/30">
+                      <ChecklistProgress description={interest.description} className="mb-1" />
                       <div className="flex items-start justify-between">
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">{interest.title}</h4>
                         {interest.description && (
@@ -1217,10 +1248,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         </Card>
       </Collapsible>
 
-      {/* Item Detail Dialog */}
+      {/* Item Detail Dialog. Its description comes from the current list, so a box ticked in it shows
+          at once */}
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
+            <ChecklistProgress description={detailsDescription} />
             <DialogTitle className="flex items-center gap-2">
               {selectedItem?.type === 'task' ? (
                 <CheckCircle2 className="shrink-0 text-primary" size={20} />
@@ -1259,10 +1292,10 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               ))}
             </div>
             
-            {selectedItem?.description && (
+            {detailsDescription && (
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Description</h4>
-                <p className="text-sm whitespace-pre-wrap"><FormattedText>{selectedItem.description}</FormattedText></p>
+                <p className="text-sm whitespace-pre-wrap"><FormattedText onToggleCheck={detailsTick}>{detailsDescription}</FormattedText></p>
               </div>
             )}
 

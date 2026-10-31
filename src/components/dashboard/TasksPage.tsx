@@ -10,13 +10,12 @@ import { Plus, Edit, Trash2, Clock, CheckCircle2, Circle, Calendar, CalendarCloc
 import { PageIcon } from './PageIcon';
 import { format, parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { toast as notify } from '@/lib/toast';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { SelectModeOverlay } from './SelectionCorners';
 import { cardSurface } from '@/lib/selectMode';
 import { MultiSelectActionBar } from './MultiSelectActionBar';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
-import { playCompletionSound, playDeleteSound, playDuplicateSound, playUpdateSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
+import { playDeleteSound, playDuplicateSound, playAddSound, playSelectModeSound } from '@/lib/sounds';
 import { TagChip } from './TagPicker';
 import { AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
@@ -31,6 +30,9 @@ import { DailyTasksSection } from './DailyTasksSection';
 import { TaskFormDialog, type TaskFormHandle } from './TaskFormDialog';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
+import { toggleTaskDone } from '@/lib/taskDone';
+import { offerTaskDone, tickFromCard } from '@/lib/checklistTick';
+import { ChecklistProgress } from './ChecklistProgress';
 
 interface TasksPageProps {
   tasks: Task[];
@@ -79,6 +81,8 @@ type TaskCardActions = {
   copy: (task: Task) => void;
   edit: (task: Task) => void;
   remove: (task: Task) => void;
+  /** Ticks or unticks a checklist box in the task's description */
+  tickCheck: (task: Task, line: number) => void;
 };
 
 type TaskCardProps = {
@@ -133,6 +137,7 @@ const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, sele
               </Button>
             )}
             <div className="flex-1 min-w-0">
+              <ChecklistProgress description={task.description} className="mb-1" />
               <h4 className={`font-semibold whitespace-pre-wrap [overflow-wrap:anywhere] ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                 {task.title}
               </h4>
@@ -164,7 +169,7 @@ const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, sele
         </div>
         <div className="w-full mt-2">
                 {task.description && (
-                  <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{task.description}</FormattedText></p>
+                  <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText onToggleCheck={(line) => actions.tickCheck(task, line)}>{task.description}</FormattedText></p>
                 )}
                {task.attachments && task.attachments.length > 0 && (
                  <div className="mt-2">
@@ -291,48 +296,17 @@ export const TasksPage = ({
 
   const handleEdit = (task: Task) => taskForm.current?.openEdit(task);
 
-  const handleToggleComplete = (task: Task) => {
-    const isCompleting = !task.is_completed;
-    // A repeating task's tick only finishes this round; its message offers to finish it for good
-    const repeatingDone = isCompleting && !!task.recurrence_unit;
-    onUpdateTask({
-      id: task.id,
-      is_completed: isCompleting,
-      ...(repeatingDone ? { __silent: true } : {}),
-    });
-    if (isCompleting) {
-      playCompletionSound();
-    } else {
-      playUpdateSound();
-    }
-    if (repeatingDone) {
-      notify.success(
-        // It comes back when this round's deadline passes; one already past (the app was open over
-        // it) has no date to name: the next round starts as soon as the list refreshes
-        task.deadline && isAfter(parseISO(task.deadline), new Date())
-          ? `This round is done. "${task.title}" comes back on ${format(parseISO(task.deadline), 'MMM d, HH:mm')}.`
-          : `This round of "${task.title}" is done.`,
-        {
-          duration: 8000,
-          action: { label: 'Done for good', onClick: () => finishForGood(task) },
-        }
-      );
-    }
-  };
+  const handleToggleComplete = (task: Task) => toggleTaskDone(task, onUpdateTask);
 
-  // Stops a repeating task and keeps it as a completed one-time task (Clear Completed can clear it)
-  const finishForGood = (task: Task) => {
-    onUpdateTask({
-      id: task.id,
-      recurrence_unit: null,
-      recurrence_interval: 1,
-      recurrence_anchor: null,
-      is_completed: true,
-      __silent: true,
-    });
-    playCompletionSound();
-    notify.success(`"${task.title}" is done for good. It won't repeat any more.`);
-  };
+  // A checklist box ticked on a card: saved at once; ticking an unfinished task's last box offers
+  // to mark the task done
+  const handleTickCheck = (task: Task, line: number) =>
+    tickFromCard(
+      task.description || '',
+      line,
+      (description) => onUpdateTask({ id: task.id, description, __silent: true }),
+      task.is_completed ? undefined : () => offerTaskDone(task.title, () => toggleTaskDone({ ...task, is_completed: false }, onUpdateTask))
+    );
 
   const handleCopy = (task: Task) => {
     onCreateTask({
@@ -425,8 +399,8 @@ export const TasksPage = ({
 
   // The cards' buttons, as one object that never changes: the cards can skip redrawing, and each
   // call still reaches the latest handlers
-  const latestHandlers = useRef({ handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask });
-  latestHandlers.current = { handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask };
+  const latestHandlers = useRef({ handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck });
+  latestHandlers.current = { handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck };
   const cardActions = useMemo<TaskCardActions>(() => ({
     cardClick: (task) => latestHandlers.current.handleCardClick(task),
     toggleSelect: (id) => latestHandlers.current.toggle(id),
@@ -437,6 +411,7 @@ export const TasksPage = ({
       playDeleteSound();
       latestHandlers.current.onDeleteTask(task.id);
     },
+    tickCheck: (task, line) => latestHandlers.current.handleTickCheck(task, line),
   }), []);
 
   // Long sections show 25 tasks at a time ("Show more" adds 25); back to 25 when the search,

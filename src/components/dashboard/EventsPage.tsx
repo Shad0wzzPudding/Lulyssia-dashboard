@@ -28,6 +28,8 @@ import { DragReorderList } from './DragReorderList';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { SECTION_PAGE_SIZE, ShowMoreButton } from './ShowMoreButton';
 import { notShownYetNote } from '@/lib/notShownYet';
+import { tickFromCard } from '@/lib/checklistTick';
+import { ChecklistProgress } from './ChecklistProgress';
 import { EventFormDialog, type EventFormHandle } from './EventFormDialog';
 
 interface EventsPageProps {
@@ -185,6 +187,10 @@ export const EventsPage = ({
     setShowDeleteConfirm(false);
   };
 
+  // A checklist box ticked on a card: saved at once
+  const handleTickCheck = (event: Event, line: number) =>
+    tickFromCard(event.description || '', line, (description) => onUpdateEvent({ id: event.id, description, __silent: true }));
+
   const handleCardClick = (event: Event) => {
     if (isSelecting) {
       toggle(event.id);
@@ -278,6 +284,7 @@ export const EventsPage = ({
                   />
                 )}
                 <div className="flex-1 min-w-0">
+                  <ChecklistProgress description={event.description} className="mb-1" />
                   <h4 className="font-semibold text-lg whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}</h4>
                   {/* On phones the badge sits under the title, leaving the title the row's width */}
                   {!isSelecting && <div className="mt-1 sm:hidden">{todayBadge}</div>}
@@ -307,7 +314,7 @@ export const EventsPage = ({
             </div>
             <div className="w-full mt-2">
                     {event.description && (
-                      <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{event.description}</FormattedText></p>
+                      <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText onToggleCheck={(line) => handleTickCheck(event, line)}>{event.description}</FormattedText></p>
                    )}
                   {event.attachments && event.attachments.length > 0 && (
                     <div className="mt-2">
@@ -347,12 +354,15 @@ export const EventsPage = ({
                     className="mt-1"
                   />
                 )}
-                <CardTitle className={`min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] text-${variant === 'past' ? 'base text-muted-foreground' : 'lg'}`}>{event.title}</CardTitle>
+                <div className="min-w-0">
+                  <ChecklistProgress description={event.description} className="mb-1" />
+                  <CardTitle className={`min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] text-${variant === 'past' ? 'base text-muted-foreground' : 'lg'}`}>{event.title}</CardTitle>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-3">
                 {event.description && (
-                  <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText>{event.description}</FormattedText></p>
+                  <p className="w-full text-sm text-muted-foreground whitespace-pre-wrap break-words max-h-32 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}><FormattedText onToggleCheck={(line) => handleTickCheck(event, line)}>{event.description}</FormattedText></p>
                )}
               <AttachmentsImages attachments={event.attachments} />
               <AttachmentsChips attachments={event.attachments} />

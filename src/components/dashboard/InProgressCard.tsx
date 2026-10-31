@@ -3,6 +3,7 @@ import { Hourglass, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsiblePreview } from './CollapsiblePreview';
 import { useTags } from '@/hooks/useTags';
+import { ChecklistProgress } from './ChecklistProgress';
 import type { Attachment } from '@/lib/types';
 
 export type InProgressItem = {
@@ -59,6 +60,7 @@ export const InProgressCard = ({
               aria-label={`${item.title}, ${item.type}, day ${day} of ${days}, ${item.type === 'event' ? 'ends' : 'due'} ${endsToday ? `today, ${format(end, 'HH:mm')}` : format(end, 'EEE d MMM, HH:mm')}`}
               className="absolute inset-0 z-0 cursor-pointer rounded focus-visible:outline-none"
             />
+            <ChecklistProgress description={item.description} />
             <div className="flex items-baseline justify-between gap-2">
               <p className="min-w-0 text-sm font-medium whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {item.title}
