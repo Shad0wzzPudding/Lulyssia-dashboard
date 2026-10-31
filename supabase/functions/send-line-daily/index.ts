@@ -18,6 +18,33 @@ function thDateString(d: Date): string {
   return new Date(d.getTime() + TH_OFFSET_MS).toISOString().split('T')[0];
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** "2026-10-30" → "30 Oct" */
+const shortDate = (day: string) => `${Number(day.slice(8, 10))} ${MONTHS[Number(day.slice(5, 7)) - 1]}`;
+
+/**
+ * Which part of an item falls on `today` (Thai date), like the badges on the app's calendar, and its
+ * time line with the other day's date when that isn't today:
+ * - "Start and end today" · "🕒 08:00 – 18:00"
+ * - "Starts today" · "🕒 today 08:00 – 2 Nov 18:00" (or "🕒 Starts 08:00" without an end)
+ * - "Ends today" / "Due today" · "🕒 30 Oct 08:00 – today 18:00" (or "🕒 Ends 18:00" / "🕒 Due 18:00")
+ */
+function partToday(startIso: string | null, endIso: string | null, today: string, kind: 'event' | 'task') {
+  const startDay = startIso ? thDateString(new Date(startIso)) : null;
+  const endDay = endIso ? thDateString(new Date(endIso)) : null;
+  const start = thTime(startIso);
+  const end = thTime(endIso);
+  const endWord = kind === 'event' ? 'Ends' : 'Due';
+  if (startDay === today && endDay === today) return { label: 'Start and end today', time: `🕒 ${start} – ${end}` };
+  if (startDay === today) {
+    return { label: 'Starts today', time: endDay ? `🕒 today ${start} – ${shortDate(endDay)} ${end}` : `🕒 Starts ${start}` };
+  }
+  if (endDay === today) {
+    return { label: `${endWord} today`, time: startDay ? `🕒 ${shortDate(startDay)} ${start} – today ${end}` : `🕒 ${endWord} ${end}` };
+  }
+  return { label: null, time: timeRange(start, end, kind) };
+}
+
 function thTime(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
@@ -43,11 +70,27 @@ const stickerImage = (name: string): LineMessage => {
 // ---- Morning letter card (LINE Flex Message) ----
 // Built from the shared card pieces in ../_shared/lineCard.ts
 
-type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string; overdue?: boolean };
+type CardItem = { title: string; time: string | null; detail: string | null; tags: string; edge: string; overdue?: boolean; label?: string | null };
 
-/** One event or task: a coloured edge, then its name, time, detail and tags. An overdue task gets a
-    yellow edge and an "⚠️ OVERDUE" chip under its name. */
-const cardItem = ({ title, time, detail, tags, edge, overdue }: CardItem): FlexComponent => ({
+/** A small chip under an item's name: "⚠️ OVERDUE" in yellow, or which part of it is today in cyan. */
+const nameChip = (text: string, color: string): FlexComponent => ({
+  type: 'box',
+  layout: 'horizontal',
+  contents: [{
+    type: 'box',
+    layout: 'vertical',
+    flex: 0,
+    backgroundColor: color,
+    cornerRadius: '4px',
+    paddingStart: '6px',
+    paddingEnd: '6px',
+    contents: [flexText(text, { size: 'xs', weight: 'bold', color: CARD.dark })],
+  }],
+});
+
+/** One event or task: a coloured edge, then its name, chips, time, detail and tags. An overdue task
+    gets a yellow edge and an "⚠️ OVERDUE" chip; `label` ("Ends today"…) gets a cyan chip. */
+const cardItem = ({ title, time, detail, tags, edge, overdue, label }: CardItem): FlexComponent => ({
   type: 'box',
   layout: 'horizontal',
   backgroundColor: CARD.item,
@@ -62,22 +105,8 @@ const cardItem = ({ title, time, detail, tags, edge, overdue }: CardItem): FlexC
       spacing: 'xs',
       contents: [
         flexText(title, { size: 'md', weight: 'bold', color: CARD.ink }),
-        ...(overdue
-          ? [{
-              type: 'box',
-              layout: 'horizontal',
-              contents: [{
-                type: 'box',
-                layout: 'vertical',
-                flex: 0,
-                backgroundColor: CARD.warn,
-                cornerRadius: '4px',
-                paddingStart: '6px',
-                paddingEnd: '6px',
-                contents: [flexText('⚠️ OVERDUE', { size: 'xs', weight: 'bold', color: CARD.dark })],
-              }],
-            }]
-          : []),
+        ...(overdue ? [nameChip('⚠️ OVERDUE', CARD.warn)] : []),
+        ...(label ? [nameChip(label, CARD.neon)] : []),
         ...(time ? [flexText(time, { size: 'sm', color: CARD.muted })] : []),
         ...(detail ? [flexText(detail, { size: 'sm', color: CARD.detail, maxLines: 5 })] : []),
         ...(tags ? [tagChip(tags)] : []),
@@ -377,6 +406,28 @@ Deno.serve(async (req) => {
 
         const todayEvents = (events ?? []).filter((e) => matchesToday(e.start_time, e.deadline));
 
+        // Today's round of a task: a repeating task's start and deadline are worked out for today
+        // (same rule as the app), so its dates are today's round, not the stored first one
+        const roundToday = (t: (typeof openTasks)[number]) => {
+          if (!t.recurrence_unit) return { start: t.start_date, deadline: t.deadline };
+          const now = new Date();
+          const gap = t.start_date && t.deadline ? new Date(t.deadline).getTime() - new Date(t.start_date).getTime() : null;
+          const deadline = deadlineRepeatOn(t, now);
+          if (deadline) {
+            return { start: gap !== null ? new Date(deadline.getTime() - gap).toISOString() : null, deadline: deadline.toISOString() };
+          }
+          const start = startRepeatOn(t, now);
+          return { start: start?.toISOString() ?? null, deadline: start && gap !== null ? new Date(start.getTime() + gap).toISOString() : null };
+        };
+        const eventToday = (e: (typeof todayEvents)[number]) => partToday(e.start_time, e.deadline, today, 'event');
+        const taskToday = (t: (typeof openTasks)[number]) => {
+          const round = roundToday(t);
+          return partToday(round.start, round.deadline, today, 'task');
+        };
+        // The plain-text fallback's time: the card's line without the clock, then the part in brackets
+        const plainWhen = ({ label, time }: { label: string | null; time: string | null }) =>
+          `${time ? time.replace(/^🕒 /, '') : '-'}${label ? ` (${label})` : ''}`;
+
         // Sign-off lines, each with the sticker that follows it
         const toasts = [
           { line: 'Have a wonderful day.', sticker: 'coffee' },
@@ -399,14 +450,12 @@ Deno.serve(async (req) => {
           if (todayEvents.length > 0) {
             lines.push(`📅 Events (${todayEvents.length})`);
             for (const e of todayEvents) {
-              const start = thTime(e.start_time);
-              const due = thTime(e.deadline);
               const tagStr = formatTags(e.tag_ids);
               const detail = formatDetail(e.description);
               lines.push(`Name : ${e.title}`);
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
-              lines.push(`Start time - end: ${start ?? '-'} - ${due ?? '-'}`);
+              lines.push(`Start time - end: ${plainWhen(eventToday(e))}`);
               if (tagStr) lines.push(`🏷 Tag : ${tagStr}`);
               lines.push('');
             }
@@ -414,14 +463,12 @@ Deno.serve(async (req) => {
           if (todayTasks.length > 0) {
             lines.push(`📋 Tasks (${todayTasks.length})`);
             for (const t of todayTasks) {
-              const start = thTime(t.start_date);
-              const due = thTime(t.deadline);
               const tagStr = formatTags(t.tag_ids);
               const detail = formatDetail(t.description);
               lines.push(`Name : ${t.title}${isOverdue(t) ? ' (overdue)' : ''}`);
               lines.push(`Detail :`);
               lines.push(detail ?? '-');
-              lines.push(`Start time - deadline: ${start ?? '-'} - ${due ?? '-'}`);
+              lines.push(`Start time - deadline: ${plainWhen(taskToday(t))}`);
               if (tagStr) lines.push(`🏷 Tag : ${tagStr}`);
               lines.push('');
             }
@@ -434,14 +481,14 @@ Deno.serve(async (req) => {
           date: cardDate(today),
           events: todayEvents.map((e) => ({
             title: e.title,
-            time: timeRange(thTime(e.start_time), thTime(e.deadline), 'event'),
+            ...eventToday(e),
             detail: formatDetail(e.description),
             tags: formatTags(e.tag_ids),
             edge: CARD.cyan,
           })),
           tasks: todayTasks.map((t) => ({
             title: t.title,
-            time: timeRange(thTime(t.start_date), thTime(t.deadline)),
+            ...taskToday(t),
             detail: formatDetail(t.description),
             tags: formatTags(t.tag_ids),
             edge: '#FFFFFF',
