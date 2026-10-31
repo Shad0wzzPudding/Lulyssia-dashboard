@@ -16,7 +16,7 @@ interface FormattedTextProps {
  * A checklist line's box (drawn in place of its "[ ]" / "[x]"). A button when it can be ticked
  * here; the click stays with the box (the card around it isn't clicked).
  */
-const CheckBox = ({ ticked, onToggle }: { ticked: boolean; onToggle?: () => void }) => {
+const CheckBox = ({ ticked, onToggle, name }: { ticked: boolean; onToggle?: () => void; name: string }) => {
   const look = cn(
     'mx-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border align-[-2px] indent-0',
     ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'
@@ -27,7 +27,9 @@ const CheckBox = ({ ticked, onToggle }: { ticked: boolean; onToggle?: () => void
       type="button"
       role="checkbox"
       aria-checked={ticked}
-      aria-label={ticked ? 'Untick' : 'Tick'}
+      // Named by its item (the ticked state is read out from aria-checked), so a screen reader
+      // going from box to box says which item each one is
+      aria-label={name || 'Checklist item'}
       onClick={(e) => {
         e.stopPropagation();
         onToggle();
@@ -82,7 +84,7 @@ const HangingLine = ({ lead, rest, onToggle }: { lead: StyledChar[]; rest: Style
         {box ? (
           <>
             {renderRuns(lead.slice(0, box.at))}
-            <CheckBox ticked={box.ticked} onToggle={onToggle} />
+            <CheckBox ticked={box.ticked} onToggle={onToggle} name={rest.map((c) => c.ch).join('').trim()} />
             {renderRuns(lead.slice(box.at + 3))}
           </>
         ) : renderRuns(lead)}
