@@ -48,6 +48,9 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
   const { toast } = useToast();
   const [link, setLink] = useState<LineLink | null>(null);
   const [loading, setLoading] = useState(true);
+  // The link couldn't be read (e.g. no connection): say so instead of "Sign in", and try again on
+  // coming back to the app
+  const [loadFailed, setLoadFailed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   const [botId, setBotId] = useState<string | null>(null);
@@ -89,12 +92,20 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('line_links')
       .select(LINK_FIELDS)
       .eq('user_id', userId)
       .maybeSingle();
 
+    if (error) {
+      // Not read: don't take it for "no link yet" (that would try to make a new one)
+      console.error('Loading the LINE link failed:', error);
+      setLoadFailed(true);
+      setLoading(false);
+      return;
+    }
+    setLoadFailed(false);
     if (data) {
       // A switch flipped (or a new code made) while this was loading: what was read is older than
       // the screen, so keep the screen
@@ -256,7 +267,11 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : !link ? (
-          <p className="text-sm text-muted-foreground">Sign in to set up LINE messages.</p>
+          <p className="text-sm text-muted-foreground">
+            {loadFailed
+              ? "Couldn't load your LINE settings. Check your connection; it tries again when you come back to the app."
+              : 'Sign in to set up LINE messages.'}
+          </p>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-2">
