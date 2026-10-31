@@ -20,7 +20,7 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `3359d35` Docs : REVIEW.md: send-line-daily and line-webhook deployed with asset version 4
+**Last reviewed:** `72fdf40` Docs : Plan in-progress-and-checklist reviewed with the owner; REVIEW.md waiting list adds the two review fixes
 
 ## Waiting for review
 
@@ -28,12 +28,6 @@ Newest first.
 
 | Commit | What |
 | --- | --- |
-| `d339a65` | Fix : An event with no start time moves to Past Events once its end's day is over (owner review of the 31 Oct cloud review) |
-| `9f266e3` | Fix : Pop-up messages sit above the round menu button, so their own button isn't half under it (owner review, 31 Oct) |
-| `1e772fd` | Fix : A screen reader names each checklist box by its item (cloud review 31 Oct, branch `cloud-review-2026-10-31`) |
-| `cf574d9` | Fix : LINE shows an empty checklist line as a box (needs function deploy: send-line-daily, send-line-reminders, send-line-overdue; cloud review 31 Oct) |
-| `0678f06` | Fix : Quick ticks on a checklist card are all saved (cloud review 31 Oct, branch `cloud-review-2026-10-31`) |
-| `da0ae72` | Fix : Today's Events names the day of a start or end that isn't today (cloud review 31 Oct, branch `cloud-review-2026-10-31`) |
 
 ## Review history
 
@@ -52,3 +46,4 @@ Newest first.
 | 2026-10-30 | `aed71e7..48da2b3` on `main` (2 code commits: `23443fc`, `e240ea1`, plus docs) and the plan wrap-indent build (the 4 `plan/wrap-indent/*` branches: 3 code commits), cloud session | Phase 1: 1 confirmed finding, in the build, fixed in `31c33bf` (indents measured during the windows' opening zoom came out a few pixels short); the bug hunt after it fixed 1 more (`22b039b`, in `23443fc`'s path: the Editor setting stuck on Quick space after a failed read and a failed save), no proposals. Checked: the diffs with the code around them; in a local browser with test data, the editor's keys on the old and new editor (same text after every step) |
 | 2026-10-30 | the 4 commits on the waiting list (`31c33bf`, `22b039b`, `cd2300d`, `b921686`), up to `20750cd` (cloud session, review only) | No new finding. Checked: the diffs with the code around them; tsc, eslint on src, build; in a local browser at 390px the description box (16px text, up to half the screen, toolbar fits) and the new move-back-out button (12 spaces → 6 → 0, then stays) |
 | 2026-10-31 | `20750cd..3359d35` on `main` (4 code commits: `77d409a`, `c04d02f`, `8fe98e3`, `2c237ef`, plus docs) and the plan in-progress-and-checklist build (the 3 `plan/in-progress-and-checklist/*` branches: 7 code commits), cloud session | Phase 1: no finding on `main`; 2 confirmed findings in the build, fixed in `da0ae72` (Today's Events showed a start or end on another day as if it were today) and `0678f06` (quick ticks on a card kept only the last one); the bug hunt after it (11 rounds) fixed 2 more (`cf574d9`, `1e772fd`) and proposed 1 (roadmap.md, "Cloud review (31 Oct 2026)"). Checked: the diffs with the code around them; tsc, eslint; in a local browser with test data, Today's Events times, 3 quick ticks with a slow save, ticks on two cards at once, a failed save, and the build's checklist test |
+| 2026-10-31 | the 6 code commits on the waiting list (`d339a65`, `9f266e3`, `1e772fd`, `cf574d9`, `0678f06`, `da0ae72`), up to `72fdf40` on branch `cloud-review-2026-10-31` (not merged yet), cloud-review run `cloud-review-2026-10-31-late` | Phase 1: no new finding. Checked: tsc, eslint, build, deno check on the 4 LINE functions; the quick-ticks code traced through saves, list reloads and failed saves; Clear Past deletes by ids only, so undated past events are really removed |
