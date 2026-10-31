@@ -248,7 +248,8 @@ export const EventsPage = ({
 
   const getEventStatus = (event: Event) => {
     if (isTodayEvent(event)) return 'today';
-    if (!event.start_time) return 'upcoming';
+    // No start: past once its end's day is over (the Past Events rule), else upcoming
+    if (!event.start_time) return isPastEvent(event) ? 'past' : 'upcoming';
     const eventDate = parseISO(event.start_time);
     if (isAfter(eventDate, now)) return 'upcoming';
     if (isInProgressEvent(event)) return 'in_progress';
