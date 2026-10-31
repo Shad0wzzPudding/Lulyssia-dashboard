@@ -93,9 +93,12 @@ export const EventsPage = ({
   // In progress: started on an earlier day and ends after today, like Home's "In progress..."
   const isInProgressEvent = (event: Event) => runsOn(event) && !isTodayEvent(event);
   // Over: started on an earlier day and ended (its deadline, or its start if it has none, has passed)
-  // on an earlier day
+  // on an earlier day. One with no start is over once its end's day is (it used to stay in Upcoming
+  // for good, and Clear Past never took it).
   const isPastEvent = (event: Event) =>
-    !!event.start_time && isBefore(parseISO(event.start_time), startOfToday) && !runsOn(event) && !isTodayEvent(event);
+    event.start_time
+      ? isBefore(parseISO(event.start_time), startOfToday) && !runsOn(event) && !isTodayEvent(event)
+      : !!event.deadline && isBefore(parseISO(event.deadline), startOfToday);
   const todayEvents = visibleEvents.filter(isTodayEvent);
   // Today's tabs: all of today's events, those that start today, or those that end today
   const [todayTab, setTodayTab] = useState<TodayTab>('all');
@@ -213,7 +216,7 @@ export const EventsPage = ({
     }
   };
 
-  const upcomingEvents = visibleEvents.filter(event => !isTodayEvent(event) && (!event.start_time || isAfter(parseISO(event.start_time), now)));
+  const upcomingEvents = visibleEvents.filter(event => !isTodayEvent(event) && !isPastEvent(event) && (!event.start_time || isAfter(parseISO(event.start_time), now)));
 
   // Long sections show 25 events at a time ("Show more" adds 25); back to 25 when the search,
   // tag filter or sort changes
