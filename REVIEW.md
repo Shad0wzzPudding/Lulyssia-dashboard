@@ -28,6 +28,8 @@ Newest first. Made during the cloud review of 1 Nov (evening), branch `cloud-rev
 
 | Commit | What |
 | --- | --- |
+| `b11ad23` | Fix : A refused unpin slides the Main Focus card back |
+| `1c2f231` | Fix : A double Enter on a Main Focus unpin handle unpins once |
 | `a439793` | Fix : Pasting checklist lines onto a box line adds no empty line, and goes above it from the line's start |
 
 ## Review history

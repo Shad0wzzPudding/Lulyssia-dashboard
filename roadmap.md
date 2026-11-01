@@ -404,6 +404,12 @@ What to do (owner):
 
 ## Cloud review (1 Nov 2026, evening)
 
+Phase 1: the 16 commits waiting in REVIEW.md (the editor's copy/paste and Ctrl+Enter features, and the 13 fixes of the 1 Nov review), 1 bug fixed. Phase 2: 5 rounds, 2 more bugs fixed, no proposals. Nothing to apply or deploy: no migrations, no function changes. Stopped after three clean rounds in a row (Tasks, Events, Home). Covered: the editor, Interests and Home's Main Focus, Tasks, Events, Home; every other area was covered earlier today. The next run is best kept for after new features land. Rounds log: [docs/reviews/2026-11-01-evening-cloud-review.md](docs/reviews/2026-11-01-evening-cloud-review.md).
+
+What to do (owner):
+- [ ] Merge `cloud-review-2026-11-01-evening`
+- [ ] In a description: copy a whole checklist line, put the cursor at the very start of another checklist line and paste: the copied line goes above it, with no empty line
+
 ### Findings
 - [x] Low: Pasting whole checklist lines onto a line that already has a box (`52d3e53`) left an empty line, and ignored a cursor at the line's start. Example: copy the line "[ ] Eggs" with its line break, put the cursor at the very start of "[ ] Milk" (before its box) and paste: the result was Milk, Eggs, an empty line, then Bread, where before that change it was Eggs, Milk, Bread (seen in the browser). Done: a pasted line's own line break is used instead of adding another, and with the cursor at or before the box the pasted lines go above the line; after the box they still go below it, and a line with only its box still takes the pasted text (this commit)
 - [x] Low: Two quick Enters (or a held Enter) on a Main Focus card's unpin handle on Home unpinned it twice: two "Interest updated successfully!" messages and two sounds (seen in the browser, 2 saves). The same double press was fixed on the Recent Changes undo handle in `d392843`. Done: a card already on its way out ignores the second press (this commit)
