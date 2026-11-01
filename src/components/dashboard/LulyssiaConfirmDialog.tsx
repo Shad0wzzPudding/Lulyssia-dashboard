@@ -70,10 +70,14 @@ export const LulyssiaConfirmDialog = ({
   }
   const { names } = useUserNames();
   const justConfirmedRef = useRef(false);
+  // The confirm button stays clickable while the dialog fades out: a double click would run the
+  // action twice (e.g. a second, empty delete saying "0 event(s) deleted"). One confirm per opening.
+  const confirmedRef = useRef(false);
 
   // Play sound when dialog opens
   useEffect(() => {
     if (open) {
+      confirmedRef.current = false;
       playLulyssiaSound();
     }
   }, [open]);
@@ -134,6 +138,8 @@ export const LulyssiaConfirmDialog = ({
           </Button>
           <AlertDialogAction
             onClick={() => {
+              if (confirmedRef.current) return;
+              confirmedRef.current = true;
               justConfirmedRef.current = true;
               handleConfirmClick(onConfirm);
             }}
