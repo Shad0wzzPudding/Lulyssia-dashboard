@@ -824,6 +824,38 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     commitEdit(writeChars([...chars.slice(0, start), ...plainChars(text), ...chars.slice(end)]), start + text.length);
   }, [commitEdit]);
 
+  /**
+   * Copy and cut put the selection on the clipboard as the editor reads it: a checklist box as
+   * "[ ] " / "[x] ", so it pastes back as a box here and stays readable in other apps (the browser's
+   * own copy took the drawn box: "✓" or nothing, plus the invisible anchor). Formatting comes out
+   * plain, as paste takes it.
+   */
+  const copySelection = useCallback((e: React.ClipboardEvent): { chars: StyledChar[]; start: number; end: number } | null => {
+    const el = editorRef.current;
+    if (!el || !selectionInside(el)) return null;
+    const range = getSelectionVisibleRange(el);
+    if (!range) return null;
+    const chars = domChars(el);
+    const start = Math.min(range.start, chars.length);
+    const end = Math.min(Math.max(range.end, start), chars.length);
+    if (start === end) return null;
+    e.preventDefault();
+    e.clipboardData.setData('text/plain', chars.slice(start, end).map((c) => c.ch).join(''));
+    return { chars, start, end };
+  }, []);
+
+  const handleCopy = useCallback((e: React.ClipboardEvent) => {
+    copySelection(e);
+  }, [copySelection]);
+
+  // Cut: the same copy, then the selection goes as one undo step
+  const handleCut = useCallback((e: React.ClipboardEvent) => {
+    const copied = copySelection(e);
+    if (!copied) return;
+    const { chars, start, end } = copied;
+    commitEdit(writeChars([...chars.slice(0, start), ...chars.slice(end)]), start);
+  }, [commitEdit, copySelection]);
+
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-1 flex-wrap">
@@ -938,6 +970,8 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onClick={handleEditorClick}
           aria-describedby={tabMoves ? tabHintId : undefined}
           onPaste={handlePaste}
+          onCopy={handleCopy}
+          onCut={handleCut}
           data-placeholder={placeholder}
           className={cn(
             // Phones: 16px text, or an iPhone zooms the page in when the box is tapped (and a zoomed page
