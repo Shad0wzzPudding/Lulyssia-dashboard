@@ -472,10 +472,14 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
     const currentText = toPlainText(el);
     if (currentText !== value) {
-      const pos = saveCursor(el);
+      // Only an editor being typed in gets its caret back: placing one moves the focus into the
+      // editor, so a form opened on an item with a description started there instead of in its
+      // title (where Tab indents rather than moving on)
+      const focused = document.activeElement === el;
+      const pos = focused ? saveCursor(el) : 0;
       el.innerHTML = toHTML(value);
       applyHangingIndents(el);
-      restoreCursor(el, pos);
+      if (focused) restoreCursor(el, pos);
       // External value replaced the editor contents (e.g. editing a different
       // item) — reset undo history so we don't rewind into unrelated state.
       flushPendingSnapshot();
