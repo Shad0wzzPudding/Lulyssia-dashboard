@@ -70,7 +70,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid grid-cols-[minmax(0,1fr)] auto-rows-min box-border w-[100vw] max-w-lg max-h-[92svh] overflow-y-auto overflow-x-hidden sm:w-full translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-50 grid grid-cols-[minmax(0,1fr)] auto-rows-min box-border w-[100vw] max-w-lg max-h-[calc(92svh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto overflow-x-hidden sm:w-full translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className
       )}
       {...props}
@@ -250,7 +250,9 @@ const ResizableDialogContent = React.forwardRef<
         )}
         style={
           isMobile
-            ? { width: '100vw', maxWidth: '100vw', height: 'auto', maxHeight: '92svh' }
+            ? // In the installed app on iPhone the page runs under the status bar and the home bar: keep
+              // the form between them (centred, so it starts below the status bar even on the tallest)
+              { width: '100vw', maxWidth: '100vw', height: 'auto', maxHeight: 'calc(92svh - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }
             : { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '90vh' }
         }
         {...props}
