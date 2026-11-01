@@ -24,10 +24,13 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 31 Oct (late), branch `cloud-review-2026-10-31-late`. Nobody has reviewed them yet.
+Newest first. The top three are the phone checklist fixes of 1 Nov (branch `fix/phone-checklist-typing`); the rest were made during the cloud review of 31 Oct (late), branch `cloud-review-2026-10-31-late`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `cee3f31` | Fix : Ticking a box in the editor leaves the cursor where it was |
+| `c016cb2` | Fix : A checklist box sits level with its text |
+| `82c830a` | Fix : On a phone, typing works after Check or Enter on a checklist line |
 | `5261785` | Fix : Undo after Clear says "restored!" only once the items are really back (cloud review 31 Oct late) |
 | `506b781` | Fix : A double click on a confirm question's yes button runs its action once (cloud review 31 Oct late) |
 | `af2cf8a` | Fix : Closing the round menu with Escape gives focus back to the menu button (cloud review 31 Oct late) |
