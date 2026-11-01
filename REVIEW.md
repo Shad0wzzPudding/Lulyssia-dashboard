@@ -20,30 +20,15 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `147df67` Docs : REVIEW.md waiting list adds the three phone checklist fixes
+**Last reviewed:** `b1b86fc` Docs : roadmap.md: the owner's iPhone checks of the 1 Nov review passed
 
 ## Waiting for review
 
-Newest first. The top three are the description editor's copy/paste and Ctrl+Enter features of 1 Nov (branch `feat/copy-checkboxes`, made after the cloud review, which didn't look at them); the rest were made during the cloud review of 1 Nov (review only, then the full run), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
+Newest first. Made during the cloud review of 1 Nov (evening), branch `cloud-review-2026-11-01-evening`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
-| `a9ff277` | Feat : Ctrl+Enter ticks a checklist box in the editor, and screen readers hear whether it's ticked |
-| `52d3e53` | Feat : Pasting a checklist line onto a line with a box never makes two boxes |
-| `d2116f3` | Feat : Copy and cut in the description editor keep checklist boxes |
-| `fe8fdef` | Fix : Edit forms open with the focus in the title, also for items with a description |
-| `19def89` | Fix : A long tag name no longer pushes Home's In progress cards past the screen |
-| `743d709` | Fix : Screen readers name each interest's Pin button by its interest |
-| `33ae37f` | Fix : A double click on a card's Delete, Done or Pin runs it once |
-| `d392843` | Fix : A double Enter on a Recent Changes undo handle undoes the change once, and Undo can stop it |
-| `032d0d2` | Fix : The interest form's date box says it's the deadline |
-| `2100e05` | Fix : Pinning several interests says "pinned" only once they're saved |
-| `c8a3915` | Fix : Screen readers name each card's buttons by its item |
-| `a5f1313` | Fix : In the installed app on newer iPhones, tall forms start below the status bar |
-| `489c62b` | Fix : Screen readers name the description box in the forms |
-| `13fac70` | Fix : Screen readers name each volume slider in Settings > Sound |
-| `aad6bfd` | Fix : Pasting text copied from the description editor saves no invisible characters |
-| `1a90e11` | Fix : Offline, the LINE card says it couldn't load instead of "Sign in" |
+| `a439793` | Fix : Pasting checklist lines onto a box line adds no empty line, and goes above it from the line's start |
 
 ## Review history
 
@@ -64,3 +49,4 @@ Newest first. The top three are the description editor's copy/paste and Ctrl+Ent
 | 2026-10-31 | `20750cd..3359d35` on `main` (4 code commits: `77d409a`, `c04d02f`, `8fe98e3`, `2c237ef`, plus docs) and the plan in-progress-and-checklist build (the 3 `plan/in-progress-and-checklist/*` branches: 7 code commits), cloud session | Phase 1: no finding on `main`; 2 confirmed findings in the build, fixed in `da0ae72` (Today's Events showed a start or end on another day as if it were today) and `0678f06` (quick ticks on a card kept only the last one); the bug hunt after it (11 rounds) fixed 2 more (`cf574d9`, `1e772fd`) and proposed 1 (roadmap.md, "Cloud review (31 Oct 2026)"). Checked: the diffs with the code around them; tsc, eslint; in a local browser with test data, Today's Events times, 3 quick ticks with a slow save, ticks on two cards at once, a failed save, and the build's checklist test |
 | 2026-10-31 | the 6 code commits on the waiting list (`d339a65`, `9f266e3`, `1e772fd`, `cf574d9`, `0678f06`, `da0ae72`), up to `72fdf40` on branch `cloud-review-2026-10-31` (not merged yet), cloud-review run `cloud-review-2026-10-31-late` | Phase 1: no new finding. Checked: tsc, eslint, build, deno check on the 4 LINE functions; the quick-ticks code traced through saves, list reloads and failed saves; Clear Past deletes by ids only, so undated past events are really removed |
 | 2026-11-01 | the 11 commits on the waiting list (`b750e2e` … `cee3f31`), up to `147df67` (cloud session, review only) | 2 findings, both fixed: offline the LINE card still said "Sign in" (the sign-in check fails before the link is read), `1a90e11`; copying checklist lines in the editor and pasting saved invisible characters, `aad6bfd`. Checked: the diffs with the code around them; tsc, eslint, build; in a local browser the LINE card with the read and the sign-in check made to fail, copy and paste of checklist lines, ticking a box while typing elsewhere (cursor kept) and Enter/typing/Backspace on a checklist line |
+| 2026-11-01 | the 16 commits on the waiting list (`1a90e11` … `a9ff277`), up to `b1b86fc` (cloud session, evening): the 3 editor features (copy/cut, paste onto a box line, Ctrl+Enter) and the 13 fixes of the 1 Nov cloud review | 1 finding, fixed in `a439793`: pasting a copied checklist line (with its line break) onto a box line left an empty line, and from the line's start the lines went below it. Checked: the diffs; tsc, eslint, build; in a local browser Ctrl+Enter on one and several lines (and Undo), the boxes' names, copy and cut (and Undo) and five paste cases; re-ran the browser checks of the 13 fixes on merged `main` (all still hold) |
