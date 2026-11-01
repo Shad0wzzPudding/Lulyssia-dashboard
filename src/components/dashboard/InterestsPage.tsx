@@ -38,6 +38,8 @@ interface InterestsPageProps {
   onDeleteInterest: (target: DeleteTarget) => void;
   /** Select mode's Delete: all picked items in one go */
   onDeleteInterests: (ids: string[], options?: { onSuccess?: () => void }) => void;
+  /** Select mode's Pin / Unpin: all picked items in one go; the summary shows once it went through */
+  onSetInterestsPinned: (args: { ids: string[]; pinned: boolean }, options?: { onSuccess?: () => void }) => void;
 }
 
 export const InterestsPage = ({ 
@@ -47,6 +49,7 @@ export const InterestsPage = ({
   onReorder,
   onDeleteInterest,
   onDeleteInterests,
+  onSetInterestsPinned,
 }: InterestsPageProps) => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -212,21 +215,22 @@ export const InterestsPage = ({
 
   const handleBatchPin = () => {
     const selected = interests.filter(i => selectedIds.has(i.id) && !i.is_pinned);
-    selected.forEach(interest => {
-      onUpdateInterest({ id: interest.id, is_pinned: true, __silent: true });
-    });
+    // The summary waits for the save: a failure says so instead
+    onSetInterestsPinned(
+      { ids: selected.map((i) => i.id), pinned: true },
+      { onSuccess: () => toast({ title: `${selected.length} interest(s) pinned` }) }
+    );
     playPinSound();
-    toast({ title: `${selected.length} interest(s) pinned` });
     clearSelection();
   };
 
   const handleBatchUnpin = () => {
     const selected = interests.filter(i => selectedIds.has(i.id) && i.is_pinned);
-    selected.forEach(interest => {
-      onUpdateInterest({ id: interest.id, is_pinned: false, __silent: true });
-    });
+    onSetInterestsPinned(
+      { ids: selected.map((i) => i.id), pinned: false },
+      { onSuccess: () => toast({ title: `${selected.length} interest(s) unpinned` }) }
+    );
     playUnpinSound();
-    toast({ title: `${selected.length} interest(s) unpinned` });
     clearSelection();
   };
 

@@ -283,7 +283,7 @@ export const useDashboardData = () => {
     }
   });
 
-  // __silent skips the success toast (used by batch pin/unpin, which shows one summary)
+  // __silent skips the success toast (used by the checklist ticks on cards, which say nothing)
   const updateInterest = useMutation({
     mutationFn: async ({ id, __silent, __form: _form, ...data }: Partial<Interest> & { id: string; __silent?: boolean } & FormSave) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -798,6 +798,26 @@ export const useDashboardData = () => {
   });
 
   const deleteInterests = useBatchDelete('interests', 'interests');
+
+  // Select mode's Pin / Unpin: every picked interest in one request (100 at a time), so the page's
+  // "N interest(s) pinned" can wait for the save instead of showing beside a failure
+  const setInterestsPinned = useMutation({
+    mutationFn: async ({ ids, pinned }: { ids: string[]; pinned: boolean }) => {
+      if (ids.length === 0) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      await inChunks(ids, (chunk) => supabase.from('interests').update({ is_pinned: pinned }).eq('user_id', user.id).in('id', chunk));
+    },
+    onError: (error, { pinned }) => {
+      console.error('Failed to pin interests:', error);
+      toast.error(`Couldn't ${pinned ? 'pin' : 'unpin'} the selected interests. Please try again.`);
+    },
+    // Reload either way: after a failure some chunks may have gone through
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['interests'] });
+      queryClient.invalidateQueries({ queryKey: ['activity_log'] });
+    },
+  });
   const deleteTasks = useBatchDelete('tasks', 'tasks');
   const deleteEvents = useBatchDelete('events', 'events');
 
@@ -821,6 +841,7 @@ export const useDashboardData = () => {
       updateInterest,
       deleteInterest,
       deleteInterests,
+      setInterestsPinned,
       createTask,
       updateTask,
       deleteTask,

@@ -262,6 +262,7 @@ const Index = () => {
             onReorder={mutations.reorderItems.mutate}
             onDeleteInterest={mutations.deleteInterest.mutate}
             onDeleteInterests={mutations.deleteInterests.mutate}
+            onSetInterestsPinned={mutations.setInterestsPinned.mutate}
           />
         );
       case 'tasks':
