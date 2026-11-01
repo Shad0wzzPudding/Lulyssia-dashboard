@@ -921,6 +921,11 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
         <div
           ref={editorRef}
           contentEditable
+          // Named like the plain boxes beside it, by its placeholder ("Description (optional)"):
+          // a screen reader gets nothing from data-placeholder
+          role="textbox"
+          aria-multiline="true"
+          aria-label={placeholder}
           onInput={handleInput}
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
