@@ -86,6 +86,8 @@ export const DraggableInterestCard = ({
   const handleSwipeKey = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
+    // Already on its way out (a second Enter, or a held key): unpin once
+    if (translateXRef.current >= 300) return;
     playUnpinSound();
     updateTranslateX(300);
     setTimeout(() => {
