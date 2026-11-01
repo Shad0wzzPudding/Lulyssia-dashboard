@@ -316,7 +316,7 @@ export const InterestsPage = ({
         )}
         {!isSelecting && (
           <div data-card-actions className="flex items-center gap-2 pt-2 mt-auto">
-            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
+            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={`${interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'}: ${interest.title}`} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
               <PinOff size={12} />
             </Button>
             <Button size="sm" variant="outline" onClick={() => handleCopy(interest)} aria-label={`Copy interest: ${interest.title}`} title="Copy">
@@ -388,7 +388,7 @@ export const InterestsPage = ({
         )}
         {!isSelecting && (
           <div data-card-actions className="flex items-center gap-2 pt-2 mt-auto">
-            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
+            <Button size="sm" variant="outline" onClick={() => handlePin(interest)} aria-label={`${interest.is_pinned ? 'Unpin from Main Focus' : 'Pin to Main Focus'}: ${interest.title}`} title={interest.is_pinned ? 'Unpin' : 'Pin'}>
               <Pin size={12} />
             </Button>
             <Button size="sm" variant="outline" onClick={() => handleCopy(interest)} aria-label={`Copy interest: ${interest.title}`} title="Copy">
