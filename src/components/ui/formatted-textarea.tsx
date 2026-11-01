@@ -37,6 +37,13 @@ const runsHTML = (chars: StyledChar[]): string =>
  * <span data-lead>, so its wrapped rows can line up under its text, as on the cards
  * (applyHangingIndents).
  */
+/**
+ * An invisible character drawn just after every checklist box. A box can't be typed into, and with
+ * nothing after it (an empty checklist line) iPhones had nowhere to put the caret, so typing after
+ * Check or Enter did nothing. It is never read back (domChars skips it) and never saved.
+ */
+const CARET_ANCHOR = '\u200B';
+
 const toHTML = (text: string): string => {
   if (!text) return '';
   const lines: StyledChar[][] = [[]];
@@ -53,7 +60,7 @@ const toHTML = (text: string): string => {
       // the caret after a box is always at the start of its text)
       const box = lineBox(text);
       const leadInner = box
-        ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${runsHTML(line.slice(box.at + 4, lead))}`
+        ? `${runsHTML(line.slice(0, box.at))}${boxHTML(box.ticked)}${CARET_ANCHOR}${runsHTML(line.slice(box.at + 4, lead))}`
         : runsHTML(line.slice(0, lead));
       const leadHTML = lead ? `<span data-lead="">${leadInner}</span>` : '';
       // A ticked checklist line's text: muted and crossed out (only drawn so; not saved as ~~strike~~)
@@ -100,7 +107,7 @@ const domChars = (el: HTMLElement, stripTrailingNewline = true): StyledChar[] =>
   const walk = (node: Node, b: boolean, i: boolean, s: boolean) => {
     if (node.nodeType === Node.TEXT_NODE) {
       // UTF-16 units, matching the caret offsets measured below
-      for (const ch of (node.textContent || '').split('')) out.push({ ch, b, i, s });
+      for (const ch of (node.textContent || '').split('')) if (ch !== CARET_ANCHOR) out.push({ ch, b, i, s });
       return;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -218,9 +225,18 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
   let afterBreak = false;
   const walk = (node: Node): boolean => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent || '';
+      const raw = node.textContent || '';
+      // The anchor after a checklist box isn't a character (domChars skips it)
+      const text = raw.split(CARET_ANCHOR).join('');
       if (pos <= currentPos + text.length) {
-        setCaretAt(sel, node, Math.max(0, pos - currentPos));
+        // The node's offset for that many characters, past any anchor (typing goes after it)
+        let want = Math.max(0, pos - currentPos);
+        let offset = 0;
+        while (offset < raw.length && (want > 0 || raw[offset] === CARET_ANCHOR)) {
+          if (raw[offset] !== CARET_ANCHOR) want--;
+          offset++;
+        }
+        setCaretAt(sel, node, offset);
         return true;
       }
       currentPos += text.length;
@@ -237,7 +253,10 @@ const restoreCursor = (el: HTMLElement, pos: number) => {
         return true;
       }
       if (pos <= currentPos + 4) {
-        setCaretAfterNode(sel, node);
+        // Into the anchor's text after the box, where every browser lets you type
+        const next = node.nextSibling;
+        if (next?.nodeType === Node.TEXT_NODE && next.textContent?.startsWith(CARET_ANCHOR)) setCaretAt(sel, next, 1);
+        else setCaretAfterNode(sel, node);
         return true;
       }
       currentPos += 4;
@@ -693,6 +712,31 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const end = Math.min(Math.max(range.end, start), chars.length);
     const edit = toggleChecklistLines(chars, linesInSelection(chars, start, end));
     commitEdit(writeChars(edit.chars), edit.shift(start), edit.shift(end));
+  }, [commitEdit]);
+
+  // Backspace right after a checklist box takes the box away in one go. Without this, the first
+  // press only deleted the invisible anchor after the box (put back by the next redraw), so the box
+  // could never be deleted. "beforeinput" also covers phone keyboards, which don't report a key.
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const onBeforeInput = (e: InputEvent) => {
+      if (e.inputType !== 'deleteContentBackward') return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || !sel.isCollapsed || !selectionInside(el)) return;
+      const chars = domChars(el);
+      const pos = Math.min(saveCursor(el), chars.length);
+      const lineStart = lineStartOf(chars.slice(0, pos));
+      let lineEnd = pos;
+      while (lineEnd < chars.length && chars[lineEnd].ch !== '\n') lineEnd++;
+      const box = lineBox(chars.slice(lineStart, lineEnd).map((c) => c.ch).join(''));
+      if (!box || pos - lineStart !== box.at + 4) return;
+      e.preventDefault();
+      const at = lineStart + box.at;
+      commitEdit(writeChars([...chars.slice(0, at), ...chars.slice(at + 4)]), at);
+    };
+    el.addEventListener('beforeinput', onBeforeInput);
+    return () => el.removeEventListener('beforeinput', onBeforeInput);
   }, [commitEdit]);
 
   // A click on a checklist box ticks or unticks it (one undo step); the caret goes just after it
