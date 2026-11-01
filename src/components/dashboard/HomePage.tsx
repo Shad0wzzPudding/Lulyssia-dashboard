@@ -213,6 +213,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   const handleActivityLogSwipe = (id: string) => {
     const log = activityLog.find(l => l.id === id);
     if (!log) return;
+    // Already waiting (a second Enter on the handle before the entry left): a second timer would
+    // undo it twice, and the first could no longer be stopped by "Undo"
+    if (undoTimersRef.current.has(id)) return;
     
     // Check if the log entry has the data needed for revert
     const canRevert = (log.action_type === 'created' && log.item_id) ||
