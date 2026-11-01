@@ -113,6 +113,8 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
     setDrawerOpen(next);
   };
   const containerRef = useRef<HTMLDivElement>(null);
+  // The round menu button: Escape gives focus back to it (the focused choice disappears with the menu)
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Props shared by every choice: cursor follows focus, and a mouse hover moves the cursor (with a tick).
   // Touch taps don't move it, so on phones only the page sound plays.
@@ -257,7 +259,10 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
       if (!containerRef.current?.contains(e.target as Node)) closeMenu();
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeMenu();
+      if (e.key === 'Escape') {
+        closeMenu();
+        menuButtonRef.current?.focus({ preventScroll: true });
+      }
       // Up/Down move the cursor (skipped when the drawer already used the key)
       else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.defaultPrevented) {
         e.preventDefault();
@@ -377,6 +382,7 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
 
       {/* Menu toggle, bottom-right corner */}
       <Button
+        ref={menuButtonRef}
         size="icon"
         onClick={(e) => {
           // Opening and closing (X) each play their own sounds; picking a page plays the page sounds instead
