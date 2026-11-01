@@ -739,17 +739,30 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     return () => el.removeEventListener('beforeinput', onBeforeInput);
   }, [commitEdit]);
 
-  // A click on a checklist box ticks or unticks it (one undo step); the caret goes just after it
+  // Where the caret (or selection) was when a box was pressed, before the tap could move it
+  const caretBeforeTickRef = useRef<{ start: number; end: number } | null>(null);
+  const handleEditorPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = editorRef.current;
+    if (!el || !(e.target as HTMLElement).closest('[data-check]')) return;
+    caretBeforeTickRef.current = selectionInside(el) ? getSelectionVisibleRange(el) : null;
+  }, []);
+
+  // A click on a checklist box ticks or unticks it (one undo step). The caret stays where it was
+  // (ticking doesn't change any line's length); with no caret in the editor yet, it goes just after
+  // the box.
   const handleEditorClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = editorRef.current;
     const box = (e.target as HTMLElement).closest('[data-check]');
+    const before = caretBeforeTickRef.current;
+    caretBeforeTickRef.current = null;
     if (!el || !box || !el.contains(box) || !box.parentNode) return;
     e.preventDefault();
     const at = getVisibleOffset(el, box.parentNode, Array.from(box.parentNode.childNodes).indexOf(box as ChildNode));
     const chars = domChars(el);
     if (!chars[at + 1]) return;
     chars[at + 1] = { ...chars[at + 1], ch: chars[at + 1].ch === ' ' ? 'x' : ' ' };
-    commitEdit(writeChars(chars), at + 4);
+    if (before) commitEdit(writeChars(chars), Math.min(before.start, chars.length), Math.min(before.end, chars.length));
+    else commitEdit(writeChars(chars), at + 4);
   }, [commitEdit]);
 
   const insertBullet = useCallback(() => {
@@ -911,6 +924,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
           onKeyDown={handleKeyDown}
+          onPointerDown={handleEditorPointerDown}
           onClick={handleEditorClick}
           aria-describedby={tabMoves ? tabHintId : undefined}
           onPaste={handlePaste}
