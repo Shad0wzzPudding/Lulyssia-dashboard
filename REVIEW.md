@@ -20,25 +20,16 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `72fdf40` Docs : Plan in-progress-and-checklist reviewed with the owner; REVIEW.md waiting list adds the two review fixes
+**Last reviewed:** `147df67` Docs : REVIEW.md waiting list adds the three phone checklist fixes
 
 ## Waiting for review
 
-Newest first. The top three are the phone checklist fixes of 1 Nov (branch `fix/phone-checklist-typing`); the rest were made during the cloud review of 31 Oct (late), branch `cloud-review-2026-10-31-late`. Nobody has reviewed them yet.
+Newest first. Made during the cloud review of 1 Nov (review only), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
-| `cee3f31` | Fix : Ticking a box in the editor leaves the cursor where it was |
-| `c016cb2` | Fix : A checklist box sits level with its text |
-| `82c830a` | Fix : On a phone, typing works after Check or Enter on a checklist line |
-| `5261785` | Fix : Undo after Clear says "restored!" only once the items are really back (cloud review 31 Oct late) |
-| `506b781` | Fix : A double click on a confirm question's yes button runs its action once (cloud review 31 Oct late) |
-| `af2cf8a` | Fix : Closing the round menu with Escape gives focus back to the menu button (cloud review 31 Oct late) |
-| `53b3566` | Fix : Screen readers name each attachment's Remove and preview buttons by their file (cloud review 31 Oct late) |
-| `5f83d33` | Fix : The app's plain messages sit above the round menu button on computers too (cloud review 31 Oct late) |
-| `7e82626` | Fix : An undated event under Past Events is coloured as past, not as upcoming (cloud review 31 Oct late) |
-| `ea65359` | Fix : The LINE card says it couldn't load, instead of "Sign in", when reading the link fails (cloud review 31 Oct late) |
-| `b750e2e` | Fix : A tag's rename box starts from its current name, not the one it had when Settings opened (cloud review 31 Oct late) |
+| `aad6bfd` | Fix : Pasting text copied from the description editor saves no invisible characters |
+| `1a90e11` | Fix : Offline, the LINE card says it couldn't load instead of "Sign in" |
 
 ## Review history
 
@@ -58,3 +49,4 @@ Newest first. The top three are the phone checklist fixes of 1 Nov (branch `fix/
 | 2026-10-30 | the 4 commits on the waiting list (`31c33bf`, `22b039b`, `cd2300d`, `b921686`), up to `20750cd` (cloud session, review only) | No new finding. Checked: the diffs with the code around them; tsc, eslint on src, build; in a local browser at 390px the description box (16px text, up to half the screen, toolbar fits) and the new move-back-out button (12 spaces → 6 → 0, then stays) |
 | 2026-10-31 | `20750cd..3359d35` on `main` (4 code commits: `77d409a`, `c04d02f`, `8fe98e3`, `2c237ef`, plus docs) and the plan in-progress-and-checklist build (the 3 `plan/in-progress-and-checklist/*` branches: 7 code commits), cloud session | Phase 1: no finding on `main`; 2 confirmed findings in the build, fixed in `da0ae72` (Today's Events showed a start or end on another day as if it were today) and `0678f06` (quick ticks on a card kept only the last one); the bug hunt after it (11 rounds) fixed 2 more (`cf574d9`, `1e772fd`) and proposed 1 (roadmap.md, "Cloud review (31 Oct 2026)"). Checked: the diffs with the code around them; tsc, eslint; in a local browser with test data, Today's Events times, 3 quick ticks with a slow save, ticks on two cards at once, a failed save, and the build's checklist test |
 | 2026-10-31 | the 6 code commits on the waiting list (`d339a65`, `9f266e3`, `1e772fd`, `cf574d9`, `0678f06`, `da0ae72`), up to `72fdf40` on branch `cloud-review-2026-10-31` (not merged yet), cloud-review run `cloud-review-2026-10-31-late` | Phase 1: no new finding. Checked: tsc, eslint, build, deno check on the 4 LINE functions; the quick-ticks code traced through saves, list reloads and failed saves; Clear Past deletes by ids only, so undated past events are really removed |
+| 2026-11-01 | the 11 commits on the waiting list (`b750e2e` … `cee3f31`), up to `147df67` (cloud session, review only) | 2 findings, both fixed: offline the LINE card still said "Sign in" (the sign-in check fails before the link is read), `1a90e11`; copying checklist lines in the editor and pasting saved invisible characters, `aad6bfd`. Checked: the diffs with the code around them; tsc, eslint, build; in a local browser the LINE card with the read and the sign-in check made to fail, copy and paste of checklist lines, ticking a box while typing elsewhere (cursor kept) and Enter/typing/Backspace on a checklist line |
