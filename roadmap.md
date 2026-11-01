@@ -364,7 +364,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-31-late`, wh
 
 **What to do (owner).**
 - [x] Merge `cloud-review-2026-10-31-late` into `main` (it contains `cloud-review-2026-10-31`, the plan in-progress-and-checklist build and its review, so merging it alone is enough), then delete the finished branches (done 1 Nov 2026)
-- [ ] Deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue` (from the plan build and the 31 Oct review: checklist boxes in LINE)
+- [x] Deploy `send-line-daily`, `send-line-reminders` and `send-line-overdue` (from the plan build and the 31 Oct review: checklist boxes in LINE) (deployed 1 Nov 2026; live code checked against main)
 - [ ] Nothing new to check by eye from this run beyond a glance: a message no longer overlaps the round menu button on a computer
 
 ### Findings
