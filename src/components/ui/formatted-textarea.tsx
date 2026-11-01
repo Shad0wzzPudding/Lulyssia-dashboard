@@ -868,8 +868,18 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
         commitEdit(writeChars(merged), lineStart + box.at + 4 + rest.length);
         return;
       }
+      // A copied line usually ends with its line break: that break is the one the new line needs,
+      // not an extra empty line
+      const lines = text.endsWith('\n') ? text.slice(0, -1) : text;
+      // The caret at or before the box (the line's start): the pasted lines go above the line, as
+      // they would anywhere else
+      if (start <= lineStart + box.at) {
+        const added = `${lines}\n`;
+        commitEdit(writeChars([...chars.slice(0, lineStart), ...plainChars(added), ...chars.slice(lineStart)]), lineStart + added.length);
+        return;
+      }
       // The line has text too: the pasted lines start on a new line after it
-      const added = `\n${text}`;
+      const added = `\n${lines}`;
       commitEdit(writeChars([...chars.slice(0, lineEnd), ...plainChars(added), ...chars.slice(lineEnd)]), lineEnd + added.length);
       return;
     }
