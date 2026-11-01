@@ -379,7 +379,7 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-31-late`, wh
 
 ## Cloud review (1 Nov 2026)
 
-Phase 1 (review only, earlier the same day): the 11 commits waiting in REVIEW.md, 2 bugs found and fixed. Then two full runs on this branch: 15 rounds, 7 more bugs fixed, 1 proposal waiting (small). Nothing to apply or deploy: no migrations, no function changes. The second run stopped after three clean rounds in a row (search, migrations and access rules, time zones), with every area covered today or in the two runs before. Covered today: all 15 areas, and the angles keyboard and screen readers, access rules and the installed app. The next run can start with the second pass by angle again (long words, double clicks and double Enter, failed saves) once new features land. Rounds log: [docs/reviews/2026-11-01-cloud-review.md](docs/reviews/2026-11-01-cloud-review.md).
+Phase 1 (review only, earlier the same day): the 11 commits waiting in REVIEW.md, 2 bugs found and fixed. Then three full runs on this branch: 23 rounds, 12 more bugs fixed, 1 proposal waiting (small). Nothing to apply or deploy: no migrations, no function changes. The third run went through the angles again (double clicks, failed saves, long words, keyboard only, many items) and stopped after three clean rounds in a row (the drawer with the keyboard, 400 interests, a failed upload). Every area and every angle has been covered today; the next run is best kept for after new features land. Rounds log: [docs/reviews/2026-11-01-cloud-review.md](docs/reviews/2026-11-01-cloud-review.md).
 
 What to do (owner):
 - [ ] Merge `cloud-review-2026-11-01`

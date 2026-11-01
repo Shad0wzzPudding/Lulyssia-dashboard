@@ -44,3 +44,19 @@ today (Recent Changes, select mode and search, migrations, time zones).
 
 Stopped: rounds 13, 14 and 15 found no new bug in a row, each on an area not covered before in this
 second run, and every area was covered today or in the two runs before (31 Oct and 31 Oct late).
+
+## Third run (same day)
+Still nothing new on `main` and this branch not merged, so this run went on here with the second pass
+by angle (every area was covered by the two runs before today's).
+
+- Round 16 (angle: double clicks): double-clicked in the browser every card's Delete and Done on Tasks and the daily list; read the same buttons on Events and Interests and Pin on the interest cards; found 2 fixed (`33ae37f`: each ran twice, with two messages and sounds; `743d709`: the interest cards' Pin button wasn't named by its interest, missed by `c8a3915`)
+- Round 17 (angle: failed and slow saves, Settings): read TagManager.tsx (create, rename), NameSettings.tsx and useTags.ts; traced a refused create (name kept, message), a refused rename (row stays open) and a refused nickname (message, name kept); found no new bug
+- Round 18 (angle: long unbroken words, tags): checked at 320px a web-address tag on every page, in the task form and in Settings' rename row; found 1 fixed (`19def89`: Home's In progress cards grew to 389px and lost their right side)
+- Round 19 (angle: long unbroken words, everything else): checked at 320px web-address titles, descriptions, checklist lines, file names, daily tasks and Recent Changes entries on Home, Home's details window, Tasks, Events, Interests and the delete question; found no new bug
+- Round 20 (angle: keyboard only, forms): walked the task form with the keyboard (open from a pencil, tag picker, Escape twice); found 1 fixed (`fe8fdef`: forms for items with a description opened with the focus in the description). Not counted: closing a form leaves the focus on the page, not on the pencil; that is on purpose (dialog.tsx: returning it would scroll the page back)
+- Round 21 (angle: keyboard only, drawer): opened the drawer with Enter, Tab and the arrows through it, Escape (focus back on the drawer tab), picked Settings with Enter; found no new bug
+- Round 22 (angle: many items, Interests): 400 interests, 30 pinned, with checklists: the page draws all 400 in about a second after the page change, a search takes 0.2 s, Home's Main Focus shows the 30; found no new bug
+- Round 23 (angle: failed saves, attachments): read AttachmentsField.tsx's upload; checked in the browser two files refused by storage while the event form had a changed title (a message per file, title kept, Update and Add file usable), then a retry (added); found no new bug
+
+Stopped: rounds 21, 22 and 23 found no new bug in a row, each on an angle not covered before in this
+third run.

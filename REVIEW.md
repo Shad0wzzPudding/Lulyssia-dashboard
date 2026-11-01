@@ -28,6 +28,10 @@ Newest first. Made during the cloud review of 1 Nov (review only, then the full 
 
 | Commit | What |
 | --- | --- |
+| `fe8fdef` | Fix : Edit forms open with the focus in the title, also for items with a description |
+| `19def89` | Fix : A long tag name no longer pushes Home's In progress cards past the screen |
+| `743d709` | Fix : Screen readers name each interest's Pin button by its interest |
+| `33ae37f` | Fix : A double click on a card's Delete, Done or Pin runs it once |
 | `d392843` | Fix : A double Enter on a Recent Changes undo handle undoes the change once, and Undo can stop it |
 | `032d0d2` | Fix : The interest form's date box says it's the deadline |
 | `2100e05` | Fix : Pinning several interests says "pinned" only once they're saved |
