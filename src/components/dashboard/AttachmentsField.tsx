@@ -187,7 +187,8 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
                   }
                   className={isDisplayed(a) ? 'text-main-focus' : 'text-muted-foreground hover:text-foreground'}
                   title={isDisplayed(a) ? 'Hide inline preview' : 'Show inline preview'}
-                  aria-label="Toggle inline display"
+                  // Named by its file, so a screen reader going from file to file says which one
+                  aria-label={`${isDisplayed(a) ? 'Hide' : 'Show'} preview of ${a.name}`}
                 >
                   {isDisplayed(a) ? <Eye size={12} /> : <EyeOff size={12} />}
                 </button>
@@ -196,7 +197,7 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
                 type="button"
                 onClick={() => handleRemove(a)}
                 className="text-muted-foreground hover:text-destructive"
-                aria-label="Remove"
+                aria-label={`Remove ${a.name}`}
               >
                 <X size={12} />
               </button>
