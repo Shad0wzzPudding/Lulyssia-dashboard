@@ -85,9 +85,15 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
 
   const load = async () => {
     const changesBefore = changesRef.current;
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) {
+      // This asks the server too: offline it fails before the link is read, which is the same
+      // "couldn't load", not "signed out" (no sign-in at all is the only other way to get here)
+      if (userError && userError.name !== 'AuthSessionMissingError') {
+        console.error('Checking the sign-in for the LINE card failed:', userError);
+        setLoadFailed(true);
+      }
       setLoading(false);
       return;
     }
