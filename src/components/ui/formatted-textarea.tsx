@@ -70,9 +70,13 @@ const toHTML = (text: string): string => {
     .join('');
 };
 
-/** A checklist box in the editor: not typed into; clicking it ticks it (see handleEditorClick). */
+/**
+ * A checklist box in the editor: not typed into; clicking it ticks it (see handleEditorClick), and so
+ * does Ctrl+Enter on its line. Screen readers hear "Ticked" / "Not ticked" (the ✓ alone said nothing
+ * useful, and an empty box nothing at all).
+ */
 const boxHTML = (ticked: boolean) =>
-  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="ml-0.5 mr-1.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border relative -top-px align-middle indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
+  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" role="img" aria-label="${ticked ? 'Ticked' : 'Not ticked'}" class="ml-0.5 mr-1.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border relative -top-px align-middle indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
 
 /** The editor's HTML without the measured indents (to compare it with toHTML's). */
 const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');
@@ -640,6 +644,30 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
       return;
     }
 
+    // Ctrl+Enter (⌘+Enter on a Mac): tick or untick the box on the caret's line, or on every selected
+    // line (all ticked when any isn't), the keyboard's way to tick. The caret and selection stay.
+    if (e.key === 'Enter' && mod && !e.shiftKey && !e.altKey && !composing) {
+      e.preventDefault();
+      const el = editorRef.current;
+      const range = el && selectionInside(el) ? getSelectionVisibleRange(el) : null;
+      if (!el || !range) return;
+      const chars = domChars(el);
+      const start = Math.min(range.start, chars.length);
+      const end = Math.min(Math.max(range.end, start), chars.length);
+      const ticks: number[] = [];
+      for (const lineStart of linesInSelection(chars, start, end)) {
+        let lineEnd = lineStart;
+        while (lineEnd < chars.length && chars[lineEnd].ch !== '\n') lineEnd++;
+        const box = lineBox(chars.slice(lineStart, lineEnd).map((c) => c.ch).join(''));
+        if (box) ticks.push(lineStart + box.at + 1);
+      }
+      if (ticks.length === 0) return;
+      const mark = ticks.some((at) => chars[at].ch === ' ') ? 'x' : ' ';
+      for (const at of ticks) chars[at] = { ...chars[at], ch: mark };
+      commitEdit(writeChars(chars), start, end);
+      return;
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault();
       const el = editorRef.current;
@@ -941,7 +969,7 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
           onMouseDown={(e) => e.preventDefault()}
           onClick={toggleChecklist}
           className="h-7 px-2 text-xs gap-1"
-          title="Checklist: a box at the start of the line"
+          title="Checklist: a box at the start of the line (Ctrl+Enter ticks it)"
           aria-label="Checklist: a box at the start of the line"
         >
           <ListChecks size={14} />
