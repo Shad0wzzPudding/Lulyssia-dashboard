@@ -805,8 +805,9 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
-    // Normalize Windows/old-Mac line breaks so no stray \r ends up in the text
-    const text = e.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
+    // Normalize Windows/old-Mac line breaks so no stray \r ends up in the text, and drop the
+    // invisible anchors a copy from this editor carries (one after each checklist box): they'd be saved
+    const text = e.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n').split(CARET_ANCHOR).join('');
     const el = editorRef.current;
     if (!el) return;
 
