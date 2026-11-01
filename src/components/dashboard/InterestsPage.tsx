@@ -472,12 +472,17 @@ export const InterestsPage = ({
                   value={formData.description}
                   onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
                 />
-                <Input
-                  type="datetime-local"
-                  placeholder="Deadline (optional)"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
-                />
+                {/* A date box shows no placeholder (and an empty one on iPhones): say what it is, as the
+                    task and event forms do */}
+                <div className="space-y-2">
+                  <label htmlFor="interest-deadline" className="text-sm font-medium">Deadline <span className="text-muted-foreground">(optional)</span></label>
+                  <Input
+                    id="interest-deadline"
+                    type="datetime-local"
+                    value={formData.deadline}
+                    onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                  />
+                </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Tags</label>
                   <TagPicker
