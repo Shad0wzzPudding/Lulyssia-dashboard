@@ -817,11 +817,36 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
 
     // Replace the selected text (if any); otherwise insert at the caret.
     // Pasted text is plain: any * or ~ in it stays a literal character.
-    const chars = domChars(el);
+    const all = domChars(el);
     const range = selectionInside(el) ? getSelectionVisibleRange(el) : null;
-    const start = Math.min(range?.start ?? chars.length, chars.length);
-    const end = Math.min(Math.max(range?.end ?? start, start), chars.length);
-    commitEdit(writeChars([...chars.slice(0, start), ...plainChars(text), ...chars.slice(end)]), start + text.length);
+    const start = Math.min(range?.start ?? all.length, all.length);
+    const end = Math.min(Math.max(range?.end ?? start, start), all.length);
+    const chars = [...all.slice(0, start), ...all.slice(end)];
+
+    // Pasting a checklist line onto a line that already has a box: never two boxes on one line
+    const pastedBox = lineBox(text.split('\n')[0]);
+    const lineStart = lineStartOf(chars.slice(0, start));
+    let lineEnd = start;
+    while (lineEnd < chars.length && chars[lineEnd].ch !== '\n') lineEnd++;
+    const line = chars.slice(lineStart, lineEnd).map((c) => c.ch).join('');
+    const box = lineBox(line);
+    if (pastedBox && box) {
+      if (!line.slice(box.at + 4).trim()) {
+        // The line has only its box: the pasted line goes after that box instead of bringing its
+        // own, and a ticked pasted box ticks it
+        const rest = text.slice(pastedBox.at + 4);
+        const merged = [...chars.slice(0, lineStart + box.at + 4), ...plainChars(rest), ...chars.slice(lineEnd)];
+        if (pastedBox.ticked) merged[lineStart + box.at + 1] = { ...merged[lineStart + box.at + 1], ch: 'x' };
+        commitEdit(writeChars(merged), lineStart + box.at + 4 + rest.length);
+        return;
+      }
+      // The line has text too: the pasted lines start on a new line after it
+      const added = `\n${text}`;
+      commitEdit(writeChars([...chars.slice(0, lineEnd), ...plainChars(added), ...chars.slice(lineEnd)]), lineEnd + added.length);
+      return;
+    }
+
+    commitEdit(writeChars([...chars.slice(0, start), ...plainChars(text), ...chars.slice(start)]), start + text.length);
   }, [commitEdit]);
 
   /**
