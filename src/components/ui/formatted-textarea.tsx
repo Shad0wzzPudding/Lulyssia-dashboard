@@ -72,7 +72,7 @@ const toHTML = (text: string): string => {
 
 /** A checklist box in the editor: not typed into; clicking it ticks it (see handleEditorClick). */
 const boxHTML = (ticked: boolean) =>
-  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="ml-0.5 mr-1.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border align-[-2px] indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
+  `<span data-check="${ticked ? 'x' : ' '}" contenteditable="false" class="ml-0.5 mr-1.5 inline-flex h-3.5 w-3.5 cursor-pointer select-none items-center justify-center rounded-[3px] border relative -top-px align-middle indent-0 text-[10px] font-bold leading-none ${ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'}">${ticked ? '✓' : ''}</span>`;
 
 /** The editor's HTML without the measured indents (to compare it with toHTML's). */
 const withoutIndents = (html: string) => html.replace(/ style="[^"]*"/g, '');

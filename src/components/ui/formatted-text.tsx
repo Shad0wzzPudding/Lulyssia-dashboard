@@ -18,7 +18,7 @@ interface FormattedTextProps {
  */
 const CheckBox = ({ ticked, onToggle, name }: { ticked: boolean; onToggle?: () => void; name: string }) => {
   const look = cn(
-    'mx-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border align-[-2px] indent-0',
+    'mx-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border relative -top-px align-middle indent-0',
     ticked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/70'
   );
   if (!onToggle) return <span className={look} aria-hidden="true">{ticked && <Check size={10} strokeWidth={3} />}</span>;
