@@ -24,10 +24,13 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 1 Nov (review only, then the full run), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
+Newest first. The top three are the description editor's copy/paste and Ctrl+Enter features of 1 Nov (branch `feat/copy-checkboxes`, made after the cloud review, which didn't look at them); the rest were made during the cloud review of 1 Nov (review only, then the full run), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `a9ff277` | Feat : Ctrl+Enter ticks a checklist box in the editor, and screen readers hear whether it's ticked |
+| `52d3e53` | Feat : Pasting a checklist line onto a line with a box never makes two boxes |
+| `d2116f3` | Feat : Copy and cut in the description editor keep checklist boxes |
 | `fe8fdef` | Fix : Edit forms open with the focus in the title, also for items with a description |
 | `19def89` | Fix : A long tag name no longer pushes Home's In progress cards past the screen |
 | `743d709` | Fix : Screen readers name each interest's Pin button by its interest |
