@@ -274,7 +274,7 @@ const Index = () => {
             onDeleteTask={mutations.deleteTask.mutate}
             onDeleteTasks={mutations.deleteTasks.mutate}
             onClearCompleted={mutations.clearCompletedTasks.mutate}
-            onRestoreTasks={(items) => mutations.restoreClearedItems.mutate({ table: 'tasks', items })}
+            onRestoreTasks={(items, options) => mutations.restoreClearedItems.mutate({ table: 'tasks', items }, options)}
             dailyTasks={dailyTasks}
             dailyTasksStale={dailyTasksStale}
             onCreateDailyTask={mutations.createDailyTask.mutate}
@@ -293,7 +293,7 @@ const Index = () => {
             onDeleteEvent={mutations.deleteEvent.mutate}
             onDeleteEvents={mutations.deleteEvents.mutate}
             onClearPast={mutations.clearPastEvents.mutate}
-            onRestoreEvents={(items) => mutations.restoreClearedItems.mutate({ table: 'events', items })}
+            onRestoreEvents={(items, options) => mutations.restoreClearedItems.mutate({ table: 'events', items }, options)}
           />
         );
       case 'settings':

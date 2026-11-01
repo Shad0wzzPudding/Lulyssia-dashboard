@@ -44,7 +44,8 @@ interface EventsPageProps {
   onDeleteEvents: (ids: string[], options?: { onSuccess?: () => void }) => void;
   /** The options let the page show Undo only once the clear has gone through */
   onClearPast: (ids: string[], options?: { onSuccess?: () => void }) => void;
-  onRestoreEvents: (events: Event[]) => void;
+  /** The options say when the restore went through (its own error message covers a failure) */
+  onRestoreEvents: (events: Event[], options?: { onSuccess?: () => void }) => void;
 }
 
 export const EventsPage = ({ 
@@ -144,14 +145,17 @@ export const EventsPage = ({
 
   const handleUndo = () => {
     // The same events back (same ids, order and dates), not copies
-    onRestoreEvents(clearedEvents);
+    // "Restored" only once it went through: a failed restore has its own message (bring them back
+    // one by one from Recent Changes)
+    onRestoreEvents(clearedEvents, {
+      onSuccess: () => toast({
+        title: "Events restored! 💠",
+        description: "Lulyssia stole them back~",
+      }),
+    });
     setShowUndo(false);
     setClearedEvents([]);
     holdClear();
-    toast({
-      title: "Events restored! 💠",
-      description: "Lulyssia stole them back~",
-    });
   };
 
   const handleEdit = (event: Event) => eventForm.current?.openEdit(event);

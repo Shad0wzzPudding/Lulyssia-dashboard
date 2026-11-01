@@ -47,7 +47,8 @@ interface TasksPageProps {
   onDeleteTasks: (ids: string[], options?: { onSuccess?: () => void }) => void;
   /** The options let the page show Undo only once the clear has gone through */
   onClearCompleted: (ids: string[], options?: { onSuccess?: () => void }) => void;
-  onRestoreTasks: (tasks: Task[]) => void;
+  /** The options say when the restore went through (its own error message covers a failure) */
+  onRestoreTasks: (tasks: Task[], options?: { onSuccess?: () => void }) => void;
   dailyTasks: DailyTask[];
   dailyTasksStale: boolean;
   onCreateDailyTask: (data: Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
@@ -281,14 +282,17 @@ export const TasksPage = ({
 
   const handleUndo = () => {
     // The same tasks back (same ids, order and dates), not copies
-    onRestoreTasks(clearedTasks);
+    // "Restored" only once it went through: a failed restore has its own message (bring them back
+    // one by one from Recent Changes)
+    onRestoreTasks(clearedTasks, {
+      onSuccess: () => toast({
+        title: "Tasks restored! 💠",
+        description: "Lulyssia stole them back~",
+      }),
+    });
     setShowUndo(false);
     setClearedTasks([]);
     holdClear();
-    toast({
-      title: "Tasks restored! 💠",
-      description: "Lulyssia stole them back~",
-    });
   };
 
   // Asked from outside (the "Add Task" shortcut): open the empty new-task form
