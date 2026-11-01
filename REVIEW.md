@@ -28,6 +28,9 @@ Newest first. Made during the cloud review of 1 Nov (review only, then the full 
 
 | Commit | What |
 | --- | --- |
+| `d392843` | Fix : A double Enter on a Recent Changes undo handle undoes the change once, and Undo can stop it |
+| `032d0d2` | Fix : The interest form's date box says it's the deadline |
+| `2100e05` | Fix : Pinning several interests says "pinned" only once they're saved |
 | `c8a3915` | Fix : Screen readers name each card's buttons by its item |
 | `a5f1313` | Fix : In the installed app on newer iPhones, tall forms start below the status bar |
 | `489c62b` | Fix : Screen readers name the description box in the forms |

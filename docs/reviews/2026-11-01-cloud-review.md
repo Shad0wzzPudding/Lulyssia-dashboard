@@ -28,3 +28,19 @@ most code, with fresh eyes (2 Tasks, 11 Data hooks, 1 Home).
 Stopped: rounds 6, 7 and 8 found no new bug in a row, each on an area not covered before in this run,
 and every area was covered in this run or the two before it (31 Oct and 31 Oct late) with no changes
 since, except the editor, covered here.
+
+## Second run (same day)
+`main` hadn't changed and this branch wasn't merged yet, so this run went on here, starting with the
+areas the first run suggested (Interests, Settings, the LINE functions), then the areas not re-read
+today (Recent Changes, select mode and search, migrations, time zones).
+
+- Round 9 (4 Interests): read InterestsPage.tsx in full (form, pin, copy, batch actions) and the interest mutations; checked in the browser select-mode Pin with the save refused, and the form at 390px; found 2 fixed (`2100e05`: "N interest(s) pinned" showed before the save and beside its failure; `032d0d2`: the form's date box had no label)
+- Round 10 (5 Settings): read soundSettings.ts, SoundSettings.tsx and every play function in sounds.ts (each checks its own switch and volume, the cut-in's fallback too); found no new bug
+- Round 11 (12 LINE functions): read line-webhook in full (follow, unfollow, Mark as done, today and its 3-a-day limit, notice, status, the switches, linking); ran the earlier Deno tests against the current webhook and send-line-daily (replies, a failed link, the morning letter's text fallback and marks removed after a failed push), deno check on all 7; found no new bug
+- Round 12 (8 Recent Changes and undo): read SwipeableActivityLogEntry.tsx, Home's undo handling and the undo mutation; checked in the browser two quick Enters on an undo handle; found 1 fixed (`d392843`: two waiting undos, the first one impossible to cancel)
+- Round 13 (7 Select mode, search, sort and filters): read sortAndFilter.ts's search; ran it on edge inputs (quoted phrases with commas, "!" alone, empty parts, a lone quote, words in checklist and bold descriptions); checked the unpin handle on Home for the same double press (it only sends the same unpin twice); found no new bug
+- Round 14 (13 Migrations, access rules and cron): replayed all 60 migrations on a local Postgres (the 6 failures are pg_cron/pg_net, which it lacks); listed every table's rules; as one user tried to move a task into another account, add tasks and Recent Changes entries for another user, undo forged entries that re-create or reorder another user's task, and set up another user's daily list: all refused or without effect; found no new bug
+- Round 15 (15 Time zones and dates): renewed repeating tasks in the local Postgres: monthly on the 31st (to 30 Nov, start kept 2 days before), monthly on the 1st at 05:00 Thai (the day before in UTC: stays on the 1st), on the 31st at 03:00 Thai, yearly on 29 Feb (to 28 Feb 2027); found no new bug
+
+Stopped: rounds 13, 14 and 15 found no new bug in a row, each on an area not covered before in this
+second run, and every area was covered today or in the two runs before (31 Oct and 31 Oct late).
