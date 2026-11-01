@@ -12,7 +12,8 @@ interface DraggableInterestCardProps {
   interest: Interest;
   isCollapsed: boolean;
   onToggleCollapse: (id: string) => void;
-  onUnpin: (interest: Interest) => void;
+  /** Unpins it; `onFailed` runs if the save is refused (the card slides back) */
+  onUnpin: (interest: Interest, onFailed: () => void) => void;
   /** Ticks or unticks a checklist box in the interest's description */
   onTickCheck?: (interest: Interest, line: number) => void;
   index: number;
@@ -74,7 +75,7 @@ export const DraggableInterestCard = ({
       updateTranslateX(300);
       setIsHorizontalDragging(false);
       setTimeout(() => {
-        onUnpin(interest);
+        onUnpin(interest, () => updateTranslateX(0));
       }, 200);
     } else {
       updateTranslateX(0);
@@ -91,7 +92,7 @@ export const DraggableInterestCard = ({
     playUnpinSound();
     updateTranslateX(300);
     setTimeout(() => {
-      onUnpin(interest);
+      onUnpin(interest, () => updateTranslateX(0));
     }, 200);
   };
 

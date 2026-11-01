@@ -81,7 +81,7 @@ interface HomePageProps {
   tasks: Task[];
   events: Event[];
   activityLog: ActivityLog[];
-  onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }) => void;
+  onUpdateInterest?: (data: Partial<Interest> & { id: string; __silent?: boolean }, options?: { onError?: () => void }) => void;
   onDeleteActivityLog?: (id: string) => void;
   onRevertActivityLog?: (log: { id: string; action_type: string; item_type: string; item_id?: string; previous_data?: Record<string, unknown> }) => void;
   // Saving from the edit forms opened on Home (the same as the Tasks and Events pages)
@@ -1115,7 +1115,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     interest={interest}
                     isCollapsed={collapsedInterests.has(interest.id)}
                     onToggleCollapse={toggleInterestCollapse}
-                    onUnpin={(i) => onUpdateInterest({ id: i.id, is_pinned: false })}
+                    onUnpin={(i, failed) => onUpdateInterest({ id: i.id, is_pinned: false }, { onError: failed })}
                     onTickCheck={tickInterest}
                     index={index}
                     onDragStart={handleInterestDragStart}
