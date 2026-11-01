@@ -383,8 +383,8 @@ Phase 1 (review only, earlier the same day): the 11 commits waiting in REVIEW.md
 
 What to do (owner):
 - [x] Merge `cloud-review-2026-11-01` (1 Nov, with `feat/copy-checkboxes` after it)
-- [ ] On the iPhone: in a description, copy a checklist line and paste it; after Update the card shows the same text (no change you can see, the invisible characters are just gone)
-- [ ] On the iPhone app (the Dynamic Island models): open a task with a long description: the title and the X sit below the status bar
+- [x] On the iPhone: in a description, copy a checklist line and paste it; after Update the card shows the same text (no change you can see, the invisible characters are just gone)
+- [x] On the iPhone app (the Dynamic Island models): open a task with a long description: the title and the X sit below the status bar
 - [x] Decide the proposal below (ticking editor boxes from the keyboard): (a), done in `a9ff277`
 
 ### Findings
