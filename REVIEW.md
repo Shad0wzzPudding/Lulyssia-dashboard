@@ -24,10 +24,18 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first.
+Newest first. Made during the cloud review of 31 Oct (late), branch `cloud-review-2026-10-31-late`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `5261785` | Fix : Undo after Clear says "restored!" only once the items are really back (cloud review 31 Oct late) |
+| `506b781` | Fix : A double click on a confirm question's yes button runs its action once (cloud review 31 Oct late) |
+| `af2cf8a` | Fix : Closing the round menu with Escape gives focus back to the menu button (cloud review 31 Oct late) |
+| `53b3566` | Fix : Screen readers name each attachment's Remove and preview buttons by their file (cloud review 31 Oct late) |
+| `5f83d33` | Fix : The app's plain messages sit above the round menu button on computers too (cloud review 31 Oct late) |
+| `7e82626` | Fix : An undated event under Past Events is coloured as past, not as upcoming (cloud review 31 Oct late) |
+| `ea65359` | Fix : The LINE card says it couldn't load, instead of "Sign in", when reading the link fails (cloud review 31 Oct late) |
+| `b750e2e` | Fix : A tag's rename box starts from its current name, not the one it had when Settings opened (cloud review 31 Oct late) |
 
 ## Review history
 
