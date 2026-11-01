@@ -21,6 +21,7 @@ import { AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
+import { useRepeatGuard } from '@/hooks/useRepeatGuard';
 import { useBriefHold } from '@/hooks/useBriefHold';
 import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
@@ -59,6 +60,8 @@ export const EventsPage = ({
   onRestoreEvents
 }: EventsPageProps) => {
   const { toast } = useToast();
+  // A double click on Delete runs it once
+  const once = useRepeatGuard();
   // The add/edit form (shared with Home)
   const eventForm = useRef<EventFormHandle>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -325,7 +328,7 @@ export const EventsPage = ({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    onClick={() => { playDeleteSound(); onDeleteEvent(event.id); }}
+                    onClick={() => { if (!once(`${event.id}:delete`)) return; playDeleteSound(); onDeleteEvent(event.id); }}
                     aria-label={`Delete event: ${event.title}`}
                     title="Delete"
                     className="text-destructive hover:text-destructive"
@@ -418,7 +421,7 @@ export const EventsPage = ({
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    onClick={() => { playDeleteSound(); onDeleteEvent(event.id); }}
+                    onClick={() => { if (!once(`${event.id}:delete`)) return; playDeleteSound(); onDeleteEvent(event.id); }}
                     aria-label={`Delete event: ${event.title}`}
                     title="Delete"
                     className="text-destructive hover:text-destructive"

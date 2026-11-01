@@ -26,6 +26,7 @@ import { AttachmentsField, AttachmentsChips, AttachmentsImages } from './Attachm
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
+import { useRepeatGuard } from '@/hooks/useRepeatGuard';
 import { useTags } from '@/hooks/useTags';
 import { DragReorderList } from './DragReorderList';
 import { refuseSaveOffline } from '@/lib/formSave';
@@ -52,6 +53,8 @@ export const InterestsPage = ({
   onSetInterestsPinned,
 }: InterestsPageProps) => {
   const { toast } = useToast();
+  // A double click on Delete or Pin runs it once
+  const once = useRepeatGuard();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   // A file still uploading: saving waits, or the item would be saved without it
   const [uploading, setUploading] = useState(false);
@@ -153,6 +156,7 @@ export const InterestsPage = ({
   };
 
   const handlePin = (interest: Interest) => {
+    if (!once(`${interest.id}:${interest.is_pinned ? 'unpin' : 'pin'}`)) return;
     if (interest.is_pinned) {
       playUnpinSound();
     } else {
@@ -324,7 +328,7 @@ export const InterestsPage = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { playDeleteSound(); onDeleteInterest(interest.id); }}
+              onClick={() => { if (!once(`${interest.id}:delete`)) return; playDeleteSound(); onDeleteInterest(interest.id); }}
               aria-label={`Delete interest: ${interest.title}`}
               title="Delete"
               className="text-destructive hover:text-destructive"
@@ -396,7 +400,7 @@ export const InterestsPage = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { playDeleteSound(); onDeleteInterest(interest.id); }}
+              onClick={() => { if (!once(`${interest.id}:delete`)) return; playDeleteSound(); onDeleteInterest(interest.id); }}
               aria-label={`Delete interest: ${interest.title}`}
               title="Delete"
               className="text-destructive hover:text-destructive"

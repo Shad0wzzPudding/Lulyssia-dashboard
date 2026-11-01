@@ -21,6 +21,7 @@ import { AttachmentsChips, AttachmentsImages } from './AttachmentsField';
 import { SortAndFilterBar } from './SortAndFilterBar';
 import { type SortOption, sortItems, filterByTags, searchItems } from '@/lib/sortAndFilter';
 import { useSortPreference } from '@/hooks/useSortPreference';
+import { useRepeatGuard } from '@/hooks/useRepeatGuard';
 import { useBriefHold } from '@/hooks/useBriefHold';
 import { HoldButton } from './HoldButton';
 import { useTags } from '@/hooks/useTags';
@@ -303,7 +304,11 @@ export const TasksPage = ({
 
   const handleEdit = (task: Task) => taskForm.current?.openEdit(task);
 
-  const handleToggleComplete = (task: Task) => toggleTaskDone(task, onUpdateTask);
+  // A double click on Done or Delete runs it once
+  const once = useRepeatGuard();
+  const handleToggleComplete = (task: Task) => {
+    if (once(`${task.id}:${task.is_completed ? 'undone' : 'done'}`)) toggleTaskDone(task, onUpdateTask);
+  };
 
   const tickCard = useChecklistTick();
   // A checklist box ticked on a card: saved at once; ticking an unfinished task's last box offers
@@ -421,8 +426,8 @@ export const TasksPage = ({
 
   // The cards' buttons, as one object that never changes: the cards can skip redrawing, and each
   // call still reaches the latest handlers
-  const latestHandlers = useRef({ handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck });
-  latestHandlers.current = { handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck };
+  const latestHandlers = useRef({ handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck, once });
+  latestHandlers.current = { handleCardClick, toggle, handleToggleComplete, handleCopy, handleEdit, onDeleteTask, handleTickCheck, once };
   const cardActions = useMemo<TaskCardActions>(() => ({
     cardClick: (task) => latestHandlers.current.handleCardClick(task),
     toggleSelect: (id) => latestHandlers.current.toggle(id),
@@ -430,6 +435,7 @@ export const TasksPage = ({
     copy: (task) => latestHandlers.current.handleCopy(task),
     edit: (task) => latestHandlers.current.handleEdit(task),
     remove: (task) => {
+      if (!latestHandlers.current.once(`${task.id}:delete`)) return;
       playDeleteSound();
       latestHandlers.current.onDeleteTask(task.id);
     },

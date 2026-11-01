@@ -20,6 +20,7 @@ import {
   playExpandSound,
   playUpdateSound,
 } from '@/lib/sounds';
+import { useRepeatGuard } from '@/hooks/useRepeatGuard';
 
 type NewDailyTask = Omit<DailyTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'task_date'>;
 
@@ -114,9 +115,12 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
     });
   };
 
+  // A double click on a task's tick or Delete runs it once
+  const once = useRepeatGuard();
   const handleToggle = (task: DailyTask) => {
     if (stale) return;
     const completing = !task.is_completed;
+    if (!once(`${task.id}:${completing ? 'done' : 'undone'}`)) return;
     onUpdate({ id: task.id, is_completed: completing, __silent: true });
     if (completing) playCompletionSound(); else playUpdateSound();
   };
@@ -238,7 +242,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => { playDeleteSound(); onDelete(task.id); }}
+                        onClick={() => { if (!once(`${task.id}:delete`)) return; playDeleteSound(); onDelete(task.id); }}
                         disabled={stale}
                         className="text-destructive hover:text-destructive"
                         aria-label={`Delete daily task: ${task.title}`}
