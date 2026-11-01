@@ -24,10 +24,14 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 1 Nov (review only), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
+Newest first. Made during the cloud review of 1 Nov (review only, then the full run), branch `cloud-review-2026-11-01`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `c8a3915` | Fix : Screen readers name each card's buttons by its item |
+| `a5f1313` | Fix : In the installed app on newer iPhones, tall forms start below the status bar |
+| `489c62b` | Fix : Screen readers name the description box in the forms |
+| `13fac70` | Fix : Screen readers name each volume slider in Settings > Sound |
 | `aad6bfd` | Fix : Pasting text copied from the description editor saves no invisible characters |
 | `1a90e11` | Fix : Offline, the LINE card says it couldn't load instead of "Sign in" |
 

@@ -379,11 +379,13 @@ Unattended review (`/cloud-review`) on branch `cloud-review-2026-10-31-late`, wh
 
 ## Cloud review (1 Nov 2026)
 
-Review only: the 11 commits waiting in REVIEW.md (the 31 Oct late review's fixes and the three phone checklist fixes). 2 bugs found, both fixed; no proposals. Nothing to apply or deploy: no migrations, no function changes.
+Phase 1 (review only, earlier the same day): the 11 commits waiting in REVIEW.md, 2 bugs found and fixed. Then the full run: 8 rounds, 4 more bugs fixed, 1 proposal waiting (small). Nothing to apply or deploy: no migrations, no function changes. Stopped after three clean rounds in a row (data hooks, Home, Events), with every area covered in this run or the two before it. Covered: the editor, then the angles keyboard and screen readers, access rules and the installed app, then Tasks, the data hooks, Home and Events with fresh eyes. The next run can start with the areas with the most code not re-read this time (Interests, Settings, the LINE functions) or the angles again after new features. Rounds log: [docs/reviews/2026-11-01-cloud-review.md](docs/reviews/2026-11-01-cloud-review.md).
 
 What to do (owner):
 - [ ] Merge `cloud-review-2026-11-01`
 - [ ] On the iPhone: in a description, copy a checklist line and paste it; after Update the card shows the same text (no change you can see, the invisible characters are just gone)
+- [ ] On the iPhone app (the Dynamic Island models): open a task with a long description: the title and the X sit below the status bar
+- [ ] Decide the proposal below (ticking editor boxes from the keyboard)
 
 ### Findings
 - [x] Low: Fully offline, the LINE card in Settings still said "Sign in to set up LINE messages." `ea65359` made a failed read of the LINE link say it couldn't load, but before that read the card asks the server who is signed in, and offline that fails first, which the card took for "signed out". Example: open the app, lose the connection, open Settings: "Sign in to set up LINE messages." (seen in the browser with the sign-in check made to fail). Done: a failed sign-in check shows the same "Couldn't load your LINE settings…" message, and coming back to the app loads it as usual (this commit)
