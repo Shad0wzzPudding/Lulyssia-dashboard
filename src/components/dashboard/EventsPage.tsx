@@ -316,17 +316,17 @@ export const EventsPage = ({
               {!isSelecting && (
                 <div data-card-actions className="flex items-center gap-2 shrink-0">
                   <div className="hidden sm:block">{todayBadge}</div>
-                  <Button size="sm" variant="outline" onClick={() => handleCopy(event)} aria-label="Copy event" title="Copy">
+                  <Button size="sm" variant="outline" onClick={() => handleCopy(event)} aria-label={`Copy event: ${event.title}`} title="Copy">
                     <Copy size={12} />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(event)} aria-label="Edit event" title="Edit">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(event)} aria-label={`Edit event: ${event.title}`} title="Edit">
                     <Edit size={12} />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     onClick={() => { playDeleteSound(); onDeleteEvent(event.id); }}
-                    aria-label="Delete event"
+                    aria-label={`Delete event: ${event.title}`}
                     title="Delete"
                     className="text-destructive hover:text-destructive"
                   >
@@ -409,17 +409,17 @@ export const EventsPage = ({
               )}
               {!isSelecting && (
                 <div data-card-actions className="flex items-center gap-2 pt-2 mt-auto">
-                  <Button size="sm" variant="outline" onClick={() => handleCopy(event)} aria-label="Copy event" title="Copy">
+                  <Button size="sm" variant="outline" onClick={() => handleCopy(event)} aria-label={`Copy event: ${event.title}`} title="Copy">
                     <Copy size={12} />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(event)} aria-label="Edit event" title="Edit">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(event)} aria-label={`Edit event: ${event.title}`} title="Edit">
                     <Edit size={12} />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     onClick={() => { playDeleteSound(); onDeleteEvent(event.id); }}
-                    aria-label="Delete event"
+                    aria-label={`Delete event: ${event.title}`}
                     title="Delete"
                     className="text-destructive hover:text-destructive"
                   >

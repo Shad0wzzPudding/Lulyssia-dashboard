@@ -206,7 +206,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
                         onClick={() => handleToggle(task)}
                         disabled={stale}
                         className="mt-0.5 p-0 h-6 w-6"
-                        aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
+                        aria-label={`${task.is_completed ? 'Mark as not done' : 'Mark as done'}: ${task.title}`}
                       >
                         {task.is_completed ? (
                           <CheckCircle2 size={20} className="text-emerald-400" />
@@ -232,7 +232,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(task)} disabled={stale} aria-label="Edit daily task">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(task)} disabled={stale} aria-label={`Edit daily task: ${task.title}`}>
                         <Edit size={12} />
                       </Button>
                       <Button
@@ -241,7 +241,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
                         onClick={() => { playDeleteSound(); onDelete(task.id); }}
                         disabled={stale}
                         className="text-destructive hover:text-destructive"
-                        aria-label="Delete daily task"
+                        aria-label={`Delete daily task: ${task.title}`}
                       >
                         <Trash2 size={12} />
                       </Button>

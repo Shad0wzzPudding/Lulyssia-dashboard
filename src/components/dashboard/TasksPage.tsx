@@ -131,7 +131,7 @@ const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, sele
                 size="sm"
                 variant="ghost"
                 onClick={() => actions.toggleComplete(task)}
-                aria-label={task.is_completed ? 'Mark as not done' : 'Mark as done'}
+                aria-label={`${task.is_completed ? 'Mark as not done' : 'Mark as done'}: ${task.title}`}
                 className="mt-1 p-0 h-6 w-6"
               >
                  {task.is_completed ? 
@@ -152,17 +152,17 @@ const TaskCard = memo(function TaskCard({ task, badge, status, isSelecting, sele
           {!isSelecting && (
             <div data-card-actions className="flex items-center gap-2 shrink-0">
               {badgeEl && <div className="hidden sm:block">{badgeEl}</div>}
-              <Button size="sm" variant="outline" onClick={() => actions.copy(task)} aria-label="Copy task" title="Copy">
+              <Button size="sm" variant="outline" onClick={() => actions.copy(task)} aria-label={`Copy task: ${task.title}`} title="Copy">
                 <Copy size={12} />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => actions.edit(task)} aria-label="Edit task" title="Edit">
+              <Button size="sm" variant="outline" onClick={() => actions.edit(task)} aria-label={`Edit task: ${task.title}`} title="Edit">
                 <Edit size={12} />
               </Button>
               <Button 
                 size="sm" 
                 variant="outline" 
                 onClick={() => actions.remove(task)}
-                aria-label="Delete task"
+                aria-label={`Delete task: ${task.title}`}
                 title="Delete"
                 className="text-destructive hover:text-destructive"
               >
