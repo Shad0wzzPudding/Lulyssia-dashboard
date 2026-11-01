@@ -107,7 +107,8 @@ export const InProgressCard = ({
             {names.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {names.map((name) => (
-                  <span key={name} className="rounded border border-primary/35 bg-primary/10 px-1.5 text-[11px] text-primary">
+                  // A long one-word name (a web address) breaks inside the word instead of widening the card
+                  <span key={name} className="max-w-full rounded border border-primary/35 bg-primary/10 px-1.5 text-[11px] text-primary [overflow-wrap:anywhere]">
                     🏷 {name}
                   </span>
                 ))}
