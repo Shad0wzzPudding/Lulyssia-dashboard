@@ -20,15 +20,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `c47b9ed` Docs : REVIEW.md waiting list and the review summary add the two decided proposals
+**Last reviewed:** `d808285` Docs : REVIEW.md: the 2 Nov review's 3 commits reviewed, 1 fix
 
 ## Waiting for review
 
-Newest first. Made while reviewing the 2 Nov commits (local session). Nobody has reviewed it yet.
-
-| Commit | What |
-| --- | --- |
-| `450cb19` | Fix : A page picked from the drawer keeps the focus on its heading with transitions off |
+Nothing waiting.
 
 ## Review history
 
@@ -52,3 +48,4 @@ Newest first. Made while reviewing the 2 Nov commits (local session). Nobody has
 | 2026-11-01 | the 16 commits on the waiting list (`1a90e11` … `a9ff277`), up to `b1b86fc` (cloud session, evening): the 3 editor features (copy/cut, paste onto a box line, Ctrl+Enter) and the 13 fixes of the 1 Nov cloud review | 1 finding, fixed in `a439793`: pasting a copied checklist line (with its line break) onto a box line left an empty line, and from the line's start the lines went below it. Checked: the diffs; tsc, eslint, build; in a local browser Ctrl+Enter on one and several lines (and Undo), the boxes' names, copy and cut (and Undo) and five paste cases; re-ran the browser checks of the 13 fixes on merged `main` (all still hold) |
 | 2026-11-02 | `b1b86fc..f6913d7` (4 code commits: `a439793`, `1c2f231`, `b11ad23`, `3413919`, plus docs; local session) | No new finding. Checked: the diffs with the code around them (the unpin's failure callback reaches the save through `updateInterest.mutate`; a held Enter is ignored once the card is sliding out; pasting above a box line with a selection; the Shift+Down selection only snaps back when it ends right after a box on a later line) |
 | 2026-11-02 | `f6913d7..c47b9ed` (3 code commits: `b30b327`, `5fcf3e6`, `7544f81`, plus docs; local session, asked by the owner before merging) | 1 finding fixed (`450cb19`: with page transitions off, the drawer handed focus back to its button after a page was picked), plus a misplaced comment moved. Checked: the diffs with the code around them; in the browser the menu and drawer with the keyboard, transitions on and off, Escape |
+| 2026-11-02 | `c47b9ed..d808285` (1 code commit: `450cb19`, plus docs; local session, asked by the owner) | No new finding. Checked: the diff with the code around it: the drawer only skips handing focus back after a new page was picked (Escape, a click outside, picking the open page and the LINE slab still hand it back), and the flag is cleared on the next close. Not counted: a page picked from the drawer during the ~1 s page transition is ignored by Index (as before), and the drawer would then not hand focus back; reaching the drawer with the keyboard within that second wasn't shown to happen |
