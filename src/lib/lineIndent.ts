@@ -4,6 +4,7 @@
  * the description looks the same everywhere it's shown.
  */
 import { plainChars, type StyledChar } from './inlineFormat';
+import { lineBox } from './checklist';
 
 /** One tab = 6 spaces */
 export const TAB_SPACES = 6;
@@ -24,13 +25,19 @@ export const linesInSelection = (chars: StyledChar[], start: number, end: number
   return starts;
 };
 
-/** True when the selection covers exactly one whole line (its line break may or may not be included). */
+/**
+ * True when the selection covers exactly one whole line (its line break may or may not be included).
+ * On a checklist line, a selection starting right after the box (where a triple click or the line's
+ * text starts) covers the whole line too: the box can't be selected on its own.
+ */
 export const isWholeLine = (chars: StyledChar[], start: number, end: number): boolean => {
   if (end <= start) return false;
   const lines = linesInSelection(chars, start, end);
-  if (lines.length !== 1 || start !== lines[0]) return false;
-  let lineEnd = start;
+  if (lines.length !== 1) return false;
+  let lineEnd = lines[0];
   while (lineEnd < chars.length && chars[lineEnd].ch !== '\n') lineEnd++;
+  const box = lineBox(chars.slice(lines[0], lineEnd).map((c) => c.ch).join(''));
+  if (start !== lines[0] && !(box && start === lines[0] + box.at + 4)) return false;
   return end === lineEnd || end === lineEnd + 1;
 };
 
