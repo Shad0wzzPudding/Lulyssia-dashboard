@@ -20,17 +20,15 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `f6913d7` Docs : REVIEW.md waiting list adds the Shift+Down checklist selection fix
+**Last reviewed:** `c47b9ed` Docs : REVIEW.md waiting list and the review summary add the two decided proposals
 
 ## Waiting for review
 
-Newest first. Made during the review of 2 Nov 2026 (branch `cloud-review-2026-11-02`): one fix, then the owner's two decided proposals. Nobody has reviewed them yet.
+Newest first. Made while reviewing the 2 Nov commits (local session). Nobody has reviewed it yet.
 
 | Commit | What |
 | --- | --- |
-| `7544f81` | Fix : A page picked from the menu puts keyboard focus on its heading |
-| `5fcf3e6` | Fix : A checklist line selected with Shift+Up copies with its box, as with Shift+Down |
-| `b30b327` | Fix : Space on a whole selected checklist line adds a space instead of wiping its text |
+| `450cb19` | Fix : A page picked from the drawer keeps the focus on its heading with transitions off |
 
 ## Review history
 
@@ -53,3 +51,4 @@ Newest first. Made during the review of 2 Nov 2026 (branch `cloud-review-2026-11
 | 2026-11-01 | the 11 commits on the waiting list (`b750e2e` … `cee3f31`), up to `147df67` (cloud session, review only) | 2 findings, both fixed: offline the LINE card still said "Sign in" (the sign-in check fails before the link is read), `1a90e11`; copying checklist lines in the editor and pasting saved invisible characters, `aad6bfd`. Checked: the diffs with the code around them; tsc, eslint, build; in a local browser the LINE card with the read and the sign-in check made to fail, copy and paste of checklist lines, ticking a box while typing elsewhere (cursor kept) and Enter/typing/Backspace on a checklist line |
 | 2026-11-01 | the 16 commits on the waiting list (`1a90e11` … `a9ff277`), up to `b1b86fc` (cloud session, evening): the 3 editor features (copy/cut, paste onto a box line, Ctrl+Enter) and the 13 fixes of the 1 Nov cloud review | 1 finding, fixed in `a439793`: pasting a copied checklist line (with its line break) onto a box line left an empty line, and from the line's start the lines went below it. Checked: the diffs; tsc, eslint, build; in a local browser Ctrl+Enter on one and several lines (and Undo), the boxes' names, copy and cut (and Undo) and five paste cases; re-ran the browser checks of the 13 fixes on merged `main` (all still hold) |
 | 2026-11-02 | `b1b86fc..f6913d7` (4 code commits: `a439793`, `1c2f231`, `b11ad23`, `3413919`, plus docs; local session) | No new finding. Checked: the diffs with the code around them (the unpin's failure callback reaches the save through `updateInterest.mutate`; a held Enter is ignored once the card is sliding out; pasting above a box line with a selection; the Shift+Down selection only snaps back when it ends right after a box on a later line) |
+| 2026-11-02 | `f6913d7..c47b9ed` (3 code commits: `b30b327`, `5fcf3e6`, `7544f81`, plus docs; local session, asked by the owner before merging) | 1 finding fixed (`450cb19`: with page transitions off, the drawer handed focus back to its button after a page was picked), plus a misplaced comment moved. Checked: the diffs with the code around them; in the browser the menu and drawer with the keyboard, transitions on and off, Escape |
