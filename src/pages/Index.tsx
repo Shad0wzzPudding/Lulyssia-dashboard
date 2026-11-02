@@ -80,8 +80,6 @@ const Index = () => {
   const pendingPage = useRef<NavigationPage | null>(null);
   // Set (a new number each time) when the Tasks page should open the new-task form
   const [newTaskRequest, setNewTaskRequest] = useState<number | null>(null);
-  // A new page always opens at the top (instant, not the smooth scroll-to-top button). Any page
-  // change lets go of the "Add Task" request, or coming back to Tasks would open the form again.
   const mainRef = useRef<HTMLElement>(null);
   // Set when a page is picked from the menu or drawer: once it's shown, keyboard focus moves to its
   // heading, so the next Tab continues in the new page and screen readers say which page opened
@@ -94,6 +92,8 @@ const Index = () => {
     if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
     heading.focus({ preventScroll: true });
   }, [activePage]);
+  // A new page always opens at the top (instant, not the smooth scroll-to-top button). Any page
+  // change lets go of the "Add Task" request, or coming back to Tasks would open the form again.
   const showPage = (page: NavigationPage) => {
     setActivePage(page);
     setNewTaskRequest(null);

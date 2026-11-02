@@ -285,10 +285,14 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
     setDrawerOpen(false);
   };
 
+  // A new page picked from the drawer takes the keyboard focus to its heading (Index.tsx), so the
+  // drawer mustn't hand focus back to its button as it closes
+  const drawerPagePicked = useRef(false);
   const handlePageChange = (page: NavigationPage) => {
     if (page !== activePage) {
       playSelectionSound();
       onPageChange(page);
+      if (drawerOpen) drawerPagePicked.current = true;
     }
     setOpen(false);
     setDrawerOpen(false);
@@ -445,6 +449,11 @@ export const Navigation = ({ activePage, onPageChange, onOpenLineSettings, onSig
             e.preventDefault();
             if (drawerOpenedByKeyboard.current) drawerItemRefs.current[drawerStart]?.focus();
             else drawerContentRef.current?.focus();
+          }}
+          onCloseAutoFocus={(e) => {
+            if (!drawerPagePicked.current) return;
+            drawerPagePicked.current = false;
+            e.preventDefault();
           }}
           onKeyDown={(e) => {
             if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
