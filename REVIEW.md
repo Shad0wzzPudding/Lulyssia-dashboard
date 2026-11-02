@@ -24,10 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the cloud review of 1 Nov (evening), branch `cloud-review-2026-11-01-evening`. Nobody has reviewed them yet.
+Newest first. The first was made in a local session on 2 Nov; the rest during the cloud review of 1 Nov (evening), branch `cloud-review-2026-11-01-evening`. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `3413919` | Fix : Selecting a line with Shift+Down no longer takes the next checklist line's box (found while testing the evening review's paste fix) |
 | `b11ad23` | Fix : A refused unpin slides the Main Focus card back |
 | `1c2f231` | Fix : A double Enter on a Main Focus unpin handle unpins once |
 | `a439793` | Fix : Pasting checklist lines onto a box line adds no empty line, and goes above it from the line's start |
