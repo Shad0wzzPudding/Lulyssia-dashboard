@@ -419,12 +419,12 @@ What to do (owner):
 Review run (`/cloud-review`) from a local session, on branch `cloud-review-2026-11-02`. Rounds log:
 [docs/reviews/2026-11-02-cloud-review.md](docs/reviews/2026-11-02-cloud-review.md).
 
-**Summary.** Phase 1: the 4 waiting commits (the evening review's 3 fixes and the Shift+Down selection fix), no new finding. Phase 2: 3 rounds (editor, time zones and dates, navigation): 1 bug fixed, 2 proposals waiting (both small, about an hour together). Nothing to apply or deploy: no migrations, no function changes. Stopped after round 3 to keep this local session short, not after three clean rounds: round 3 found a proposal, so the clean-round count was 0. Covered: the editor (changed since the last run), time zones and dates, navigation. Every other area was covered on 1 Nov (morning or evening) with nothing changed since; the next run can start with Settings, LINE functions, Recent Changes and attachments, the ones covered longest ago.
+**Summary.** Phase 1: the 4 waiting commits (the evening review's 3 fixes and the Shift+Down selection fix), no new finding. Phase 2: 3 rounds (editor, time zones and dates, navigation): 1 bug fixed, 2 proposals, both decided by the owner the same day (option a) and done (`5fcf3e6`, `7544f81`). Nothing to apply or deploy: no migrations, no function changes. Stopped after round 3 to keep this local session short, not after three clean rounds: round 3 found a proposal, so the clean-round count was 0. Covered: the editor (changed since the last run), time zones and dates, navigation. Every other area was covered on 1 Nov (morning or evening) with nothing changed since; the next run can start with Settings, LINE functions, Recent Changes and attachments, the ones covered longest ago.
 
 **What to do (owner).**
 - [ ] Merge `cloud-review-2026-11-02`
-- [ ] Decide the 2 proposals below (one at a time with Claude)
 - [ ] In a description with checklist lines: triple-click one line's text and press Space: a space goes before its box (twice gives two), and the text stays
+- [ ] With the keyboard, open a page from the round menu: the next Tab goes to that page's first button
 
 ### Findings
 - [x] Medium: With Quick space on (the default), triple-clicking a checklist line and pressing Space wiped the line's text instead of adding a space before it, because the selection starts just after the box and so didn't count as a whole line. Example: "[ ] Milk", triple-click "Milk", Space: the line became an empty box (seen on the test account). The Shift+Down fix earlier today made this case worse: before it, the same Space indented that line and the one below. Done: a selection starting right after a checklist line's box counts as the whole line, so Space adds a space before the box, as on any other line (this commit)

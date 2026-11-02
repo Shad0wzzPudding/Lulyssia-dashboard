@@ -24,10 +24,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Newest first. Made during the review of 2 Nov 2026 (branch `cloud-review-2026-11-02`). Nobody has reviewed it yet.
+Newest first. Made during the review of 2 Nov 2026 (branch `cloud-review-2026-11-02`): one fix, then the owner's two decided proposals. Nobody has reviewed them yet.
 
 | Commit | What |
 | --- | --- |
+| `7544f81` | Fix : A page picked from the menu puts keyboard focus on its heading |
+| `5fcf3e6` | Fix : A checklist line selected with Shift+Up copies with its box, as with Shift+Down |
 | `b30b327` | Fix : Space on a whole selected checklist line adds a space instead of wiping its text |
 
 ## Review history
