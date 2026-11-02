@@ -82,6 +82,18 @@ const Index = () => {
   const [newTaskRequest, setNewTaskRequest] = useState<number | null>(null);
   // A new page always opens at the top (instant, not the smooth scroll-to-top button). Any page
   // change lets go of the "Add Task" request, or coming back to Tasks would open the form again.
+  const mainRef = useRef<HTMLElement>(null);
+  // Set when a page is picked from the menu or drawer: once it's shown, keyboard focus moves to its
+  // heading, so the next Tab continues in the new page and screen readers say which page opened
+  const focusPageHeading = useRef(false);
+  useEffect(() => {
+    if (!focusPageHeading.current) return;
+    focusPageHeading.current = false;
+    const heading = mainRef.current?.querySelector<HTMLElement>('.p5-title, h1, h2, h3');
+    if (!heading) return;
+    if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll: true });
+  }, [activePage]);
   const showPage = (page: NavigationPage) => {
     setActivePage(page);
     setNewTaskRequest(null);
@@ -94,6 +106,8 @@ const Index = () => {
     if (pageTransitionId !== null) return;
     setLineFocus(focus === 'line' ? Date.now() : null);
     if (page === activePage) return;
+    // Settings opened for its LINE card focuses that card instead
+    focusPageHeading.current = focus !== 'line';
     if (!transitionsEnabled) {
       showPage(page);
       return;
@@ -340,7 +354,7 @@ const Index = () => {
         {/* New greeting on every page change (under the crowd transition when it plays) */}
         <WelcomeMessage key={activePage} />
         
-        <main className="max-w-6xl mx-auto">
+        <main ref={mainRef} className="max-w-6xl mx-auto">
           {renderActivePage()}
         </main>
       </div>
