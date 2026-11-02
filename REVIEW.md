@@ -20,18 +20,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `b1b86fc` Docs : roadmap.md: the owner's iPhone checks of the 1 Nov review passed
+**Last reviewed:** `f6913d7` Docs : REVIEW.md waiting list adds the Shift+Down checklist selection fix
 
 ## Waiting for review
 
-Newest first. The first was made in a local session on 2 Nov; the rest during the cloud review of 1 Nov (evening), branch `cloud-review-2026-11-01-evening`. Nobody has reviewed them yet.
-
-| Commit | What |
-| --- | --- |
-| `3413919` | Fix : Selecting a line with Shift+Down no longer takes the next checklist line's box (found while testing the evening review's paste fix) |
-| `b11ad23` | Fix : A refused unpin slides the Main Focus card back |
-| `1c2f231` | Fix : A double Enter on a Main Focus unpin handle unpins once |
-| `a439793` | Fix : Pasting checklist lines onto a box line adds no empty line, and goes above it from the line's start |
+Nothing waiting.
 
 ## Review history
 
@@ -53,3 +46,4 @@ Newest first. The first was made in a local session on 2 Nov; the rest during th
 | 2026-10-31 | the 6 code commits on the waiting list (`d339a65`, `9f266e3`, `1e772fd`, `cf574d9`, `0678f06`, `da0ae72`), up to `72fdf40` on branch `cloud-review-2026-10-31` (not merged yet), cloud-review run `cloud-review-2026-10-31-late` | Phase 1: no new finding. Checked: tsc, eslint, build, deno check on the 4 LINE functions; the quick-ticks code traced through saves, list reloads and failed saves; Clear Past deletes by ids only, so undated past events are really removed |
 | 2026-11-01 | the 11 commits on the waiting list (`b750e2e` … `cee3f31`), up to `147df67` (cloud session, review only) | 2 findings, both fixed: offline the LINE card still said "Sign in" (the sign-in check fails before the link is read), `1a90e11`; copying checklist lines in the editor and pasting saved invisible characters, `aad6bfd`. Checked: the diffs with the code around them; tsc, eslint, build; in a local browser the LINE card with the read and the sign-in check made to fail, copy and paste of checklist lines, ticking a box while typing elsewhere (cursor kept) and Enter/typing/Backspace on a checklist line |
 | 2026-11-01 | the 16 commits on the waiting list (`1a90e11` … `a9ff277`), up to `b1b86fc` (cloud session, evening): the 3 editor features (copy/cut, paste onto a box line, Ctrl+Enter) and the 13 fixes of the 1 Nov cloud review | 1 finding, fixed in `a439793`: pasting a copied checklist line (with its line break) onto a box line left an empty line, and from the line's start the lines went below it. Checked: the diffs; tsc, eslint, build; in a local browser Ctrl+Enter on one and several lines (and Undo), the boxes' names, copy and cut (and Undo) and five paste cases; re-ran the browser checks of the 13 fixes on merged `main` (all still hold) |
+| 2026-11-02 | `b1b86fc..f6913d7` (4 code commits: `a439793`, `1c2f231`, `b11ad23`, `3413919`, plus docs; local session) | No new finding. Checked: the diffs with the code around them (the unpin's failure callback reaches the save through `updateInterest.mutate`; a held Enter is ignored once the card is sliding out; pasting above a box line with a selection; the Shift+Down selection only snaps back when it ends right after a box on a later line) |
