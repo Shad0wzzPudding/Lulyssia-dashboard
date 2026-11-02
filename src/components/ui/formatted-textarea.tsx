@@ -907,9 +907,17 @@ export const FormattedTextarea = ({ value, onChange, placeholder, className }: F
     const range = getSelectionVisibleRange(el);
     if (!range) return null;
     const chars = domChars(el);
-    const start = Math.min(range.start, chars.length);
+    let start = Math.min(range.start, chars.length);
     const end = Math.min(Math.max(range.end, start), chars.length);
     if (start === end) return null;
+    // A selection that starts right after a checklist box (Shift+Up, or a triple click) and runs
+    // past that line takes the box too, so the line copies as "[ ] Milk" whichever way it was
+    // selected. Only for copy and cut: bold or Space must not take the box into their edit.
+    const text = chars.map((c) => c.ch).join('');
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start) === -1 ? text.length : text.indexOf('\n', start);
+    const box = lineBox(text.slice(lineStart, lineEnd));
+    if (box && start === lineStart + box.at + 4 && end > lineEnd) start = lineStart;
     e.preventDefault();
     e.clipboardData.setData('text/plain', chars.slice(start, end).map((c) => c.ch).join(''));
     return { chars, start, end };
