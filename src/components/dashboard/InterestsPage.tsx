@@ -244,6 +244,8 @@ export const InterestsPage = ({
     }
   };
 
+  // The search bar's example is made from these words
+  const searchTitles = useMemo(() => interests.map((i) => i.title), [interests]);
   const visibleInterests = useMemo(
     () => sortItems(searchItems(filterByTags(interests, filterTagIds), search), sort, tagsById),
     [interests, filterTagIds, search, sort, tagsById]
@@ -532,7 +534,9 @@ export const InterestsPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search interests… e.g. music, books, !someday"
+          searchPlaceholder="Search interests…"
+          searchTitles={searchTitles}
+          searchFallback="music, books, !someday"
         />
       )}
       <>

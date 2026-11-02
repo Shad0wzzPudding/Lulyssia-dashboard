@@ -389,6 +389,8 @@ export const TasksPage = ({
   // The search box updates right away; the (slower) list follows just after, so typing never waits
   // for every card to be redrawn
   const deferredSearch = useDeferredValue(search);
+  // The search bar's example is made from these words
+  const searchTitles = useMemo(() => tasks.map((i) => i.title), [tasks]);
   const visibleTasks = useMemo(
     () => sortItems(searchItems(filterByTags(tasks, filterTagIds), deferredSearch), sort, tagsById),
     [tasks, filterTagIds, deferredSearch, sort, tagsById]
@@ -613,7 +615,9 @@ export const TasksPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search tasks… e.g. report, slides, !draft"
+          searchPlaceholder="Search tasks…"
+          searchTitles={searchTitles}
+          searchFallback="report, slides, !draft"
         />
       )}
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTags } from '@/hooks/useTags';
 import { TagChip } from './TagPicker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowUpDown, X, Sparkles, Image as ImageIcon, Search } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { playSuccessSound } from '@/lib/sounds';
-import { parseSearch, searchHasFilter, type SortOption } from '@/lib/sortAndFilter';
+import { parseSearch, searchExample, searchHasFilter, type SortOption } from '@/lib/sortAndFilter';
 import { useUserNames } from '@/hooks/useUserNames';
 import { fillNames } from '@/lib/names';
 
@@ -19,7 +19,12 @@ interface Props {
   onFilterChange: (ids: string[]) => void;
   search?: string;
   onSearchChange?: (v: string) => void;
+  /** The grey start of the empty bar's hint ("Search tasks…") */
   searchPlaceholder?: string;
+  /** The page's titles: the example search is made from their words */
+  searchTitles?: string[];
+  /** The example when the titles have too few words ("report, slides, !draft") */
+  searchFallback?: string;
   /** Name of the date the date sorts use ("Deadline", or "Start time" on Events) */
   dateLabel?: string;
 }
@@ -32,6 +37,8 @@ export const SortAndFilterBar = ({
   search,
   onSearchChange,
   searchPlaceholder = 'Search…',
+  searchTitles = [],
+  searchFallback = '',
   dateLabel = 'Deadline',
 }: Props) => {
   const { tags, isLoading: tagsLoading } = useTags();
@@ -190,27 +197,116 @@ export const SortAndFilterBar = ({
       </div>
 
       {onSearchChange && (
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search ?? ''}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="h-8 pl-8 pr-8 text-xs"
-          />
-          {!!search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
+        <SearchField
+          search={search ?? ''}
+          onSearchChange={onSearchChange}
+          lead={searchPlaceholder}
+          titles={searchTitles}
+          fallback={searchFallback}
+        />
       )}
       {onSearchChange && <SearchChips search={search ?? ''} />}
+    </div>
+  );
+};
+
+/**
+ * The search box. Empty, it shows "Search tasks… e.g." in grey and an example made from the page's
+ * own titles in cyan (a native placeholder can't be partly coloured, so it's drawn over the box).
+ * While what's typed is the start of the example, the rest of it shows faintly after the text, and
+ * → at the end of the text fills it in; typing anything else clears it. Tab still moves on.
+ */
+const SearchField = ({
+  search,
+  onSearchChange,
+  lead,
+  titles,
+  fallback,
+}: {
+  search: string;
+  onSearchChange: (v: string) => void;
+  lead: string;
+  titles: string[];
+  fallback: string;
+}) => {
+  const example = useMemo(() => searchExample(titles, fallback), [titles, fallback]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hintId = useId();
+  const guiding = !!example && !!search && search.length < example.length && example.toLowerCase().startsWith(search.toLowerCase());
+  // The faint rest is drawn after the text as it sits unscrolled, so it's left out once the
+  // text is longer than the box (a narrow phone)
+  const [fits, setFits] = useState(true);
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (el) setFits(el.scrollWidth <= el.clientWidth);
+  }, [search]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const el = e.currentTarget;
+    if (
+      guiding &&
+      e.key === 'ArrowRight' &&
+      !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey &&
+      el.selectionStart === search.length &&
+      el.selectionEnd === search.length
+    ) {
+      e.preventDefault();
+      onSearchChange(example);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        ref={inputRef}
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        aria-label={lead.replace(/…$/, '')}
+        aria-describedby={example ? hintId : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        className="h-8 pl-8 pr-8 text-xs"
+      />
+      {(!search || (guiding && fits)) && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-[calc(2rem+1px)] right-8 flex items-center overflow-hidden whitespace-pre text-xs md:text-sm"
+        >
+          {!search ? (
+            <span className="truncate text-muted-foreground">
+              {lead}
+              {example && (
+                <>
+                  {' e.g. '}
+                  <span className="font-medium text-primary">{example}</span>
+                </>
+              )}
+            </span>
+          ) : (
+            <>
+              <span className="invisible">{search}</span>
+              <span className="text-primary/40">{example.slice(search.length)}</span>
+            </>
+          )}
+        </span>
+      )}
+      {example && (
+        <span id={hintId} className="sr-only">
+          {`For example: ${example}`}
+        </span>
+      )}
+      {!!search && (
+        <button
+          type="button"
+          onClick={() => onSearchChange('')}
+          aria-label="Clear search"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          <X size={12} />
+        </button>
+      )}
     </div>
   );
 };

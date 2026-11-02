@@ -80,6 +80,8 @@ export const EventsPage = ({
   const { selectedIds, selectedCount, isSelecting, toggle, selectAll, keepOnly, clearSelection, enterSelectMode, isSelected } = useMultiSelect<Event>();
 
   const now = new Date();
+  // The search bar's example is made from these words
+  const searchTitles = useMemo(() => events.map((i) => i.title), [events]);
   const visibleEvents = useMemo(
     // Date sorts use when an event starts (its deadline only if it has no start)
     () => sortItems(searchItems(filterByTags(events, filterTagIds), search), sort, tagsById, (e) => e.start_time ?? e.deadline),
@@ -559,7 +561,9 @@ export const EventsPage = ({
           onFilterChange={setFilterTagIds}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search events… e.g. meeting, party, !online"
+          searchPlaceholder="Search events…"
+          searchTitles={searchTitles}
+          searchFallback="meeting, party, !online"
           dateLabel="Start time"
         />
       )}

@@ -122,3 +122,33 @@ export const searchItems = <T extends { title: string; description?: string | nu
     return find.length === 0 || find.some(has);
   });
 };
+
+// Words too common to make a useful example search
+const EXAMPLE_SKIP = new Set(
+  'the and for with from that this your you are was were will into onto about have has had not but all any can our out off its his her him she they them then than when what who why how'.split(' ')
+);
+
+/**
+ * The search bar's example, made from the page's own titles so trying it shows real results: the
+ * two words found in the most titles become words to find, and the next most common word that hides
+ * some of what they find but not all of it becomes the word to hide ("homework, tour, !food"), so
+ * the example never shows an empty list. Short and common words and numbers are skipped; ties go
+ * alphabetically, so the example doesn't change with the sort. No such words: the fallback.
+ */
+export const searchExample = (titles: string[], fallback: string): string => {
+  const count = new Map<string, number>();
+  for (const title of titles) {
+    const words = new Set(
+      title
+        .toLowerCase()
+        .split(/[^\p{L}\p{M}\p{N}]+/u)
+        .filter((w) => w.length >= 3 && w.length <= 15 && !EXAMPLE_SKIP.has(w) && !/^\p{N}+$/u.test(w))
+    );
+    for (const w of words) count.set(w, (count.get(w) ?? 0) + 1);
+  }
+  const [find1, find2, ...rest] = [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([w]) => w);
+  // Matched as the search matches: anywhere in the title ("tab" also hides "table")
+  const found = titles.map((t) => t.toLowerCase()).filter((t) => t.includes(find1) || t.includes(find2));
+  const hide = rest.find((w) => found.some((t) => t.includes(w)) && found.some((t) => !t.includes(w)));
+  return hide ? `${find1}, ${find2}, !${hide}` : fallback;
+};
