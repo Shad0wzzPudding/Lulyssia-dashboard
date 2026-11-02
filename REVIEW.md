@@ -24,7 +24,11 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 
 ## Waiting for review
 
-Nothing waiting.
+Newest first. Made during the review of 2 Nov 2026 (branch `cloud-review-2026-11-02`). Nobody has reviewed it yet.
+
+| Commit | What |
+| --- | --- |
+| `b30b327` | Fix : Space on a whole selected checklist line adds a space instead of wiping its text |
 
 ## Review history
 
