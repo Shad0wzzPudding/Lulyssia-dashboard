@@ -182,10 +182,18 @@ const getSelectionVisibleRange = (el: HTMLElement): { start: number; end: number
   if (!sel || sel.rangeCount === 0) return null;
 
   const range = sel.getRangeAt(0);
-  return {
-    start: getVisibleOffset(el, range.startContainer, range.startOffset),
-    end: getVisibleOffset(el, range.endContainer, range.endOffset),
-  };
+  const start = getVisibleOffset(el, range.startContainer, range.startOffset);
+  let end = getVisibleOffset(el, range.endContainer, range.endOffset);
+  // A selection from an earlier line that ends at the very start of a checklist line (Shift+Down,
+  // or a drag to the line's start) lands after that line's box, since the box can't hold the caret.
+  // It still means "up to this line", not "and its box": otherwise copy, cut and Tab took the box too.
+  if (end > start) {
+    const text = domChars(el).map((c) => c.ch).join('');
+    const lineStart = text.lastIndexOf('\n', end - 1) + 1;
+    const box = lineStart > start ? lineBox(text.slice(lineStart).split('\n')[0]) : null;
+    if (box && end === lineStart + box.at + 4) end = lineStart;
+  }
+  return { start, end };
 };
 
 /** True when the current selection is inside the editor (not elsewhere on the page). */
