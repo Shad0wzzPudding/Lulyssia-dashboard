@@ -103,8 +103,9 @@ Go through the items in the plan's order.
    <adaptations to code that changed since the plan, anything else worth knowing>
    ```
 
-6. **Commit and push** the item: one or a few commits, each passing the checks. Then go on to the next
-   item.
+6. **Commit and push** the item: one or a few commits, each passing the checks. The item's log goes in
+   the item's own (last) commit, not a separate `Docs :` commit: the owner doesn't want the history
+   flooded with notes-only commits. Then go on to the next item.
 
 ## Finishing
 
