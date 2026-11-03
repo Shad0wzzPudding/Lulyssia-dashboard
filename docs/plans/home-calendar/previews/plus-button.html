@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar Plus Button</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: option switch, then Home's Calendar Overview (calendar left, date panel right) with the plus button; intent only */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --panel: hsl(200 18% 9%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 64%);
+    --cyan: hsl(193 61% 52%);
+    --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%);
+    --green: hsl(142 71% 45%);
+    --red: hsl(0 84% 60%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; color: var(--muted); }
+  .seg button { font: 600 .8rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+  .seg button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); background: hsl(193 61% 52% / .1); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+  .card h2 { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--cyan); margin: 0 0 14px; font-size: 1.35rem; display: flex; gap: 8px; align-items: center; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: auto 1fr; } }
+  .cal { border: 1px solid var(--line); border-radius: 6px; padding: 12px; justify-self: center; }
+  .cal .head { text-align: center; font-weight: 600; font-size: .9rem; margin-bottom: 10px; }
+  .days { display: grid; grid-template-columns: repeat(7, 36px); gap: 8px 2px; text-align: center; font-size: .85rem; }
+  .days .dow { color: var(--muted); font-size: .75rem; }
+  .d { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 6px; cursor: pointer; border: 0; background: none; color: var(--fg); font: inherit; position: relative; }
+  .d.out { color: #555; }
+  .d.today { box-shadow: inset 0 0 0 2px var(--cyan); }
+  .d.marked { font-weight: 600; }
+  .d.marked::after { content: ""; position: absolute; inset: 0; border-radius: 999px; background: var(--cyan-dim); }
+  .d.sel { outline: 2px solid var(--fg); outline-offset: -2px; }
+  .d span { position: relative; z-index: 1; }
+  .note { text-align: center; color: var(--cyan); font-size: .8rem; margin-top: 10px; }
+  .panel { background: var(--panel); border: 2px solid hsl(193 50% 30% / .4); border-radius: 12px; padding: 18px; min-height: 340px; }
+  .ph { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); gap: 8px; position: relative; }
+  .ph h3 { margin: 0; font-size: 1rem; }
+  .ph small { color: var(--cyan); font-size: .75rem; }
+  .iconbtn { width: 32px; height: 32px; border-radius: 6px; border: 0; background: transparent; color: var(--cyan); display: grid; place-items: center; cursor: pointer; }
+  .iconbtn:hover, .iconbtn[aria-expanded=true] { background: hsl(193 61% 52% / .15); }
+  .iconbtn:focus-visible, .seg button:focus-visible, .menu button:focus-visible, .d:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .btns { display: flex; gap: 4px; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; font: 600 .75rem var(--body); color: var(--cyan); border: 1px solid var(--cyan-dim); background: transparent; border-radius: 6px; padding: 5px 8px; cursor: pointer; }
+  .pill:hover { background: hsl(193 61% 52% / .12); }
+  .menu { position: absolute; right: 0; top: 40px; background: hsl(200 14% 11%); border: 1px solid var(--line); border-radius: 8px; padding: 4px; min-width: 190px; z-index: 5; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .menu button { display: flex; width: 100%; align-items: center; gap: 8px; background: none; border: 0; color: var(--fg); font: 500 .85rem var(--body); padding: 8px 10px; border-radius: 6px; cursor: pointer; text-align: left; }
+  .menu button:hover { background: hsl(193 61% 52% / .12); }
+  .items { display: grid; gap: 8px; margin-top: 14px; }
+  .item { position: relative; background: hsl(210 15% 14%); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 10px 16px; }
+  .item .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+  .item .t { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: .9rem; }
+  .badge { font-size: .7rem; border-radius: 999px; padding: 1px 8px; border: 1px solid #444; font-weight: 600; }
+  .chip { display: inline-flex; gap: 4px; margin-top: 6px; font-size: .75rem; font-weight: 600; color: #4ade80; background: hsl(142 71% 45% / .15); border-radius: 4px; padding: 2px 6px; }
+  .chip.end { color: #f87171; background: hsl(0 84% 60% / .15); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: hsl(200 14% 12%); border: 1px solid var(--cyan); color: var(--fg); padding: 10px 14px; border-radius: 8px; font-size: .85rem; max-width: calc(100% - 32px); display: none; }
+  .muted { color: var(--muted); font-size: .82rem; line-height: 1.55; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Plus button on the calendar</h1>
+    <p class="lede">Home's Calendar Overview after the change: marked dates keep only the round circle, the eye button is gone, and a plus button makes a new task or event on the picked date. Click a date, then the plus. Intent only: the build uses the app's real calendar, buttons and forms.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="How the plus works">
+    <span>The plus:</span>
+    <button type="button" data-opt="menu" aria-pressed="true">A · + opens a menu: New task / New event (recommended)</button>
+    <button type="button" data-opt="two" aria-pressed="false">B · two small buttons: + Task, + Event</button>
+  </div>
+
+  <section class="card">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendar Overview
+    </h2>
+    <div class="grid">
+      <div>
+        <div class="cal">
+          <div class="head">November 2026</div>
+          <div class="days" id="days"></div>
+        </div>
+        <p class="note">Click on highlighted dates to see details</p>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <div><h3 id="dtitle">Fri, Nov 20</h3><small>2026</small></div>
+          <div id="actions"></div>
+        </div>
+        <div class="items" id="items"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="muted">What the date's items look like: an event's start line is now green (it was blue), like a task's start; an end stays red. Which date and time the new task or event gets is the next question.</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+  let opt = 'menu', sel = 20;
+  const marked = { 20: [{ t: 'kk', type: 'event', kind: 'start', time: '09:21' }], 27: [{ t: 'kk', type: 'event', kind: 'end', time: '14:21' }] };
+  const days = document.getElementById('days');
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach((d) => { const s = document.createElement('span'); s.className = 'dow'; s.textContent = d; days.append(s); });
+  const cells = [];
+  for (let n = 1; n <= 35; n++) {
+    const b = document.createElement('button');
+    const day = n <= 30 ? n : n - 30;
+    b.className = 'd' + (n > 30 ? ' out' : '') + (n === 3 ? ' today' : '') + (marked[n] ? ' marked' : '');
+    b.innerHTML = `<span>${day}</span>`;
+    b.type = 'button';
+    b.setAttribute('aria-label', `November ${day}`);
+    if (n <= 30) b.addEventListener('click', () => { sel = n; draw(); });
+    days.append(b); cells.push(b);
+  }
+  const plusSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>';
+  const toast = (m) => { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), 2400); };
+  const open = (what) => toast(`The ${what} form opens, set to Nov ${sel}`);
+  function draw() {
+    cells.forEach((c, i) => c.classList.toggle('sel', i + 1 === sel));
+    const date = new Date(2026, 10, sel);
+    document.getElementById('dtitle').textContent = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const a = document.getElementById('actions');
+    if (opt === 'menu') {
+      a.innerHTML = `<button type="button" class="iconbtn" id="plus" aria-label="New task or event on this date" aria-haspopup="menu" aria-expanded="false" title="New task or event">${plusSvg}</button>`;
+      const p = document.getElementById('plus');
+      p.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const m = document.getElementById('menu');
+        if (m) { m.remove(); p.setAttribute('aria-expanded', 'false'); return; }
+        p.setAttribute('aria-expanded', 'true');
+        const menu = document.createElement('div');
+        menu.className = 'menu'; menu.id = 'menu'; menu.setAttribute('role', 'menu');
+        menu.innerHTML = `<button role="menuitem" data-w="task">${plusSvg} New task</button><button role="menuitem" data-w="event">${plusSvg} New event</button>`;
+        menu.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { open(b.dataset.w); menu.remove(); p.setAttribute('aria-expanded', 'false'); }));
+        a.parentElement.append(menu);
+        menu.querySelector('button').focus();
+      });
+    } else {
+      document.getElementById('menu')?.remove();
+      a.innerHTML = `<div class="btns"><button type="button" class="pill" data-w="task">${plusSvg} Task</button><button type="button" class="pill" data-w="event">${plusSvg} Event</button></div>`;
+      a.querySelectorAll('.pill').forEach((b) => b.addEventListener('click', () => open(b.dataset.w)));
+    }
+    const list = marked[sel] || [];
+    document.getElementById('items').innerHTML = list.length ? list.map((it) => `
+      <div class="item"><div class="bar" style="background:${it.kind === 'end' ? 'var(--red)' : 'var(--green)'}"></div>
+        <div class="t"><span>${it.t}</span><span><span class="badge">${it.type}</span> <span class="badge">${it.kind === 'end' ? 'End' : 'Start'}</span></span></div>
+        <span class="chip ${it.kind === 'end' ? 'end' : ''}">◷ ${it.time}</span></div>`).join('')
+      : '<p class="muted" style="text-align:center;margin-top:40px">Free Day · No scheduled items</p>';
+  }
+  document.addEventListener('click', () => { document.getElementById('menu')?.remove(); document.getElementById('plus')?.setAttribute('aria-expanded', 'false'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('menu')) { document.getElementById('menu').remove(); const p = document.getElementById('plus'); p.setAttribute('aria-expanded', 'false'); p.focus(); } });
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    opt = b.dataset.opt;
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    draw();
+  }));
+  draw();
+</script>
+</body>
+</html>
