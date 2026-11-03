@@ -20,11 +20,12 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `d808285` Docs : REVIEW.md: the 2 Nov review's 3 commits reviewed, 1 fix
+**Last reviewed:** `85bfe3b` Feat : The search bar's example comes from your own titles, in cyan, with a faint guide while typing
 
 ## Waiting for review
 
-Nothing waiting.
+- `8b0b02d` Fix : → while composing a word with a Chinese or Japanese keyboard no longer fills in the search example
+- `cc40caf` Fix : The search example never uses one word that's inside another
 
 ## Review history
 
@@ -49,3 +50,4 @@ Nothing waiting.
 | 2026-11-02 | `b1b86fc..f6913d7` (4 code commits: `a439793`, `1c2f231`, `b11ad23`, `3413919`, plus docs; local session) | No new finding. Checked: the diffs with the code around them (the unpin's failure callback reaches the save through `updateInterest.mutate`; a held Enter is ignored once the card is sliding out; pasting above a box line with a selection; the Shift+Down selection only snaps back when it ends right after a box on a later line) |
 | 2026-11-02 | `f6913d7..c47b9ed` (3 code commits: `b30b327`, `5fcf3e6`, `7544f81`, plus docs; local session, asked by the owner before merging) | 1 finding fixed (`450cb19`: with page transitions off, the drawer handed focus back to its button after a page was picked), plus a misplaced comment moved. Checked: the diffs with the code around them; in the browser the menu and drawer with the keyboard, transitions on and off, Escape |
 | 2026-11-02 | `c47b9ed..d808285` (1 code commit: `450cb19`, plus docs; local session, asked by the owner) | No new finding. Checked: the diff with the code around it: the drawer only skips handing focus back after a new page was picked (Escape, a click outside, picking the open page and the LINE slab still hand it back), and the flag is cleared on the next close. Not counted: a page picked from the drawer during the ~1 s page transition is ignored by Index (as before), and the drawer would then not hand focus back; reaching the drawer with the keyboard within that second wasn't shown to happen |
+| 2026-11-03 | `6a37b56..85bfe3b` (1 code commit: `85bfe3b`, branch `search-guide`; local session, asked by the owner before merging) | 2 findings fixed: `cc40caf` (the example could use one word inside another, e.g. "home, homework", or hide everything it found) and `8b0b02d` (→ while composing with a Chinese/Japanese keyboard filled in the example). Checked: the diff with the code around it; the word picking on sample, overlapping, Thai, too-few and empty title lists; in the browser on Test-dummy the cyan example, the faint guide, → and the fallback on Events |
