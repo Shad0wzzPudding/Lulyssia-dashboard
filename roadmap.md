@@ -438,7 +438,20 @@ branch `cloud-review-2026-11-03` (from `main` with the 4 `plan/home-calendar/*` 
 their order; main got the build its own way, so only this run's 4 commits were copied onto it). Rounds log:
 [docs/reviews/2026-11-03-cloud-review.md](docs/reviews/2026-11-03-cloud-review.md).
 
+**Summary.** Phase 1: `main`'s 2 waiting code commits (the search example fixes) and the home-calendar
+build's 3, no new finding. Phase 2: 11 rounds, 3 bugs fixed (1 Medium, 2 Low), no proposals. Nothing to
+apply to the database and no functions to deploy. Stopped after three clean rounds in a row (LINE
+functions, migrations, phones and accessibility), with every area covered in this run or the two before
+it (2 Nov: editor, time zones, navigation; 1 Nov evening: Interests) and unchanged since. This run
+covered areas 1-3, 5, 7-9 and 11-14; the next run should start with 10 Editor, 15 Time zones, 6
+Navigation and 4 Interests (covered longest ago), then the second pass by angle.
+
+**What to do (owner).**
+- [ ] Merge `cloud-review-2026-11-03` (it contains the 4 `plan/home-calendar/*` branches)
+- [ ] The home-calendar checks by eye (docs/plans/home-calendar/log/summary.md), and on Test-dummy a
+      "ZZ …" task and event made from the plus, then deleted
+
 ### Findings
 - [x] Low: The LINE card in Settings could say "Sign in to set up LINE messages." to someone signed in. On a first visit the card makes the account's link code; with Settings open in two tabs at once (or a connection drop at that moment), the second try is refused (one link per account) and that tab showed the sign-in text until the app was left and opened again. Done: a refused try reads the link again (the other tab's code shows), and if there's still none the card says it couldn't load, as for other load failures (e308cf4)
 - [x] Low: Adding a file to a task, event or interest with no connection did nothing at all: the button's spinner stopped, no file appeared and no message said why (the sign-in check failed before the upload, and that error was never caught). Done: it says "Couldn't upload. Check your connection and try again." (d7ff05c)
-- [x] Medium: Changing a page's sort could wipe the other saved settings. The new sort is saved by reading the stored settings, adding it and writing them back; when that read failed (a passing server error) but the write went through, only the new sort was kept. Example: Editor setting on Tab only and Events sorted by title; a Tasks sort change during a failed read saved just {Tasks: Title A–Z}, so the Editor setting went back to Quick space and Events to the default sort. Done: a failed read saves nothing (the pick stays on screen, just not remembered that time), as the Editor setting already does (this commit)
+- [x] Medium: Changing a page's sort could wipe the other saved settings. The new sort is saved by reading the stored settings, adding it and writing them back; when that read failed (a passing server error) but the write went through, only the new sort was kept. Example: Editor setting on Tab only and Events sorted by title; a Tasks sort change during a failed read saved just {Tasks: Title A–Z}, so the Editor setting went back to Quick space and Events to the default sort. Done: a failed read saves nothing (the pick stays on screen, just not remembered that time), as the Editor setting already does (c6a3f9c)
