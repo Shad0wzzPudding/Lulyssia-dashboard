@@ -3,29 +3,29 @@
 <!--
 The plan, for anyone (or any Claude session, local or cloud) working on this repo:
 
-- This file keeps track of which commits have had a code review and which are still waiting.
-  It lives in the repo (not in local git settings) so a cloud session, which starts from a fresh
-  copy of GitHub, can read and update it too.
+- This file keeps track of which commits have had a code review. It lives in the repo (not in
+  local git settings) so a cloud session, which starts from a fresh copy of GitHub, can read and
+  update it too.
 - "Review" here means a code review: looking for bugs, performance problems and things worth
   refactoring. It is not a summary of what changed.
-- "Last reviewed" is the source of truth. Everything after it on main is unreviewed:
+- "Last reviewed" is the source of truth. Everything after it on main is waiting for review:
       git log --oneline <last reviewed>..main
-- After committing work, refresh the "Waiting for review" list from that command (newest first),
-  in the same push, so the list always matches main.
-- When a review is done: set "Last reviewed" to the newest commit that was reviewed, clear the
-  waiting list, and add a line to "Review history". Fixes committed because of the review are
-  new commits after that point, so they get checked in the next review.
-- If the waiting list covers about 8-10 files or more, ask first whether to review all of it or
+  or the compare link below on GitHub. A cloud copy may hold only recent commits; if the last
+  reviewed commit is missing, run `git fetch --unshallow` first.
+- There is no hand-kept waiting list: a commit can't name its own ID, so keeping one meant a
+  separate notes commit after every change. Ordinary commits never touch this file.
+- When a review is done: set "Last reviewed" (and the compare link) to the newest commit that was
+  reviewed, and add a line to "Review history". Put that change in the review's last fix commit; a
+  review with no fix goes in the next commit with changes (only a separate commit when the owner
+  asks for it now). Fixes from the review come after "Last reviewed", so the next review checks them.
+- If what's waiting covers about 8-10 files or more, ask first whether to review all of it or
   only part.
 - Only review when asked; don't run a review automatically after every task.
 -->
 
 **Last reviewed:** `85bfe3b` Feat : The search bar's example comes from your own titles, in cyan, with a faint guide while typing
 
-## Waiting for review
-
-- `8b0b02d` Fix : → while composing a word with a Chinese or Japanese keyboard no longer fills in the search example
-- `cc40caf` Fix : The search example never uses one word that's inside another
+Waiting for review: [compare `85bfe3b...main`](https://github.com/Shad0wzzPudding/Lulyssia-dashboard/compare/85bfe3b...main) (or `git log --oneline 85bfe3b..main`)
 
 ## Review history
 

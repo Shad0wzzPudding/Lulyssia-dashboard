@@ -1,8 +1,8 @@
 ---
 name: cloud-review
-description: Unattended code review and bug hunt for the Lulyssia dashboard. First reviews every commit waiting in REVIEW.md, then hunts for bugs area by area across the whole site until the tokens run out or three honest rounds in a row find nothing. Fixes safe bugs on its own branch and writes up anything that changes behaviour as a "Needs decision" proposal. Meant for a cloud session working while the owner is away; run it with /cloud-review.
+description: Unattended code review and bug hunt for the Lulyssia dashboard. First reviews every commit on main after REVIEW.md's "Last reviewed", then hunts for bugs area by area across the whole site until the tokens run out or three honest rounds in a row find nothing. Fixes safe bugs on its own branch and writes up anything that changes behaviour as a "Needs decision" proposal. Meant for a cloud session working while the owner is away; run it with /cloud-review.
 disable-model-invocation: true
-argument-hint: "[optional: 'review only' to stop after the REVIEW.md list, or an area to hunt first]"
+argument-hint: "[optional: 'review only' to stop after reviewing the waiting commits, or an area to hunt first]"
 ---
 
 # Cloud review and bug hunt
@@ -27,11 +27,11 @@ These protect the live app and the owner's control over it, so treat them as har
   merges after checking.
 - **Push often.** Push after every commit or every few. A cloud session can stop at any moment when the
   tokens run out, and unpushed work is lost.
-- **Keep the history about the code.** The roadmap line for a fix goes in the fix's own commit. Notes
-  that aren't part of a fix (proposals, the rounds log) go in one `Docs :` commit every few rounds, and
-  REVIEW.md is updated only when Phase 1 ends and when you stop. A history where half the commits only
-  update notes is hard for the owner to read and review (one run had 21 notes-only commits beside 24
-  fixes).
+- **Keep the history about the code: no notes-only commits.** The roadmap line for a fix goes in the
+  fix's own commit. Other notes (proposals, rounds log lines, the REVIEW.md update) ride along in the
+  next fix commit. Only when several rounds pass with no fix, put the notes so far in one `Docs :`
+  commit, so they aren't lost if the session stops. The owner doesn't want the history flooded with
+  docs commits (one run had 21 notes-only commits beside 24 fixes).
 - **Nothing outward-facing.** Don't deploy, apply migrations to the live database, write to the live
   project, or read, print or ask for secrets (that includes the cron secret `line_cron_secret` /
   `LINE_CRON_SECRET`). You may write new migration files and change edge functions; the owner applies
@@ -77,22 +77,24 @@ without asking.
 - **docs/reviews/<date>-cloud-review.md:** the rounds log (format in Phase 2). It's long and only
   matters for checking the run, so it stays out of roadmap.md; the roadmap section links to it.
 - **REVIEW.md:** follow the plan in the comment at its top, with one exception. That plan says to ask
-  before reviewing a large waiting list, but nobody can answer, so review all of it.
+  before reviewing a lot of waiting commits, but nobody can answer, so review all of them. It keeps no
+  waiting list: what's waiting is everything on `main` after "Last reviewed".
 
-## Phase 1: review the waiting list
+## Phase 1: review the waiting commits
 
 1. Read REVIEW.md. Everything on `main` after "Last reviewed" is unreviewed:
-   `git log --oneline <last reviewed>..HEAD`. If the list is empty, go straight to Phase 2.
+   `git log --oneline <last reviewed>..HEAD`. If git says it doesn't know that commit, the copy holds
+   only recent history: run `git fetch --unshallow` and try again. If nothing is waiting, go straight
+   to Phase 2.
 2. Review every commit: read its diff together with the code around it. Look for bugs, edge cases,
    security problems (row level security gaps, functions anyone can call without a check), performance
    problems and clean-ups worth doing.
 3. Fix or propose each finding as above.
-4. Then update REVIEW.md in a `Docs :` commit (together with any proposals from this phase):
-   - set "Last reviewed" to the newest commit you reviewed;
-   - clear the waiting list;
-   - add a "Review history" line (date, range, number of commits, result);
-   - put the commits you made during the review back in the waiting list, newest first. Nobody has
-     reviewed your own fixes yet.
+4. Then update REVIEW.md, in this phase's last fix commit (or, with no fix, in the next commit you
+   make; together with any proposals from this phase):
+   - set "Last reviewed" and its compare link to the newest commit you reviewed;
+   - add a "Review history" line (date, range, number of commits, result).
+   Your own fixes come after "Last reviewed", so the next review checks them without a list.
 
 ## Phase 2: bug hunt rounds across the whole site
 
@@ -167,10 +169,11 @@ is genuinely clean, not to give an easy way out. So:
 
 Whether you finish or run low on tokens, keep enough budget for this:
 
-1. Everything is committed and pushed, including the last notes commit.
+1. Everything is committed and pushed. Notes not yet in a fix commit go in one last `Docs :` commit.
 2. A short summary sits at the top of the roadmap section, with a link to the rounds log:
    - rounds run, bugs fixed, proposals waiting (with their sizes added up);
    - migrations to apply and functions to deploy, by file and function name;
    - why you stopped: three clean rounds, or out of tokens, and which area you were on;
    - which areas this run covered, and which ones the next run should start with.
-3. REVIEW.md lists all your own commits in its waiting list, newest first.
+3. REVIEW.md's "Last reviewed" is the newest commit you reviewed in Phase 1 (your own commits come after it,
+   so the next review picks them up).
