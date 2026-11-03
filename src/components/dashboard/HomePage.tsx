@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, EyeOff, Eye, Undo2, Pencil } from "lucide-react";
+import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, Undo2, Pencil } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
 import { Interest, Task, Event, ActivityLog, Attachment, FormSaveCallbacks, FormSaveMarker } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -160,27 +160,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     };
   }, []);
   
-  // Hidden dates for calendar (manually unhighlighted by user)
-  const [hiddenDates, setHiddenDates] = useState<Set<string>>(() => {
-    try {
-      const saved = localStorage.getItem('hiddenCalendarDates');
-      if (!saved) return new Set();
-      const parsed = JSON.parse(saved);
-      // Validate that parsed is an array of valid date strings
-      if (Array.isArray(parsed)) {
-        const validDates = parsed.filter((d): d is string => 
-          typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
-        );
-        return new Set(validDates);
-      }
-      return new Set();
-    } catch {
-      // Clear corrupted data
-      try { localStorage.removeItem('hiddenCalendarDates'); } catch { /* storage unavailable */ }
-      return new Set();
-    }
-  });
-  
+  // Dates hidden with the old eye button: that button is gone and every marked date shows its
+  // circle, so the saved list is removed once
+  useEffect(() => {
+    try { localStorage.removeItem('hiddenCalendarDates'); } catch { /* storage unavailable */ }
+  }, []);
+
   // Initialize collapsed interests from localStorage
   const [collapsedInterests, setCollapsedInterests] = useState<Set<string>>(() => {
     try {
@@ -315,33 +300,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       
       return newSet;
     });
-  };
-  
-  // Toggle date visibility in calendar
-  const toggleDateVisibility = (date: Date) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    setHiddenDates(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(dateKey)) {
-        newSet.delete(dateKey);
-      } else {
-        newSet.add(dateKey);
-      }
-      // Save to localStorage
-      try {
-        localStorage.setItem('hiddenCalendarDates', JSON.stringify(Array.from(newSet)));
-      } catch (error) {
-        console.error('Failed to save hidden dates:', error);
-      }
-      
-      return newSet;
-    });
-  };
-  
-  // Check if a date is hidden
-  const isDateHidden = (date: Date) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    return hiddenDates.has(dateKey);
   };
   
   // Get all dates with tasks or events for calendar highlighting
@@ -783,23 +741,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 onSelect={setSelectedDate}
                 modifiers={{
                   marked: markedDates.filter(d => !isNaN(d.getTime())),
-                  neutralized: Array.from(hiddenDates)
-                    .map((dateStr) => {
-                      try {
-                        const parsed = parseISO(dateStr);
-                        return isNaN(parsed.getTime()) ? null : parsed;
-                      } catch {
-                        return null;
-                      }
-                    })
-                    .filter((d): d is Date => d !== null),
                   today: [new Date()],
                 }}
                 modifiersClassNames={{
                   marked:
-                    "bg-gradient-to-br from-p5-200 to-p5-200 dark:from-p5-700/50 dark:to-p5-700/50 text-p5-900 dark:text-p5-100 font-semibold relative after:absolute after:inset-0 after:rounded-full after:bg-p5-300/30 dark:after:bg-p5-500/30 cursor-pointer hover:scale-105 transition-transform",
-                  neutralized:
-                    "!bg-transparent !from-transparent !to-transparent !text-foreground !font-normal !after:hidden !shadow-none",
+                    "text-p5-900 dark:text-p5-100 font-semibold relative after:absolute after:inset-0 after:rounded-full after:bg-p5-300/30 dark:after:bg-p5-500/30 cursor-pointer hover:scale-105 transition-transform",
                   today:
                     "!bg-transparent ring-2 ring-sky-300 dark:ring-sky-400 rounded-full",
                 }}
@@ -815,7 +761,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             <div className="bg-gradient-to-br from-white/90 to-p5-50/50 dark:from-gray-900/70 dark:to-p5-950/40 rounded-xl border-2 border-p5-300/40 dark:border-p5-600/30 shadow-lg backdrop-blur-sm p-5 min-h-[400px]">
               {selectedDate ? (
                 <div className="space-y-4 animate-fade-in">
-                  {/* Compact Header with Toggle Button */}
+                  {/* Compact Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-p5-100 dark:bg-p5-900/50 rounded-lg">
@@ -830,19 +776,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         </p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleDateVisibility(selectedDate)}
-                      className="text-p5-600 dark:text-p5-400 hover:bg-p5-100 dark:hover:bg-p5-900/50"
-                      title={isDateHidden(selectedDate) ? "Show highlight" : "Hide highlight"}
-                    >
-                      {isDateHidden(selectedDate) ? (
-                        <Eye size={16} />
-                      ) : (
-                        <EyeOff size={16} />
-                      )}
-                    </Button>
                   </div>
                   
                   {(() => {
