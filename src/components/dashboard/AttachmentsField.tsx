@@ -118,6 +118,10 @@ export function AttachmentsField({ value, onChange, onUploadingChange }: Attachm
         });
       }
       if (uploaded.length > 0 && mounted.current) onChange([...(valueRef.current || []), ...uploaded]);
+    } catch (err) {
+      // The sign-in couldn't be checked (no connection): say so instead of doing nothing
+      console.error('Upload failed before it started:', err);
+      toast.error("Couldn't upload. Check your connection and try again.");
     } finally {
       uploadingRef.current = false;
       if (mounted.current) {
