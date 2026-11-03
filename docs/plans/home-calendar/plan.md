@@ -1,6 +1,6 @@
 # Plan: home-calendar
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `4b2f960` (2026-11-03)
 **Decided with the owner on:** 2026-11-03
 
@@ -129,6 +129,8 @@ skip the item and mark it Blocked in its log with the question for the owner.
 ## Deploy checklist
 
 Nothing to deploy or migrate: all three items are front-end only and go out with Vercel when merged.
+
+- [x] Nothing to apply or deploy (checked at build, 3 Nov 2026). Merge order: item 1, item 3 (brings item 2), then `plan/home-calendar/summary`.
 
 ## Summary
 
