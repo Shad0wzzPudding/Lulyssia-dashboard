@@ -117,12 +117,24 @@ export const LineSettings = ({ scrollToken = null }: { scrollToken?: number | nu
       // the screen, so keep the screen
       if (changesRef.current === changesBefore) setLink(data as LineLink);
     } else {
-      const { data: created } = await supabase
+      const { data: created, error: createError } = await supabase
         .from('line_links')
         .insert({ user_id: userId, link_code: generateCode() })
         .select(LINK_FIELDS)
         .maybeSingle();
       if (created) setLink(created as LineLink);
+      else {
+        // Refused: most likely another tab made the link just now (one per account), so read it;
+        // otherwise say it couldn't load (not "Sign in": the user is signed in)
+        console.error('Making the LINE link failed:', createError);
+        const { data: again } = await supabase
+          .from('line_links')
+          .select(LINK_FIELDS)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (again) setLink(again as LineLink);
+        else setLoadFailed(true);
+      }
     }
     setLoading(false);
   };
