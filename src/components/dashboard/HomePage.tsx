@@ -884,12 +884,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                 }}
                               />
                             ) : (
+                              // Start: green, for tasks and events alike; end/deadline: red
                               <div className={`absolute left-0 top-0 w-0.5 h-full rounded-l-lg ${
-                                item.dateTypes.includes('deadline')
-                                  ? 'bg-red-500'
-                                  : item.type === 'event'
-                                  ? 'bg-p5-500'
-                                  : 'bg-green-500'
+                                item.dateTypes.includes('deadline') ? 'bg-red-500' : 'bg-green-500'
                               }`} />
                             )}
                             
