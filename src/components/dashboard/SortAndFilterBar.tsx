@@ -246,6 +246,8 @@ const SearchField = ({
     if (
       guiding &&
       e.key === 'ArrowRight' &&
+      // Mid-word with a composing keyboard (Chinese, Japanese…), → moves within the word
+      !e.nativeEvent.isComposing &&
       !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey &&
       el.selectionStart === search.length &&
       el.selectionEnd === search.length
