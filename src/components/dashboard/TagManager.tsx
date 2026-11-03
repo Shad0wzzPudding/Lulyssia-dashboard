@@ -120,7 +120,7 @@ const TagRow = ({ tag, count, onDelete }: { tag: Tag; count: number; onDelete: (
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-label="Tag name"
-          className="h-8 text-sm"
+          className="h-8 text-base md:text-sm"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === 'Enter') { e.preventDefault(); save(); }
@@ -190,7 +190,7 @@ export const TagManager = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') { e.preventDefault(); handleCreate(); }
               }}
-              className="h-9 text-sm"
+              className="h-9 text-base md:text-sm"
             />
             <Button onClick={handleCreate} disabled={!newName.trim() || createTag.isPending} size="sm">
               <Plus size={14} className="mr-1" />

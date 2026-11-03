@@ -275,7 +275,7 @@ export const DailyTasksSection = ({ dailyTasks, stale, onCreate, onUpdate, onDel
               value={quickTime}
               onChange={(e) => setQuickTime(e.target.value)}
               aria-label="Time (optional)"
-              className="w-28 shrink-0 px-2 text-xs sm:text-sm"
+              className="w-28 shrink-0 px-2 text-base md:text-sm"
             />
             <Button type="submit" size="sm" disabled={!quickTitle.trim() || stale || adding} aria-label={adding ? 'Saving…' : 'Add daily task'} className="shrink-0">
               <Plus size={16} />

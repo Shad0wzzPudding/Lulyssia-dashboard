@@ -269,15 +269,17 @@ const SearchField = ({
         aria-describedby={example ? hintId : undefined}
         autoComplete="off"
         spellCheck={false}
-        className="h-8 pl-8 pr-8 text-xs"
+        className="h-8 pl-8 pr-8 text-base md:text-sm"
       />
       {(!search || (guiding && fits)) && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-[calc(2rem+1px)] right-8 flex items-center overflow-hidden whitespace-pre text-xs md:text-sm"
+          className="pointer-events-none absolute inset-y-0 left-[calc(2rem+1px)] right-8 flex items-center overflow-hidden whitespace-pre text-base md:text-sm"
         >
           {!search ? (
-            <span className="truncate text-muted-foreground">
+            // Typed text is 16px on phones (smaller makes an iPhone zoom the page in), but the
+            // example stays 12px there so it fits whole; the faint rest below matches the typing
+            <span className="truncate text-xs md:text-sm text-muted-foreground">
               {lead}
               {example && (
                 <>

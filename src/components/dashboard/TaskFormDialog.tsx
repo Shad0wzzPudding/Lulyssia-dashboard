@@ -215,7 +215,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
                     return next;
                   });
                 }}
-                className="flex-1 h-9 text-sm"
+                className="flex-1 h-9 text-base md:text-sm"
               />
               <button
                 type="button"
@@ -248,7 +248,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
                   setDateErrorShown(true);
                 }}
                 aria-invalid={dateErrorShown && deadlineBeforeStart(formData.start_date, formData.deadline)}
-                className="flex-1 h-9 text-sm"
+                className="flex-1 h-9 text-base md:text-sm"
               />
               <button
                 type="button"
@@ -298,7 +298,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
                   // The box may be empty while a new number is typed (forcing 1 there turned "3" into "13");
                   // saving makes it a whole number of at least 1
                   onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: e.target.value === '' ? '' : Number(e.target.value) }))}
-                  className="w-20 h-9 text-sm"
+                  className="w-20 h-9 text-base md:text-sm"
                 />
                 <Select
                   value={formData.recurrence_unit}

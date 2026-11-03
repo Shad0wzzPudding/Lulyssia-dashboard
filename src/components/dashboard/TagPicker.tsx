@@ -105,7 +105,7 @@ export const TagPicker = ({ selected, onChange }: TagPickerProps) => {
                       handleCreate();
                     }
                   }}
-                  className="h-8 text-sm"
+                  className="h-8 text-base md:text-sm"
                 />
                 <Button type="button" size="sm" onClick={handleCreate} disabled={!newName.trim() || createTag.isPending}>
                   <Plus size={14} />
