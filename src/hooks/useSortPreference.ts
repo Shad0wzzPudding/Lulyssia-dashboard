@@ -40,11 +40,17 @@ export function useSortPreference(page: PageKey) {
     const uid = userId.current;
     if (!uid) return;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_preferences')
         .select('prefs')
         .eq('user_id', uid)
         .maybeSingle();
+      // Not read: writing now would save only this sort and wipe the others and the Editor setting.
+      // The pick stays on screen; it's just not remembered this time.
+      if (error) {
+        console.error('Reading the saved preferences failed; the sort is not saved:', error);
+        return;
+      }
       const prefs = ((data?.prefs ?? {}) as Record<string, unknown>);
       const sortPrefs = ((prefs.sort ?? {}) as Record<string, SortOption>);
       sortPrefs[page] = next;
