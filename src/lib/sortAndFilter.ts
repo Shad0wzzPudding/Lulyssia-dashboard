@@ -146,9 +146,16 @@ export const searchExample = (titles: string[], fallback: string): string => {
     );
     for (const w of words) count.set(w, (count.get(w) ?? 0) + 1);
   }
-  const [find1, find2, ...rest] = [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([w]) => w);
-  // Matched as the search matches: anywhere in the title ("tab" also hides "table")
+  const top = [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([w]) => w);
+  // Words are matched as the search matches them, anywhere in the title, so one word inside
+  // another ("home", "homework") would only repeat it, or hide everything the other finds
+  const apart = (a: string, b: string) => !a.includes(b) && !b.includes(a);
+  const [find1] = top;
+  const find2 = top.find((w) => apart(w, find1));
+  if (!find2) return fallback;
   const found = titles.map((t) => t.toLowerCase()).filter((t) => t.includes(find1) || t.includes(find2));
-  const hide = rest.find((w) => found.some((t) => t.includes(w)) && found.some((t) => !t.includes(w)));
+  const hide = top.find(
+    (w) => apart(w, find1) && apart(w, find2) && found.some((t) => t.includes(w)) && found.some((t) => !t.includes(w))
+  );
   return hide ? `${find1}, ${find2}, !${hide}` : fallback;
 };
