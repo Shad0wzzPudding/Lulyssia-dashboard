@@ -126,7 +126,6 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       tickCard('interests', interest.id, line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }))
     : undefined;
 
-  // The details window's item as it is now (the window keeps what it was opened with)
   // The calendar's plus: a new task (deadline) or event (start) on the picked date. The form opens
   // once the menu has closed, so the menu doesn't take the focus back from the form.
   const newOnDate = useRef<'task' | 'event' | null>(null);
@@ -141,6 +140,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     else eventForm.current?.openNew({ start_time: at });
   };
 
+  // The details window's item as it is now (the window keeps what it was opened with)
   const detailsTask = selectedItem?.type === 'task' ? tasks.find(t => t.id === selectedItem.id) : undefined;
   const detailsEvent = selectedItem?.type === 'event' ? events.find(e => e.id === selectedItem.id) : undefined;
   const detailsDescription = (detailsTask ?? detailsEvent)?.description ?? selectedItem?.description;
