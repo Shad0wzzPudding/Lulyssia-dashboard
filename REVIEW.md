@@ -23,9 +23,9 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `de5d970` Docs : Build summary for plan home-calendar (all three items built)
+**Last reviewed:** `9f2f4fa` Docs : Cloud review of 3 Nov: rounds 9-11 and the summary
 
-Waiting for review: [compare `de5d970...main`](https://github.com/Shad0wzzPudding/Lulyssia-dashboard/compare/de5d970...main) (or `git log --oneline de5d970..main`)
+Waiting for review: [compare `9f2f4fa...main`](https://github.com/Shad0wzzPudding/Lulyssia-dashboard/compare/9f2f4fa...main) (or `git log --oneline 9f2f4fa..main`)
 
 ## Review history
 
@@ -53,3 +53,5 @@ Waiting for review: [compare `de5d970...main`](https://github.com/Shad0wzzPuddin
 | 2026-11-03 | `6a37b56..85bfe3b` (1 code commit: `85bfe3b`, branch `search-guide`; local session, asked by the owner before merging) | 2 findings fixed: `cc40caf` (the example could use one word inside another, e.g. "home, homework", or hide everything it found) and `8b0b02d` (→ while composing with a Chinese/Japanese keyboard filled in the example). Checked: the diff with the code around it; the word picking on sample, overlapping, Thai, too-few and empty title lists; in the browser on Test-dummy the cyan example, the faint guide, → and the fallback on Events |
 | 2026-11-03 | `85bfe3b..57d208d` on `main` (2 code commits: `cc40caf`, `8b0b02d`, plus docs) and the plan home-calendar build (the 4 `plan/home-calendar/*` branches: 3 code commits), cloud session | Phase 1: no new finding. Checked: the diffs with the code around them; the search example against the real search on random titles (never an empty list, the hidden word always hides some but not all); in a local browser the plus menu with a fast Enter, Enter, Enter (one form, nothing saved) and on a month's last and next month's first day. The bug hunt after it: see roadmap.md, "Cloud review (3 Nov 2026)" |
 | 2026-11-03 | `85bfe3b..de5d970`: the search guide's 2 review fixes (`cc40caf`, `8b0b02d`), the REVIEW.md change `4b2f960`, the plan `57d208d` and the build of plan home-calendar (`665686e`, `92dfa16`, `baaaaae`, `de5d970`, as replayed onto main with item 2's log folded in); local session | 1 finding fixed in this commit: item 3 put its code between the details window's comment and the line it explains. Checked: the diffs with the code around them; tsc, eslint, build; on Test-dummy the green start line, circle-only dates, the plus menu by mouse and keyboard, a ZZ task and event saved on 20 Nov at 09:00 (then deleted, with their Recent Changes entries) |
+| 2026-11-03 | `de5d970..98a3f2b` (2 commits: `9f7be51`, `98a3f2b`; cloud session, second run, branch `cloud-review-2026-11-03-second`) | No new finding. Then a bug hunt of 10 rounds: no bug, 1 proposal (text boxes under 16px zoom the page on iPhones), in roadmap.md |
+| 2026-11-03 | `98a3f2b..9f2f4fa`: the first 3 Nov cloud run's 3 fixes (`b036dcb`, `bb5120d`, `c6aea5b`, as copied onto `main`) and its notes `9f2f4fa`; local session, while merging both 3 Nov runs | No new finding. Checked: the diffs with the code around them (a refused LINE link read again and a failed reread shows "couldn't load"; the upload's catch also covers a signed-out check, with no double message beside the per-file ones; a failed settings read saves nothing and a missing row still saves); tsc, eslint, build |
