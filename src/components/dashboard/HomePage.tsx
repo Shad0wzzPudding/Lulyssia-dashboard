@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, Undo2, Pencil } from "lucide-react";
+import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, Undo2, Pencil, Plus } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
 import { Interest, Task, Event, ActivityLog, Attachment, FormSaveCallbacks, FormSaveMarker } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -12,7 +12,9 @@ import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
 import { DraggableSummaryItem } from "./DraggableSummaryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { unlockAudio, playCollapseSound, playExpandSound } from "@/lib/sounds";
+import { unlockAudio, playCollapseSound, playExpandSound, playAddSound } from "@/lib/sounds";
+import { presetTime } from "@/lib/presetTime";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
 import { useTouchReorder } from "@/hooks/useTouchReorder";
@@ -125,6 +127,20 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     : undefined;
 
   // The details window's item as it is now (the window keeps what it was opened with)
+  // The calendar's plus: a new task (deadline) or event (start) on the picked date. The form opens
+  // once the menu has closed, so the menu doesn't take the focus back from the form.
+  const newOnDate = useRef<'task' | 'event' | null>(null);
+  const openNewOnDate = (e: globalThis.Event) => {
+    const kind = newOnDate.current;
+    newOnDate.current = null;
+    if (!kind || !selectedDate) return;
+    e.preventDefault();
+    playAddSound();
+    const at = presetTime(selectedDate);
+    if (kind === 'task') taskForm.current?.openNew({ deadline: at });
+    else eventForm.current?.openNew({ start_time: at });
+  };
+
   const detailsTask = selectedItem?.type === 'task' ? tasks.find(t => t.id === selectedItem.id) : undefined;
   const detailsEvent = selectedItem?.type === 'event' ? events.find(e => e.id === selectedItem.id) : undefined;
   const detailsDescription = (detailsTask ?? detailsEvent)?.description ?? selectedItem?.description;
@@ -776,6 +792,23 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         </p>
                       </div>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-p5-600 dark:text-p5-400 hover:bg-p5-100 dark:hover:bg-p5-900/50"
+                          aria-label="New task or event on this date"
+                          title="New task or event on this date"
+                        >
+                          <Plus size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onCloseAutoFocus={openNewOnDate}>
+                        <DropdownMenuItem onSelect={() => { newOnDate.current = 'task'; }}>New task</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => { newOnDate.current = 'event'; }}>New event</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   
                   {(() => {

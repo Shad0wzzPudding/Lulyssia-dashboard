@@ -13,9 +13,12 @@ import { autoDeadline } from '@/lib/autoDeadline';
 import { END_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
 
-/** Opens the form: empty for a new event, or filled in to edit one */
+/**
+ * Opens the form: empty for a new event (or with only its start filled in, as yyyy-MM-ddTHH:mm),
+ * or filled in to edit one
+ */
 export interface EventFormHandle {
-  openNew: () => void;
+  openNew: (preset?: { start_time?: string }) => void;
   openEdit: (event: Event) => void;
 }
 
@@ -131,8 +134,9 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
   };
 
   useImperativeHandle(ref, () => ({
-    openNew: () => {
+    openNew: (preset) => {
       resetForm();
+      if (preset?.start_time) setFormData((prev) => ({ ...prev, start_time: preset.start_time ?? '' }));
       setIsCreateOpen(true);
     },
     openEdit: handleEdit,

@@ -18,9 +18,12 @@ import { refuseSaveOffline } from '@/lib/formSave';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
-/** Opens the form: empty for a new task, or filled in to edit one */
+/**
+ * Opens the form: empty for a new task (or with only its deadline filled in, as yyyy-MM-ddTHH:mm),
+ * or filled in to edit one
+ */
 export interface TaskFormHandle {
-  openNew: () => void;
+  openNew: (preset?: { deadline?: string }) => void;
   openEdit: (task: Task) => void;
 }
 
@@ -165,8 +168,9 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
   };
 
   useImperativeHandle(ref, () => ({
-    openNew: () => {
+    openNew: (preset) => {
       resetForm();
+      if (preset?.deadline) setFormData((prev) => ({ ...prev, deadline: preset.deadline ?? '' }));
       setIsCreateOpen(true);
     },
     openEdit: handleEdit,
