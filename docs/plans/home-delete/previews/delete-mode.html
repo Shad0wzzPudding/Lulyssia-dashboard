@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar Delete Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Home's date panel with "+ / −": − turns on delete mode, each item gets a delete button at its
+     bottom right, and deleting asks first (with "Don't ask again today"). Intent only. */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --panel: hsl(200 18% 9%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 64%);
+    --cyan: hsl(193 61% 52%);
+    --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%);
+    --green: hsl(142 71% 45%);
+    --red: hsl(0 84% 60%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); }
+  .wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; color: var(--muted); }
+  .seg button { font: 600 .8rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+  .seg button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); background: hsl(193 61% 52% / .1); }
+  .panel { background: var(--panel); border: 2px solid hsl(193 50% 30% / .4); border-radius: 12px; padding: 18px; }
+  .ph { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); gap: 8px; }
+  .ph h3 { margin: 0; font-size: 1rem; }
+  .ph small { color: var(--cyan); font-size: .75rem; }
+  .pm { display: flex; align-items: center; gap: 0; color: var(--cyan); }
+  .pm.boxed { border: 1px solid var(--cyan-dim); border-radius: 8px; padding: 0 2px; }
+  .pm .slash { color: var(--muted); font-size: .95rem; padding: 0 1px; user-select: none; }
+  .iconbtn { width: 32px; height: 32px; border-radius: 6px; border: 0; background: transparent; color: var(--cyan); display: grid; place-items: center; cursor: pointer; }
+  .iconbtn:hover { background: hsl(193 61% 52% / .15); }
+  .iconbtn[aria-pressed=true] { background: hsl(0 84% 60% / .18); color: var(--red); }
+  .iconbtn:focus-visible, .seg button:focus-visible, .del:focus-visible, .dlg button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .hint { margin: 10px 0 0; font-size: .78rem; color: var(--red); display: none; }
+  .on .hint { display: block; }
+  .items { display: grid; gap: 8px; margin-top: 14px; }
+  .item { position: relative; background: hsl(210 15% 14%); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 10px 16px; transition: opacity .25s, transform .25s; }
+  .item.gone { opacity: 0; transform: translateX(24px); }
+  .item .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+  .item .t { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: .9rem; }
+  .badge { font-size: .7rem; border-radius: 999px; padding: 1px 8px; border: 1px solid #444; font-weight: 600; white-space: nowrap; }
+  .row { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: 6px; }
+  .chip { display: inline-flex; gap: 4px; font-size: .75rem; font-weight: 600; color: #4ade80; background: hsl(142 71% 45% / .15); border-radius: 4px; padding: 2px 6px; }
+  .chip.end { color: #f87171; background: hsl(0 84% 60% / .15); }
+  .del { display: none; width: 30px; height: 30px; border-radius: 6px; border: 1px solid hsl(0 84% 60% / .5); background: hsl(0 84% 60% / .1); color: var(--red); place-items: center; cursor: pointer; flex: none; }
+  .del:hover { background: hsl(0 84% 60% / .22); }
+  .on .del { display: grid; }
+  .empty { text-align: center; color: var(--muted); font-size: .85rem; padding: 24px 0; }
+  .muted { color: var(--muted); font-size: .82rem; line-height: 1.55; }
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; place-items: center; padding: 16px; z-index: 10; }
+  .scrim.open { display: grid; }
+  .dlg { background: var(--card); border: 2px solid hsl(0 0% 98% / .8); box-shadow: 6px 6px 0 0 var(--cyan); border-radius: 8px; padding: 22px; width: 100%; max-width: 420px; text-align: center; }
+  .sticker { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 999px; background: hsl(193 61% 52% / .2); display: grid; place-items: center; font-size: 30px; }
+  .dlg h4 { margin: 0; color: var(--cyan); font-size: 1.2rem; }
+  .dlg .what { margin: 12px 0 4px; font-weight: 600; overflow-wrap: anywhere; }
+  .dlg .sub { margin: 0; color: var(--muted); font-size: .85rem; }
+  .tick { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 16px 0 4px; font-size: .85rem; cursor: pointer; }
+  .tick input { width: 16px; height: 16px; accent-color: var(--cyan); }
+  .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .acts button { font: 600 .85rem var(--body); border-radius: 6px; padding: 9px 14px; cursor: pointer; }
+  .acts .no { background: transparent; color: var(--fg); border: 1px solid hsl(0 0% 98% / .4); }
+  .acts .yes { background: var(--cyan); color: hsl(200 20% 6%); border: 0; }
+  @media (max-width: 480px) { .acts button { flex: 1 1 100%; } }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: hsl(200 14% 12%); border: 1px solid var(--cyan); color: var(--fg); padding: 10px 14px; border-radius: 8px; font-size: .85rem; max-width: calc(100% - 32px); display: none; z-index: 11; }
+  .reset { font: 600 .8rem var(--body); color: var(--muted); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; cursor: pointer; justify-self: start; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Delete from the calendar</h1>
+    <p class="lede">Home's date panel with "+ / −". Press − to turn delete mode on: each task and event gets a red delete button at its bottom right. Deleting asks first, with "Don't ask again today". Press − again to turn it off. Intent only: the build uses the app's real buttons and Lulyssia's confirm window.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="How + / − looks">
+    <span>Look:</span>
+    <button type="button" data-look="plain" aria-pressed="true">A: plain icons (recommended)</button>
+    <button type="button" data-look="boxed" aria-pressed="false">B: in one outlined group</button>
+  </div>
+
+  <section class="panel" id="panel">
+    <div class="ph">
+      <div>
+        <h3>Fri, Nov 20</h3>
+        <small>2026</small>
+      </div>
+      <div class="pm" id="pm">
+        <button type="button" class="iconbtn" aria-label="New task or event on this date" title="New task or event on this date">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <span class="slash" aria-hidden="true">/</span>
+        <button type="button" class="iconbtn" id="minus" aria-pressed="false" aria-label="Delete mode: show a delete button on each item" title="Delete items on this date">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="hint">Delete mode: pick the item to delete. Press − again when done.</p>
+    <div class="items" id="items"></div>
+  </section>
+  <button type="button" class="reset" id="reset">Reset the preview (items and "don't ask")</button>
+  <p class="muted">Clicking an item itself still opens its details, as now; only the red button deletes. The delete is the same as on the Tasks and Events pages (same sound, message, and it shows in Recent Changes, where it can be undone).</p>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-h">
+    <div class="sticker" aria-hidden="true">😮</div>
+    <h4 id="dlg-h">Hold on, Test-dummy.</h4>
+    <p class="what" id="dlg-what"></p>
+    <p class="sub">It goes to Recent Changes, where you can undo it.</p>
+    <label class="tick"><input type="checkbox" id="skip"> Don't ask again today</label>
+    <div class="acts">
+      <button type="button" class="no" id="no">Nevermind~</button>
+      <button type="button" class="yes" id="yes">Yes, delete it</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const START = [
+    { id: 1, type: 'task', title: 'Finish the slides', bar: 'var(--red)', chips: [['end', 'Due 09:00']] },
+    { id: 2, type: 'event', title: 'Team lunch', bar: 'var(--green)', chips: [['', 'Start 12:00']] },
+    { id: 3, type: 'event', title: 'Dentist', bar: 'linear-gradient(var(--green) 50%, var(--red) 50%)', chips: [['', '15:00 – 16:00']] },
+  ];
+  let items = START.slice();
+  let skipDay = null;            // the day "don't ask" was ticked for
+  const today = () => new Date().toDateString();
+  const $ = (id) => document.getElementById(id);
+  const trash = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+
+  const render = () => {
+    const box = $('items');
+    if (!items.length) { box.innerHTML = '<div class="empty">Free Day · No scheduled items</div>'; return; }
+    box.innerHTML = items.map((it) => `
+      <div class="item" data-id="${it.id}">
+        <span class="bar" style="background:${it.bar}"></span>
+        <div class="t"><span>${it.title}</span><span class="badge">${it.type}</span></div>
+        <div class="row">
+          <div>${it.chips.map(([c, t]) => `<span class="chip ${c}">${t}</span>`).join(' ')}</div>
+          <button type="button" class="del" aria-label="Delete ${it.type}: ${it.title}" title="Delete">${trash}</button>
+        </div>
+      </div>`).join('');
+  };
+
+  const toast = (t) => { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => el.style.display = 'none', 2200); };
+
+  let pending = null;
+  const doDelete = (id) => {
+    const el = document.querySelector(`.item[data-id="${id}"]`);
+    const it = items.find((x) => x.id === id);
+    el?.classList.add('gone');
+    setTimeout(() => { items = items.filter((x) => x.id !== id); render(); }, 250);
+    toast(`${it.type === 'task' ? 'Task' : 'Event'} deleted successfully!`);
+  };
+  const ask = (id) => {
+    if (skipDay === today()) { doDelete(id); return; }
+    pending = id;
+    const it = items.find((x) => x.id === id);
+    $('dlg-what').textContent = `Delete the ${it.type} "${it.title}"?`;
+    $('skip').checked = false;
+    $('scrim').classList.add('open');
+    $('no').focus();
+  };
+  const close = () => { $('scrim').classList.remove('open'); pending = null; };
+
+  $('items').addEventListener('click', (e) => {
+    const b = e.target.closest('.del');
+    if (b) { e.stopPropagation(); ask(Number(b.closest('.item').dataset.id)); return; }
+    if (e.target.closest('.item')) toast('Opens the details window, as now');
+  });
+  $('minus').addEventListener('click', () => {
+    const on = $('minus').getAttribute('aria-pressed') !== 'true';
+    $('minus').setAttribute('aria-pressed', String(on));
+    $('panel').classList.toggle('on', on);
+  });
+  $('no').addEventListener('click', close);
+  $('yes').addEventListener('click', () => {
+    if ($('skip').checked) skipDay = today();
+    const id = pending; close(); doDelete(id);
+  });
+  $('scrim').addEventListener('click', (e) => { if (e.target === $('scrim')) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('scrim').classList.contains('open')) close(); });
+  $('reset').addEventListener('click', () => { items = START.slice(); skipDay = null; render(); toast('Preview reset'); });
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('pm').classList.toggle('boxed', b.dataset.look === 'boxed');
+  }));
+  render();
+</script>
+</body>
+</html>
