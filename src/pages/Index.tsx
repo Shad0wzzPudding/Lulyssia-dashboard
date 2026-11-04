@@ -265,6 +265,8 @@ const Index = () => {
             onUpdateTask={mutations.updateTask.mutate}
             onCreateEvent={mutations.createEvent.mutate}
             onUpdateEvent={mutations.updateEvent.mutate}
+            onDeleteTask={mutations.deleteTask.mutate}
+            onDeleteEvent={mutations.deleteEvent.mutate}
           />
         );
       case 'interests':

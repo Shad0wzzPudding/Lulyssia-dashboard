@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, Undo2, Pencil, Plus } from "lucide-react";
+import { Clock, Star, Calendar as CalendarIcon, CheckCircle2, Circle, ChevronDown, ChevronRight, Pin, Activity, AlertCircle, ChevronUp, CalendarDays, ChevronsRight, GripVertical, Undo2, Pencil, Plus, Minus, Trash2 } from "lucide-react";
 import { format, isToday, startOfDay, endOfDay, isSameDay, isAfter, isBefore, parseISO, parseISO as parseDate } from "date-fns";
 import { Interest, Task, Event, ActivityLog, Attachment, FormSaveCallbacks, FormSaveMarker } from "@/lib/types";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -12,7 +12,9 @@ import { InstallAppCard } from "./InstallAppCard";
 import { DraggableInterestCard } from "./DraggableInterestCard";
 import { DraggableSummaryItem } from "./DraggableSummaryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { unlockAudio, playCollapseSound, playExpandSound, playAddSound } from "@/lib/sounds";
+import { unlockAudio, playCollapseSound, playExpandSound, playAddSound, playDeleteSound } from "@/lib/sounds";
+import { LulyssiaConfirmDialog } from "./LulyssiaConfirmDialog";
+import type { DeleteTarget } from "@/hooks/useDashboardData";
 import { presetStart, presetTime } from "@/lib/presetTime";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FormattedText } from '@/components/ui/formatted-text';
@@ -91,10 +93,30 @@ interface HomePageProps {
   onUpdateTask: (data: Partial<Task> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
+  // Deleting from the date panel's delete mode (the same as the Tasks and Events pages)
+  onDeleteTask: (target: DeleteTarget, options?: { onSettled?: () => void }) => void;
+  onDeleteEvent: (target: DeleteTarget, options?: { onSettled?: () => void }) => void;
 }
 
-export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onCreateTask, onUpdateTask, onCreateEvent, onUpdateEvent }: HomePageProps) => {
+export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onCreateTask, onUpdateTask, onCreateEvent, onUpdateEvent, onDeleteTask, onDeleteEvent }: HomePageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  // The date panel's delete mode (the "−" next to the plus): a delete button on each item. Off
+  // again on the "−", on picking another date, after the date's last item, and on leaving Home.
+  const [deleteMode, setDeleteMode] = useState(false);
+  const pickDate = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setDeleteMode(false);
+    refocusAfterDelete.current = false;
+  };
+  // The item whose delete window is open
+  const [deleteAsk, setDeleteAsk] = useState<{ type: 'task' | 'event'; id: string; title: string } | null>(null);
+  // Items whose delete is on its way: a second click on their button sends nothing more
+  const deletingIds = useRef(new Set<string>());
+  const minusRef = useRef<HTMLButtonElement>(null);
+  const plusRef = useRef<HTMLButtonElement>(null);
+  // A delete was confirmed: once its item (and the button the focus went back to) leaves the list,
+  // the focus goes to the "−", or to the plus when the date is now free
+  const refocusAfterDelete = useRef(false);
   const [selectedItem, setSelectedItem] = useState<DayItem | null>(null);
   const [recentChangesCollapsed, setRecentChangesCollapsed] = useState(() => {
     try {
@@ -125,6 +147,21 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     ? (interest: Interest, line: number) =>
       tickCard('interests', interest.id, line, (description) => onUpdateInterest({ id: interest.id, description, __silent: true }))
     : undefined;
+
+  // Sends the delete, as the Tasks and Events pages do (the same sound, toast and Recent Changes
+  // entry, so it can be undone)
+  const deleteFromPanel = (item: { type: 'task' | 'event'; id: string }) => {
+    if (deletingIds.current.has(item.id)) return;
+    deletingIds.current.add(item.id);
+    playDeleteSound();
+    const done = { onSettled: () => deletingIds.current.delete(item.id) };
+    if (item.type === 'task') onDeleteTask(item.id, done);
+    else onDeleteEvent(item.id, done);
+  };
+  const askDelete = (item: { type: 'task' | 'event'; id: string; title: string }) => {
+    if (deletingIds.current.has(item.id)) return;
+    setDeleteAsk(item);
+  };
 
   // The calendar's plus: a new task (deadline) or event (start) on the picked date. The form opens
   // once the menu has closed, so the menu doesn't take the focus back from the form.
@@ -571,6 +608,21 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     },
   });
 
+  // The picked date's items (the date panel's list)
+  const panelItems = selectedDate ? getDateDetails(selectedDate) : [];
+  // The date's last item deleted (a Free Day): delete mode ends
+  const panelEmpty = panelItems.length === 0;
+  useEffect(() => {
+    if (panelEmpty) setDeleteMode(false);
+  }, [panelEmpty]);
+  useEffect(() => {
+    if (!refocusAfterDelete.current) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active.isConnected) return;
+    refocusAfterDelete.current = false;
+    (panelEmpty ? plusRef : minusRef).current?.focus();
+  }, [panelItems.length, panelEmpty]);
+
   return (
     <div className="space-y-6">
       <InstallAppCard />
@@ -755,7 +807,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 mode="single"
                 className="rounded-md border border-p5-200 dark:border-p5-800 bg-white/50 dark:bg-p5-950/20"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={pickDate}
                 modifiers={{
                   marked: markedDates.filter(d => !isNaN(d.getTime())),
                   today: [new Date()],
@@ -793,9 +845,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         </p>
                       </div>
                     </div>
+                    <div className="flex items-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
+                          ref={plusRef}
                           variant="ghost"
                           size="sm"
                           className="text-p5-600 dark:text-p5-400 hover:bg-p5-100 dark:hover:bg-p5-900/50"
@@ -810,10 +864,32 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                         <DropdownMenuItem onSelect={() => { newOnDate.current = 'event'; }}>New event</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    <span className="px-0.5 text-sm text-muted-foreground/60 select-none" aria-hidden="true">/</span>
+                    <Button
+                      ref={minusRef}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteMode((on) => !on)}
+                      disabled={panelItems.length === 0}
+                      aria-pressed={deleteMode}
+                      aria-label="Delete mode: show a delete button on each item"
+                      title="Delete items on this date"
+                      className={deleteMode
+                        ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-500 dark:text-red-400 dark:hover:text-red-400'
+                        : 'text-p5-600 dark:text-p5-400 hover:bg-p5-100 dark:hover:bg-p5-900/50'}
+                    >
+                      <Minus size={16} />
+                    </Button>
+                    </div>
                   </div>
+                  {deleteMode && (
+                    <p className="-mt-2 text-xs text-red-500 dark:text-red-400">
+                      Delete mode: pick the item to delete. Press − again when done.
+                    </p>
+                  )}
                   
                   {(() => {
-                    const dateItems = getDateDetails(selectedDate);
+                    const dateItems = panelItems;
                     
                     if (dateItems.length === 0) {
                       return (
@@ -890,6 +966,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                  </p>
                                )}
                               
+                              <div className="flex items-end justify-between gap-2">
                               <div className="flex flex-wrap gap-2">
                                 {item.sameDayLabel ? (
                                   <TimeRangeChip start={item.times.start as string} end={item.times.deadline as string} />
@@ -907,6 +984,23 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                                   </div>
                                 )}
                                 </>)}
+                              </div>
+                              {deleteMode && (
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    askDelete({ type: item.type, id: item.id, title: item.title });
+                                  }}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                  aria-label={`Delete ${item.type}: ${item.title}`}
+                                  title="Delete"
+                                  className="h-8 w-8 shrink-0 border-red-300 bg-red-500/5 text-red-500 hover:bg-red-500/15 hover:text-red-600 dark:border-red-800 dark:text-red-400"
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              )}
                               </div>
                             </div>
                           </div>
@@ -1317,6 +1411,19 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         </DialogContent>
       </Dialog>
 
+      {/* Asked before a delete from the date panel */}
+      <LulyssiaConfirmDialog
+        open={!!deleteAsk}
+        onOpenChange={(open) => { if (!open) setDeleteAsk(null); }}
+        onConfirm={() => {
+          if (deleteAsk) deleteFromPanel(deleteAsk);
+          setDeleteAsk(null);
+          refocusAfterDelete.current = true;
+        }}
+        title={deleteAsk?.type === 'event' ? 'Delete this event?' : 'Delete this task?'}
+        description={`"${deleteAsk?.title ?? ''}" will be deleted. You can undo it from Recent Changes on Home.`}
+        confirmText="Yes, delete it!"
+      />
       <TaskFormDialog ref={taskForm} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} />
       <EventFormDialog ref={eventForm} onCreateEvent={onCreateEvent} onUpdateEvent={onUpdateEvent} />
     </div>
