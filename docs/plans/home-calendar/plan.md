@@ -1,6 +1,6 @@
 # Plan: home-calendar
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `4b2f960` (2026-11-03)
 **Decided with the owner on:** 2026-11-03
 
@@ -131,6 +131,19 @@ skip the item and mark it Blocked in its log with the question for the owner.
 Nothing to deploy or migrate: all three items are front-end only and go out with Vercel when merged.
 
 - [x] Nothing to apply or deploy (checked at build, 3 Nov 2026). Merge order: item 1, item 3 (brings item 2), then `plan/home-calendar/summary`.
+
+## Decided after the build
+
+Reviewed with the owner on 3-4 Nov 2026: the green start line, the circle-only dates, the plus and its
+menu (on a phone too) and the add sound all checked by eye and kept as built. The build's five
+assumptions (the old hidden-dates list cleared on every Home load, marked dates keep their bold
+number, picking an entry plays the add sound, the form opens after the menu closes, the menu opens
+below the plus aligned to its right edge) were kept.
+
+- **Q:** A task made from the plus gets only its Deadline; should it get a Start too? **A:** Yes:
+  Start = now (date and time, to the minute) when the picked date is today or later; on a past date
+  it stays empty, since the deadline would come before it and the form would refuse to save. Events
+  are unchanged (their Start is the picked date).
 
 ## Summary
 

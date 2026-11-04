@@ -13,7 +13,7 @@ import { DraggableInterestCard } from "./DraggableInterestCard";
 import { DraggableSummaryItem } from "./DraggableSummaryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { unlockAudio, playCollapseSound, playExpandSound, playAddSound } from "@/lib/sounds";
-import { presetTime } from "@/lib/presetTime";
+import { presetStart, presetTime } from "@/lib/presetTime";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
@@ -135,8 +135,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     if (!kind || !selectedDate) return;
     e.preventDefault();
     playAddSound();
-    const at = presetTime(selectedDate);
-    if (kind === 'task') taskForm.current?.openNew({ deadline: at });
+    const now = new Date();
+    const at = presetTime(selectedDate, now);
+    if (kind === 'task') taskForm.current?.openNew({ start_date: presetStart(selectedDate, now), deadline: at });
     else eventForm.current?.openNew({ start_time: at });
   };
 
