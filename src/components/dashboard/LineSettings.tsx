@@ -9,6 +9,7 @@ import { MessageCircle, Copy, RefreshCw, Send } from 'lucide-react';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 import { STICKERS } from '@/lib/stickers';
 import { cn } from '@/lib/utils';
+import { thaiToday } from '@/lib/thaiDate';
 
 interface LineLink {
   id: string;
@@ -36,8 +37,6 @@ const LINK_FIELDS =
 /** Same as TODAY_REQUESTS_PER_DAY in supabase/functions/_shared/lineQuota.ts */
 const TODAY_REQUESTS_PER_DAY = 3;
 
-/** Today's date in Thai time, as stored in today_requests_date */
-const thaiToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
 
 const generateCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(8)),

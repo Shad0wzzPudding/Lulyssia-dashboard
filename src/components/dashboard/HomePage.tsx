@@ -14,6 +14,7 @@ import { DraggableSummaryItem } from "./DraggableSummaryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { unlockAudio, playCollapseSound, playExpandSound, playAddSound, playDeleteSound } from "@/lib/sounds";
 import { LulyssiaConfirmDialog } from "./LulyssiaConfirmDialog";
+import { skipDeleteQuestion, stopDeleteQuestionToday } from "@/lib/homeDeleteNoAsk";
 import type { DeleteTarget } from "@/hooks/useDashboardData";
 import { presetStart, presetTime } from "@/lib/presetTime";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -158,9 +159,13 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     if (item.type === 'task') onDeleteTask(item.id, done);
     else onDeleteEvent(item.id, done);
   };
+  // Asks first, unless "Don't ask again today" was ticked on this device today
   const askDelete = (item: { type: 'task' | 'event'; id: string; title: string }) => {
     if (deletingIds.current.has(item.id)) return;
-    setDeleteAsk(item);
+    if (skipDeleteQuestion()) {
+      deleteFromPanel(item);
+      refocusAfterDelete.current = true;
+    } else setDeleteAsk(item);
   };
 
   // The calendar's plus: a new task (deadline) or event (start) on the picked date. The form opens
@@ -1415,7 +1420,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
       <LulyssiaConfirmDialog
         open={!!deleteAsk}
         onOpenChange={(open) => { if (!open) setDeleteAsk(null); }}
-        onConfirm={() => {
+        onConfirm={(dontAsk) => {
+          // The tick only counts on confirming
+          if (dontAsk) stopDeleteQuestionToday();
           if (deleteAsk) deleteFromPanel(deleteAsk);
           setDeleteAsk(null);
           refocusAfterDelete.current = true;
@@ -1423,6 +1430,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
         title={deleteAsk?.type === 'event' ? 'Delete this event?' : 'Delete this task?'}
         description={`"${deleteAsk?.title ?? ''}" will be deleted. You can undo it from Recent Changes on Home.`}
         confirmText="Yes, delete it!"
+        dontAskLabel="Don't ask again today"
       />
       <TaskFormDialog ref={taskForm} onCreateTask={onCreateTask} onUpdateTask={onUpdateTask} />
       <EventFormDialog ref={eventForm} onCreateEvent={onCreateEvent} onUpdateEvent={onUpdateEvent} />

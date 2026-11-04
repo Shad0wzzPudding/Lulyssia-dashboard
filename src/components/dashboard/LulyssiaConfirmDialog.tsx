@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { STICKERS, pickRandom } from '@/lib/stickers';
 import { playLulyssiaSound, playConfirmSound, playCancelSound } from '@/lib/sounds';
 import { useUserNames } from '@/hooks/useUserNames';
@@ -17,16 +18,19 @@ import { fillNames } from '@/lib/names';
 interface LulyssiaConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  /** `dontAsk`: whether the "don't ask" box (dontAskLabel) was ticked */
+  onConfirm: (dontAsk: boolean) => void;
   title: string;
   description: string;
   confirmText?: string;
   cancelText?: string;
+  /** Shows a tick box with this label above the buttons (unticked each time the window opens) */
+  dontAskLabel?: string;
 }
 
-const handleConfirmClick = (onConfirm: () => void) => {
+const handleConfirmClick = (onConfirm: (dontAsk: boolean) => void, dontAsk: boolean) => {
   playConfirmSound();
-  onConfirm();
+  onConfirm(dontAsk);
 };
 
 // Cancel button just closes the dialog - sound is handled by handleOpenChange
@@ -56,8 +60,10 @@ export const LulyssiaConfirmDialog = ({
   title,
   description,
   confirmText = "Yes, I'm sure!",
-  cancelText = "Nevermind~"
+  cancelText = "Nevermind~",
+  dontAskLabel,
 }: LulyssiaConfirmDialogProps) => {
+  const [dontAsk, setDontAsk] = useState(false);
   const pickMessage = () => pickRandom(lulyssiaMessages);
   const [lulyssiaMessage, setLulyssiaMessage] = useState(pickMessage);
   // Pick a new line each time the dialog opens (it used to be picked once per page
@@ -66,7 +72,10 @@ export const LulyssiaConfirmDialog = ({
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
-    if (open) setLulyssiaMessage(pickMessage());
+    if (open) {
+      setLulyssiaMessage(pickMessage());
+      setDontAsk(false);
+    }
   }
   const { names } = useUserNames();
   const justConfirmedRef = useRef(false);
@@ -119,6 +128,12 @@ export const LulyssiaConfirmDialog = ({
             </AlertDialogDescription>
           </div>
         </AlertDialogHeader>
+        {dontAskLabel && (
+          <label className="flex cursor-pointer items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Checkbox checked={dontAsk} onCheckedChange={(v) => setDontAsk(v === true)} />
+            {dontAskLabel}
+          </label>
+        )}
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
           <Button 
             variant="outline"
@@ -141,7 +156,7 @@ export const LulyssiaConfirmDialog = ({
               if (confirmedRef.current) return;
               confirmedRef.current = true;
               justConfirmedRef.current = true;
-              handleConfirmClick(onConfirm);
+              handleConfirmClick(onConfirm, dontAsk);
             }}
             className="w-full sm:w-auto font-semibold"
           >
