@@ -1,6 +1,6 @@
 # Plan: home-delete
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `a235a5e` (2026-11-04)
 **Decided with the owner on:** 2026-11-04
 
@@ -160,6 +160,8 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 Nothing to deploy or migrate. Both items are front-end only and go out with Vercel when merged.
 Merge order: item 2 (it brings item 1), then the summary branch. Item 1 can go alone.
+
+- [x] Nothing to apply or deploy (checked at build, 4 Nov 2026).
 
 ## Summary
 
