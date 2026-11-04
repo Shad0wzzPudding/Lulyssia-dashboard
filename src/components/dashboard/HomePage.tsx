@@ -95,8 +95,8 @@ interface HomePageProps {
   onCreateEvent: (data: Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at'> & FormSaveMarker, options?: FormSaveCallbacks) => void;
   onUpdateEvent: (data: Partial<Event> & { id: string; __silent?: boolean } & FormSaveMarker, options?: FormSaveCallbacks) => void;
   // Deleting from the date panel's delete mode (the same as the Tasks and Events pages)
-  onDeleteTask: (target: DeleteTarget, options?: { onSettled?: () => void }) => void;
-  onDeleteEvent: (target: DeleteTarget, options?: { onSettled?: () => void }) => void;
+  onDeleteTask: (target: DeleteTarget, options?: { onSettled?: () => void; onError?: () => void }) => void;
+  onDeleteEvent: (target: DeleteTarget, options?: { onSettled?: () => void; onError?: () => void }) => void;
 }
 
 export const HomePage = ({ interests, tasks, events, activityLog, onUpdateInterest, onDeleteActivityLog, onRevertActivityLog, onCreateTask, onUpdateTask, onCreateEvent, onUpdateEvent, onDeleteTask, onDeleteEvent }: HomePageProps) => {
@@ -155,7 +155,16 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     if (deletingIds.current.has(item.id)) return;
     deletingIds.current.add(item.id);
     playDeleteSound();
-    const done = { onSettled: () => deletingIds.current.delete(item.id) };
+    const done = {
+      onSettled: () => deletingIds.current.delete(item.id),
+      // Not deleted: the item stays, but the focus was left nowhere when the window closed
+      onError: () => {
+        if (!refocusAfterDelete.current) return;
+        refocusAfterDelete.current = false;
+        const active = document.activeElement;
+        if (!active || active === document.body || !active.isConnected) minusRef.current?.focus();
+      },
+    };
     if (item.type === 'task') onDeleteTask(item.id, done);
     else onDeleteEvent(item.id, done);
   };

@@ -26,7 +26,7 @@
   gone), or to the plus when the date has become a Free Day (the "−" is disabled then).
 - A delete that's already on its way ignores more clicks on that item's button; the guard lets go when
   the delete is answered. If two deletes run at once and the first fails, that item's button may stay
-  ignored until another date is picked or Home is left (the app only reports the latest delete's answer).
+  ignored until Home is left (the app only reports the latest delete's answer). (Corrected at the review: picking another date doesn't free it, and shouldn't, since the same item can show on two dates and a second delete of it would be sent.)
 
 ## Needs
 nothing

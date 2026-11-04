@@ -467,3 +467,24 @@ What to do (owner):
 
 ### Findings
 - [x] Low: On an iPhone, tapping some text boxes zooms the whole page in, because iPhones zoom into any box whose text is smaller than 16px (the reason the description box went to 16px on phones on 30 Oct). Measured at 390px: the search boxes on Tasks, Events and Interests (12px), the daily list's time box (12px), the task form's Start and Deadline boxes (14px), and the tag name boxes in the tag picker and in Settings (14px); the title boxes and the event form's date boxes are already 16px. The page then stays zoomed until you pinch it back. Decided (owner): option (a). Done: those boxes, and the task form's "Every N" repeat box (also 14px, not in the list above), use 16px text on phones and keep 14px from 768px up; the search box's empty example stays 12px on phones so it still fits whole (at 16px it was cut off at 390px), while typed text and the faint guide are 16px (this commit)
+
+## Cloud review (4 Nov 2026)
+Unattended review (`/cloud-review in this branch`) of `main`'s waiting commits and the plan home-delete
+build, done on branch `plan/home-delete/summary` as asked (the two `plan/home-delete/*` branches are
+merged into it, so merging it alone is enough). Rounds log:
+[docs/reviews/2026-11-04-cloud-review.md](docs/reviews/2026-11-04-cloud-review.md).
+
+**Summary.** Phase 1: `main`'s 2 waiting code commits and the home-delete build's 2, no new finding.
+Phase 2: 7 rounds, 1 bug fixed (Low), no proposals. Nothing to apply to the database and no functions to
+deploy. Stopped after six clean rounds in a row (editor, time zones, Interests, Tasks, Settings, search),
+with every area covered in this run or the two 3 Nov runs and unchanged since. This run covered areas
+1-5, 7, 10 and 15; the next run should start with 6 Navigation, 8 Recent Changes, 9 Attachments, 11
+Hooks, 12 LINE, 13 Migrations and 14 Phones (covered on 3 Nov), then the second pass by angle.
+
+**What to do (owner).**
+- [x] Merge `plan/home-delete/summary` (it now holds both home-delete items and this review's fix) (done 4 Nov 2026: its commits copied onto `main` in a line, the review's notes folded into its fix)
+- [x] On Test-dummy (local session, 4 Nov 2026): a "ZZ" task and event deleted from the panel, Nevermind~ and Escape, one entry for a double confirm, the undo, "Don't ask again today" and yesterday's date; then cleaned up
+- [ ] The home-delete checks by eye (docs/plans/home-delete/log/summary.md)
+
+### Findings
+- [x] Low: After a delete from Home's date panel that failed (e.g. no connection), the keyboard focus was left nowhere: the window closed, the item stayed with its "Failed to delete" message, and the next Tab started again from the top of the page. Done: the focus goes back to the "−" (this commit; `d7c50f7` on the build branch)

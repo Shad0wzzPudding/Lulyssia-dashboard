@@ -10,8 +10,10 @@ files changed since).
 | 2 | "Don't ask again today" in the delete window | Built | `plan/home-delete/2-dont-ask-today` (on item 1's branch) |
 
 ## Merge order
-1. `plan/home-delete/2-dont-ask-today` (contains item 1; or merge item 1 alone first if you want only it)
-2. `plan/home-delete/summary`
+Merge `plan/home-delete/summary` alone: the review of 4 Nov (done on this branch) merged both items into
+it and added its fix. To take only item 1, merge `plan/home-delete/1-delete-mode` instead. (Done 4 Nov
+2026: the commits were copied onto `main` in a line, `573bb6b`, `b9e45c3`, `4285705`, then the review's
+fix with its notes.)
 
 ## Deploy checklist
 Nothing to deploy or migrate: both items are front-end only and go out with Vercel when merged.
@@ -21,7 +23,7 @@ Nothing to deploy or migrate: both items are front-end only and go out with Verc
 2. (Item 1) After a confirmed delete, the focus goes to the "−" once the item has left the list, or to
    the plus when the date has become a Free Day.
 3. (Item 1) A delete on its way ignores more clicks on that item. If two deletes run at once and the
-   first fails, that item's button may stay ignored until another date is picked or Home is left.
+   first fails, that item's button may stay ignored until Home is left (corrected at the review).
 4. (Item 2) The box sits between the description and the buttons, centred, muted; the whole label is
    clickable.
 5. (Item 2) After a delete without the window, the focus goes to the "−" once the item has left.
