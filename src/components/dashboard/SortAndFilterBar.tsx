@@ -320,7 +320,7 @@ const SearchField = ({
  * them), then red, crossed-out chips for the words to hide. Only a display; read out politely to
  * screen readers. A plain search shows nothing, so the bar looks as before.
  */
-const SearchChips = ({ search }: { search: string }) => {
+export const SearchChips = ({ search }: { search: string }) => {
   const terms = searchHasFilter(search) ? parseSearch(search) : [];
   const find = terms.filter((t) => !t.hide);
   const hide = terms.filter((t) => t.hide);

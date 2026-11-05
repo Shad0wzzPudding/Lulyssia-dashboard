@@ -274,6 +274,117 @@
    Show All Modal
    ======================================== */
 
+/* A search with options (a comma or "!") puts the list on a black slab with a white edge and a
+   cyan offset slab behind it, slanted like the page titles; a slanted cyan tab at its
+   top-right holds the search's chips (on black, so they stay readable) */
+.search-panel {
+  position: relative;
+}
+.search-panel.is-filtered {
+  padding: 0 1rem 1.25rem;
+  margin: 0.6rem 8px 0 0;
+}
+.search-panel-bg {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  --lean: 12px;
+}
+/* The slant is a fixed 12px whatever the list's height (a skew would lean a long list's slab off
+   its cards): a cyan offset slab, a white one for the edge, and the black slab inside it */
+.search-panel-bg::before,
+.search-panel-bg::after,
+.search-panel-bg > span {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(var(--lean) 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
+}
+.search-panel-bg::before {
+  background: hsl(var(--primary));
+  translate: 8px 7px;
+}
+.search-panel-bg::after {
+  background: hsl(var(--foreground));
+}
+.search-panel-bg > span {
+  inset: 2px;
+  z-index: 1;
+  background: hsl(var(--background));
+}
+/* In the flow, so a tab that wraps onto more lines pushes the cards down instead of covering them */
+.search-panel-tab {
+  position: relative;
+  width: fit-content;
+  margin: -0.6rem -1.4rem 1rem auto;
+  z-index: 2;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  max-width: calc(100% - 1rem);
+  padding: 0.35rem 1rem 0.35rem 0.75rem;
+}
+.search-panel-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: hsl(var(--primary));
+  transform: skewX(-14deg);
+  box-shadow: 4px 4px 0 hsl(var(--foreground));
+}
+.search-panel-label {
+  font: italic 900 0.875rem 'Asap Condensed', 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+  color: hsl(var(--primary-foreground));
+}
+.search-panel-tab .rounded-full {
+  background: hsl(var(--background));
+}
+.search-panel-tab .text-muted-foreground {
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+}
+
+/* Slam: the slabs swing in slanted from the left and land with a small bounce, the tab drops onto
+   the corner, then the cards rise in one by one */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes search-panel-slam {
+    0% { opacity: 0; transform: translateX(-60px) skewX(-20deg); }
+    70% { opacity: 1; transform: translateX(6px) skewX(1deg); }
+    100% { transform: none; }
+  }
+  @keyframes search-panel-drop {
+    0% { opacity: 0; transform: translateY(-26px) rotate(-8deg); }
+    70% { opacity: 1; transform: translateY(3px) rotate(1deg); }
+    100% { transform: none; }
+  }
+  @keyframes search-panel-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  .search-panel.slam .search-panel-bg::after,
+  .search-panel.slam .search-panel-bg > span {
+    animation: search-panel-slam 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  .search-panel.slam .search-panel-bg::before {
+    animation: search-panel-slam 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.04s both;
+  }
+  .search-panel.slam .search-panel-tab {
+    animation: search-panel-drop 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.2s both;
+  }
+  .search-panel.slam [data-modal-list] > :first-child > * {
+    animation: search-panel-rise 0.26s ease-out 0.18s both;
+  }
+  .search-panel.slam [data-modal-list] > :first-child > :nth-child(2) { animation-delay: 0.21s; }
+  .search-panel.slam [data-modal-list] > :first-child > :nth-child(3) { animation-delay: 0.24s; }
+  .search-panel.slam [data-modal-list] > :first-child > :nth-child(4) { animation-delay: 0.27s; }
+  .search-panel.slam [data-modal-list] > :first-child > :nth-child(5) { animation-delay: 0.3s; }
+  .search-panel.slam [data-modal-list] > :first-child > :nth-child(n + 6) { animation-delay: 0.33s; }
+}
+
 /* The lists' columns follow the screen's width; in the window they follow the window's instead */
 [data-modal-list] > .grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));

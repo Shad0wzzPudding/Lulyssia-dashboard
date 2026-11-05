@@ -2,7 +2,9 @@ import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MoreHorizontal, Search, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { searchItems } from '@/lib/sortAndFilter';
+import { parseSearch, searchHasFilter, searchItems } from '@/lib/sortAndFilter';
+import { cn } from '@/lib/utils';
+import { SearchChips } from './SortAndFilterBar';
 
 interface Props<T> {
   items: T[];
@@ -59,6 +61,19 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
   // each time the window opens
   const [search, setSearch] = useState('');
   const found = searchItems(items, search);
+  // A search with options (a comma or "!") puts the list on a panel, with its chips in a tab at the
+  // top-right; the panel slams in when it appears (not on every key while it's up)
+  const filtered = searchHasFilter(search) && parseSearch(search).length > 0;
+  const [slam, setSlam] = useState(false);
+  const wasFiltered = useRef(false);
+  useEffect(() => {
+    if (filtered === wasFiltered.current) return;
+    wasFiltered.current = filtered;
+    setSlam(filtered);
+    if (!filtered) return;
+    const t = setTimeout(() => setSlam(false), 1200);
+    return () => clearTimeout(t);
+  }, [filtered]);
   // The window's height when it opened: it keeps it while searching, so fewer results don't shrink
   // the (centred) window and move the search box away while typing
   const [openHeight, setOpenHeight] = useState<number>();
@@ -205,12 +220,25 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
               )}
             </div>
           </DialogHeader>
-          <div data-modal-list className="overflow-y-auto pr-1">
-            {found.length > 0 ? (
-              renderList(found)
-            ) : (
-              <p className="py-8 text-center text-sm text-muted-foreground">Nothing matches "{search.trim()}".</p>
+          <div className={cn('search-panel', filtered && 'is-filtered', slam && 'slam')}>
+            {filtered && (
+              <>
+                <div className="search-panel-bg" aria-hidden="true">
+                  <span />
+                </div>
+                <div className="search-panel-tab">
+                  <span className="search-panel-label" aria-hidden="true">Showing</span>
+                  <SearchChips search={search} />
+                </div>
+              </>
             )}
+            <div data-modal-list className="relative overflow-y-auto pr-1">
+              {found.length > 0 ? (
+                renderList(found)
+              ) : (
+                <p className="py-8 text-center text-sm text-muted-foreground">Nothing matches "{search.trim()}".</p>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
