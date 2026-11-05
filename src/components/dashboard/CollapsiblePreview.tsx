@@ -62,23 +62,41 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
   const [search, setSearch] = useState('');
   const found = searchItems(items, search);
   // A search with options (a comma or "!") puts the list on a panel, with its chips in a tab at the
-  // top-right; the panel slams in when it appears (not on every key while it's up)
+  // top-right. The panel slams in when it appears (not on every key while it's up), and slams out
+  // when the options are taken away: it stays up with its last chips while it goes, then the cards
+  // settle into place
   const filtered = searchHasFilter(search) && parseSearch(search).length > 0;
-  const [slam, setSlam] = useState(false);
+  const [phase, setPhase] = useState<'off' | 'slam' | 'up' | 'leaving' | 'settle'>('off');
+  const [chipSearch, setChipSearch] = useState('');
   const wasFiltered = useRef(false);
   useEffect(() => {
+    if (filtered) setChipSearch(search);
+  }, [filtered, search]);
+  // Before the screen is drawn, so the panel doesn't vanish for a frame before it slams out
+  useLayoutEffect(() => {
     if (filtered === wasFiltered.current) return;
     wasFiltered.current = filtered;
-    setSlam(filtered);
-    if (!filtered) return;
-    const t = setTimeout(() => setSlam(false), 1200);
-    return () => clearTimeout(t);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (filtered) {
+      setPhase('slam');
+      timers.push(setTimeout(() => setPhase('up'), 1200));
+    } else if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setPhase('off');
+    } else {
+      setPhase('leaving');
+      timers.push(setTimeout(() => setPhase('settle'), 360));
+      timers.push(setTimeout(() => setPhase('off'), 660));
+    }
+    return () => timers.forEach(clearTimeout);
   }, [filtered]);
+  const panelUp = filtered || phase === 'leaving';
   // The window's height when it opened: it keeps it while searching, so fewer results don't shrink
   // the (centred) window and move the search box away while typing
   const [openHeight, setOpenHeight] = useState<number>();
   const openAll = () => {
     setSearch('');
+    wasFiltered.current = false;
+    setPhase('off');
     setOpenHeight(undefined);
     setOpen(true);
   };
@@ -220,15 +238,15 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
               )}
             </div>
           </DialogHeader>
-          <div className={cn('search-panel', filtered && 'is-filtered', slam && 'slam')}>
-            {filtered && (
+          <div className={cn('search-panel', panelUp && 'is-filtered', phase === 'slam' && 'slam', phase === 'leaving' && 'leaving', phase === 'settle' && 'settle')}>
+            {panelUp && (
               <>
                 <div className="search-panel-bg" aria-hidden="true">
                   <span />
                 </div>
                 <div className="search-panel-tab">
                   <span className="search-panel-label" aria-hidden="true">Showing</span>
-                  <SearchChips search={search} />
+                  <SearchChips search={filtered ? search : chipSearch} />
                 </div>
               </>
             )}

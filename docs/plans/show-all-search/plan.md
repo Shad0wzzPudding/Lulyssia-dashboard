@@ -37,15 +37,20 @@ a Persona-style panel behind the cards.
   - Animation: Slam (owner's choice). The slabs swing in slanted from the left and land with a small
     bounce, the tab drops onto the corner, the cards rise in one by one. It plays when the panel
     appears, not on every key; none for people who ask for reduced motion.
+  - Closing: Slam out (owner's choice, asked after Slam was built). When the search loses its
+    options, the panel stays up with its last chips while the tab flies up and tips away and the
+    slabs pull back a little, then swing out to the right and fade (about 0.35s); then the cards
+    settle into place. Opening the window again never plays it.
   - The chips are the page's own (`SearchChips`), so screen readers hear the same description.
 - **Preview:** `previews/search-panel.html`, published at
   https://claude.ai/artifact/WS6b3awmTGgrtcC3Z3sgKE. Intent only.
-- **Owner checks by eye:** the panel and tab (on a phone too), and the Slam animation.
+- **Owner checks by eye:** the panel and tab (on a phone too), and the Slam and Slam out animations.
 
 ## Questions answered while planning
 
 - **Q:** Which look? **A:** A, with the tab at the top-right.
 - **Q:** When does the panel show? **A:** Only when the search has options.
+- **Q:** Which closing animation? **A:** Slam out (the preview also had Wipe out and Drop).
 - **Q:** Which animation? **A:** Slam. The owner thinks Deal (cards dealt onto the panel one by one)
   would fit the coming "Tag present" feature.
 

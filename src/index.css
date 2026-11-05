@@ -383,6 +383,35 @@
   .search-panel.slam [data-modal-list] > :first-child > :nth-child(4) { animation-delay: 0.27s; }
   .search-panel.slam [data-modal-list] > :first-child > :nth-child(5) { animation-delay: 0.3s; }
   .search-panel.slam [data-modal-list] > :first-child > :nth-child(n + 6) { animation-delay: 0.33s; }
+
+  /* Slam out: the tab flies up and tips away, the slabs pull back a little, then swing out to the
+     right, slanting, and fade; then the cards settle into place */
+  @keyframes search-panel-slam-out {
+    0% { opacity: 1; transform: none; }
+    30% { transform: translateX(-6px) skewX(2deg); }
+    100% { opacity: 0; transform: translateX(70px) skewX(-20deg); }
+  }
+  @keyframes search-panel-fly-up {
+    0% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: translateY(-28px) rotate(8deg); }
+  }
+  @keyframes search-panel-settle {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .search-panel.leaving .search-panel-bg::before {
+    animation: search-panel-slam-out 0.3s cubic-bezier(0.5, 0, 0.8, 0.4) both;
+  }
+  .search-panel.leaving .search-panel-bg::after,
+  .search-panel.leaving .search-panel-bg > span {
+    animation: search-panel-slam-out 0.3s cubic-bezier(0.5, 0, 0.8, 0.4) 0.05s both;
+  }
+  .search-panel.leaving .search-panel-tab {
+    animation: search-panel-fly-up 0.22s ease-in both;
+  }
+  .search-panel.settle [data-modal-list] > :first-child > * {
+    animation: search-panel-settle 0.18s ease-out both;
+  }
 }
 
 /* The lists' columns follow the screen's width; in the window they follow the window's instead */

@@ -151,6 +151,21 @@
   .play-deal .panel-bg, .play-deal .panel-tab { animation: fade .2s ease-out both; }
   .play-deal .card { animation: deal .3s cubic-bezier(.2,.8,.3,1.1) both calc(.08s + var(--i) * 55ms); }
 
+
+  /* Exits: played when the panel goes away (the search loses its comma or "!") */
+  @keyframes slam-out-slab { 0% { opacity: 1; transform: skewX(-3deg); } 30% { transform: translateX(-6px) skewX(-1deg); } 100% { opacity: 0; transform: translateX(70px) skewX(-22deg); } }
+  @keyframes slam-out-tab { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-28px) rotate(8deg); } }
+  @keyframes drop-out { to { opacity: 0; transform: translateY(12px); } }
+  @keyframes wipe-out { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+  @keyframes settle { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .leave-slamout .panel-bg::after { animation: slam-out-slab .3s cubic-bezier(.5,0,.8,.4) both .05s; }
+  .leave-slamout .panel-bg::before { animation: slam-out-slab .3s cubic-bezier(.5,0,.8,.4) both; }
+  .leave-slamout .panel-tab { animation: slam-out-tab .22s ease-in both; }
+  .leave-drop .panel-bg, .leave-drop .panel-tab { animation: drop-out .2s ease-in both; }
+  .leave-wipeout .panel-bg::after { animation: wipe-out .26s cubic-bezier(.6,0,.2,1) both; }
+  .leave-wipeout .panel-bg::before { animation: wipe-out .26s cubic-bezier(.6,0,.2,1) both .06s; }
+  .leave-wipeout .panel-tab { animation: slam-out-tab .2s ease-in both; }
+  .settle .card { animation: settle .18s ease-out both; }
   @media (prefers-reduced-motion: reduce) { [class*="play-"] * , [class*="play-"] *::before, [class*="play-"] *::after { animation: none !important; } }
   .rec { color: var(--primary); font-weight: 600; }
 </style>
@@ -173,12 +188,20 @@
     <button type="button" data-anim="none" aria-pressed="false"><span>None</span></button>
   </div>
   <div class="anim-row"><span class="lbl" id="anim-note"></span><button type="button" class="replay" id="replay">▶ Replay</button></div>
+  <div class="tabs" role="group" aria-label="Closing animation" id="exits">
+    <button type="button" data-exit="slamout" aria-pressed="true"><span>Close 1: Slam out (recommended)</span></button>
+    <button type="button" data-exit="wipeout" aria-pressed="false"><span>Close 2: Wipe out</span></button>
+    <button type="button" data-exit="drop" aria-pressed="false"><span>Close 3: Drop</span></button>
+    <button type="button" data-exit="none" aria-pressed="false"><span>None</span></button>
+  </div>
+  <div class="anim-row"><span class="lbl" id="exit-note"></span><button type="button" class="replay" id="replay-exit">▶ Replay closing</button></div>
   <div class="tries">Try:
     <button type="button" data-q="homework, tour">homework, tour</button>
     <button type="button" data-q="trip, !food">trip, !food</button>
     <button type="button" data-q="!meeting">!meeting</button>
     <button type="button" data-q="tour">tour (plain, no panel)</button>
     <button type="button" data-q="">clear</button>
+    <button type="button" data-q="homework">homework (takes the options away)</button>
   </div>
 
   <div class="dialog look-a" id="dlg">
@@ -236,7 +259,7 @@
     });
     const filtered = /[,!]/.test(q.value) && terms.length > 0;
     dlg.classList.toggle('filtered', filtered);
-    document.getElementById('chips').innerHTML =
+    if (filtered) document.getElementById('chips').innerHTML =
       find.map((w, k) => (k ? '<span class="or">or</span>' : '') + `<span class="chip find">${esc(w)}</span>`).join('') +
       hide.map(w => `<span class="chip hide">${esc(w)}</span>`).join('');
     document.getElementById('grid').innerHTML = shown.length
@@ -282,12 +305,47 @@
   const afterRender = () => {
     const now = dlg.classList.contains('filtered');
     if (now && !wasFiltered) play();
-    if (!now) dlg.classList.remove('play-slam', 'play-wipe', 'play-pop', 'play-deal');
+    if (!now && wasFiltered) leave();
+    if (now) { clearTimeout(leave.t); dlg.classList.remove('settle', ...leaveClasses); }
     wasFiltered = now;
   };
   q.addEventListener('input', afterRender);
   document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', afterRender));
   setAnim('slam');
+
+  const exitNotes = {
+    slamout: 'Slam out: Slam played backwards and off the other side. The tab flies up and tips away, the slabs pull back a little, then swing out to the right, slanting, and fade. The cards settle into place. About 0.35 s.',
+    wipeout: 'Wipe out: the black slab, then the cyan one, are wiped away to the right; the tab flies up. The cards settle into place. About 0.3 s.',
+    drop: 'Drop: the panel and tab sink a little and fade, all at once. The calmest. About 0.2 s.',
+    none: 'None: the panel just goes.',
+  };
+  let exit = 'slamout';
+  const leaveClasses = ['leave-slamout', 'leave-wipeout', 'leave-drop'];
+  const leave = () => {
+    clearTimeout(leave.t);
+    dlg.classList.remove('play-slam', 'play-wipe', 'play-pop', 'play-deal', 'settle', ...leaveClasses);
+    if (exit === 'none') return;
+    // Keep the panel (and its last chips) up while it goes, then let the cards settle
+    dlg.classList.add('filtered', 'leave-' + exit);
+    leave.t = setTimeout(() => {
+      dlg.classList.remove('filtered', ...leaveClasses);
+      void dlg.offsetWidth;
+      dlg.classList.add('settle');
+      leave.t = setTimeout(() => dlg.classList.remove('settle'), 300);
+    }, exit === 'drop' ? 200 : 360);
+  };
+  const setExit = (x) => {
+    exit = x;
+    document.querySelectorAll('[data-exit]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.exit === x)));
+    document.getElementById('exit-note').textContent = exitNotes[x];
+  };
+  document.querySelectorAll('[data-exit]').forEach(b => b.addEventListener('click', () => setExit(b.dataset.exit)));
+  // Replay: show the panel, then take its options away
+  document.getElementById('replay-exit').addEventListener('click', () => {
+    q.value = 'homework, tour'; render(); wasFiltered = true; dlg.classList.remove('play-slam');
+    setTimeout(() => { q.value = 'homework'; render(); afterRender(); }, 500);
+  });
+  setExit('slamout');
 </script>
 </body>
 </html>
