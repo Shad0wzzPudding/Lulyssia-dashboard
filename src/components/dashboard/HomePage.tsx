@@ -49,6 +49,13 @@ type DayItem = {
 const sameDayLabel = (day: Date) => isToday(day) ? 'Start and end today' : `Start and end ${format(day, 'd MMM')}`;
 
 // The outlined badge beside the type for an item that starts and ends on the same day
+// On the "Show all" window's search panel (a search with options), Home's cards take the Tasks and
+// Events pages' light look, keeping their own outline colour (green starting, red deadline, cyan
+// event); the text and the "Starting" badge darken to read on it
+const panelCard = (onPanel: boolean | undefined, normal: string, outline: string) =>
+  onPanel ? `theme-light bg-[#d5e1e8] dark:bg-[#d5e1e8] border-2 ${outline}` : `bg-card/90 border ${normal}`;
+const panelText = (onPanel: boolean | undefined, normal: string, light: string) => (onPanel ? light : normal);
+
 const SameDayBadge = ({ label, className }: { label: string; className?: string }) => (
   <Badge variant="outline" className={className}>{label}</Badge>
 );
@@ -691,10 +698,17 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   items={allTodayTasks}
                   previewCount={3}
                   label="today's tasks"
-                  renderList={(list) => (
+                  renderList={(list, onPanel) => (
                     <div className="space-y-2">
                       {list.map(task => (
-                      <div key={task.id} className={`p-3 bg-card/90 rounded border ${dueToday(task) ? 'border-red-200/40 dark:border-red-800/40' : 'border-green-200/40 dark:border-green-800/40'}`}>
+                      <div
+                        key={task.id}
+                        className={`p-3 rounded ${
+                          dueToday(task)
+                            ? panelCard(onPanel, 'border-red-200/40 dark:border-red-800/40', 'border-red-500 dark:border-red-500')
+                            : panelCard(onPanel, 'border-green-200/40 dark:border-green-800/40', 'border-green-500 dark:border-green-500')
+                        }`}
+                      >
                         <ChecklistProgress description={task.description} className="mb-1" />
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{task.title}<EditButton type="task" onEdit={() => taskForm.current?.openEdit(task)} /></p>
@@ -703,14 +717,14 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           ) : (
                             <>
                               {startsToday(task) && (
-                                <Badge variant="outline" className="text-xs border-green-500 text-green-700 dark:text-green-300">Starting</Badge>
+                                <Badge variant="outline" className={`text-xs border-green-500 text-green-700 ${panelText(onPanel, 'dark:text-green-300', 'dark:text-green-700')}`}>Starting</Badge>
                               )}
                               {dueToday(task) && <Badge variant="destructive" className="text-xs">Deadline</Badge>}
                             </>
                           )}
                         </div>
                           {task.description && (
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText onToggleCheck={(line) => tickTask(task, line)}>{task.description}</FormattedText></p>
+                            <p className={`text-xs mt-1 whitespace-pre-wrap ${panelText(onPanel, 'text-gray-600 dark:text-gray-300', 'text-gray-700 dark:text-gray-700')}`}><FormattedText onToggleCheck={(line) => tickTask(task, line)}>{task.description}</FormattedText></p>
                          )}
                         {startsToday(task) && dueToday(task) ? (
                           <TimeRangeChip
@@ -719,7 +733,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                             className="mt-1"
                           />
                         ) : (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className={`text-xs mt-1 ${panelText(onPanel, 'text-gray-500 dark:text-gray-400', 'text-gray-600 dark:text-gray-600')}`}>
                             {[
                               startsToday(task) && `Starts: ${format(parseISO(task.start_date as string), 'HH:mm')}`,
                               dueToday(task) && `Due: ${format(parseISO(task.deadline as string), 'HH:mm')}`,
@@ -744,12 +758,12 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                   items={allTodayEvents}
                   previewCount={3}
                   label="today's events"
-                  renderList={(list) => (
+                  renderList={(list, onPanel) => (
                     <div className="space-y-2">
                       {list.map(event => {
                       const endsToday = !!event.deadline && isToday(parseISO(event.deadline));
                       return (
-                      <div key={event.id} className="p-3 bg-card/90 rounded border border-p5-200/40 dark:border-p5-800/40">
+                      <div key={event.id} className={`p-3 rounded ${panelCard(onPanel, 'border-p5-200/40 dark:border-p5-800/40', 'border-p5-500 dark:border-p5-500')}`}>
                         <ChecklistProgress description={event.description} className="mb-1" />
                         {endsToday ? (
                           <div className="flex flex-wrap items-center gap-2">
@@ -760,7 +774,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                           <p className="font-medium text-sm whitespace-pre-wrap [overflow-wrap:anywhere]">{event.title}<EditButton type="event" onEdit={() => eventForm.current?.openEdit(event)} /></p>
                         )}
                           {event.description && (
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 whitespace-pre-wrap"><FormattedText onToggleCheck={(line) => tickEvent(event, line)}>{event.description}</FormattedText></p>
+                            <p className={`text-xs mt-1 whitespace-pre-wrap ${panelText(onPanel, 'text-gray-600 dark:text-gray-300', 'text-gray-700 dark:text-gray-700')}`}><FormattedText onToggleCheck={(line) => tickEvent(event, line)}>{event.description}</FormattedText></p>
                          )}
                         {endsToday ? (
                           <TimeRangeChip
@@ -769,7 +783,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                             className="mt-1"
                           />
                         ) : (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                          <div className={`text-xs mt-1 space-y-0.5 ${panelText(onPanel, 'text-gray-500 dark:text-gray-400', 'text-gray-600 dark:text-gray-600')}`}>
                             <p>Starts: {format(parseISO(event.start_time), 'HH:mm')}</p>
                             {event.deadline && (
                               <p>Ends: {format(parseISO(event.deadline), 'HH:mm')}</p>

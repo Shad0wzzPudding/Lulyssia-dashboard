@@ -43,6 +43,11 @@ a Persona-style panel behind the cards.
     last search's) sink and fade one by one with it (owner's ask), then the new list rises in.
     Opening the window again never plays it.
   - The chips are the page's own (`SearchChips`), so screen readers hear the same description.
+  - On Home (Today's Tasks, Today's Events, In progress), cards on the panel take the Tasks and
+    Events pages' light card look (owner's ask), keeping their outline colour, made solid and 2px
+    so it shows on the light card: green for starting, red for a deadline, cyan for events and in
+    progress. Their grey text, the "Starting" badge and the task progress bar darken to read on it.
+    A plain search keeps Home's dark cards.
 - **Preview:** `previews/search-panel.html`, published at
   https://claude.ai/artifact/WS6b3awmTGgrtcC3Z3sgKE. Intent only.
 - **Owner checks by eye:** the panel and tab (on a phone too), and the Slam and Slam out animations.

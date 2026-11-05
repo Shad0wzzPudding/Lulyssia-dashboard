@@ -10,7 +10,9 @@ interface Props<T> {
   items: T[];
   /** How many stay fully visible when the list is one column (a wider grid keeps its first row) */
   previewCount: number;
-  renderList: (items: T[]) => ReactNode;
+  /** `onPanel`: the cards sit on the window's search panel (a search with options), where a list
+      can switch them to the Tasks and Events pages' light card look */
+  renderList: (items: T[], onPanel?: boolean) => ReactNode;
   label?: string;
   /** Told how many items are on view (the rest are behind the "+N more" cover), whenever that changes */
   onShownChange?: (shown: number) => void;
@@ -253,7 +255,7 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
             )}
             <div data-modal-list className="relative overflow-y-auto pr-1">
               {found.length > 0 ? (
-                renderList(found)
+                renderList(found, panelUp)
               ) : (
                 <p className="py-8 text-center text-sm text-muted-foreground">Nothing matches "{search.trim()}".</p>
               )}

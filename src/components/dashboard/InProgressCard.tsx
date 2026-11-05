@@ -37,7 +37,10 @@ export const InProgressCard = ({
   const tagName = new Map(tags.map((t) => [t.id, t.name]));
   const now = new Date();
 
-  const renderList = (list: InProgressItem[]) => (
+  // On the "Show all" window's search panel (a search with options) the cards take the Tasks and
+  // Events pages' light look, keeping their cyan outline; the task bar and the grey text darken to
+  // show on it
+  const renderList = (list: InProgressItem[], onPanel?: boolean) => (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {list.map((item) => {
         const start = parseISO(item.start);
@@ -52,7 +55,11 @@ export const InProgressCard = ({
           // on top of that button: a button can't hold another button
           <div
             key={`${item.type}-${item.id}`}
-            className="relative flex w-full flex-col gap-2 rounded border border-p5-200/40 bg-card/90 p-3 text-left transition-colors has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring hover:border-primary dark:border-p5-800/40"
+            className={`relative flex w-full flex-col gap-2 rounded p-3 text-left transition-colors has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring hover:border-primary ${
+              onPanel
+                ? 'theme-light border-2 border-p5-500 bg-[#d5e1e8] dark:border-p5-500 dark:bg-[#d5e1e8]'
+                : 'border border-p5-200/40 bg-card/90 dark:border-p5-800/40'
+            }`}
           >
             <button
               type="button"
@@ -89,11 +96,11 @@ export const InProgressCard = ({
               aria-valuemax={100}
             >
               <div
-                className={`h-full rounded-full ${item.type === 'event' ? 'bg-gradient-to-r from-primary to-p5-300' : 'bg-gradient-to-r from-slate-300 to-white'}`}
+                className={`h-full rounded-full ${item.type === 'event' ? 'bg-gradient-to-r from-primary to-p5-300' : onPanel ? 'bg-gradient-to-r from-slate-600 to-slate-400' : 'bg-gradient-to-r from-slate-300 to-white'}`}
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <div className={`flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-xs ${onPanel ? 'text-gray-600 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`}>
               <span>
                 Day <b className="font-semibold text-foreground">{day}</b> of {days}
               </span>
