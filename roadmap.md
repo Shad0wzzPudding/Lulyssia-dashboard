@@ -488,3 +488,14 @@ Hooks, 12 LINE, 13 Migrations and 14 Phones (covered on 3 Nov), then the second 
 
 ### Findings
 - [x] Low: After a delete from Home's date panel that failed (e.g. no connection), the keyboard focus was left nowhere: the window closed, the item stayed with its "Failed to delete" message, and the next Tab started again from the top of the page. Done: the focus goes back to the "−" (this commit; `d7c50f7` on the build branch)
+
+## Cloud review (5 Nov 2026)
+
+Review of the 8 commits after `4285705` (the "Show all" search, the delete focus fix, the branch-delete rule), then a bug hunt: 3 rounds, no bug, 1 proposal (small). Nothing to apply or deploy. Stopped after three clean rounds in a row (Events, Home's In progress window, the window with the keyboard), with every area covered in this run or the two before it. The next run can start with Navigation, Recent Changes, attachments, the hooks, the LINE functions and migrations (last covered 3 Nov). Rounds log: [docs/reviews/2026-11-05-cloud-review.md](docs/reviews/2026-11-05-cloud-review.md).
+
+What to do (owner):
+- [ ] Merge `cloud-review-2026-11-05` (notes only)
+- [ ] Decide the proposal below
+
+### Findings
+- [ ] Low: The rule added in `d201546` (.claude/settings.json) lets Claude delete any GitHub branch without asking (`git push origin --delete *`) and blocks only the exact command `git push origin --delete main`. Other spellings of the same thing match the allowed pattern and aren't blocked, so they'd go through without a question: `git push origin --delete refs/heads/main`, or `git push origin --delete old-branch main` (two branches at once). Nothing has happened; it's a gap in the safety net. Needs decision: (a) turn on branch protection for `main` on GitHub (Settings → Branches → add a rule for `main`, "Do not allow deletions"), which stops every way of deleting it, from any tool (recommended); (b) also add deny rules for those spellings (`Bash(git push origin --delete refs/heads/main*)`, `Bash(git push origin --delete * main*)`, `Bash(git push origin --delete main *)`); (c) both. Size: small

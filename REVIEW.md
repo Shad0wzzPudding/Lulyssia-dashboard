@@ -23,9 +23,9 @@ The plan, for anyone (or any Claude session, local or cloud) working on this rep
 - Only review when asked; don't run a review automatically after every task.
 -->
 
-**Last reviewed:** `4285705` Docs : Build summary for plan home-delete (both items built)
+**Last reviewed:** `97bfa6e` Feat : On Home, a "Show all" search with options shows the cards in the Tasks and Events pages' light look
 
-Waiting for review: [compare `4285705...main`](https://github.com/Shad0wzzPudding/Lulyssia-dashboard/compare/4285705...main) (or `git log --oneline 4285705..main`)
+Waiting for review: [compare `97bfa6e...main`](https://github.com/Shad0wzzPudding/Lulyssia-dashboard/compare/97bfa6e...main) (or `git log --oneline 97bfa6e..main`)
 
 ## Review history
 
@@ -57,3 +57,4 @@ Waiting for review: [compare `4285705...main`](https://github.com/Shad0wzzPuddin
 | 2026-11-03 | `98a3f2b..9f2f4fa`: the first 3 Nov cloud run's 3 fixes (`b036dcb`, `bb5120d`, `c6aea5b`, as copied onto `main`) and its notes `9f2f4fa`; local session, while merging both 3 Nov runs | No new finding. Checked: the diffs with the code around them (a refused LINE link read again and a failed reread shows "couldn't load"; the upload's catch also covers a signed-out check, with no double message beside the per-file ones; a failed settings read saves nothing and a missing row still saves); tsc, eslint, build |
 | 2026-11-04 | `9f2f4fa..4233001` on `main` (2 code commits: `2d2014b`, `a235a5e`, plus docs) and the plan home-delete build (branches `plan/home-delete/1-delete-mode`, `2-dont-ask-today`: 2 code commits), cloud session on branch `plan/home-delete/summary` (asked by the owner) | Phase 1: no new finding. Checked: the diffs with the code around them (16px boxes on phones; a task from the plus starting now, with 23:59 on today and a past day's empty start). The bug hunt after it: see roadmap.md, "Cloud review (4 Nov 2026)" |
 | 2026-11-04 | the home-delete build as copied onto `main` (`573bb6b`, `b9e45c3`, `4285705`) and the cloud review's fix (folded with its notes into the commit after them); local session, before merging | No new finding. Corrected the build log's assumption 3 (a stuck delete button frees up only on leaving Home, not on another date; left as is, since freeing it on another date could send a second delete for an item shown on two dates). Checked: the diffs with the code around them; tsc, eslint, build; on Test-dummy a "ZZ" task and event: the window's wording and box, Nevermind~ and Escape, a double confirm (one Recent Changes entry), the undo from Recent Changes, "Don't ask again today" (no window, then asks again with yesterday's date), delete mode off on another date and the minus disabled on a free day; cleaned up |
+| 2026-11-05 | `4285705..97bfa6e` (8 commits: `72275fe`, `259821c`, `d201546`, and the "Show all" search `2ed0bae`, `d9c1139`, `1e1e33f`, `647c8f6`, `97bfa6e`; cloud session) | No app bug; 1 proposal (the rule keeping `main` from deletion matches only one spelling), in roadmap.md. Checked: the diffs; the "Show all" window in the browser at 390 and 1200px and with reduced motion (search, panel, light cards, ticks, the pencil's form over it, Escape). Then a bug hunt of 3 rounds: no bug |
