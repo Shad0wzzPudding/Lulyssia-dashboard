@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
-import { Dialog, ResizableDialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Props<T> {
   items: T[];
@@ -142,14 +142,16 @@ export function CollapsiblePreview<T>({ items, previewCount, renderList, label =
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <ResizableDialogContent>
+        {/* A fixed size, wide enough for three cards: the list's columns follow the window's width
+            (index.css), so a window that could be dragged narrow squeezed them */}
+        <DialogContent className="p-4 sm:w-[min(95vw,64rem)] sm:max-w-none sm:max-h-[90vh] sm:p-6">
           <DialogHeader>
             <DialogTitle className="capitalize">
               All {label} ({items.length})
             </DialogTitle>
           </DialogHeader>
           <div data-modal-list className="overflow-y-auto pr-1">{renderList(items)}</div>
-        </ResizableDialogContent>
+        </DialogContent>
       </Dialog>
     </div>
   );

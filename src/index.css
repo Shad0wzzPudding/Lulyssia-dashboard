@@ -274,6 +274,11 @@
    Show All Modal
    ======================================== */
 
+/* The lists' columns follow the screen's width; in the window they follow the window's instead */
+[data-modal-list] > .grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
+
 [data-modal-list] [data-card-header] {
   flex-direction: column;
   align-items: stretch;
