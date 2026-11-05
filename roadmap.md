@@ -494,8 +494,8 @@ Hooks, 12 LINE, 13 Migrations and 14 Phones (covered on 3 Nov), then the second 
 Review of the 8 commits after `4285705` (the "Show all" search, the delete focus fix, the branch-delete rule), then a bug hunt: 3 rounds, no bug, 1 proposal (small). Nothing to apply or deploy. Stopped after three clean rounds in a row (Events, Home's In progress window, the window with the keyboard), with every area covered in this run or the two before it. The next run can start with Navigation, Recent Changes, attachments, the hooks, the LINE functions and migrations (last covered 3 Nov). Rounds log: [docs/reviews/2026-11-05-cloud-review.md](docs/reviews/2026-11-05-cloud-review.md).
 
 What to do (owner):
-- [ ] Merge `cloud-review-2026-11-05` (notes only)
-- [ ] On GitHub: Settings → Branches → Add branch ruleset (or classic rule) for `main` → turn on "Restrict deletions" (ruleset) / leave "Allow deletions" off (classic) → Save
+- [x] Merge `cloud-review-2026-11-05` (notes only) (merged 5 Nov 2026, as ce5f186 and fa8598b)
+- [x] On GitHub: Settings → Branches → Add branch ruleset (or classic rule) for `main` → turn on "Restrict deletions" (ruleset) / leave "Allow deletions" off (classic) → Save (done by the owner, 5 Nov 2026: a ruleset restricting deletions of `main`)
 
 ### Findings
 - [x] Low: The rule added in `d201546` (.claude/settings.json) lets Claude delete any GitHub branch without asking (`git push origin --delete *`) and blocks only the exact command `git push origin --delete main`. Other spellings of the same thing match the allowed pattern and aren't blocked, so they'd go through without a question: `git push origin --delete refs/heads/main`, or `git push origin --delete old-branch main` (two branches at once). Nothing has happened; it's a gap in the safety net. Decided (owner): (c) both. Done: deny rules for `main` alone, with other branches, as `refs/heads/main` and in quotes (this commit); branch protection for `main` is a GitHub setting the owner turns on (see What to do)
