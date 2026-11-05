@@ -39,8 +39,9 @@ a Persona-style panel behind the cards.
     appears, not on every key; none for people who ask for reduced motion.
   - Closing: Slam out (owner's choice, asked after Slam was built). When the search loses its
     options, the panel stays up with its last chips while the tab flies up and tips away and the
-    slabs pull back a little, then swing out to the right and fade (about 0.35s); then the cards
-    settle into place. Opening the window again never plays it.
+    slabs pull back a little, then swing out to the right and fade (about 0.35s). Its cards (the
+    last search's) sink and fade one by one with it (owner's ask), then the new list rises in.
+    Opening the window again never plays it.
   - The chips are the page's own (`SearchChips`), so screen readers hear the same description.
 - **Preview:** `previews/search-panel.html`, published at
   https://claude.ai/artifact/WS6b3awmTGgrtcC3Z3sgKE. Intent only.

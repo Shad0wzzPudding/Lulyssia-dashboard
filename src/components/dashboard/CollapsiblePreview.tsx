@@ -60,11 +60,10 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
   // The window's own search, read like the page's (commas for "any of", "!" to hide); starts empty
   // each time the window opens
   const [search, setSearch] = useState('');
-  const found = searchItems(items, search);
   // A search with options (a comma or "!") puts the list on a panel, with its chips in a tab at the
   // top-right. The panel slams in when it appears (not on every key while it's up), and slams out
-  // when the options are taken away: it stays up with its last chips while it goes, then the cards
-  // settle into place
+  // when the options are taken away: it stays up with its last chips and cards while they go, then
+  // the new list rises in
   const filtered = searchHasFilter(search) && parseSearch(search).length > 0;
   const [phase, setPhase] = useState<'off' | 'slam' | 'up' | 'leaving' | 'settle'>('off');
   const [chipSearch, setChipSearch] = useState('');
@@ -85,11 +84,13 @@ export function CollapsiblePreview<T extends { title: string; description?: stri
     } else {
       setPhase('leaving');
       timers.push(setTimeout(() => setPhase('settle'), 360));
-      timers.push(setTimeout(() => setPhase('off'), 660));
+      timers.push(setTimeout(() => setPhase('off'), 720));
     }
     return () => timers.forEach(clearTimeout);
   }, [filtered]);
   const panelUp = filtered || phase === 'leaving';
+  // While the panel goes, its cards (the last search's) go with it; then the new list rises in
+  const found = searchItems(items, phase === 'leaving' ? chipSearch : search);
   // The window's height when it opened: it keeps it while searching, so fewer results don't shrink
   // the (centred) window and move the search box away while typing
   const [openHeight, setOpenHeight] = useState<number>();
