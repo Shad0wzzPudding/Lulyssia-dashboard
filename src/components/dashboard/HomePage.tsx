@@ -118,8 +118,17 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   };
   // The item whose delete window is open
   const [deleteAsk, setDeleteAsk] = useState<{ type: 'task' | 'event'; id: string; title: string } | null>(null);
-  // Items whose delete is on its way: a second click on their button sends nothing more
-  const deletingIds = useRef(new Set<string>());
+  // Items whose delete is on its way, with when it was sent: a second click on their button sends
+  // nothing more. A click well after the first (not a double click) brings Lulyssia out to say the
+  // item is still being saved, like the "Collapse all" pout.
+  const deletingIds = useRef(new Map<string, number>());
+  const [showDeleteWait, setShowDeleteWait] = useState(false);
+  const deleteWaitTimerRef = useRef<number | null>(null);
+  const sayDeleteWait = () => {
+    setShowDeleteWait(true);
+    if (deleteWaitTimerRef.current) window.clearTimeout(deleteWaitTimerRef.current);
+    deleteWaitTimerRef.current = window.setTimeout(() => setShowDeleteWait(false), 2800);
+  };
   const minusRef = useRef<HTMLButtonElement>(null);
   const plusRef = useRef<HTMLButtonElement>(null);
   // A delete was confirmed: once its item (and the button the focus went back to) leaves the list,
@@ -160,7 +169,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   // entry, so it can be undone)
   const deleteFromPanel = (item: { type: 'task' | 'event'; id: string }) => {
     if (deletingIds.current.has(item.id)) return;
-    deletingIds.current.add(item.id);
+    deletingIds.current.set(item.id, Date.now());
     playDeleteSound();
     const done = {
       onSettled: () => deletingIds.current.delete(item.id),
@@ -177,7 +186,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
   };
   // Asks first, unless "Don't ask again today" was ticked on this device today
   const askDelete = (item: { type: 'task' | 'event'; id: string; title: string }) => {
-    if (deletingIds.current.has(item.id)) return;
+    const sentAt = deletingIds.current.get(item.id);
+    if (sentAt !== undefined) {
+      if (Date.now() - sentAt > 600) sayDeleteWait();
+      return;
+    }
     if (skipDeleteQuestion()) {
       deleteFromPanel(item);
       refocusAfterDelete.current = true;
@@ -859,7 +872,7 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               {selectedDate ? (
                 <div className="space-y-4 animate-fade-in">
                   {/* Compact Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
+                  <div className="relative flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-p5-100 dark:bg-p5-900/50 rounded-lg">
                         <CalendarIcon size={16} className="text-p5-600 dark:text-p5-400" />
@@ -909,6 +922,26 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       <Minus size={16} />
                     </Button>
                     </div>
+                    {showDeleteWait && (
+                      <div
+                        role="status"
+                        className="absolute inset-x-0 top-full z-50 mt-2 flex items-start gap-2 animate-scale-in"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <img
+                          src={STICKERS.no}
+                          alt="Lulyssia pouting"
+                          className="w-20 h-20 object-contain drop-shadow-md -mt-2 flex-shrink-0"
+                        />
+                        <div className="relative mt-3 min-w-0 max-w-[260px] flex-1">
+                          <div className="bg-card border-2 border-main-focus/60 rounded-2xl px-4 py-3 text-sm font-medium text-foreground shadow-xl">
+                            Hold on! The last item is still being saved, please wait~
+                          </div>
+                          <div className="absolute left-[-9px] top-4 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-r-[9px] border-r-main-focus/60" />
+                          <div className="absolute left-[-6px] top-4 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-r-[9px] border-r-card" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {deleteMode && (
                     <p className="-mt-2 text-xs text-red-500 dark:text-red-400">

@@ -1,6 +1,6 @@
 # Plan: home-delete
 
-**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Reviewed <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `a235a5e` (2026-11-04)
 **Decided with the owner on:** 2026-11-04
 
@@ -149,6 +149,20 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Set while planning, not asked** (change them at the review if wanted): the minus is disabled
   on a Free Day; delete mode ends after the last item on the date is deleted; clicking an item card
   in delete mode still opens its details; the tick only counts on confirm.
+
+## Decided after the build (review with the owner, 5 Nov 2026)
+
+- Owner checks by eye: the `+ / −` and the red minus, the delete buttons (on a phone too), the
+  window and its sounds, the delete sound, and the "Don't ask again today" box: all fine as built.
+- The build's guesses: the 32px delete button (its row grows 12px) and the centred, muted box were
+  settled by the checks above. Focus going back to the "−" (or the plus on a Free Day) after a
+  delete: keep.
+- A delete still on its way ignores more presses on that item: keep, and Lulyssia now says so. A
+  press more than 0.6s after the first (not a double click) brings her out under the date panel's
+  header with her pouting sticker, like the "Collapse all" pout: "Hold on! The last item is still
+  being saved, please wait~".
+- After a delete without the window ("Don't ask again today" ticked), focus goes to the "−" once
+  the item has left, the same as after a confirmed delete: keep.
 
 ## If something isn't covered here
 
