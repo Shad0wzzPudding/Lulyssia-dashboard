@@ -5,7 +5,16 @@
       "Bash(git push origin --delete *)"
     ],
     "deny": [
-      "Bash(git push origin --delete main)"
+      "Bash(git push origin --delete main)",
+      "Bash(git push origin --delete main *)",
+      "Bash(git push origin --delete * main)",
+      "Bash(git push origin --delete * main *)",
+      "Bash(git push origin --delete refs/heads/main*)",
+      "Bash(git push origin --delete * refs/heads/main*)",
+      "Bash(git push origin --delete \"main\"*)",
+      "Bash(git push origin --delete * \"main\"*)",
+      "Bash(git push origin --delete 'main'*)",
+      "Bash(git push origin --delete * 'main'*)"
     ]
   }
 }
