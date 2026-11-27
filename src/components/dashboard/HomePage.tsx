@@ -941,7 +941,8 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 mode="single"
                 className="rounded-md border border-p5-200 dark:border-p5-800 bg-white/50 dark:bg-p5-950/20"
                 selected={selectedDate}
-                onSelect={pickDate}
+                // A double click's second click is ignored: it unselected the date the first one picked
+                onSelect={(date, _day, _modifiers, e) => { if (e.detail <= 1) pickDate(date); }}
                 month={calendarMonth}
                 onMonthChange={setCalendarMonth}
                 modifiers={{
@@ -1087,7 +1088,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                             key={`${item.type}-${item.id}`} 
                             style={{ '--i': index } as CSSProperties}
                             className="group relative bg-white/80 dark:bg-gray-800/60 rounded-lg border border-p5-200/60 dark:border-p5-700/40 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] hover:border-p5-300 dark:hover:border-p5-600 cursor-pointer"
-                            onClick={() => setSelectedItem(item)}
+                            // Not on a double click's second click (e.g. a search result double-clicked,
+                            // whose second click landed on the card that took its place)
+                            onClick={(e) => { if (e.detail <= 1) setSelectedItem(item); }}
                           >
                             {/* Slim accent border */}
                             {item.dateTypes.includes('deadline') && item.dateTypes.includes('start') ? (
