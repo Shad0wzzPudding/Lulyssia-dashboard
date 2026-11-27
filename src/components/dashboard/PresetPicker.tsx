@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type RefObject } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Check, GalleryHorizontalEnd, Plus } from 'lucide-react';
 import type { Preset } from '@/lib/types';
@@ -21,7 +21,7 @@ import { PresetMoment } from './PresetMoment';
 
 interface PresetPickerProps {
   open: boolean;
-  /** Skip, Esc, or after Apply: the layer closes */
+  /** A tap on the empty space around the cards, Esc, or after Apply: the layer closes */
   onClose: () => void;
   /** The form's description already has text: Apply asks first (add below or replace) */
   hasDescription: boolean;
@@ -32,8 +32,9 @@ interface PresetPickerProps {
 }
 
 /**
- * The full-screen "Choose 1 preset" layer over the task or event form: the stacked cards, "+",
- * "Skip" and "Apply preset". A modal dialog, so nothing behind it can be used while it is open.
+ * The full-screen "Choose 1 preset" layer over the task or event form: the stacked cards, "+" and
+ * "Apply preset". A tap or click on its empty space (not a card, a button or the banner) fades it
+ * out with no changes, as Esc does; nothing behind it can be used while it is open.
  */
 export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFocusRef }: PresetPickerProps) => {
   const { presets, countUse } = usePresets();
@@ -83,9 +84,20 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
     });
   }, [bringId, presets]);
 
-  const skip = () => {
+  const close = () => {
     playCancelSound();
     onClose();
+  };
+  // Where the last press on the layer started: letting go after dragging the stack isn't a tap
+  const pressAt = useRef<{ x: number; y: number } | null>(null);
+  const tapOutside = (e: ReactMouseEvent) => {
+    const start = pressAt.current;
+    pressAt.current = null;
+    if (!start || Math.hypot(e.clientX - start.x, e.clientY - start.y) > 6) return;
+    const target = e.target as HTMLElement;
+    // The cards (with their labels and ⓘ), the banner and every button are the layer's own parts
+    if (target.closest('[data-slot], .preset-banner, button, a, input, textarea')) return;
+    close();
   };
   const togglePick = (preset: Preset) => {
     playEditSound();
@@ -119,7 +131,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
 
   return (
     <>
-      <Dialog open={open && !moment && !applied} onOpenChange={(o) => { if (!o) skip(); }}>
+      <Dialog open={open && !moment && !applied} onOpenChange={(o) => { if (!o) close(); }}>
         <DialogPortal>
           <DialogPrimitive.Content
             aria-describedby={undefined}
@@ -133,6 +145,8 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
               // During the apply moment the focus goes back once the moment has gone
               if (!moment && !applied) returnFocusRef.current?.focus();
             }}
+            onPointerDown={(e) => { pressAt.current = { x: e.clientX, y: e.clientY }; }}
+            onClick={tapOutside}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); carousel.current?.go(-1); }
               if (e.key === 'ArrowRight') { e.preventDefault(); carousel.current?.go(1); }
@@ -181,14 +195,8 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
               )}
             </div>
 
-            <div className="flex justify-end gap-2.5 border-t border-primary/25 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-              <button
-                type="button"
-                onClick={skip}
-                className="inline-flex min-h-11 items-center rounded-md bg-[hsl(0_0%_92%)] px-[18px] text-sm font-bold text-[#111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                Skip
-              </button>
+            {/* "Apply preset": in the middle on phones, on the right on wider screens */}
+            <div className="flex justify-center gap-2.5 border-t border-primary/25 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:justify-end">
               <button
                 type="button"
                 onClick={pressApply}
