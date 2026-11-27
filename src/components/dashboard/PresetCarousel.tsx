@@ -22,6 +22,23 @@ const wrapOffset = (d: number, total: number) => {
 };
 const mod = (n: number, total: number) => ((n % total) + total) % total;
 
+/**
+ * A card's place in the stack as drawn. With two cards the back one rests on the right (wrapped into
+ * -0.5 to 1.5, not -1 to 1, whose edge is exactly where it rests, so it would flicker out of sight)
+ * and changes sides out of sight while the stack moves; otherwise as wrapOffset.
+ */
+const slotOffset = (d: number, total: number) => {
+  if (total !== 2) return wrapOffset(d, total);
+  const m = mod(d, 2);
+  return m >= 1.5 ? m - 2 : m;
+};
+/** How visible a card is at that place: cards passing round the back fade out and in again */
+const slotOpacity = (o: number, total: number) => {
+  if (total === 2) return o > 1 ? Math.max(0, (1.5 - o) * 2) : o < 0 ? Math.max(0, (o + 0.5) * 2) : 1;
+  const a = Math.abs(o);
+  return a > total / 2 - 0.5 ? Math.max(0, (total / 2 - a) * 2) : 1;
+};
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface PresetCarouselHandle {
@@ -62,17 +79,14 @@ type SlotProps = {
  * position through motion values, so moving the stack changes the styles without redrawing it.
  */
 const Slot = memo(function Slot({ index, preset, tags, isFront, picked, progress, step, total, onCardClick, onInfo, cardRef }: SlotProps) {
-  const offset = useTransform<number, number>([progress, total], ([p, t]) => wrapOffset(index - p, t));
+  const offset = useTransform<number, number>([progress, total], ([p, t]) => slotOffset(index - p, t));
   const x = useTransform<number, number>([offset, step], ([o, s]) => o * STEPS[s].x);
   const y = useTransform<number, number>([offset, step], ([o, s]) => (Math.abs(o) < 0.05 ? 0 : Math.abs(o) * STEPS[s].y));
   const rotate = useTransform<number, number>([offset, step], ([o, s]) => (Math.abs(o) < 0.05 ? 0 : o * STEPS[s].r));
   const scale = useTransform<number, number>([offset, step], ([o, s]) => 1 - Math.abs(o) * STEPS[s].s);
   const zIndex = useTransform(offset, (o) => Math.round(100 - Math.abs(o) * 10));
   // Cards more than half the stack away fade out (they pass behind on their way round)
-  const opacity = useTransform<number, number>([offset, total], ([o, t]) => {
-    const a = Math.abs(o);
-    return a > t / 2 - 0.5 ? Math.max(0, (t / 2 - a) * 2) : 1;
-  });
+  const opacity = useTransform<number, number>([offset, total], ([o, t]) => slotOpacity(o, t));
   const dim = useTransform(offset, (o) => Math.min(0.5, Math.abs(o) * 0.25));
   const labelOpacity = useTransform(dim, (d) => 1 - d);
   const tagList = presetTags(preset, tags);
