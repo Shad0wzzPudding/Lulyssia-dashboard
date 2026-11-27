@@ -630,8 +630,8 @@
   @keyframes preset-moment-rise {
     from { opacity: 0; transform: translate(-50%, 40px); }
   }
-  /* The apply moment's card (1.2s): rises in (to 25%), catches fire and chars, and burns away from
-     the bottom up (30% to 92%) under a glowing edge, with flames all over it */
+  /* The apply moment's card (1.2s): rises in (to 25%), catches blue fire (Lulyssia's colours) and
+     chars, and burns away from the bottom up (30% to 92%) under a glowing edge, with flames all over it */
   @keyframes preset-moment-hold {
     0% { transform: translateY(40px) scale(0.9); opacity: 0; }
     25% { transform: none; opacity: 1; }
@@ -639,8 +639,8 @@
   }
   @keyframes preset-moment-char {
     0%, 28% { filter: none; -webkit-mask-position: 0 0%; mask-position: 0 0%; }
-    45% { filter: sepia(0.5) saturate(1.8) brightness(1.15); }
-    92%, 100% { filter: sepia(1) saturate(2) brightness(0.45); -webkit-mask-position: 0 100%; mask-position: 0 100%; }
+    45% { filter: saturate(1.4) brightness(1.25); }
+    92%, 100% { filter: grayscale(0.5) brightness(0.4); -webkit-mask-position: 0 100%; mask-position: 0 100%; }
   }
   @keyframes preset-moment-ember {
     0%, 28% { background-position: 0 0%; opacity: 0; }
@@ -668,7 +668,7 @@
     animation: preset-moment-hold 1.2s ease-in-out forwards;
   }
   /* The burn: a mask taller than the card, clear at its bottom, slides up so the clear part eats the
-     card from below; the ember is the same band in fire colours, moving with it */
+     card from below; the ember is the same band in the fire's blues, moving with it */
   .preset-moment-card {
     -webkit-mask-image: linear-gradient(to top, transparent 40%, #000 52%);
     mask-image: linear-gradient(to top, transparent 40%, #000 52%);
@@ -679,20 +679,20 @@
     animation: preset-moment-char 1.2s cubic-bezier(0.45, 0, 0.7, 1) forwards;
   }
   .preset-moment-ember {
-    background: linear-gradient(to top, transparent 37%, #ff3d00 40%, #ffd166 45%, #ff7a1a 49%, transparent 53%) no-repeat;
+    background: linear-gradient(to top, transparent 37%, #1e6fe0 40%, #e6f9ff 45%, #4fc3f7 49%, transparent 53%) no-repeat;
     background-size: 100% 250%;
     filter: blur(3px);
     mix-blend-mode: screen;
     animation: preset-moment-ember 1.2s cubic-bezier(0.45, 0, 0.7, 1) forwards;
   }
   .preset-moment-blaze {
-    background: radial-gradient(closest-side, rgb(255 140 40 / 0.75), rgb(255 60 0 / 0.35) 55%, transparent);
+    background: radial-gradient(closest-side, rgb(79 195 247 / 0.75), rgb(30 111 224 / 0.35) 55%, transparent);
     filter: blur(14px);
     animation: preset-moment-blaze 1.2s ease-out forwards;
   }
   .preset-moment-flame {
     border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
-    background: radial-gradient(ellipse at 50% 72%, #fff3c4 0%, #ffd166 22%, #ff8a1f 48%, rgb(255 61 0 / 0.55) 68%, transparent 75%);
+    background: radial-gradient(ellipse at 50% 72%, #f2fcff 0%, #b3ecff 22%, #4fc3f7 48%, rgb(30 111 224 / 0.55) 68%, transparent 75%);
     filter: blur(2px);
     mix-blend-mode: screen;
     animation-name: preset-moment-flame;

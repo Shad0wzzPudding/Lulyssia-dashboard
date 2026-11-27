@@ -22,7 +22,7 @@ const FLAMES = Array.from({ length: 24 }, (_, i) => ({
 }));
 
 /**
- * After "Apply preset": Lulyssia holds the picked card up while it's engulfed in flame and burns away
+ * After "Apply preset": Lulyssia holds the picked card up while it's engulfed in blue flame and burns away
  * from the bottom up.
  * At 1.25s (or on "Skip" / Esc) `onEnd` fills the form, and the moment fades out over it.
  */
