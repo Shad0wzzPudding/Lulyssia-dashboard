@@ -502,7 +502,12 @@ What to do (owner):
 
 ## Cloud review (27 Nov 2026)
 
-Summary: (filled in at the end of the run). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
+Review of the 8 commits after `97bfa6e` on `main` and the two plan builds (calendar-search, presets), then a bug hunt: 5 rounds. 1 bug fixed (in the presets build), no proposals. Stopped: running low on tokens, after round 5 (Home). Covered: migrations and access rules, the data hooks, Settings, the task and event forms, Home. The next run should start with Navigation, Recent Changes, attachments and the LINE functions (last covered 3 Nov). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
+
+What to do (owner):
+- [ ] Apply migration `supabase/migrations/20261127000000_presets.sql` before merging (from the presets build)
+- [ ] Merge `cloud-review-2026-11-27` (it contains both builds and the fix), then run `npm install` locally (new package `motion`)
+- [ ] Nothing to deploy for the LINE functions
 
 Branch `cloud-review-2026-11-27`: `main` at `221dabc` with the plan builds calendar-search
 (`plan/calendar-search/2-rise`, `summary`) and presets (`plan/presets/4-moment`, `summary`) merged in
