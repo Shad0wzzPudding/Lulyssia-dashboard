@@ -12,7 +12,6 @@ import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 import slidingEffect from "@/assets/sound/sliding.wav";
 import cardSwapEffect from "@/assets/sound/card_swap.mp3";
-import cardDropEffect from "@/assets/sound/card_drop.mp3";
 import cardChooseEffect from "@/assets/sound/card_choose.mp3";
 import cardUnchooseEffect from "@/assets/sound/card_unchoose.mp3";
 import cardApplyEffect from "@/assets/sound/card_apply.mp3";
@@ -788,10 +787,10 @@ const loadSoundBuffer = (url: string) => {
   return loading;
 };
 
-// The preset cards' sounds (card_swap, card_drop, card_choose, card_unchoose, card_apply). Loaded when a form
+// The preset cards' sounds (card_swap, card_choose, card_unchoose, card_apply). Loaded when a form
 // with "Presets" opens, so the first opening already has its sound.
 export const preloadPresetCardSounds = () => {
-  for (const url of [cardSwapEffect, cardDropEffect, cardChooseEffect, cardUnchooseEffect, cardApplyEffect]) void loadSoundBuffer(url);
+  for (const url of [cardSwapEffect, cardChooseEffect, cardUnchooseEffect, cardApplyEffect]) void loadSoundBuffer(url);
 };
 
 /** Plays a loaded sound file through its setting's gain; returns the source, or null. */
@@ -826,14 +825,14 @@ export const playCardUnpickSound = () => playCardFile('cardUnpick', cardUnchoose
 /** Applying the picked card, as the apply moment starts (card_apply) */
 export const playCardApplySound = () => playCardFile('cardApply', cardApplyEffect);
 
-// Another card reaching the front (card_drop). A new one cuts off the one before, so a quick drag
+// Another card reaching the front (card_swap, the same file as the cards opening; the owner's card_swap2). A new one cuts off the one before, so a quick drag
 // or flick past several cards doesn't pile them up; not loaded yet, it's skipped (it would be late)
 let cardMoveSource: AudioBufferSourceNode | null = null;
 export const playCardMoveSound = () => {
   if (!soundOn('cardMove')) return;
-  const buffer = soundBuffers.get(cardDropEffect);
+  const buffer = soundBuffers.get(cardSwapEffect);
   if (!buffer) {
-    void loadSoundBuffer(cardDropEffect);
+    void loadSoundBuffer(cardSwapEffect);
     return;
   }
   try { cardMoveSource?.stop(); } catch { /* already ended */ }
