@@ -573,6 +573,26 @@
   flex: none;
   padding-inline: 12px;
 }
+/* Phones (under 640px, the stack's phone steps): the cards 50% bigger, 176px → 264px, but narrow
+   enough to keep clear of ‹ › (10px from each edge, 44px wide) and short enough that the label, the
+   card and its lift fit between the banner and Skip / Apply (about 240px of the screen's height,
+   plus the status bar and home bar). The label follows the card's width. */
+@media (max-width: 639px) {
+  .preset-card,
+  .preset-label {
+    --preset-phone-width: min(
+      264px,
+      calc(100vw - 120px),
+      calc((100dvh - 240px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 2 / 3)
+    );
+  }
+  .preset-card {
+    width: max(176px, var(--preset-phone-width));
+  }
+  .preset-label {
+    max-width: max(176px, var(--preset-phone-width));
+  }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   /* The layer fades in and out (Skip / Esc), the banner slides in from the left and the cards with
