@@ -521,7 +521,11 @@ their order. Merging this branch brings both builds. Presets needs migration
 
 ## Cloud review (27 Nov 2026, second run)
 
-Summary: (filled in at the end of the run). Rounds log: [docs/reviews/2026-11-27-second-cloud-review.md](docs/reviews/2026-11-27-second-cloud-review.md).
+Review of the first 27 Nov run's two fixes, then a bug hunt by angle: 7 rounds. 4 bugs fixed (Home's search results on phones, double clicks on Home, double clicks on the preset cards, the preset cards under the iPhone status bar), no proposals. Nothing new to apply or deploy (the presets migration and `npm install` from the first run still apply). Stopped after three clean rounds in a row (failed saves, many items, access rules), with every area covered in the first 27 Nov run or the two runs before it. The next run can start with the angles from the top again on the code changed since, or with the areas covered longest ago: the editor, time zones, Interests and search (4 Nov). Rounds log: [docs/reviews/2026-11-27-second-cloud-review.md](docs/reviews/2026-11-27-second-cloud-review.md).
+
+What to do (owner):
+- [ ] Merge `cloud-review-2026-11-27-second` (it contains `cloud-review-2026-11-27`, so both runs and both plan builds), after applying `supabase/migrations/20261127000000_presets.sql`; then `npm install`
+- [ ] On the iPhone app: open "Presets" in a task form and check the cyan banner and "+" sit below the clock, and Skip / Apply above the home bar
 
 Branch `cloud-review-2026-11-27-second`, started from the first 27 Nov run's branch (`main` plus both
 plan builds and that run's fixes), since `main` hasn't changed and doesn't have the new code yet.
