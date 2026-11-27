@@ -17,6 +17,7 @@ import {
 } from '@/lib/soundSettings';
 import {
   playAddSound,
+  playCardApplySound,
   playCardMoveSound,
   playCardOpenSound,
   playCardPickSound,
@@ -74,6 +75,7 @@ const PLAY: Record<SoundId, () => void> = {
   cardMove: playCardMoveSound,
   cardPick: playCardPickSound,
   cardUnpick: playCardUnpickSound,
+  cardApply: playCardApplySound,
   menuOpen: playMenuOpenSound,
   menuClose: playMenuCloseSound,
   cursor: playTickSound,

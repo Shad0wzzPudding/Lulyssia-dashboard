@@ -15,6 +15,7 @@ import cardSwapEffect from "@/assets/sound/card_swap.mp3";
 import cardDropEffect from "@/assets/sound/card_drop.mp3";
 import cardChooseEffect from "@/assets/sound/card_choose.mp3";
 import cardUnchooseEffect from "@/assets/sound/card_unchoose.mp3";
+import cardApplyEffect from "@/assets/sound/card_apply.mp3";
 import { soundLevel, type SoundId } from "@/lib/soundSettings";
 
 // Haptic feedback utility - vibrates if supported
@@ -787,10 +788,10 @@ const loadSoundBuffer = (url: string) => {
   return loading;
 };
 
-// The preset cards' sounds (card_swap, card_drop, card_choose, card_unchoose). Loaded when a form
+// The preset cards' sounds (card_swap, card_drop, card_choose, card_unchoose, card_apply). Loaded when a form
 // with "Presets" opens, so the first opening already has its sound.
 export const preloadPresetCardSounds = () => {
-  for (const url of [cardSwapEffect, cardDropEffect, cardChooseEffect, cardUnchooseEffect]) void loadSoundBuffer(url);
+  for (const url of [cardSwapEffect, cardDropEffect, cardChooseEffect, cardUnchooseEffect, cardApplyEffect]) void loadSoundBuffer(url);
 };
 
 /** Plays a loaded sound file through its setting's gain; returns the source, or null. */
@@ -822,6 +823,8 @@ export const playCardOpenSound = () => playCardFile('cardOpen', cardSwapEffect);
 export const playCardPickSound = () => playCardFile('cardPick', cardChooseEffect);
 /** Unpicking the picked card (card_unchoose) */
 export const playCardUnpickSound = () => playCardFile('cardUnpick', cardUnchooseEffect);
+/** Applying the picked card, as the apply moment starts (card_apply) */
+export const playCardApplySound = () => playCardFile('cardApply', cardApplyEffect);
 
 // Another card reaching the front (card_drop). A new one cuts off the one before, so a quick drag
 // or flick past several cards doesn't pile them up; not loaded yet, it's skipped (it would be late)
