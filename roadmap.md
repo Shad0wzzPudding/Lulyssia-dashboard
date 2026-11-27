@@ -502,12 +502,12 @@ What to do (owner):
 
 ## Cloud review (27 Nov 2026)
 
-Review of the 8 commits after `97bfa6e` on `main` and the two plan builds (calendar-search, presets), then a bug hunt: 5 rounds. 1 bug fixed (in the presets build), no proposals. Stopped: running low on tokens, after round 5 (Home). Covered: migrations and access rules, the data hooks, Settings, the task and event forms, Home. The next run should start with Navigation, Recent Changes, attachments and the LINE functions (last covered 3 Nov). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
+Review of the 8 commits after `97bfa6e` on `main` and the two plan builds (calendar-search, presets), then a bug hunt: 9 rounds. 2 bugs fixed (one in the presets build, one in Lulyssia's question windows), 1 proposal (small, LINE). The first part stopped by choice after round 5 (not forced by the session; noted here because the first summary said "out of tokens"); the run then carried on with the four areas left. Stopped after round 9 with every area covered in this run or the two before it, and rounds 7 to 9 (Recent Changes, attachments, LINE) clean in a row. Covered: migrations and access rules, the data hooks, Settings, the task and event forms, Home, navigation, Recent Changes, attachments, the LINE functions. The next run can start with the editor, time zones, Interests and search (last covered 4 Nov), and phone layouts (5 Nov). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
 
 What to do (owner):
 - [ ] Apply migration `supabase/migrations/20261127000000_presets.sql` before merging (from the presets build)
 - [ ] Merge `cloud-review-2026-11-27` (it contains both builds and the fix), then run `npm install` locally (new package `motion`)
-- [ ] Nothing to deploy for the LINE functions
+- [ ] Nothing to deploy for the LINE functions now (only if the LINE proposal below is chosen)
 
 Branch `cloud-review-2026-11-27`: `main` at `221dabc` with the plan builds calendar-search
 (`plan/calendar-search/2-rise`, `summary`) and presets (`plan/presets/4-moment`, `summary`) merged in
@@ -517,3 +517,4 @@ their order. Merging this branch brings both builds. Presets needs migration
 ### Findings
 - [x] Medium: After "Apply preset", when Lulyssia's moment ended and faded out over the filled form, the cards layer came back behind it for about half a second (it showed again, then faded out a second time). Done: the layer stays shut once the preset is applied, until the form hears it's closed (this commit)
 - [x] Low: Lulyssia's question windows (Sign out, every delete question, Clear Completed and the others) never took the keyboard focus. Opened from the keyboard, the focus stayed on the button behind the window, so pressing Enter again pressed that button a second time instead of answering, and Tab was needed to reach Nevermind~ / Yes; a screen reader stayed on the page behind. Example: on a delete button, Enter opens "Delete this task?", a second Enter presses the delete button again. Done: the window now puts the focus on Nevermind~ (on the first answer for the new three-answer question), and gives it back to the button that opened it when it closes, if that button is still there (this commit)
+- [ ] Low: LINE's "Starting soon" reminder shows the Deadline / End as a time only, even when it falls on another day. Example: a task starting at 09:00 today with its deadline on Friday at 17:00 gets "Starts 09:00 · Deadline 17:00", which reads as today at 17:00 (the plain-text version says "Start time - deadline: 09:00 - 17:00"). The morning letter already writes the day for these ("30 Oct 08:00 – today 18:00"). Needs decision: (a) add the day when it isn't the start's day, e.g. "Deadline Fri 4 Dec 17:00" (Thai time), the same way as the morning letter; (b) leave it. Recommendation: (a). Size: small (needs function deploy: send-line-reminders)

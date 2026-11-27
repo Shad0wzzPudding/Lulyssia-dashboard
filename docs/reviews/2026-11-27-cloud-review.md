@@ -41,6 +41,30 @@ preset cards) and Home (1, calendar search, `4739478`). Order: 13 Migrations →
   CalendarSearchResults.tsx, calendarSearch.ts) with the delete-mode code and `4739478`'s pout; found
   no new bug
 
-Stopped: running low on tokens, after round 5. Rounds 1-5 found no new bug, but areas 6 Navigation,
-8 Recent Changes, 9 Attachments and 12 LINE functions haven't been covered in this run or the two
-before it, so the three-clean-rounds stop doesn't apply yet. The next run should start with them.
+Paused after round 5 by choice, to make sure the notes were saved (the first summary called this
+"running low on tokens"; the session wasn't actually cut off). Rounds 1-5 found no new bug, but areas
+6, 8, 9 and 12 hadn't been covered in this run or the two before it, so the run carried on:
+
+- Round 6 (6 Navigation, drawer and page transitions): read Navigation.tsx in full and Index.tsx's page
+  switching, heading focus and sign-out; checked with a test page that Lulyssia's question (used by
+  Sign out and every delete) left the keyboard focus on the button behind it: a second Enter pressed
+  that button again (2 presses counted). Found 1 fixed (the question now focuses Nevermind~, or the
+  first answer in the three-answer one, and gives the focus back to its opener; checked in the browser
+  with the plain question and the preset flow: question, Cancel back to Apply, Add below, the moment,
+  back to Presets; Home's delete flow still moves to the "−" by its own code)
+- Round 7 (8 Recent Changes and undo): read the undo and remove-entry mutations in
+  useDashboardData.ts and revert_activity_log as it stands (20261015000004): every step is limited to
+  the signed-in person's own entry and items, a saved copy with another user_id is refused, an edit's
+  undo leaves user_id, id, created_at and sort_order alone; found no new bug
+- Round 8 (9 Attachments and storage clean-up): read unused_attachment_paths and the
+  cleanup-attachments function: files any task, event, interest or Recent Changes entry points to are
+  kept, uploads under a day old are kept, daily tasks and presets hold no files; only the service role
+  can list the paths; found no new bug
+- Round 9 (12 LINE functions): ran `deno check` on all seven functions (Deno from a scratch folder this
+  time): all pass; read send-line-reminders in full (window, repeats across midnight, the sent mark
+  undone on failure, card then text fallback); found 1 proposed (the card shows a Deadline / End on
+  another day as a time only; the morning letter already writes the day)
+
+Stopped: every area has now been covered in this run or the two before it, and rounds 7, 8 and 9 found
+no new bug in a row, each on an area not covered before in this run.
+
