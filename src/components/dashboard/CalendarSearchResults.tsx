@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, type CSSProperties } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +54,7 @@ const GREEN = 'hsl(142 71% 45%)';
 const RED = 'hsl(0 84% 60%)';
 
 /** One found item: its title and type, its dates on the right; a button that opens its date */
-const HitRow = ({ hit, past, onPick }: { hit: CalendarHit; past: boolean; onPick: (hit: CalendarHit) => void }) => {
+const HitRow = ({ hit, past, index, onPick }: { hit: CalendarHit; past: boolean; index: number; onPick: (hit: CalendarHit) => void }) => {
   const lines = hitDateLines(hit);
   // The thin line at its left edge, like the date panel's cards: green start, red due/end
   const bar = hit.start && hit.end
@@ -65,6 +65,7 @@ const HitRow = ({ hit, past, onPick }: { hit: CalendarHit; past: boolean; onPick
       type="button"
       data-hit={hitKey(hit)}
       onClick={() => onPick(hit)}
+      style={{ '--i': index } as CSSProperties}
       className={cn(
         'group relative flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-p5-200/60 bg-white/80 p-3 text-left shadow-sm transition-all duration-200 hover:scale-[1.01] hover:border-p5-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-p5-700/40 dark:bg-gray-800/60 dark:hover:border-p5-600',
         past && 'opacity-70'
@@ -97,11 +98,14 @@ export const CalendarSearchResults = ({
   upcoming,
   past,
   onPick,
+  rising,
 }: {
   search: string;
   upcoming: CalendarHit[];
   past: CalendarHit[];
   onPick: (hit: CalendarHit) => void;
+  /** The rows rise in one by one (when the results show, not on every key typed) */
+  rising?: boolean;
 }) => {
   const count = upcoming.length + past.length;
   return (
@@ -125,12 +129,12 @@ export const CalendarSearchResults = ({
         </div>
       </div>
       {count > 0 && (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-          {upcoming.map((hit) => <HitRow key={hitKey(hit)} hit={hit} past={false} onPick={onPick} />)}
+        <div className={cn('space-y-2 max-h-72 overflow-y-auto pr-1', rising && 'calendar-rise')}>
+          {upcoming.map((hit, i) => <HitRow key={hitKey(hit)} hit={hit} past={false} index={i} onPick={onPick} />)}
           {past.length > 0 && (
-            <p className="pt-1 text-xs font-semibold text-muted-foreground">Past</p>
+            <p className="pt-1 text-xs font-semibold text-muted-foreground" style={{ '--i': upcoming.length } as CSSProperties}>Past</p>
           )}
-          {past.map((hit) => <HitRow key={hitKey(hit)} hit={hit} past onPick={onPick} />)}
+          {past.map((hit, i) => <HitRow key={hitKey(hit)} hit={hit} past index={upcoming.length + 1 + i} onPick={onPick} />)}
         </div>
       )}
     </div>
