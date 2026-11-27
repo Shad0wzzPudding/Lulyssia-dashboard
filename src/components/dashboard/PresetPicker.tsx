@@ -8,7 +8,7 @@ import { Dialog, DialogPortal, DialogContent, DialogHeader, DialogTitle, DialogD
 import { Button } from '@/components/ui/button';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { STICKERS } from '@/lib/stickers';
-import { playCancelSound, playCardOpenSound, playCardPickSound, playCardUnpickSound, playSuccessSound } from '@/lib/sounds';
+import { playCancelSound, playCardApplySound, playCardOpenSound, playCardPickSound, playCardUnpickSound } from '@/lib/sounds';
 import { presetDueLabel, presetTags } from '@/lib/presets';
 import type { ApplyHow } from '@/lib/presetApply';
 import { PresetButterflySymbol } from './PresetCard';
@@ -106,7 +106,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   };
   const apply = (preset: Preset, how?: ApplyHow) => {
     countUse(preset.id);
-    playSuccessSound();
+    playCardApplySound();
     // Reduced motion: no moment, the form is simply filled
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       onApply(preset, how);

@@ -28,6 +28,7 @@ export const SOUND_GROUPS = [
       { id: 'cardMove', name: 'Card moves', when: 'Another card coming to the front' },
       { id: 'cardPick', name: 'Card picked', when: 'Picking a preset card' },
       { id: 'cardUnpick', name: 'Card unpicked', when: 'Unpicking the picked card' },
+      { id: 'cardApply', name: 'Card applied', when: '"Apply preset": the form is filled from the card' },
     ],
   },
   {
