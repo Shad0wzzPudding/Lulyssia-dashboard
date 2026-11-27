@@ -139,8 +139,10 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
             }}
           >
             <PresetButterflySymbol />
-            {/* The banner: slanted at its right end, a dark icon block, the title, a hint and "+" */}
-            <div className="preset-banner flex items-center gap-3 bg-primary py-2.5 pr-4 text-[#04151b] [clip-path:polygon(0_0,100%_0,calc(100%-14px)_100%,0_100%)]">
+            {/* The banner: slanted at its right end, a dark icon block, the title, a hint and "+". In the
+                installed app on iPhone the page runs under the status bar (and the footer over the
+                home bar), so they keep clear of them, as the forms do */}
+            <div className="preset-banner flex items-center gap-3 bg-primary pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] pr-4 text-[#04151b] [clip-path:polygon(0_0,100%_0,calc(100%-14px)_100%,0_100%)]">
               <span className="grid self-stretch place-items-center bg-[#04151b] px-4 text-primary [clip-path:polygon(0_0,100%_0,calc(100%-10px)_100%,0_100%)]" aria-hidden="true">
                 <GalleryHorizontalEnd size={22} />
               </span>
@@ -179,7 +181,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
               )}
             </div>
 
-            <div className="flex justify-end gap-2.5 border-t border-primary/25 px-4 py-3">
+            <div className="flex justify-end gap-2.5 border-t border-primary/25 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               <button
                 type="button"
                 onClick={skip}

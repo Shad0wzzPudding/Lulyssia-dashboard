@@ -74,7 +74,7 @@ export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
           <button
             type="button"
             onClick={onEnd}
-            className="absolute bottom-4 right-4 z-[4] inline-flex min-h-11 items-center rounded-md bg-[hsl(0_0%_92%)] px-[18px] text-sm font-bold text-[#111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-[4] inline-flex min-h-11 items-center rounded-md bg-[hsl(0_0%_92%)] px-[18px] text-sm font-bold text-[#111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             Skip
           </button>
