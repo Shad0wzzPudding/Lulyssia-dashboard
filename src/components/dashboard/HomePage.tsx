@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, forwardRef } from "react";
+import { useState, useEffect, useMemo, useRef, forwardRef, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,26 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     setShowResults(true);
     focusAfterPanel.current = 'row';
   };
+  // The panel's rows rise in when the results show (also back from a date) and when a date opens
+  // while searching; not on every key typed. Each such moment gets a new number, and the rows rise
+  // until it has played out.
+  const risePanel = searchingCalendar ? (resultsShown ? 'results' : `date-${selectedDate?.getTime() ?? 'none'}`) : null;
+  const [lastRisePanel, setLastRisePanel] = useState(risePanel);
+  const [riseId, setRiseId] = useState(0);
+  const [risePlayed, setRisePlayed] = useState(0);
+  if (risePanel !== lastRisePanel) {
+    setLastRisePanel(risePanel);
+    if (risePanel) setRiseId(riseId + 1);
+  }
+  const rising = riseId !== risePlayed;
+  const risingListRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (riseId === risePlayed) return;
+    // 0.32s for the last row, which starts 45ms after the one before it
+    const rows = risingListRef.current?.querySelector('.calendar-rise')?.children.length ?? 0;
+    const timer = window.setTimeout(() => setRisePlayed(riseId), 320 + 45 * rows + 80);
+    return () => window.clearTimeout(timer);
+  }, [riseId, risePlayed]);
   // Nothing to delete in the results list
   useEffect(() => {
     if (resultsShown) setDeleteMode(false);
@@ -953,11 +973,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
             {/* Right side - Day Information Panel */}
             <div className="bg-gradient-to-br from-white/90 to-p5-50/50 dark:from-gray-900/70 dark:to-p5-950/40 rounded-xl border-2 border-p5-300/40 dark:border-p5-600/30 shadow-lg backdrop-blur-sm p-5 min-h-[400px]">
               {resultsShown ? (
-                <div ref={resultsListRef}>
-                  <CalendarSearchResults search={calendarSearch} upcoming={upcomingHits} past={pastHits} onPick={pickHit} />
+                <div ref={(el) => { resultsListRef.current = el; risingListRef.current = el; }}>
+                  <CalendarSearchResults key={riseId} search={calendarSearch} upcoming={upcomingHits} past={pastHits} onPick={pickHit} rising={rising} />
                 </div>
               ) : selectedDate ? (
-                <div className="space-y-4 animate-fade-in">
+                <div ref={risingListRef} className="space-y-4 animate-fade-in">
                   {/* Compact Header */}
                   <div className="relative flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
                     <div className="flex items-center gap-3">
@@ -1061,10 +1081,11 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                     }
                     
                     return (
-                      <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                        {dateItems.map((item) => (
+                      <div key={riseId} className={`space-y-2 max-h-72 overflow-y-auto pr-1 ${searchingCalendar && rising ? 'calendar-rise' : ''}`}>
+                        {dateItems.map((item, index) => (
                           <div 
                             key={`${item.type}-${item.id}`} 
+                            style={{ '--i': index } as CSSProperties}
                             className="group relative bg-white/80 dark:bg-gray-800/60 rounded-lg border border-p5-200/60 dark:border-p5-700/40 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.01] hover:border-p5-300 dark:hover:border-p5-600 cursor-pointer"
                             onClick={() => setSelectedItem(item)}
                           >

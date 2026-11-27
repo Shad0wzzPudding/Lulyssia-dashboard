@@ -425,6 +425,16 @@
   .search-panel.settle [data-modal-list] > :first-child > :nth-child(3) { animation-delay: 0.05s; }
   .search-panel.settle [data-modal-list] > :first-child > :nth-child(4) { animation-delay: 0.075s; }
   .search-panel.settle [data-modal-list] > :first-child > :nth-child(n + 5) { animation-delay: 0.1s; }
+
+  /* The Calendar Overview's search: the date panel's rows rise in one by one from below (each
+     row sets --i, its place in the list) */
+  @keyframes calendar-rise {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+  .calendar-rise > * {
+    animation: calendar-rise 0.32s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
 }
 
 /* The lists' columns follow the screen's width; in the window they follow the window's instead */
