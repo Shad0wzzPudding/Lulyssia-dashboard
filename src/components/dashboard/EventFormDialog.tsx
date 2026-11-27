@@ -12,6 +12,10 @@ import { AttachmentsField } from './AttachmentsField';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { END_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
+import { applyPreset, descriptionHasText, followStart } from '@/lib/presetApply';
+import { useFormPresets } from '@/hooks/useFormPresets';
+import { PresetPicker } from './PresetPicker';
+import { DescriptionLabelRow } from './DescriptionLabelRow';
 
 /**
  * Opens the form: empty for a new event (or with only its start filled in, as yyyy-MM-ddTHH:mm),
@@ -54,6 +58,7 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
     setSaving(false);
     setIsCreateOpen(false);
   };
+  const { presetsOpen, setPresetsOpen, dueOffset, setDueOffset, presetsButtonRef, formContentRef } = useFormPresets();
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -77,6 +82,7 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
     });
     setEditingEvent(null);
     setDateErrorShown(false);
+    setDueOffset(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -121,6 +127,7 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
     playEditSound();
     setEditingEvent(event);
     setDateErrorShown(false);
+    setDueOffset(null);
     setFormData({
       title: event.title,
       description: event.description || '',
@@ -145,7 +152,7 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
   return (
     <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <ResizableDialogContent>
+      <ResizableDialogContent ref={formContentRef}>
         <DialogHeader>
           <DialogTitle>
             {editingEvent ? 'Edit Event' : 'Create New Event'}
@@ -158,11 +165,14 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             required
           />
-          <FormattedTextarea
-            placeholder="Description (optional)"
-            value={formData.description}
-            onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-          />
+          <div>
+            <DescriptionLabelRow ref={presetsButtonRef} onPresets={() => setPresetsOpen(true)} />
+            <FormattedTextarea
+              placeholder="Description (optional)"
+              value={formData.description}
+              onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
+            />
+          </div>
           <div className="space-y-2">
             <label htmlFor={startId} className="text-sm font-medium block">Start <span className="text-muted-foreground">(optional)</span></label>
             <Input
@@ -173,12 +183,11 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
               onChange={(e) => {
                 const v = e.target.value;
                 setFormData(prev => {
-                  const next = { ...prev, start_time: v };
-                  // The deadline follows the start (+5 h) until it is set by hand
-                  if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time))) {
-                    next.deadline = autoDeadline(v);
-                  }
-                  return next;
+                  // The deadline follows the start: at start + X after a preset set it that way, otherwise
+                  // +5 h; either until it is set by hand
+                  const deadline = followStart(prev.start_time, prev.deadline, v, dueOffset, () =>
+                    v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_time)) ? autoDeadline(v) : prev.deadline);
+                  return { ...prev, start_time: v, deadline };
                 });
               }}
             />
@@ -227,6 +236,23 @@ export const EventFormDialog = forwardRef<EventFormHandle, EventFormDialogProps>
             </Button>
           </div>
         </form>
+        <PresetPicker
+          open={presetsOpen}
+          onClose={() => setPresetsOpen(false)}
+          hasDescription={descriptionHasText(formData.description)}
+          returnFocusRef={presetsButtonRef}
+          onApply={(preset, how) => {
+            setFormData((prev) => {
+              const next = applyPreset(
+                { title: prev.title, description: prev.description, start: prev.start_time, deadline: prev.deadline, tag_ids: prev.tag_ids },
+                preset,
+                how
+              );
+              return { ...prev, title: next.title, description: next.description, start_time: next.start, deadline: next.deadline, tag_ids: next.tag_ids };
+            });
+            if (preset.due_amount && preset.due_unit) setDueOffset({ due_amount: preset.due_amount, due_unit: preset.due_unit });
+          }}
+        />
       </ResizableDialogContent>
     </Dialog>
   );

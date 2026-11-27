@@ -437,6 +437,175 @@
   }
 }
 
+/* Preset cards (the "Presets" layer in the task and event forms): glossy black, a silver edge with a
+   black ring, a hard light-blue shadow, light-blue comic dots fading out towards the top, a white
+   frosted name slab with a band in the first tag's colour under its slanted edge, and a butterfly */
+.preset-card {
+  --preset-blue: #4fc3f7;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  width: clamp(176px, 22vw, 256px);
+  aspect-ratio: 2 / 3;
+  padding: 0 0 14px;
+  overflow: hidden;
+  text-align: left;
+  color: #f1f5f9;
+  border: 2px solid #d9dee3;
+  border-radius: 6px;
+  background:
+    linear-gradient(125deg, transparent 38%, hsl(0 0% 100% / 0.07) 46%, transparent 54%),
+    radial-gradient(circle, color-mix(in srgb, var(--preset-blue) 70%, transparent) 1.3px, transparent 1.7px) 0 0 / 9px 9px,
+    linear-gradient(170deg, #15181c, #050607);
+  box-shadow: 0 0 0 2px #000, 7px 7px 0 var(--preset-blue);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.preset-card[aria-pressed='true'] {
+  transform: translateY(-8px);
+  box-shadow: 0 0 0 2px #000, 0 0 0 5px var(--preset-blue), 0 0 26px 6px rgb(79 195 247 / 0.55), 7px 15px 0 var(--preset-blue);
+}
+.preset-card:focus-visible {
+  outline: 3px solid var(--preset-blue);
+  outline-offset: 6px;
+}
+.preset-card-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, #0a0c0e 18%, rgb(10 12 14 / 0.6) 48%, transparent 85%);
+}
+.preset-card-head {
+  position: relative;
+  background: var(--band, var(--preset-blue));
+  padding: 14px 40px 22px 16px;
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
+}
+.preset-card-head::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.94), hsl(200 30% 88% / 0.9));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  clip-path: polygon(0 0, 100% 0, 100% calc(72% - 5px), 0 calc(100% - 5px));
+}
+.preset-card-name {
+  position: relative;
+  display: block;
+  color: #000;
+  font: italic 800 clamp(1.4rem, 2vw, 1.9rem) / 1.02 "Asap Condensed", Kanit, ui-sans-serif, system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.preset-card-format {
+  position: relative;
+  padding: 0 14px 0 16px;
+  overflow: hidden;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent);
+  mask-image: linear-gradient(#000 70%, transparent);
+}
+.preset-card-offset {
+  position: relative;
+  width: fit-content;
+  margin-left: 16px;
+  padding: 1px 7px;
+  color: #000;
+  background: var(--preset-blue);
+  border: 2px solid #000;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.preset-card-offset.is-none {
+  background: #d9dee3;
+}
+.preset-card-butterfly {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 50px;
+  height: 47px;
+  pointer-events: none;
+  filter: drop-shadow(2px 2px 0 #000);
+}
+.preset-card-check {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: hsl(193 61% 52%);
+  color: #04151b;
+  box-shadow: 0 0 0 3px #000;
+  pointer-events: none;
+}
+/* The label above a card: a slanted tab per tag with a hard black shadow */
+.preset-label {
+  display: flex;
+  gap: 6px;
+  max-width: clamp(176px, 22vw, 256px);
+  filter: drop-shadow(3px 3px 0 #000);
+}
+.preset-label > span {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 6px 16px 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: italic 800 1.05rem / 1 "Asap Condensed", Kanit, ui-sans-serif, system-ui, sans-serif;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.preset-label > span.is-more {
+  flex: none;
+  padding-inline: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The layer fades in and out (Skip / Esc), the banner slides in from the left and the cards with
+     their labels slide down from above one after another */
+  @keyframes preset-layer-in {
+    from { opacity: 0; }
+  }
+  @keyframes preset-layer-out {
+    to { opacity: 0; }
+  }
+  @keyframes preset-banner-in {
+    from { transform: translateX(-40px); opacity: 0; }
+  }
+  @keyframes preset-slide-down {
+    0% { opacity: 0; transform: translateY(-70vh) rotate(-2deg); }
+    70% { opacity: 1; }
+    100% { opacity: 1; transform: none; }
+  }
+  .preset-layer[data-state='open'] {
+    animation: preset-layer-in 0.2s ease-out both;
+  }
+  .preset-layer[data-state='closed'] {
+    animation: preset-layer-out 0.38s ease-in forwards;
+  }
+  .preset-layer[data-state='open'] .preset-banner {
+    animation: preset-banner-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  .preset-layer[data-state='open'] .preset-slide-down {
+    animation: preset-slide-down 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.12) backwards;
+    animation-delay: calc(0.12s + var(--i, 0) * 90ms);
+  }
+}
+
 /* The lists' columns follow the screen's width; in the window they follow the window's instead */
 [data-modal-list] > .grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
