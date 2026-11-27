@@ -17,6 +17,7 @@ import { PresetFormDialog, type PresetFormHandle } from './PresetFormDialog';
 import { PresetDeleteDialog } from './PresetManager';
 import { LulyssiaConfirmDialog } from './LulyssiaConfirmDialog';
 import { TagChip } from './TagPicker';
+import { PresetMoment } from './PresetMoment';
 
 interface PresetPickerProps {
   open: boolean;
@@ -43,6 +44,8 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Preset | null>(null);
   const [asking, setAsking] = useState<Preset | null>(null);
+  // The apply moment playing (the layer has gone; the form is filled when it ends)
+  const [moment, setMoment] = useState<{ preset: Preset; how?: ApplyHow } | null>(null);
   // A preset just made with "+": brought to the front once it is in the list
   const [bringId, setBringId] = useState<string | null>(null);
 
@@ -87,8 +90,19 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   const apply = (preset: Preset, how?: ApplyHow) => {
     countUse(preset.id);
     playSuccessSound();
-    onApply(preset, how);
-    onClose();
+    // Reduced motion: no moment, the form is simply filled
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onApply(preset, how);
+      onClose();
+      return;
+    }
+    setMoment({ preset, how });
+  };
+  // The moment ends (at 1.25s, or "Skip" / Esc): the form is filled, then the moment fades out
+  const endMoment = () => {
+    if (!moment) return;
+    onApply(moment.preset, moment.how);
+    setMoment(null);
   };
   const pressApply = () => {
     if (!picked) return;
@@ -100,7 +114,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => { if (!o) skip(); }}>
+      <Dialog open={open && !moment} onOpenChange={(o) => { if (!o) skip(); }}>
         <DialogPortal>
           <DialogPrimitive.Content
             aria-describedby={undefined}
@@ -111,7 +125,8 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
             }}
             onCloseAutoFocus={(e) => {
               e.preventDefault();
-              returnFocusRef.current?.focus();
+              // During the apply moment the focus goes back once the moment has gone
+              if (!moment) returnFocusRef.current?.focus();
             }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); carousel.current?.go(-1); }
@@ -219,6 +234,15 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
         </DialogContent>
       </Dialog>
 
+      <PresetMoment
+        preset={moment?.preset ?? null}
+        tags={tags}
+        onEnd={endMoment}
+        onClosed={() => {
+          onClose();
+          requestAnimationFrame(() => returnFocusRef.current?.focus());
+        }}
+      />
       <PresetFormDialog
         ref={presetForm}
         onSaved={(preset) => {

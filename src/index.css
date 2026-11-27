@@ -594,6 +594,35 @@
     animation: preset-slide-down 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.12) backwards;
     animation-delay: calc(0.12s + var(--i, 0) * 90ms);
   }
+
+  /* The apply moment: Lulyssia rises from the bottom, the picked card rises, glows and melts into
+     light while sparkles burst out, then it all fades out over the filled-in form */
+  @keyframes preset-moment-rise {
+    from { opacity: 0; transform: translate(-50%, 40px); }
+  }
+  @keyframes preset-moment-hold {
+    0% { transform: translateY(40px) scale(0.9); opacity: 0; }
+    25% { transform: none; opacity: 1; filter: none; }
+    60% { filter: brightness(1.6) drop-shadow(0 0 24px hsl(193 61% 70%)); transform: scale(1.04); }
+    85%, 100% { filter: brightness(3) blur(6px); transform: scale(1.12); opacity: 0; }
+  }
+  @keyframes preset-moment-spark {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+    30% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+  }
+  .preset-moment[data-state='closed'] {
+    animation: preset-layer-out 0.38s ease-in forwards;
+  }
+  .preset-moment-lulyssia {
+    animation: preset-moment-rise 0.4s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  .preset-moment-card {
+    animation: preset-moment-hold 1.2s ease-in-out forwards;
+  }
+  .preset-moment-spark {
+    animation: preset-moment-spark 0.8s ease-out both;
+  }
 }
 
 /* The lists' columns follow the screen's width; in the window they follow the window's instead */
