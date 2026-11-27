@@ -8,7 +8,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { consumeRecovery, onRecovery } from "@/lib/recovery";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
