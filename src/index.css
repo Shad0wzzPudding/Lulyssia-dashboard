@@ -569,6 +569,36 @@
   font: italic 800 1.05rem / 1 "Asap Condensed", Kanit, ui-sans-serif, system-ui, sans-serif;
   clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
 }
+/* The apply moment's speech bubble: on Lulyssia's left at her head's height. On phones she's moved
+   right (to 60%) and the bubble takes the left side, overlapping her a little; wider, it sits
+   beside her, its tail just over her edge. */
+.preset-moment-quote {
+  left: 3vw;
+  bottom: calc(4% + min(62vw, 340px) * 0.52);
+  width: min(52vw, 270px);
+  transform: rotate(-4deg);
+  transform-origin: 90% 50%;
+}
+@media (min-width: 640px) {
+  .preset-moment-quote {
+    left: auto;
+    right: calc(50% + 115px);
+    width: 290px;
+  }
+}
+.preset-moment-quote-name {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin: 0 0 -6px 10px;
+  padding: 3px 12px 2px;
+  background: hsl(193 61% 52%);
+  color: #04151b;
+  font: italic 800 0.8rem / 1 "Asap Condensed", Kanit, ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
 .preset-label > span.is-more {
   flex: none;
   padding-inline: 12px;
@@ -663,6 +693,15 @@
   }
   .preset-moment-lulyssia {
     animation: preset-moment-rise 0.4s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  /* Lulyssia's line: the bubble pops in tilted, beside her head */
+  @keyframes preset-moment-quote {
+    0% { opacity: 0; transform: rotate(-14deg) scale(0.4); }
+    70% { opacity: 1; transform: rotate(-2deg) scale(1.06); }
+    100% { opacity: 1; transform: rotate(-4deg) scale(1); }
+  }
+  .preset-moment-quote {
+    animation: preset-moment-quote 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.15s both;
   }
   .preset-moment-burn {
     animation: preset-moment-hold 1.2s ease-in-out forwards;
