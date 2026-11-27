@@ -525,7 +525,7 @@ Review of the first 27 Nov run's two fixes, then a bug hunt by angle: 7 rounds. 
 
 What to do (owner):
 - [ ] Merge `cloud-review-2026-11-27-second` (it contains `cloud-review-2026-11-27`, so both runs and both plan builds), after applying `supabase/migrations/20261127000000_presets.sql`; then `npm install`
-- [ ] Deploy the LINE function: `supabase functions deploy send-line-reminders` (the "Starting soon" day fix, chosen after the run)
+- [x] Deploy the LINE function: `supabase functions deploy send-line-reminders` (the "Starting soon" day fix, chosen after the run). Done 27 Nov from `12bdab5`
 - [ ] On the iPhone app: open "Presets" in a task form and check the cyan banner and "+" sit below the clock, and Skip / Apply above the home bar
 
 Branch `cloud-review-2026-11-27-second`, started from the first 27 Nov run's branch (`main` plus both
