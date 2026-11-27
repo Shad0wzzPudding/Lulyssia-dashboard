@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import type { Preset, Tag } from '@/lib/types';
 import { Dialog, DialogPortal } from '@/components/ui/dialog';
@@ -8,6 +8,23 @@ import { PresetButterflySymbol, PresetCard } from './PresetCard';
 
 /** When the form is filled in under the moment, which then fades out (0.38s) */
 const MOMENT_MS = 1250;
+/** What Lulyssia says as she casts the preset (short: the moment lasts about 1.6s); one at random */
+const RITUAL_QUOTES = [
+  'Azure flame, answer my call!',
+  'By the blue fire... take form!',
+  'Burn bright, become your plan!',
+  'Butterflies, carry this spell~',
+  'From card to task... manifest!',
+  'Blue fire, seal the pact!',
+  'A little ritual, just for you~',
+  'Spell cast! Use it well, okay?',
+  'Flame of mine, write it down!',
+  "Ritual complete. It's yours~",
+];
+
+// The Persona-style bubble: jagged, with its tail on the right pointing at Lulyssia
+const QUOTE_SHAPE = 'polygon(0% 16%, 7% 0%, 83% 7%, 86% 33%, 100% 52%, 84% 66%, 81% 100%, 3% 87%)';
+
 /**
  * The flames on the card: spread over its width and height (fixed, so every moment looks the same),
  * each rising, swelling and fading out, one after another from about 0.3s
@@ -23,7 +40,7 @@ const FLAMES = Array.from({ length: 24 }, (_, i) => ({
 
 /**
  * After "Apply preset": Lulyssia holds the picked card up while it's engulfed in blue flame and burns away
- * from the bottom up.
+ * from the bottom up, saying a ritual line in a speech bubble on her left.
  * At 1.25s (or on "Skip" / Esc) `onEnd` fills the form, and the moment fades out over it.
  */
 export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
@@ -34,6 +51,11 @@ export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
   /** The fade-out has finished */
   onClosed: () => void;
 }) => {
+  // A new line for each moment, kept through the fade-out (when preset is already null)
+  const [said, setSaid] = useState<{ preset: Preset; quote: string } | null>(null);
+  if (preset && preset !== said?.preset) {
+    setSaid({ preset, quote: RITUAL_QUOTES[Math.floor(Math.random() * RITUAL_QUOTES.length)] });
+  }
   const onEndRef = useRef(onEnd);
   onEndRef.current = onEnd;
   useEffect(() => {
@@ -58,8 +80,21 @@ export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
           <img
             src={STICKERS.ritualing}
             alt=""
-            className="preset-moment-lulyssia absolute bottom-[4%] left-1/2 w-[min(62vw,340px)] -translate-x-1/2 drop-shadow-[0_0_30px_hsl(193_61%_52%/0.5)]"
+            className="preset-moment-lulyssia absolute bottom-[4%] left-1/2 w-[min(62vw,340px)] -translate-x-1/2 drop-shadow-[0_0_30px_hsl(193_61%_52%/0.5)] max-[639px]:left-[60%]"
           />
+          {said && (
+            <div className="preset-moment-quote pointer-events-none absolute z-[3]" role="status">
+              <span className="preset-moment-quote-name">Lulyssia</span>
+              <div className="relative">
+                {/* White outline, then the black fill, both cut to the same jagged bubble */}
+                <span aria-hidden className="absolute inset-0 bg-white" style={{ clipPath: QUOTE_SHAPE }} />
+                <span aria-hidden className="absolute inset-[3px] bg-black" style={{ clipPath: QUOTE_SHAPE }} />
+                <p className="relative py-3.5 pl-5 pr-[22%] font-display text-[0.98rem] font-extrabold italic leading-tight text-white sm:text-lg">
+                  {said.quote}
+                </p>
+              </div>
+            </div>
+          )}
           {preset && (
             <div className="preset-moment-burn pointer-events-none relative z-[2] mb-[18vh]" aria-hidden="true">
               {/* The blaze behind the card, the card (charring and burning away), the glowing edge
