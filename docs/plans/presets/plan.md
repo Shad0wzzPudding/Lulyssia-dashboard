@@ -135,6 +135,12 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
   - **Stacking:** the task and event forms are Radix dialogs, so build the layer as a Radix `Dialog`
     too (its content full screen), so it stacks over the form; item 2's form and Lulyssia's
     questions then stack over the layer, and Esc closes only the top one.
+  - **The form behind is blocked** (owner's ask): while the layer is open (and during item 4's
+    moment and Lulyssia's description question), nothing behind it can be used: no clicks or taps,
+    no typing, no scrolling the form or the page, Tab never reaches it, and screen readers skip it
+    (a modal dialog: Radix's focus trap and outside-pointer block, plus `inert` on the form
+    dialog's content while the layer is up). Only the layer's own controls work; the form comes
+    back to life when the layer closes.
   - **The layer:** full screen over the form, dark (the app's dark page colour at about 94%,
     a light blur). At the top a cyan banner, slanted at its right end, with a dark icon block, "Choose
     1 preset" in the app's slanted display font, the hint "Hold a card (or ⓘ) to read all of it"
@@ -248,6 +254,8 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
         makes a preset that then shows in front;
   - [ ] with no presets, the empty message and "+ New preset" show;
   - [ ] keyboard only: the whole flow works with Tab, Enter, Space, ← → and Esc;
+  - [ ] while the layer is open, clicking, tapping, typing, scrolling and Tab can't reach the form or
+        the page behind it (check on a phone too), and the form works again once it closes;
   - [ ] with reduced motion on, nothing slides or fades;
   - [ ] `motion` is added to package.json; typecheck, lint and build pass.
 - **Owner checks by eye:** the "Description" row with "Presets"; the layer, the stack and its feel
@@ -329,6 +337,8 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
   two buttons, so it gets an optional third for "Add below / Replace / Cancel"; the app doesn't
   handle the phone's back button for dialogs, so only Skip and Esc close the layer; the preset form
   is one shared component; deleting a tag refreshes the presets too.
+- **Q:** Can the form behind the cards be used while they're open? **A:** No (owner's ask): it's
+  blocked completely until the layer closes.
 
 ## If something isn't covered here
 
