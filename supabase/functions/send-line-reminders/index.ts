@@ -20,6 +20,18 @@ function thTime(iso: string | null): string | null {
   return `${String(shifted.getUTCHours()).padStart(2, '0')}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
 }
 
+/** The deadline / end as a time when it's on the start's day (Thai time), else with its day:
+    "17:00" or "Fri 4 Dec 17:00" (like the morning letter writes the other day). */
+function thEnd(startIso: string, endIso: string | null): string | null {
+  const time = thTime(endIso);
+  if (!time || !endIso) return time;
+  const day = (iso: string) => new Date(new Date(iso).getTime() + TH_OFFSET_MS);
+  const end = day(endIso);
+  if (end.toISOString().slice(0, 10) === day(startIso).toISOString().slice(0, 10)) return time;
+  const date = end.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  return `${date} ${time}`;
+}
+
 type LineMessage =
   | { type: 'text'; text: string }
   | { type: 'image'; originalContentUrl: string; previewImageUrl: string }
@@ -177,13 +189,21 @@ Deno.serve(async (req) => {
             occ = new Date(t.start_date);
           }
           if (inWindow(occ)) {
+            // A repeating task's round keeps the first round's start-to-deadline gap; the stored
+            // deadline is the first round's
+            let deadline = t.deadline;
+            if (t.recurrence_unit) {
+              deadline = t.start_date && t.deadline
+                ? new Date((occ as Date).getTime() + new Date(t.deadline).getTime() - new Date(t.start_date).getTime()).toISOString()
+                : null;
+            }
             due.push({
               type: 'task',
               id: t.id,
               title: t.title,
               description: t.description,
               occurrence: occ as Date,
-              deadline: t.deadline,
+              deadline,
               tag_ids: t.tag_ids,
               attachments: (t as Record<string, unknown>).attachments,
             });
@@ -226,7 +246,7 @@ Deno.serve(async (req) => {
             `Name : ${item.title}`,
             'Detail :',
             formatDetail(item.description) ?? '-',
-            `${item.type === 'event' ? 'Start time - end' : 'Start time - deadline'}: ${thTime(occurrenceIso) ?? '-'} - ${thTime(item.deadline) ?? '-'}`,
+            `${item.type === 'event' ? 'Start time - end' : 'Start time - deadline'}: ${thTime(occurrenceIso) ?? '-'} - ${thEnd(occurrenceIso, item.deadline) ?? '-'}`,
             ...(tagStr ? [`🏷 Tag : ${tagStr}`] : []),
           ];
 
@@ -236,7 +256,7 @@ Deno.serve(async (req) => {
             kind: item.type,
             title: item.title,
             start: thTime(occurrenceIso),
-            deadline: thTime(item.deadline),
+            deadline: thEnd(occurrenceIso, item.deadline),
             detail: formatDetail(item.description),
             tags: tagStr,
           });
