@@ -16,7 +16,7 @@ list.
 - The Tasks, Events and Interests pages' search bars, and the "Show all" window's search.
 - Finished tasks: the calendar doesn't show them, so the search doesn't find them.
 - The rest of Home, and the date panel's items, `+` and `−` (they work as now when a date shows).
-- The "Deal" animation: kept for the coming "Tag present" plan.
+- Other animations for the results (Slide, the "Show all" panel's Slam, Deal): only Rise (item 2).
 
 ## Items
 
@@ -37,9 +37,10 @@ Build them in this order. Each one is its own branch and can be merged on its ow
   - **Where:** wherever the date panel sits under the calendar, the search goes between the
     calendar and the panel, right above the results, so they show while typing (owner's choice).
     The card's grid puts the panel beside the calendar only from `lg` (1024px), so: under `lg`,
-    between the calendar and the panel; from `lg`, above the calendar. Use the "Show all" window's small search as the model (`CollapsiblePreview.tsx`: the
-    `Input` with the search icon and its ✕ "Clear search" button); its own label is
-    "Search tasks and events on the calendar".
+    between the calendar and the panel; from `lg`, above the calendar. Use the "Show all" window's
+    small search as the model (`CollapsiblePreview.tsx`: the `Input` with the search icon, its ✕
+    "Clear search" button, and 16px text on phones / 14px from `md` so iPhones don't zoom in); its
+    own label is "Search tasks and events on the calendar".
   - **How it reads a search:** exactly like the pages: `searchItems` / `parseSearch` /
     `searchHasFilter` from `src/lib/sortAndFilter.ts` (title and description, commas mean "or",
     "!" hides, quotes keep a comma or "!" as text). A search counts only when `parseSearch` gives at
@@ -56,10 +57,12 @@ Build them in this order. Each one is its own branch and can be merged on its ow
     live: an item changed or deleted while the results show changes or leaves the list.
   - **One row per item** (owner's choice): its title, its type badge, and its dates on the right:
     "Start <date>" in green and "Due <date>" (tasks) / "End <date>" (events) in red, one under the
-    other, with the year only when it isn't this year. A thin line at its left edge like the date
+    other. Dates read like the app's In progress cards: "Tue 3 Nov, 10:46" (`format(…, 'EEE d MMM,
+    HH:mm')`), with the year after the month when it isn't this year ("Tue 3 Nov 2027, 10:46"). A thin line at its left edge like the date
     panel's cards: green with a start only, red with a due/end only, the green-over-red split with
     both. When the start and the due/end fall on the same day, one green-over-red line and one date
-    line, "Start and end <date>" (the wording of the app's `sameDayLabel`). Picking it opens its
+    line in the wording of the app's `sameDayLabel` with both times: "Start and end Tue 3 Nov,
+    09:00–11:00" ("Start and end today, 09:00–11:00" for today). Picking it opens its
     start date, or its due/end date if it has no start. Each row is a button, reachable by Tab and
     opened with Enter or Space. Titles wrap inside the row (`[overflow-wrap:anywhere]`, as the date
     panel's cards do); the dates never wrap.
@@ -160,7 +163,8 @@ Build them in this order. Each one is its own branch and can be merged on its ow
 - **Q:** On a phone? **A:** The search goes under the calendar, right above the results; that is,
   wherever the panel sits under the calendar (under 1024px), found while checking the plan.
 - **Filled in by Claude while checking the plan (owner to object if wrong):** same-day items show
-  "Start and end <date>"; dateless tasks aren't found; ties go by time, then title; long lists
+  "Start and end <date>"; row dates in the In progress cards' format with times ("Tue 3 Nov, 10:46");
+  dateless tasks aren't found; ties go by time, then title; long lists
   scroll in the panel; focus goes to "← Results" after picking and back to the row after it;
   clicking the selected date again unselects it as today; the calendar doesn't move while typing.
 

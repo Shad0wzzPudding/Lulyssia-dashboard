@@ -40,18 +40,21 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
       date), `due_unit text` (`'hours' | 'days' | 'weeks'`, null exactly when `due_amount` is
       null: a check), `use_count integer not null default 0`, `created_at` / `updated_at
       timestamptz not null default now()`;
-    - row level security on, one policy for `authenticated`: a user reads and writes only their
-      own rows (`auth.uid() = user_id`), like `tags`;
+    - row level security on, one policy `for all to authenticated` with both `using (auth.uid() =
+      user_id)` and `with check (auth.uid() = user_id)`, like `tags`;
     - the `update_updated_at_column` trigger, like `tags`;
     - deleting a tag also takes it out of every preset's `tag_ids`: extend the trigger function from
-      `20261015000001_deleted_tags_leave_items.sql` (redefine it in the new migration with the
-      same body plus `update public.presets set tag_ids = array_remove(...)`).
+      `20261015000001_deleted_tags_leave_items.sql`: redefine `public.remove_deleted_tag_from_items()`
+      in the new migration with the same body plus `update public.presets set tag_ids =
+      array_remove(tag_ids, old.id) where user_id = old.user_id and old.id = any(tag_ids);`, and
+      repeat its `revoke execute … from public, anon, authenticated` (the trigger itself stays).
   - Names don't have to be unique.
   - `src/hooks/usePresets.ts`, modelled on `src/hooks/useTags.ts`: query key `['presets']`, the
     list ordered by `use_count` (most used first), then `created_at` (older first, so new ones
     start at the end); `createPreset`, `updatePreset`, `deletePreset` (with toasts on failure, like
     tags) and `countUse(id)` (adds 1 to `use_count`). A second create while the first is still
-    saving is ignored (the double-Enter guard tags have).
+    saving is ignored (the double-Enter guard tags have). `useTags`'s `deleteTag` also invalidates
+    `['presets']`, so a deleted tag leaves the presets on screen at once.
   - `Preset` type in `src/lib/types.ts`; `src/integrations/supabase/types.ts` gets the table.
 - **Preview:** none.
 - **Done when:**
@@ -81,7 +84,10 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
     due date") and "used 9×", with a pencil ("Edit preset <name>") and a trash ("Delete preset
     <name>"). With none: "No presets yet. Make one to fill a task or event in one tap."
   - **Form** (a dialog like the task form, titled "New Preset" / "Edit Preset", buttons
-    "Create"/"Update" and "Cancel"):
+    "Create"/"Update" and "Cancel"). Build it as one component,
+    `src/components/dashboard/PresetFormDialog.tsx`, opened with a handle's `openNew()` /
+    `openEdit(preset)` like `TaskFormDialog`, and taking an `onSaved(preset)` callback: Settings
+    uses it here, and item 3 opens the same one from the carousel's "+" and a card's details.
     - Name: required, at most 40 characters; empty: "Give the preset a name." under it.
     - Description format (optional): the same `FormattedTextarea` as a task's description.
     - Tags (optional): the same `TagPicker` (a new tag can be made there too).
@@ -118,12 +124,17 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
 ### 3. The preset cards in the task and event forms
 
 - **Branch:** `plan/presets/3-cards`
-- **What it does:** a "Presets" button at the right of the Description label in the task form and
-  the event form (new and edit). It opens a full-screen layer: a banner "Choose 1 preset", a stacked
+- **What it does:** a "Presets" button in the task form and the event form (new and edit). Today
+  neither form has a label over its description box (only the "Description (optional)"
+  placeholder), so add a row just above the box: "Description" on the left, styled like the forms'
+  other labels ("Tags"), and "Presets" (small, outline, a cards icon) on the right. It opens a full-screen layer: a banner "Choose 1 preset", a stacked
   carousel of preset cards, and "Skip" / "Apply preset" at the bottom right. Tap the front card to
   pick it, then "Apply preset" fills the form.
 - **Rules decided:**
   - **One shared list:** both forms show every preset (owner's choice).
+  - **Stacking:** the task and event forms are Radix dialogs, so build the layer as a Radix `Dialog`
+    too (its content full screen), so it stacks over the form; item 2's form and Lulyssia's
+    questions then stack over the layer, and Esc closes only the top one.
   - **The layer:** full screen over the form, dark (the app's dark page colour at about 94%,
     a light blur). At the top a cyan banner, slanted at its right end, with a dark icon block, "Choose
     1 preset" in the app's slanted display font, the hint "Hold a card (or ⓘ) to read all of it"
@@ -160,7 +171,8 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
       higher than the left); the name on it in black, large, in the slanted display font, with room
       for the ⓘ. Under the slab, following its slant all the way across, a 5px band in the card's
       first tag colour (light blue with no tag).
-    - **Inside:** the description format as plain text in near-white, cut off with a fade; the due
+    - **Inside:** the description format as plain text in near-white (the formatting marks taken
+      out with `parseChars` from `src/lib/inlineFormat.ts`, as `searchItems` does), cut off with a fade; the due
       offset on a small tag with a 2px black outline: "+3 days" in black on light blue, "No due date"
       in black on silver. The tag chips are not on the card (the label shows them).
     - **Butterfly:** a white butterfly drawn in code (SVG, black outlines, faint wing lines, curled
@@ -176,12 +188,16 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
     is still too wide, so the label never gets wider than its card. Text on the tab is dark or white,
     whichever reads better on that tag's colour. The label moves, tilts and darkens with its card.
   - **Picking:** tapping (or Enter / Space on) the front card picks it: it lifts 8px with a black
-    ring, a light-blue ring and a light-blue glow outside it, and a round cyan check in the middle; tapping it again unpicks it. A tap right after a
-    drag does nothing. Moving the stack keeps the pick on its card.
+    ring, a light-blue ring and a light-blue glow outside it, and a round cyan check in the middle;
+    tapping it again unpicks it. A tap right after a drag does nothing. Moving the stack keeps the
+    pick on its card.
   - **Details:** holding a card half a second, or its ⓘ, opens a big card: the name, the whole
-    format as it will look, all tags, "Due: start +3 days" / "No due date", and the buttons "Pick
+    format as it will look (with `FormattedText`, as the app shows descriptions), all tags, "Due: start +3 days" / "No due date", and the buttons "Pick
     this one", "Edit", "Delete", "Close" (owner's choice: edit and delete from here too). Edit opens
-    item 2's form; Delete asks first as in item 2. Esc or a tap outside closes it.
+    item 2's form; Delete asks first as in item 2. Esc or a tap outside closes it. Moving the finger
+    more than 6px cancels the hold (it's a drag), and a long press doesn't open the phone's own
+    menu or select text. After Edit, the card shows the changes in place; deleting the picked
+    preset unpicks it; deleting the last one shows the "No presets yet" screen.
   - **"+":** opens item 2's form over the layer; after "Create" the layer comes back with the new
     preset brought to the front.
   - **No presets yet:** the layer shows Lulyssia (the "contemplate" sticker) with "No presets yet.
@@ -190,7 +206,8 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
     - **Title:** an empty title (only spaces counts as empty) gets the preset's name; a typed title
       stays.
     - **Description:** an empty description gets the format. If it already has text, Lulyssia asks
-      first: "The description already has text. Add "<name>" below it, or replace it?" with "Add
+      first (`LulyssiaConfirmDialog` has only two buttons today: give it an optional third, e.g.
+      `secondaryText` / `onSecondary`, keeping its look and random line; other uses don't change): "The description already has text. Add "<name>" below it, or replace it?" with "Add
       below" (first, focused), "Replace" and "Cancel". "Add below" puts the format after a blank
       line; Cancel leaves the form and the layer as they were.
     - **Tags:** the preset's tags are added to those already picked; none are removed.
@@ -204,7 +221,7 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
       presses Create/Update.
   - **Entrance:** when the layer opens, the banner slides in from the left and the cards (with
     their labels) slide down from above one after another (0.5s each, 90ms apart, a small bounce).
-  - **Closing:** "Skip", Esc or the system back fade the layer out (0.38s) with no changes; the focus
+  - **Closing:** "Skip" or Esc fade the layer out (0.38s) with no changes; the focus
     goes back to "Presets".
   - **Sounds** (owner's choice: the existing ones, following the Settings sound switch and volume):
     opening the layer: the expand sound; picking a card: the edit sound; Apply: the success sound;
@@ -218,8 +235,6 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
   Versions 1 and 2 there were not chosen. The card: `previews/card-designs.html` (card "F"),
   published at https://claude.ai/artifact/2LpwqdEkCuS7bxWm5xSuSF; exact for the colours, the slab,
   the dots and the butterfly (the other cards there were not chosen).
-- **Owner checks by eye (the card):** the black, white and light-blue card, the tag-colour band
-  under the name, the dots, the butterfly.
 - **Done when:**
   - [ ] "Presets" shows in the task and the event form, new and edit, and opens the layer with
         every preset, the most used in front;
@@ -235,8 +250,9 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
   - [ ] keyboard only: the whole flow works with Tab, Enter, Space, ← → and Esc;
   - [ ] with reduced motion on, nothing slides or fades;
   - [ ] `motion` is added to package.json; typecheck, lint and build pass.
-- **Owner checks by eye:** the layer, the stack and its feel when dragging (desktop and phone), the
-  labels, the slide-in and fade-out, the sounds.
+- **Owner checks by eye:** the "Description" row with "Presets"; the layer, the stack and its feel
+  when dragging (desktop and phone); the card (black, white and light blue, the tag-colour band
+  under the name, the dots, the butterfly); the labels; the slide-in and fade-out; the sounds.
 - **Needs:** item 1's migration applied; `npm install` (new package `motion`).
 - **Depends on:** 1, 2.
 
@@ -308,6 +324,11 @@ Build them in this order. Each one is its own branch. Items 2 to 4 depend on the
   empty-carousel message with Lulyssia's "contemplate" sticker; after "+", the new preset comes to
   the front; a changed start keeps start + X until the Deadline/End is set by hand; Apply doesn't
   save the form; delete asks with Lulyssia's usual question; no Recent Changes for presets.
+- **Found while checking the plan against the code (27 Nov 2026):** the forms have no
+  "Description" label today, so item 3 adds one with "Presets" beside it; Lulyssia's question has
+  two buttons, so it gets an optional third for "Add below / Replace / Cancel"; the app doesn't
+  handle the phone's back button for dialogs, so only Skip and Esc close the layer; the preset form
+  is one shared component; deleting a tag refreshes the presets too.
 
 ## If something isn't covered here
 
