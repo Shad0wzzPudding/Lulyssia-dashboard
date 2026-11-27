@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar Search Placement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: animation switch, then Home's Calendar Overview: search above the calendar, results in the date panel; intent only */
+  :root {
+    --page: hsl(200 20% 4%);
+    --card: hsl(200 14% 8%);
+    --panel: hsl(200 18% 9%);
+    --fg: hsl(0 0% 98%);
+    --muted: hsl(0 0% 64%);
+    --cyan: hsl(193 61% 52%);
+    --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%);
+    --green: hsl(142 71% 45%);
+    --red: hsl(0 84% 60%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font-family: var(--body); overflow-x: clip; }
+  .wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); }
+  .lede { margin: 4px 0 0; color: var(--muted); line-height: 1.55; font-size: .92rem; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; color: var(--muted); }
+  .seg button { font: 600 .8rem var(--body); color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; cursor: pointer; text-align: left; }
+  .seg button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); background: hsl(193 61% 52% / .1); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+  .card h2 { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--cyan); margin: 0 0 14px; font-size: 1.35rem; display: flex; gap: 8px; align-items: center; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: auto minmax(0, 1fr); } }
+  .left { display: grid; gap: 10px; justify-items: center; align-content: start; }
+  .cal { border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+  .cal .head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: .9rem; margin-bottom: 10px; }
+  .cal .head button { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; }
+  .days { display: grid; grid-template-columns: repeat(7, 36px); gap: 8px 2px; text-align: center; font-size: .85rem; }
+  .days .dow { color: var(--muted); font-size: .75rem; }
+  .d { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 6px; border: 0; background: none; color: var(--fg); font: inherit; position: relative; cursor: pointer; }
+  .d.blank { visibility: hidden; }
+  .d.today { box-shadow: inset 0 0 0 2px var(--cyan); }
+  .d.marked { font-weight: 600; }
+  .d.marked::after { content: ""; position: absolute; inset: 0; border-radius: 999px; background: var(--cyan-dim); }
+  .d.sel { outline: 2px solid var(--fg); outline-offset: -2px; }
+  .d span { position: relative; z-index: 1; }
+  .d:focus-visible, .seg button:focus-visible, .res:focus-visible, .search input:focus-visible, .back:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .note { text-align: center; color: var(--cyan); font-size: .8rem; margin: 0; }
+  .search { position: relative; width: 100%; max-width: 280px; }
+  .search input { width: 100%; font: 500 .85rem var(--body); color: var(--fg); background: hsl(200 14% 11%); border: 1px solid var(--line); border-radius: 6px; padding: 7px 28px 7px 30px; }
+  .search svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .search .x { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 14px; }
+  .panel { background: var(--panel); border: 2px solid hsl(193 50% 30% / .4); border-radius: 12px; padding: 18px; min-height: 360px; overflow: hidden; }
+  .ph { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
+  .ph h3 { margin: 0; font-size: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .ph small { color: var(--cyan); font-size: .75rem; }
+  .back { font: 600 .75rem var(--body); color: var(--cyan); border: 1px solid var(--cyan-dim); background: transparent; border-radius: 6px; padding: 5px 9px; cursor: pointer; }
+  .items { display: grid; gap: 8px; margin-top: 14px; max-height: 300px; overflow-y: auto; padding-right: 2px; }
+  .group { font-size: .72rem; font-weight: 700; color: var(--muted); margin: 6px 0 -2px; }
+  .item, .res { position: relative; background: hsl(210 15% 14%); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 10px 16px; text-align: left; color: var(--fg); font: inherit; width: 100%; }
+  .res { cursor: pointer; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  .res:hover { border-color: var(--cyan); }
+  .res.past { opacity: .7; }
+  .when { flex-shrink: 0; font-size: .75rem; font-weight: 600; text-align: right; display: grid; gap: 2px; white-space: nowrap; }
+  .when .s { color: #4ade80; } .when .e { color: #f87171; }
+  .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+  .t { font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
+  .sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .badge { font-size: .7rem; border-radius: 999px; padding: 1px 8px; border: 1px solid #444; font-weight: 600; margin-left: 6px; color: var(--muted); }
+  .chip { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: 1px 8px; overflow-wrap: anywhere; }
+  .chip.f { color: #4ade80; background: hsl(142 71% 45% / .15); border: 1px solid hsl(142 71% 45% / .4); }
+  .chip.h { color: #f87171; background: hsl(0 84% 60% / .15); border: 1px solid hsl(0 84% 60% / .4); text-decoration: line-through; }
+  .or { color: var(--muted); font-size: .72rem; font-weight: 500; }
+  .empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 30px 0; }
+  .muted { color: var(--muted); font-size: .82rem; line-height: 1.55; margin: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .anim-rise .items > * { animation: rise .32s cubic-bezier(.2,.8,.3,1) both; animation-delay: calc(var(--i) * 45ms); }
+    .anim-slide .ph, .anim-slide .items { animation: slide .34s cubic-bezier(.2,.8,.3,1) both; }
+    .anim-slide .items { animation-delay: 60ms; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+    @keyframes slide { from { opacity: 0; transform: translateX(-24px); } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Search in the Calendar Overview</h1>
+    <p class="lede">Type a word (try "dentist", "report" or "dentist, trip" or "report, !year"). Only dates with a match stay highlighted, and the date panel lists the matches, upcoming first. Pick one: the calendar jumps to it and "← Results" takes you back. Today here is Fri Nov 27, 2026. Intent only: the build uses the app's real calendar, search box, chips and cards.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="How the results appear">
+    <span>Results appear:</span>
+    <button type="button" data-anim="rise" aria-pressed="true">Rise: one by one from below (recommended)</button>
+    <button type="button" data-anim="slide" aria-pressed="false">Slide: the panel slides in from the left</button>
+    <button type="button" data-anim="none" aria-pressed="false">None</button>
+  </div>
+
+  <section class="card">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Calendar Overview
+    </h2>
+    <div class="grid">
+      <div class="left">
+        <div class="search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search tasks and events…" aria-label="Search tasks and events on the calendar">
+          <button type="button" class="x" id="clear" aria-label="Clear search" hidden>✕</button>
+        </div>
+        <div class="cal">
+          <div class="head">
+            <button type="button" id="prev" aria-label="Previous month">‹</button>
+            <span id="month"></span>
+            <button type="button" id="next" aria-label="Next month">›</button>
+          </div>
+          <div class="days" id="days"></div>
+        </div>
+        <p class="note" id="note"></p>
+      </div>
+      <div class="panel" id="panel"></div>
+    </div>
+  </section>
+
+  <p class="muted">Rules shown: same search as the pages (title and description, commas mean "or", "!" hides); a search with a comma or "!" shows its chips after "Results for". One row per item with both its dates; picking it opens its start date (or its due/end date if it has no start). Upcoming and going-on items first by date, then "Past", most recent first. Only unfinished tasks and events, as on the calendar.</p>
+</div>
+
+<script>
+{
+  const items = [
+    { t: 'Dentist check-up', type: 'event', s: [2026, 9, 14, '10:00'] },
+    { t: 'Trip to Chiang Mai', type: 'event', s: [2026, 10, 20, '07:30'], e: [2026, 10, 23, '18:00'] },
+    { t: 'Monthly report', type: 'task', e: [2026, 10, 27, '17:00'] },
+    { t: 'Buy groceries', type: 'task', s: [2026, 10, 28, '09:00'] },
+    { t: 'Year-end report', type: 'task', s: [2026, 11, 1, '09:00'], e: [2026, 11, 18, '12:00'] },
+    { t: 'Dentist follow-up', type: 'event', s: [2026, 11, 9, '14:00'] },
+    { t: 'New Year party', type: 'event', s: [2026, 11, 31, '20:00'], e: [2027, 0, 1, '01:00'] },
+  ];
+  const TODAY = new Date(2026, 10, 27);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let anim = 'rise', view = { y: 2026, m: 10 }, sel = new Date(2026, 10, 27), q = '', showing = 'results';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const dt = (a) => a && new Date(a[0], a[1], a[2]);
+  const same = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const fmt = (d, year) => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}) });
+
+  const parse = (query) => query.split(',').map((p) => p.trim()).filter(Boolean).map((p) => { const hide = p.startsWith('!'); return { word: (hide ? p.slice(1) : p).trim().toLowerCase(), hide }; }).filter((x) => x.word);
+  const hasFilter = (query) => /[,!]/.test(query);
+  const hit = (it) => {
+    const terms = parse(q); if (!terms.length) return true;
+    const title = it.t.toLowerCase(), has = (w) => title.includes(w);
+    if (terms.some((x) => x.hide && has(x.word))) return false;
+    const find = terms.filter((x) => !x.hide); return !find.length || find.some((x) => has(x.word));
+  };
+  const searching = () => parse(q).length > 0;
+  const lastDate = (it) => dt(it.e) || dt(it.s);
+  const opens = (it) => dt(it.s) || dt(it.e);
+
+  function results() {
+    const found = items.filter(hit);
+    const up = found.filter((it) => lastDate(it) >= TODAY).sort((a, b) => opens(a) - opens(b));
+    const past = found.filter((it) => lastDate(it) < TODAY).sort((a, b) => lastDate(b) - lastDate(a));
+    return { up, past, n: found.length };
+  }
+  function chips() {
+    if (!hasFilter(q)) return `<span>"${esc(q)}"</span>`;
+    const terms = parse(q), find = terms.filter((x) => !x.hide), hide = terms.filter((x) => x.hide);
+    return find.map((x, k) => `${k ? '<span class="or">or</span>' : ''}<span class="chip f">${esc(x.word)}</span>`).join('') + hide.map((x) => `<span class="chip h">${esc(x.word)}</span>`).join('');
+  }
+  function row(it, i, past) {
+    const s = dt(it.s), e = dt(it.e);
+    const endWord = it.type === 'event' ? 'End' : 'Due';
+    const when = (s ? `<span class="s">Start ${esc(fmt(s, s.getFullYear() !== TODAY.getFullYear()))}</span>` : '') + (e ? `<span class="e">${endWord} ${esc(fmt(e, e.getFullYear() !== TODAY.getFullYear()))}</span>` : '');
+    const bar = s && e ? 'linear-gradient(var(--green) 50%, var(--red) 50%)' : s ? 'var(--green)' : 'var(--red)';
+    return `<button type="button" class="res${past ? ' past' : ''}" style="--i:${i}" data-i="${items.indexOf(it)}"><span class="bar" style="background:${bar}"></span><span><span class="t">${esc(it.t)}</span><span class="badge">${it.type}</span></span><span class="when">${when}</span></button>`;
+  }
+
+  function draw(animate) {
+    $('month').textContent = `${months[view.m]} ${view.y}`;
+    const days = $('days'); days.innerHTML = '';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach((d) => { const s = document.createElement('span'); s.className = 'dow'; s.textContent = d; days.append(s); });
+    const first = new Date(view.y, view.m, 1).getDay(), count = new Date(view.y, view.m + 1, 0).getDate();
+    for (let i = 0; i < first; i++) { const b = document.createElement('span'); b.className = 'd blank'; days.append(b); }
+    for (let d = 1; d <= count; d++) {
+      const here = new Date(view.y, view.m, d);
+      const on = items.filter((it) => same(dt(it.s), here) || same(dt(it.e), here));
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'd' + (on.some(hit) ? ' marked' : '') + (same(here, TODAY) ? ' today' : '') + (same(here, sel) ? ' sel' : '');
+      b.innerHTML = `<span>${d}</span>`; b.setAttribute('aria-label', `${months[view.m]} ${d}`);
+      b.addEventListener('click', () => { sel = here; showing = 'date'; draw(true); });
+      days.append(b);
+    }
+    $('note').textContent = searching() ? 'Highlighted: dates with a match' : 'Click on highlighted dates to see details';
+
+    const panel = $('panel');
+    panel.className = 'panel' + (animate ? ` anim-${anim}` : '');
+    void panel.offsetWidth;
+    if (searching() && showing === 'results') {
+      const { up, past, n } = results();
+      let i = 0;
+      const list = !n ? `<p class="empty">Nothing matches</p>` :
+        up.map((it) => row(it, i++, false)).join('') + (past.length ? `<p class="group" style="--i:${i++}">Past</p>` + past.map((it) => row(it, i++, true)).join('') : '');
+      panel.innerHTML = `<div class="ph"><div><h3>Results for ${chips()}</h3><small>${n} found · pick one to open its date</small></div></div><div class="items">${list}</div>`;
+      panel.querySelectorAll('.res').forEach((r) => r.addEventListener('click', () => {
+        const it = items[+r.dataset.i]; sel = opens(it); view = { y: sel.getFullYear(), m: sel.getMonth() }; showing = 'date'; draw(true);
+      }));
+    } else {
+      const on = items.filter((it) => same(dt(it.s), sel) || same(dt(it.e), sel));
+      const back = searching() ? `<button type="button" class="back" id="back">← Results</button>` : '';
+      panel.innerHTML = `<div class="ph"><div><h3>${esc(fmt(sel))}</h3><small>${sel.getFullYear()}</small></div>${back}</div><div class="items">${on.length ? on.map((it, i) => {
+        const isS = same(dt(it.s), sel), isE = same(dt(it.e), sel);
+        const a = isS ? it.s : it.e;
+        return `<div class="item" style="--i:${i}"><span class="bar" style="background:${isE && !isS ? 'var(--red)' : 'var(--green)'}"></span><span class="t">${esc(it.t)}</span><span class="badge">${it.type}</span><div class="sub">${isS ? 'Start' : it.type === 'event' ? 'End' : 'Due'} ${a[3]}</div></div>`;
+      }).join('') : '<p class="empty">Free Day · No scheduled items</p>'}</div>`;
+      const b = $('back'); if (b) b.addEventListener('click', () => { showing = 'results'; draw(true); });
+    }
+  }
+
+  const input = $('q'), clear = $('clear');
+  input.addEventListener('input', () => { const was = searching(); q = input.value; clear.hidden = !q; if (searching() && !was) showing = 'results'; draw(!was && searching()); });
+  clear.addEventListener('click', () => { q = ''; input.value = ''; clear.hidden = true; showing = 'date'; draw(false); input.focus(); });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') clear.click(); });
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    anim = b.dataset.anim;
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    draw(true);
+  }));
+  $('prev').addEventListener('click', () => { view = view.m === 0 ? { y: view.y - 1, m: 11 } : { y: view.y, m: view.m - 1 }; draw(false); });
+  $('next').addEventListener('click', () => { view = view.m === 11 ? { y: view.y + 1, m: 0 } : { y: view.y, m: view.m + 1 }; draw(false); });
+  draw(false);
+}
+</script>
+</body>
+</html>

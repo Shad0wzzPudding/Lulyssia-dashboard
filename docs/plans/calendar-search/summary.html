@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar Search Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: title, then per item a Now -> After pair drawn in the app's dark look, then what happens after the build; intent only */
+  :root {
+    --page: hsl(200 20% 4%); --card: hsl(200 14% 8%); --panel: hsl(200 18% 9%);
+    --fg: hsl(0 0% 98%); --muted: hsl(0 0% 64%); --cyan: hsl(193 61% 52%); --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%); --green: hsl(142 71% 45%); --red: hsl(0 84% 60%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font: 15px/1.55 var(--body); overflow-x: clip; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 28px 16px 64px; display: grid; gap: 26px; }
+  h1, h2 { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--cyan); margin: 0; line-height: 1.05; }
+  h1 { font-size: 2.2rem; } h2 { font-size: 1.45rem; }
+  .lede, .muted { color: var(--muted); margin: 6px 0 0; }
+  .where { font-size: .8rem; color: var(--cyan); margin: 4px 0 12px; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: stretch; }
+  @media (min-width: 860px) { .pair { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); } }
+  .arrow { display: none; place-items: center; color: var(--cyan); font-size: 1.4rem; }
+  @media (min-width: 860px) { .arrow { display: grid; } }
+  .label { font-size: .72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .mock { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
+  .row2 { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+  .cal { border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: grid; grid-template-columns: repeat(7, 18px); gap: 4px 2px; font-size: .62rem; text-align: center; }
+  .cal span { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 999px; }
+  .cal .m { background: var(--cyan-dim); font-weight: 700; }
+  .cal .t { box-shadow: inset 0 0 0 1.5px var(--cyan); }
+  .cal .s { outline: 1.5px solid var(--fg); outline-offset: -1.5px; border-radius: 4px; }
+  .search { border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-size: .72rem; color: var(--fg); background: hsl(200 14% 11%); }
+  .search.empty { color: var(--muted); }
+  .panel { background: var(--panel); border: 2px solid hsl(193 50% 30% / .4); border-radius: 10px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+  .ph { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: .8rem; flex-wrap: wrap; }
+  .ph small { display: block; color: var(--cyan); font-weight: 500; font-size: .66rem; }
+  .btn { font-size: .66rem; color: var(--cyan); border: 1px solid var(--cyan-dim); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+  .it { position: relative; background: hsl(210 15% 14%); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px 6px 11px; font-size: .74rem; display: flex; justify-content: space-between; gap: 8px; }
+  .it .b { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 6px 0 0 6px; }
+  .it .w { text-align: right; font-size: .64rem; font-weight: 600; white-space: nowrap; }
+  .g { color: #4ade80; } .r { color: #f87171; }
+  .chip { font-size: .62rem; border-radius: 999px; padding: 0 6px; font-weight: 600; }
+  .chip.f { color: #4ade80; background: hsl(142 71% 45% / .15); border: 1px solid hsl(142 71% 45% / .4); }
+  .chip.h { color: #f87171; background: hsl(0 84% 60% / .15); border: 1px solid hsl(0 84% 60% / .4); text-decoration: line-through; }
+  .past { font-size: .62rem; font-weight: 700; color: var(--muted); }
+  .faded { opacity: .7; }
+  .left { display: grid; gap: 6px; align-content: start; }
+  .left .search { width: 100%; }
+  .step { font-size: .72rem; color: var(--cyan); margin: 4px 0 0; }
+  .size { font-size: .78rem; color: var(--muted); margin: 8px 0 0; }
+  .rise { display: grid; gap: 6px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .rise > * { animation: rise .32s cubic-bezier(.2,.8,.3,1) both infinite alternate; animation-duration: 2.4s; }
+    .rise > *:nth-child(2) { animation-delay: .045s; } .rise > *:nth-child(3) { animation-delay: .09s; } .rise > *:nth-child(4) { animation-delay: .135s; }
+    @keyframes rise { 0% { opacity: 0; transform: translateY(12px); } 14%, 100% { opacity: 1; transform: none; } }
+  }
+  ul { margin: 6px 0 0; padding-left: 20px; color: var(--fg); }
+  li { margin: 3px 0; }
+  a { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Calendar search: the whole build</h1>
+    <p class="lede">Two items, both in Home's Calendar Overview, front end only. Drawn small and simplified; the build uses the app's real parts. Sample items are made up.</p>
+  </header>
+
+  <section>
+    <h2>1 · Search, results and jump</h2>
+    <p class="where">Home → Calendar Overview · search box ~280px wide, above the calendar (under 1024px, where the panel sits under the calendar: between the calendar and the date panel) · results fill the date panel</p>
+    <div class="pair">
+      <div>
+        <div class="label">Now</div>
+        <div class="mock">
+          <div class="row2">
+            <div class="cal">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+              <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+              <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span class="m">20</span><span>21</span>
+              <span>22</span><span class="m">23</span><span>24</span><span>25</span><span>26</span><span class="m t s">27</span><span class="m">28</span>
+            </div>
+            <div class="panel">
+              <div class="ph"><span>Fri, Nov 27<small>2026</small></span><span class="btn">+ / −</span></div>
+              <div class="it"><span class="b" style="background:var(--red)"></span><span>Monthly report</span><span class="w r">Due 17:00</span></div>
+            </div>
+          </div>
+          <p class="muted" style="font-size:.74rem;margin:0">No search: to find "when is the dentist?" you flip months and click highlighted dates one by one.</p>
+        </div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <div class="label">After</div>
+        <div class="mock">
+          <div class="row2">
+            <div class="left">
+            <div class="search">dentist, trip</div>
+            <div class="cal">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+              <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+              <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span class="m">20</span><span>21</span>
+              <span>22</span><span class="m">23</span><span>24</span><span>25</span><span>26</span><span class="t">27</span><span>28</span>
+            </div>
+            </div>
+            <div class="panel">
+              <div class="ph"><span>Results for <span class="chip f">dentist</span> <span class="past">or</span> <span class="chip f">trip</span><small>3 found · pick one to open its date</small></span></div>
+              <div class="it"><span class="b" style="background:var(--green)"></span><span>Dentist follow-up</span><span class="w g">Start Wed, Dec 9</span></div>
+              <div class="past">Past</div>
+              <div class="it faded"><span class="b" style="background:linear-gradient(var(--green) 50%,var(--red) 50%)"></span><span>Trip to Chiang Mai</span><span class="w"><span class="g">Start Fri, Nov 20</span><br><span class="r">End Mon, Nov 23</span></span></div>
+              <div class="it faded"><span class="b" style="background:var(--green)"></span><span>Dentist check-up</span><span class="w g">Start Wed, Oct 14</span></div>
+            </div>
+          </div>
+          <p class="step">Then, after picking the trip, the same date panel shows its date:</p>
+          <div class="row2">
+            <div class="left">
+            <div class="search">dentist, trip</div>
+            <div class="cal">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+              <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+              <span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span class="m s">20</span><span>21</span>
+              <span>22</span><span class="m">23</span><span>24</span><span>25</span><span>26</span><span class="t">27</span><span>28</span>
+            </div>
+            </div>
+            <div class="panel">
+              <div class="ph"><span>Fri, Nov 20<small>2026</small></span><span class="btn">← Results</span><span class="btn">+ / −</span></div>
+              <div class="it"><span class="b" style="background:var(--green)"></span><span>Trip to Chiang Mai</span><span class="w g">Start 07:30</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul>
+      <li>Same search as the pages: title and description, commas mean "or", "!" hides; chips after "Results for" for a search with options.</li>
+      <li>Finds what the calendar shows: unfinished tasks and all events. One row per item with both its dates.</li>
+      <li>Upcoming first, soonest first; then "Past", most recent first. Only dates with a match stay highlighted.</li>
+      <li>Picking a row jumps the calendar to its start date (or due/end date); "← Results" goes back. ✕ or Esc ends the search.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2 · The results rise in</h2>
+    <p class="where">Home → Calendar Overview → date panel · each row 0.32s, 45ms apart · none with reduced motion</p>
+    <div class="pair">
+      <div>
+        <div class="label">Now</div>
+        <div class="mock"><p class="muted" style="margin:0;font-size:.8rem">Nothing to animate yet: there are no results.</p></div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <div class="label">After (looping here to show it)</div>
+        <div class="mock">
+          <div class="rise">
+            <div class="it"><span class="b" style="background:var(--green)"></span><span>Dentist follow-up</span><span class="w g">Start Wed, Dec 9</span></div>
+            <div class="past">Past</div>
+            <div class="it faded"><span class="b" style="background:var(--green)"></span><span>Trip to Chiang Mai</span><span class="w g">Start Fri, Nov 20</span></div>
+            <div class="it faded"><span class="b" style="background:var(--green)"></span><span>Dentist check-up</span><span class="w g">Start Wed, Oct 14</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="size">Plays when the results first show, when "← Results" brings them back and when a date opens while searching; not on every key.</p>
+  </section>
+
+  <section>
+    <h2>After the build</h2>
+    <ul>
+      <li>Nothing to deploy or migrate: front end only, out with Vercel when merged. Merge 1, then 2.</li>
+      <li>You check by eye: where the search sits (desktop and phone), the results panel and chips, the rows and their dates, "← Results", and the Rise motion.</li>
+      <li>Try-it preview: <a href="https://claude.ai/artifact/8txW7LHDbJDL1U7EMcLXvA">Calendar Search Placement</a>.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>
