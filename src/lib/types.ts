@@ -88,6 +88,25 @@ export interface Tag {
   created_at: string;
   updated_at: string;
 }
+
+/** How long after the start a preset puts the Deadline (task) or End (event) */
+export type PresetDueUnit = 'hours' | 'days' | 'weeks';
+
+/** A ready-made setup for a task or an event, picked with "Presets" in the form */
+export interface Preset {
+  id: string;
+  user_id: string;
+  name: string;
+  /** The description format, stored as the description editor stores text */
+  description: string;
+  tag_ids: string[];
+  /** 1 to 999, or null for no due date (then due_unit is null too) */
+  due_amount: number | null;
+  due_unit: PresetDueUnit | null;
+  use_count: number;
+  created_at: string;
+  updated_at: string;
+}
 /**
  * What an add/edit form passes along with a save: the form closes in onSuccess, and stays open
  * (with everything typed) when the save fails. `__form` names the button the failure message

@@ -7,6 +7,7 @@ import { NameSettings } from './NameSettings';
 import { DisplaySettings } from './DisplaySettings';
 import { SoundSettings } from './SoundSettings';
 import { EditorSettings } from './EditorSettings';
+import { PresetManager } from './PresetManager';
 
 /** lineFocus: set (a new number each time) when Settings should jump to the LINE card */
 export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }) => {
@@ -25,12 +26,13 @@ export const SettingsPage = ({ lineFocus = null }: { lineFocus?: number | null }
       </div>
       <TagManager />
       <div className="theme-light">
-        <DisplaySettings />
+        <PresetManager />
       </div>
-      <SoundSettings />
+      <DisplaySettings />
       <div className="theme-light">
-        <EditorSettings />
+        <SoundSettings />
       </div>
+      <EditorSettings />
     </div>
   );
 };

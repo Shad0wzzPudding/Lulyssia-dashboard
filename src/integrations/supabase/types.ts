@@ -248,6 +248,45 @@ export type Database = {
         }
         Relationships: []
       }
+      presets: {
+        Row: {
+          created_at: string
+          description: string
+          due_amount: number | null
+          due_unit: string | null
+          id: string
+          name: string
+          tag_ids: string[]
+          updated_at: string
+          use_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          due_amount?: number | null
+          due_unit?: string | null
+          id?: string
+          name: string
+          tag_ids?: string[]
+          updated_at?: string
+          use_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          due_amount?: number | null
+          due_unit?: string | null
+          id?: string
+          name?: string
+          tag_ids?: string[]
+          updated_at?: string
+          use_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string
