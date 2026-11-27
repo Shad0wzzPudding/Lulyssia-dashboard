@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { consumeRecovery, onRecovery } from "@/lib/recovery";
+import { Analytics } from "@vercel/analytics/next"
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <Analytics />
       <BrowserRouter>
         <RecoveryRedirect />
         <Routes>
