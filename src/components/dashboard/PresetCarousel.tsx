@@ -52,7 +52,7 @@ type SlotProps = {
   progress: MotionValue<number>;
   step: MotionValue<number>;
   total: MotionValue<number>;
-  onCardClick: (index: number) => void;
+  onCardClick: (index: number, clickCount: number) => void;
   onInfo: (preset: Preset) => void;
   cardRef?: (el: HTMLButtonElement | null) => void;
 };
@@ -92,7 +92,7 @@ const Slot = memo(function Slot({ index, preset, tags, isFront, picked, progress
             tabIndex={isFront ? 0 : -1}
             aria-hidden={!isFront}
             aria-label={`${preset.name}${picked ? ', picked' : ''}`}
-            onClick={() => onCardClick(index)}
+            onClick={(e) => onCardClick(index, e.detail)}
             onContextMenu={(e) => e.preventDefault()}
           >
             <motion.span className="pointer-events-none absolute inset-0 z-[4] bg-black" style={{ opacity: dim }} aria-hidden="true" />
@@ -247,7 +247,9 @@ export const PresetCarousel = forwardRef<PresetCarouselHandle, PresetCarouselPro
     }
   };
 
-  const onCardClick = (i: number) => {
+  const onCardClick = (i: number, clickCount: number) => {
+    // A double click's second click does nothing: it unpicked the card the first one picked
+    if (clickCount > 1) return;
     if (moved.current || held.current) {
       moved.current = false;
       held.current = false;
