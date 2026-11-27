@@ -11,7 +11,7 @@ import annoyedCloseEffect from "@/assets/sound/annoyed_close.wav";
 import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 import slidingEffect from "@/assets/sound/sliding.wav";
-import cardSwapEffect from "@/assets/sound/card_swap.mp3";
+import cardDropEffect from "@/assets/sound/card_drop.mp3";
 import cardMoveEffect from "@/assets/sound/card_move.mp3";
 import cardChooseEffect from "@/assets/sound/card_choose.mp3";
 import cardUnchooseEffect from "@/assets/sound/card_unchoose.mp3";
@@ -788,10 +788,10 @@ const loadSoundBuffer = (url: string) => {
   return loading;
 };
 
-// The preset cards' sounds (card_swap, card_move, card_choose, card_unchoose, card_apply). Loaded when a form
+// The preset cards' sounds (card_drop, card_move, card_choose, card_unchoose, card_apply). Loaded when a form
 // with "Presets" opens, so the first opening already has its sound.
 export const preloadPresetCardSounds = () => {
-  for (const url of [cardSwapEffect, cardMoveEffect, cardChooseEffect, cardUnchooseEffect, cardApplyEffect]) void loadSoundBuffer(url);
+  for (const url of [cardDropEffect, cardMoveEffect, cardChooseEffect, cardUnchooseEffect, cardApplyEffect]) void loadSoundBuffer(url);
 };
 
 /** Plays a loaded sound file through its setting's gain; returns the source, or null. */
@@ -817,8 +817,8 @@ const playCardFile = (id: SoundId, url: string) => {
   else void loadSoundBuffer(url).then((b) => { if (b && soundOn(id)) playBuffer(id, b); });
 };
 
-/** Opening the preset cards (card_swap) */
-export const playCardOpenSound = () => playCardFile('cardOpen', cardSwapEffect);
+/** Opening the preset cards (card_drop) */
+export const playCardOpenSound = () => playCardFile('cardOpen', cardDropEffect);
 /** Picking a card (card_choose) */
 export const playCardPickSound = () => playCardFile('cardPick', cardChooseEffect);
 /** Unpicking the picked card (card_unchoose) */
