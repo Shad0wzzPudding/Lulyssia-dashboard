@@ -98,6 +98,8 @@ export const useTags = () => {
       queryClient.invalidateQueries({ queryKey: ['interests'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      // A deleted tag also leaves the presets that had it
+      queryClient.invalidateQueries({ queryKey: ['presets'] });
       toast.success('Tag deleted');
     },
     onError: () => {
