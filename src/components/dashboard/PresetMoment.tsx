@@ -8,14 +8,22 @@ import { PresetButterflySymbol, PresetCard } from './PresetCard';
 
 /** When the form is filled in under the moment, which then fades out (0.38s) */
 const MOMENT_MS = 1250;
-const SPARKS = Array.from({ length: 14 }, (_, s) => {
-  const a = (s / 14) * Math.PI * 2;
-  const r = 120 + (s % 3) * 40;
-  return { dx: Math.cos(a) * r, dy: Math.sin(a) * r, delay: 0.35 + (s % 4) * 0.05 };
-});
+/**
+ * The flames on the card: spread over its width and height (fixed, so every moment looks the same),
+ * each rising, swelling and fading out, one after another from about 0.3s
+ */
+const FLAMES = Array.from({ length: 24 }, (_, i) => ({
+  x: (i * 37 + 7) % 100,
+  y: (i * 53) % 85,
+  size: 28 + ((i * 17) % 26),
+  drift: ((i * 29) % 21) - 10,
+  delay: 0.28 + ((i * 3) % 8) * 0.08,
+  duration: 0.5 + (i % 3) * 0.12,
+}));
 
 /**
- * After "Apply preset": Lulyssia holds the picked card up while it turns to light, with sparkles.
+ * After "Apply preset": Lulyssia holds the picked card up while it's engulfed in flame and burns away
+ * from the bottom up.
  * At 1.25s (or on "Skip" / Esc) `onEnd` fills the form, and the moment fades out over it.
  */
 export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
@@ -53,24 +61,34 @@ export const PresetMoment = ({ preset, tags, onEnd, onClosed }: {
             className="preset-moment-lulyssia absolute bottom-[4%] left-1/2 w-[min(62vw,340px)] -translate-x-1/2 drop-shadow-[0_0_30px_hsl(193_61%_52%/0.5)]"
           />
           {preset && (
-            <PresetCard
-              preset={preset}
-              tags={presetTags(preset, tags)}
-              tabIndex={-1}
-              aria-hidden
-              className="preset-moment-card pointer-events-none relative z-[2] mb-[18vh] !w-[min(60vw,230px)]"
-            />
+            <div className="preset-moment-burn pointer-events-none relative z-[2] mb-[18vh]" aria-hidden="true">
+              {/* The blaze behind the card, the card (charring and burning away), the glowing edge
+                  that eats up it, and the flames over it */}
+              <span className="preset-moment-blaze absolute -inset-[30%] rounded-full" />
+              <PresetCard
+                preset={preset}
+                tags={presetTags(preset, tags)}
+                tabIndex={-1}
+                className="preset-moment-card relative !w-[min(60vw,230px)]"
+              />
+              <span className="preset-moment-ember absolute inset-0" />
+              {FLAMES.map((f, i) => (
+                <span
+                  key={i}
+                  className="preset-moment-flame absolute"
+                  style={{
+                    left: `${f.x}%`,
+                    bottom: `${f.y}%`,
+                    width: f.size,
+                    height: f.size * 1.35,
+                    '--drift': `${f.drift}px`,
+                    animationDelay: `${f.delay}s`,
+                    animationDuration: `${f.duration}s`,
+                  } as CSSProperties}
+                />
+              ))}
+            </div>
           )}
-          {SPARKS.map((sp, i) => (
-            <span
-              key={i}
-              aria-hidden="true"
-              className="preset-moment-spark pointer-events-none absolute left-[calc(50%-9px)] top-[calc(41%-9px)] z-[2] text-lg text-[#e0f7ff]"
-              style={{ '--dx': `${sp.dx}px`, '--dy': `${sp.dy}px`, animationDelay: `${sp.delay}s` } as CSSProperties}
-            >
-              ✦
-            </span>
-          ))}
           <button
             type="button"
             onClick={onEnd}
