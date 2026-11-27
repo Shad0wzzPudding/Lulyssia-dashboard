@@ -518,3 +518,14 @@ their order. Merging this branch brings both builds. Presets needs migration
 - [x] Medium: After "Apply preset", when Lulyssia's moment ended and faded out over the filled form, the cards layer came back behind it for about half a second (it showed again, then faded out a second time). Done: the layer stays shut once the preset is applied, until the form hears it's closed (this commit)
 - [x] Low: Lulyssia's question windows (Sign out, every delete question, Clear Completed and the others) never took the keyboard focus. Opened from the keyboard, the focus stayed on the button behind the window, so pressing Enter again pressed that button a second time instead of answering, and Tab was needed to reach Nevermind~ / Yes; a screen reader stayed on the page behind. Example: on a delete button, Enter opens "Delete this task?", a second Enter presses the delete button again. Done: the window now puts the focus on Nevermind~ (on the first answer for the new three-answer question), and gives it back to the button that opened it when it closes, if that button is still there (this commit)
 - [ ] Low: LINE's "Starting soon" reminder shows the Deadline / End as a time only, even when it falls on another day. Example: a task starting at 09:00 today with its deadline on Friday at 17:00 gets "Starts 09:00 · Deadline 17:00", which reads as today at 17:00 (the plain-text version says "Start time - deadline: 09:00 - 17:00"). The morning letter already writes the day for these ("30 Oct 08:00 – today 18:00"). Needs decision: (a) add the day when it isn't the start's day, e.g. "Deadline Fri 4 Dec 17:00" (Thai time), the same way as the morning letter; (b) leave it. Recommendation: (a). Size: small (needs function deploy: send-line-reminders)
+
+## Cloud review (27 Nov 2026, second run)
+
+Summary: (filled in at the end of the run). Rounds log: [docs/reviews/2026-11-27-second-cloud-review.md](docs/reviews/2026-11-27-second-cloud-review.md).
+
+Branch `cloud-review-2026-11-27-second`, started from the first 27 Nov run's branch (`main` plus both
+plan builds and that run's fixes), since `main` hasn't changed and doesn't have the new code yet.
+Merging this branch also brings the first run's.
+
+### Findings
+- [x] Low: In Home's calendar search, a result's date line could be cut off on phones: the dates never wrap, and the longest ones are wider than a row. Example: a task that starts and ends on 6 Mar 2027 shows "Start and end Sat 6 Mar 2027, 09:00–11:0" with the rest hidden at 320 and 360px; "Start and end today, 09:00–11:00" is cut at 320px. Done: a date line stays on one line when it fits, and otherwise puts its time under its date (this commit)

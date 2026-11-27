@@ -53,6 +53,21 @@ CalendarSearchBox.displayName = 'CalendarSearchBox';
 const GREEN = 'hsl(142 71% 45%)';
 const RED = 'hsl(0 84% 60%)';
 
+/**
+ * One date line ("Start Tue 3 Nov, 10:46"). It stays on one line, unless the row is too narrow for
+ * it (a phone, a date in another year): then the time goes under the date instead of being cut off
+ */
+const DateLine = ({ text, className }: { text: string; className: string }) => {
+  const cut = text.lastIndexOf(', ');
+  if (cut < 0) return <span className={cn('whitespace-nowrap', className)}>{text}</span>;
+  return (
+    <span className={className}>
+      <span className="whitespace-nowrap">{text.slice(0, cut + 1)}</span>{' '}
+      <span className="whitespace-nowrap">{text.slice(cut + 2)}</span>
+    </span>
+  );
+};
+
 /** One found item: its title and type, its dates on the right; a button that opens its date */
 const HitRow = ({ hit, past, index, onPick }: { hit: CalendarHit; past: boolean; index: number; onPick: (hit: CalendarHit) => void }) => {
   const lines = hitDateLines(hit);
@@ -80,12 +95,12 @@ const HitRow = ({ hit, past, index, onPick }: { hit: CalendarHit; past: boolean;
           {hit.type}
         </Badge>
       </span>
-      <span className="ml-auto grid gap-0.5 whitespace-nowrap text-right text-xs font-medium">
+      <span className="ml-auto grid min-w-0 max-w-full gap-0.5 text-right text-xs font-medium">
         {lines.sameDay ? (
-          <span className="text-p5-700 dark:text-p5-300">{lines.sameDay}</span>
+          <DateLine text={lines.sameDay} className="text-p5-700 dark:text-p5-300" />
         ) : (<>
-          {lines.start && <span className="text-green-600 dark:text-green-400">{lines.start}</span>}
-          {lines.end && <span className="text-red-600 dark:text-red-400">{lines.end}</span>}
+          {lines.start && <DateLine text={lines.start} className="text-green-600 dark:text-green-400" />}
+          {lines.end && <DateLine text={lines.end} className="text-red-600 dark:text-red-400" />}
         </>)}
       </span>
     </button>
