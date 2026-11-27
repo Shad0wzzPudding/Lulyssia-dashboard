@@ -505,7 +505,7 @@ What to do (owner):
 Review of the 8 commits after `97bfa6e` on `main` and the two plan builds (calendar-search, presets), then a bug hunt: 9 rounds. 2 bugs fixed (one in the presets build, one in Lulyssia's question windows), 1 proposal (small, LINE). The first part stopped by choice after round 5 (not forced by the session; noted here because the first summary said "out of tokens"); the run then carried on with the four areas left. Stopped after round 9 with every area covered in this run or the two before it, and rounds 7 to 9 (Recent Changes, attachments, LINE) clean in a row. Covered: migrations and access rules, the data hooks, Settings, the task and event forms, Home, navigation, Recent Changes, attachments, the LINE functions. The next run can start with the editor, time zones, Interests and search (last covered 4 Nov), and phone layouts (5 Nov). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
 
 What to do (owner):
-- [ ] Apply migration `supabase/migrations/20261127000000_presets.sql` before merging (from the presets build)
+- [x] Apply migration `supabase/migrations/20261127000000_presets.sql` before merging (from the presets build). Done 27 Nov by the owner
 - [ ] Merge `cloud-review-2026-11-27` (it contains both builds and the fix), then run `npm install` locally (new package `motion`)
 - [ ] Nothing to deploy for the LINE functions now (only if the LINE proposal below is chosen)
 
