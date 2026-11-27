@@ -1,6 +1,6 @@
 # Plan: presets
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `5922c3f` (2026-11-27)
 **Decided with the owner on:** 2026-11-27
 
@@ -348,9 +348,12 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-1. Apply migration `supabase/migrations/<timestamp>_presets.sql` (item 1) before merging items 2 to 4.
-2. Item 3 adds the `motion` package: Vercel installs it on deploy; run `npm install` locally.
-3. Front end otherwise; out with Vercel when merged. Merge order: 1, 2, 3, 4.
+1. [ ] Apply migration `supabase/migrations/20261127000000_presets.sql` (item 1, branch
+   `plan/presets/1-data`) before merging items 2 to 4.
+2. [ ] Item 3 adds the `motion` package: Vercel installs it on deploy; run `npm install` locally.
+3. [x] Front end otherwise; out with Vercel when merged. Merge order: `plan/presets/1-data`,
+   `2-settings`, `3-cards`, `4-moment`, then `plan/presets/summary`. Build notes in
+   `log/summary.md`.
 
 ## Summary
 
