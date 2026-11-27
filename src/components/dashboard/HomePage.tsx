@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import { FormattedText } from '@/components/ui/formatted-text';
 import { SwipeableActivityLogEntry } from "./SwipeableActivityLogEntry";
 import { useTouchReorder } from "@/hooks/useTouchReorder";
 import { toast } from "@/lib/toast";
+import { calendarHits, hitDays, hitKey, isCalendarSearch, type CalendarHit } from "@/lib/calendarSearch";
+import { CalendarSearchBox, CalendarSearchResults } from "./CalendarSearchResults";
 import { InProgressCard, type InProgressItem } from "./InProgressCard";
 import { CollapsiblePreview } from "./CollapsiblePreview";
 import { STICKERS } from '@/lib/stickers';
@@ -67,6 +69,22 @@ const TimeRangeChip = ({ start, end, className = '' }: { start: string; end: str
     {start} – {end}
   </div>
 );
+
+// "← Results": back from a date to the search's results (only while searching)
+const BackToResultsButton = forwardRef<HTMLButtonElement, { onClick: () => void; className?: string }>(
+  ({ onClick, className }, ref) => (
+    <Button
+      ref={ref}
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className={`h-8 px-2.5 text-xs font-semibold border-p5-300 text-p5-700 hover:bg-p5-100 dark:border-p5-700 dark:text-p5-300 dark:hover:bg-p5-900/50 ${className ?? ''}`}
+    >
+      ← Results
+    </Button>
+  )
+);
+BackToResultsButton.displayName = 'BackToResultsButton';
 
 /**
  * The pencil after a task's or event's name: opens its edit form on Home. It sits inside the name
@@ -115,7 +133,55 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     setSelectedDate(date);
     setDeleteMode(false);
     refocusAfterDelete.current = false;
+    // While searching, a clicked date shows in the panel, with "← Results" to go back
+    setShowResults(false);
   };
+  // The month the calendar shows: a picked search result moves it there; the arrows as before
+  const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
+  // The Calendar Overview's search (empty each time Home opens). While it has a word, only dates
+  // with a match are highlighted, and the date panel lists the matches until one is picked.
+  const [calendarSearch, setCalendarSearch] = useState('');
+  const [showResults, setShowResults] = useState(true);
+  const searchingCalendar = isCalendarSearch(calendarSearch);
+  const resultsShown = searchingCalendar && showResults;
+  const searchBoxRef = useRef<HTMLInputElement>(null);
+  const backToResultsRef = useRef<HTMLButtonElement>(null);
+  const resultsListRef = useRef<HTMLDivElement>(null);
+  // The result last picked, and where the focus goes once the panel has changed
+  const pickedHit = useRef<string | null>(null);
+  const focusAfterPanel = useRef<'back' | 'row' | null>(null);
+  const typeCalendarSearch = (value: string) => {
+    setCalendarSearch(value);
+    // Typing more goes back to the results
+    setShowResults(true);
+  };
+  const pickHit = (hit: CalendarHit) => {
+    const day = startOfDay(hit.opens);
+    pickDate(day);
+    setCalendarMonth(day);
+    pickedHit.current = hitKey(hit);
+    focusAfterPanel.current = 'back';
+  };
+  const backToResults = () => {
+    setShowResults(true);
+    focusAfterPanel.current = 'row';
+  };
+  // Nothing to delete in the results list
+  useEffect(() => {
+    if (resultsShown) setDeleteMode(false);
+  }, [resultsShown]);
+  useEffect(() => {
+    const target = focusAfterPanel.current;
+    if (!target) return;
+    focusAfterPanel.current = null;
+    if (target === 'back') {
+      backToResultsRef.current?.focus();
+      return;
+    }
+    const rows = resultsListRef.current?.querySelectorAll<HTMLButtonElement>('[data-hit]');
+    const row = rows && Array.from(rows).find((r) => r.dataset.hit === pickedHit.current);
+    (row ?? rows?.[0] ?? searchBoxRef.current)?.focus();
+  }, [resultsShown, selectedDate]);
   // The item whose delete window is open
   const [deleteAsk, setDeleteAsk] = useState<{ type: 'task' | 'event'; id: string; title: string } | null>(null);
   // Items whose delete is on its way, with when it was sent: a second click on their button sends
@@ -642,6 +708,13 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
     },
   });
 
+  // What the Calendar Overview's search finds (live: changes and deletes show at once)
+  const { upcoming: upcomingHits, past: pastHits } = useMemo(
+    () => (searchingCalendar ? calendarHits(tasks, events, calendarSearch) : { upcoming: [], past: [] }),
+    [searchingCalendar, tasks, events, calendarSearch]
+  );
+  const searchMarkedDates = useMemo(() => hitDays([...upcomingHits, ...pastHits]), [upcomingHits, pastHits]);
+
   // The picked date's items (the date panel's list)
   const panelItems = selectedDate ? getDateDetails(selectedDate) : [];
   // The date's last item deleted (a Free Day): delete mode ends
@@ -849,8 +922,10 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 className="rounded-md border border-p5-200 dark:border-p5-800 bg-white/50 dark:bg-p5-950/20"
                 selected={selectedDate}
                 onSelect={pickDate}
+                month={calendarMonth}
+                onMonthChange={setCalendarMonth}
                 modifiers={{
-                  marked: markedDates.filter(d => !isNaN(d.getTime())),
+                  marked: searchingCalendar ? searchMarkedDates : markedDates.filter(d => !isNaN(d.getTime())),
                   today: [new Date()],
                 }}
                 modifiersClassNames={{
@@ -862,14 +937,26 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
               />
               <div className="mt-4 text-center">
                 <p className="text-sm text-p5-600 dark:text-p5-400">
-                  Click on highlighted dates to see details
+                  {searchingCalendar ? 'Highlighted: dates with a match' : 'Click on highlighted dates to see details'}
                 </p>
               </div>
+              {/* The search: right above the date panel, so the results show while typing (under
+                  the calendar until the panel sits beside it, then above the calendar) */}
+              <CalendarSearchBox
+                ref={searchBoxRef}
+                value={calendarSearch}
+                onChange={typeCalendarSearch}
+                className="mt-4 lg:order-first lg:mt-0 lg:mb-4"
+              />
             </div>
 
             {/* Right side - Day Information Panel */}
             <div className="bg-gradient-to-br from-white/90 to-p5-50/50 dark:from-gray-900/70 dark:to-p5-950/40 rounded-xl border-2 border-p5-300/40 dark:border-p5-600/30 shadow-lg backdrop-blur-sm p-5 min-h-[400px]">
-              {selectedDate ? (
+              {resultsShown ? (
+                <div ref={resultsListRef}>
+                  <CalendarSearchResults search={calendarSearch} upcoming={upcomingHits} past={pastHits} onPick={pickHit} />
+                </div>
+              ) : selectedDate ? (
                 <div className="space-y-4 animate-fade-in">
                   {/* Compact Header */}
                   <div className="relative flex items-center justify-between pb-3 border-b border-p5-200/60 dark:border-p5-700/50">
@@ -887,6 +974,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                       </div>
                     </div>
                     <div className="flex items-center">
+                    {searchingCalendar && (
+                      <BackToResultsButton ref={backToResultsRef} onClick={backToResults} className="mr-1" />
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -1072,6 +1162,9 @@ export const HomePage = ({ interests, tasks, events, activityLog, onUpdateIntere
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full py-12 space-y-4">
+                  {searchingCalendar && (
+                    <BackToResultsButton ref={backToResultsRef} onClick={backToResults} className="self-start -mt-8" />
+                  )}
                   <div className="p-4 bg-p5-100/60 dark:bg-p5-900/30 rounded-full">
                     <CalendarIcon size={32} className="text-p5-400 dark:text-p5-500" />
                   </div>
