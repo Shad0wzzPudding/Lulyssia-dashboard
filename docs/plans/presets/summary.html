@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presets Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: title, then items grouped by place (task/event form, Settings, behind the scenes), each a Now -> After pair in the app's dark look, then after the build; intent only */
+  :root {
+    --page: hsl(200 20% 4%); --card: hsl(200 14% 8%); --field: hsl(200 14% 11%);
+    --fg: hsl(0 0% 98%); --muted: hsl(0 0% 64%); --cyan: hsl(193 61% 52%); --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%); --lcard: hsl(200 30% 96%); --lfg: hsl(200 30% 10%); --lline: hsl(200 20% 82%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font: 15px/1.55 var(--body); overflow-x: clip; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 28px 16px 64px; display: grid; gap: 28px; }
+  h1, h2 { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--cyan); margin: 0; line-height: 1.05; }
+  h1 { font-size: 2.2rem; } h2 { font-size: 1.45rem; }
+  .group { font-size: .8rem; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  .lede { color: var(--muted); margin: 6px 0 0; }
+  .where { font-size: .8rem; color: var(--cyan); margin: 4px 0 12px; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  @media (min-width: 860px) { .pair { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1.4fr); } }
+  .arrow { display: none; place-items: center; color: var(--cyan); font-size: 1.4rem; }
+  @media (min-width: 860px) { .arrow { display: grid; } }
+  .label { font-size: .72rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .mock { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; position: relative; overflow: hidden; }
+  .f { background: var(--field); border: 1px solid var(--line); border-radius: 5px; padding: 5px 8px; font-size: .72rem; color: var(--muted); }
+  .rowf { display: flex; justify-content: space-between; align-items: center; font-size: .72rem; font-weight: 600; }
+  .pb { font-size: .66rem; font-weight: 700; color: var(--cyan); border: 1px solid var(--cyan-dim); border-radius: 5px; padding: 2px 7px; }
+  .layer { background: hsl(200 25% 3%); border-radius: 6px; overflow: hidden; display: grid; }
+  .ban { background: var(--cyan); color: #04151b; font: italic 800 .95rem var(--display); padding: 5px 10px; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); display: flex; justify-content: space-between; }
+  .stage { position: relative; height: 190px; }
+  .sl { position: absolute; left: 50%; top: 50%; display: grid; justify-items: center; gap: 5px; }
+  .cat { font: italic 800 .62rem/1 var(--display); color: #0b1418; padding: 3px 8px; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+  .pc { position: relative; width: 84px; aspect-ratio: 2 / 3; overflow: hidden; background: radial-gradient(circle, rgb(79 195 247 / .7) .8px, transparent 1.1px) 0 0 / 6px 6px, linear-gradient(170deg, #15181c, #050607); border: 1.5px solid #d9dee3; border-radius: 4px; box-shadow: 0 0 0 1.5px #000, 4px 4px 0 #4fc3f7; padding: 0 0 6px; font-size: .5rem; color: #f1f5f9; white-space: pre-line; }
+  .pc::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #0a0c0e 18%, rgb(10 12 14 / .6) 48%, transparent 88%); }
+  .pc > * { position: relative; }
+  .pc b { display: block; font: italic 800 .74rem/1 var(--display); color: #000; margin-bottom: 4px; padding: 5px 6px 8px; background: linear-gradient(#fff, #fff) top / 100% calc(100% - 3px) no-repeat, var(--c); clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%); }
+  .pc span.t { display: block; padding: 0 6px; }
+  .pc i.bf { position: absolute; right: 3px; bottom: 3px; width: 16px; height: 13px; background: #fff; clip-path: polygon(30% 70%, 50% 0, 70% 20%, 60% 55%, 100% 30%, 95% 55%, 50% 75%, 70% 100%, 40% 90%); }
+  .pc.on { box-shadow: 0 0 0 1.5px #000, 0 0 0 3.5px #4fc3f7, 0 0 14px rgb(79 195 247 / .6), 4px 6px 0 #4fc3f7; }
+  .foot { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 8px; border-top: 1px solid var(--line); }
+  .sk { font-size: .62rem; font-weight: 700; background: #eee; color: #111; border-radius: 4px; padding: 3px 8px; }
+  .ap { font-size: .62rem; font-weight: 700; background: var(--cyan); color: #04151b; border-radius: 4px; padding: 3px 10px; }
+  .moment { display: grid; place-items: center; gap: 6px; padding: 12px; border-radius: 6px; background: radial-gradient(circle at 50% 45%, hsl(193 40% 14%), #000 70%); }
+  .moment img { width: 110px; }
+  .moment .pc { filter: brightness(1.5) drop-shadow(0 0 10px hsl(193 61% 70%)); }
+  .scard { background: var(--lcard); color: var(--lfg); border-radius: 8px; padding: 10px; display: grid; gap: 6px; }
+  .scard.dark { background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+  .scard h3 { margin: 0; font-size: .85rem; }
+  .prow { background: #fff; border: 1px solid var(--lline); border-left: 4px solid var(--c); border-radius: 6px; padding: 5px 8px; font-size: .7rem; display: flex; justify-content: space-between; gap: 6px; }
+  .newb { font-size: .66rem; font-weight: 700; background: var(--lfg); color: #fff; border-radius: 5px; padding: 3px 8px; width: fit-content; }
+  .db { font: 500 .72rem/1.5 ui-monospace, Menlo, monospace; background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; color: hsl(0 0% 85%); }
+  ul { margin: 8px 0 0; padding-left: 20px; } li { margin: 3px 0; }
+  a { color: var(--cyan); }
+  .muted { color: var(--muted); font-size: .78rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Presets: the whole build</h1>
+    <p class="lede">Four items, built in order. Drawn small and simplified; the build uses the app's real parts. Sample presets are made up. Try the real feel in the previews: <a href="https://claude.ai/artifact/QpM2XpnLibYaZt8TAuTErr">Preset Cards</a> (Version 3) and <a href="https://claude.ai/artifact/N2mi5pwoWsEfvGoh8N9bJ8">Preset Form</a>.</p>
+  </header>
+
+  <div class="group">In the task and event forms</div>
+
+  <section>
+    <h2>3 · The preset cards</h2>
+    <p class="where">Task form and event form (new and edit) → "Presets" beside Description → a full-screen layer · cards about 176–256px wide</p>
+    <div class="pair">
+      <div>
+        <div class="label">Now</div>
+        <div class="mock">
+          <div class="f">Task title</div>
+          <div class="rowf"><span>Description</span></div>
+          <div class="f" style="height:46px">Description (optional)</div>
+          <p class="muted" style="margin:0">Every task or event is typed from scratch.</p>
+        </div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <div class="label">After</div>
+        <div class="mock">
+          <div class="rowf"><span>Description</span><span class="pb">▢ Presets</span></div>
+          <div class="layer">
+            <div class="ban"><span>Choose 1 preset</span><span>+</span></div>
+            <div class="stage">
+              <div class="sl" style="transform:translate(calc(-50% - 92px), calc(-50% + 14px)) rotate(-10deg) scale(.86);opacity:.6"><span class="cat" style="background:#38bdf8">School</span><div class="pc" style="--c:#38bdf8"><b>Homework</b><span class="t">Subject:
+Pages:</span><i class="bf"></i></div></div>
+              <div class="sl" style="transform:translate(calc(-50% + 92px), calc(-50% + 14px)) rotate(10deg) scale(.86);opacity:.6"><span class="cat" style="background:#4ade80">Home</span><div class="pc" style="--c:#4ade80"><b>Shopping</b><span class="t">Buy:
+- </span><i class="bf"></i></div></div>
+              <div class="sl" style="transform:translate(-50%, -50%);z-index:2"><span class="cat" style="background:#f472b6">Work</span><div class="pc on" style="--c:#f472b6"><b>Meeting notes</b><span class="t">Agenda:
+1.
+Attendees:</span><i class="bf"></i></div></div>
+            </div>
+            <div class="foot"><span class="sk">Skip</span><span class="ap">✓ Apply preset</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul>
+      <li>A stacked carousel that loops: drag or swipe, ‹ ›, ← →, or tap a card behind. The most used preset is in front. Built with the <code>motion</code> package.</li>
+      <li>Cartoon cards in black, white and light blue: a white glass slab for the name with a band in the tag's colour under it, light-blue comic dots fading up, a white butterfly in the corner. They slide down from above; a slanted label per tag above each (past 16 letters: the first two and "…").</li>
+      <li>Tap the front card to pick it, then "Apply preset": an empty title takes the name; the description gets the format (asking "Add below / Replace" if it has text); tags are added; Deadline/End = start + X (start = now if empty).</li>
+      <li>Hold a card or press ⓘ for its details, with Pick, Edit and Delete. "+" makes a new preset. Sounds: expand, edit, success, cancel.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4 · The apply moment</h2>
+    <p class="where">After "Apply preset" · about 1.6s · "Skip" ends it · none with reduced motion</p>
+    <div class="pair">
+      <div>
+        <div class="label">Now</div>
+        <div class="mock"><p class="muted" style="margin:0">Nothing to apply yet.</p></div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <div class="label">After</div>
+        <div class="mock">
+          <div class="moment">
+            <div class="pc" style="--c:#f472b6"><b>Meeting notes</b><span class="t">Agenda:</span><i class="bf"></i></div>
+            <img src="previews/lulyssia_ritualing.webp" alt="Lulyssia casting with her papers">
+          </div>
+          <p class="muted" style="margin:0">Lulyssia holds the card up, it glows and melts into light with sparkles (no white flash), then everything fades out over the filled-in form.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="group">In Settings</div>
+
+  <section>
+    <h2>2 · Presets in Settings, and the preset form</h2>
+    <p class="where">Settings → a new white "Presets" card right after Tag Management · the form opens from "+ New preset", a pencil, the carousel's "+" or a card's details</p>
+    <div class="pair">
+      <div>
+        <div class="label">Now</div>
+        <div class="mock">
+          <div class="scard dark"><h3>Tag Management</h3></div>
+          <div class="scard"><h3>Display</h3></div>
+          <div class="scard dark"><h3>Sound</h3></div>
+          <div class="scard"><h3>Editor</h3></div>
+        </div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div>
+        <div class="label">After</div>
+        <div class="mock">
+          <div class="scard dark"><h3>Tag Management</h3></div>
+          <div class="scard"><h3>▢ Presets</h3><span class="newb">+ New preset</span>
+            <div class="prow" style="--c:#f472b6"><span><b>Meeting notes</b> · Work · Due: start +2 hours · used 14×</span><span>✎ 🗑</span></div>
+            <div class="prow" style="--c:#38bdf8"><span><b>Homework</b> · School · Due: start +3 days · used 9×</span><span>✎ 🗑</span></div>
+          </div>
+          <div class="scard dark"><h3>Display</h3></div>
+          <div class="scard"><h3>Sound</h3></div>
+          <div class="scard dark"><h3>Editor</h3></div>
+        </div>
+      </div>
+    </div>
+    <ul>
+      <li>The form: Name (required, up to 40 letters), Description format (the task's editor), Tags (the tag picker), and "Set the Deadline / End from the start": Start + [1–999] [Hours / Days / Weeks].</li>
+      <li>Delete asks first with Lulyssia's usual question. Most used first; new ones at the end.</li>
+      <li>Display, Sound and Editor each swap black/white to keep the alternation.</li>
+    </ul>
+  </section>
+
+  <div class="group">Behind the scenes</div>
+
+  <section>
+    <h2>1 · Where presets are kept</h2>
+    <p class="where">A new database table with your account, so presets are on every device · nothing to see yet</p>
+    <div class="db">presets: name · description format · tags · due amount + unit (or none) · how often used
+Only you can read or change your presets. Deleting a tag also takes it off your presets.</div>
+  </section>
+
+  <section>
+    <h2>After the build</h2>
+    <ul>
+      <li>You apply the new migration (<code>…_presets.sql</code>) before merging items 2 to 4. Merge order: 1, 2, 3, 4.</li>
+      <li>Item 3 adds the <code>motion</code> package; Vercel installs it, and <code>npm install</code> locally.</li>
+      <li>You check by eye: the Presets card and the swapped colours, the form, the cards layer and the stack's feel when dragging (desktop and phone), the labels, the slide-in and fade-out, the sounds, and the apply moment.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

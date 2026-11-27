@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preset Card Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: four card designs (A current, B comic, C slab, D playing card), each a row of three sample presets with their tag label above; tap a card to see it picked; intent only */
+  :root {
+    --page: hsl(200 20% 4%); --fg: hsl(0 0% 98%); --muted: hsl(0 0% 64%); --cyan: hsl(193 61% 52%); --line: hsl(193 40% 22%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font: 15px/1.5 var(--body); overflow-x: clip; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 30px; }
+  h1, h2 { font-family: var(--display); font-style: italic; font-weight: 800; color: var(--cyan); margin: 0; line-height: 1.05; }
+  h1 { font-size: 2rem; } h2 { font-size: 1.4rem; }
+  .lede, .note { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 14px; }
+  .slot { display: grid; justify-items: center; gap: 10px; }
+  .cat { display: flex; gap: 6px; filter: drop-shadow(3px 3px 0 #000); }
+  .cat span { font: italic 800 1rem/1 var(--display); color: #0b1418; background: var(--c); padding: 6px 15px 5px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+  .card { position: relative; width: 210px; aspect-ratio: 2 / 3; cursor: pointer; text-align: left; font: inherit; color: var(--fg); border: 0; padding: 0; background: none; transition: transform .15s; }
+  .card:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+  .card[aria-pressed=true] { transform: translateY(-8px); }
+  .card[aria-pressed=true]::after { content: "✓"; position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 56px; height: 56px; border-radius: 999px; display: grid; place-items: center; background: var(--cyan); color: #04151b; font-size: 1.8rem; font-weight: 900; box-shadow: 0 0 0 3px #000; z-index: 5; }
+  .n { font: italic 800 1.55rem/1.02 var(--display); overflow-wrap: anywhere; }
+  .fmt { white-space: pre-line; font-size: .8rem; line-height: 1.55; overflow: hidden; }
+  .off { font-size: .72rem; font-weight: 800; white-space: nowrap; }
+
+  /* A · now: flat dark card, tag stripe */
+  .A { background: linear-gradient(170deg, hsl(205 30% 18%), hsl(205 25% 10%)); border: 3px solid var(--line); border-radius: 6px; box-shadow: 7px 7px 0 #000; padding: 16px 14px 14px 20px; display: grid; grid-template-rows: auto 1fr auto; gap: 10px; }
+  .A::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: var(--c); border-radius: 4px 0 0 4px; }
+  .A .fmt { color: hsl(0 0% 78%); mask-image: linear-gradient(#000 70%, transparent); }
+  .A .off { color: #fca5a5; background: hsl(0 84% 60% / .18); border-radius: 4px; padding: 2px 7px; width: fit-content; }
+  .A[aria-pressed=true] { box-shadow: 0 0 0 3px var(--cyan), 0 0 24px 5px hsl(193 61% 52% / .5), 7px 15px 0 #000; }
+
+
+  /* F · black, white and light blue (the owner's reference picture): glossy black card, silver edge,
+     light-blue dots full at the bottom, a white frosted slab with the name in black, a light-blue
+     hard shadow, a small blue butterfly. The tag's colour stays in the label above. */
+  .F { --blue: #4fc3f7; background:
+      linear-gradient(125deg, transparent 38%, hsl(0 0% 100% / .07) 46%, transparent 54%),
+      radial-gradient(circle, color-mix(in srgb, var(--blue) 70%, transparent) 1.3px, transparent 1.7px) 0 0 / 9px 9px,
+      linear-gradient(170deg, #15181c, #050607);
+    border: 2px solid #d9dee3; border-radius: 6px; box-shadow: 0 0 0 2px #000, 7px 7px 0 var(--blue); padding: 0 0 14px; display: grid; grid-template-rows: auto 1fr auto; gap: 10px; overflow: hidden; }
+  .F .dots { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #0a0c0e 18%, rgb(10 12 14 / .6) 48%, transparent 88%); }
+  .F .head { position: relative; background: var(--c, var(--blue)); padding: 14px 14px 18px 16px; clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%); }
+  .F .head::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, hsl(0 0% 100% / .94), hsl(200 30% 88% / .9)); clip-path: polygon(0 0, 100% 0, 100% calc(72% - 5px), 0 calc(100% - 5px)); }
+  .F .head .n { position: relative; }
+  .F .n { color: #000; }
+  .F .fmt { position: relative; color: #f1f5f9; padding: 0 14px 0 16px; mask-image: linear-gradient(#000 70%, transparent); }
+  .F .off { position: relative; margin-left: 16px; color: #000; background: var(--blue); border: 2px solid #000; border-radius: 4px; padding: 1px 7px; width: fit-content; }
+  .F .bf { position: absolute; width: 50px; right: 8px; bottom: 8px; filter: drop-shadow(2px 2px 0 #000); }
+  .F[aria-pressed=true] { transform: translateY(-8px); box-shadow: 0 0 0 2px #000, 0 0 0 5px var(--blue), 0 0 26px 6px rgb(79 195 247 / .55), 7px 15px 0 var(--blue); }
+
+  /* E · chosen mix: A's dark card and stripe, B's comic dots (in the tag's colour), C's black slab for the name */
+  .E { background:
+      radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent) 1.3px, transparent 1.7px) 0 0 / 9px 9px,
+      linear-gradient(170deg, hsl(205 30% 18%), hsl(205 25% 10%));
+    border: 3px solid var(--line); border-radius: 6px; box-shadow: 7px 7px 0 #000; padding: 0 0 14px; display: grid; grid-template-rows: auto 1fr auto; gap: 10px; overflow: hidden; }
+  .E::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: var(--c); z-index: 2; }
+  .E .dots { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, hsl(205 25% 10%) 15%, hsl(205 25% 10% / .6) 45%, transparent 85%); }
+  .E .head { position: relative; background: linear-gradient(180deg, hsl(205 18% 34% / .78), hsl(205 18% 22% / .72)); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: inset 0 1px 0 hsl(0 0% 100% / .22); padding: 14px 14px 16px 20px; clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%); }
+  .E .n { color: #fff; }
+  .E .fmt { position: relative; color: hsl(0 0% 82%); padding: 0 14px 0 20px; mask-image: linear-gradient(#000 70%, transparent); }
+  .E .off { position: relative; margin-left: 20px; color: #fca5a5; background: hsl(0 84% 60% / .22); border-radius: 4px; padding: 2px 7px; width: fit-content; }
+  .E[aria-pressed=true] { box-shadow: 0 0 0 3px var(--cyan), 0 0 24px 5px hsl(193 61% 52% / .5), 7px 15px 0 #000; }
+
+  /* B · comic: tag-colour halftone, thick black ink, name on a ribbon, a speech bubble */
+  .B { background: radial-gradient(circle, rgb(0 0 0 / .22) 1.2px, transparent 1.6px) 0 0 / 9px 9px, var(--c); border: 4px solid #000; border-radius: 10px; box-shadow: 7px 7px 0 #000; padding: 14px 12px; display: grid; grid-template-rows: auto 1fr auto; gap: 12px; overflow: hidden; }
+  .B .n { background: #000; color: #fff; margin: 0 -12px; padding: 7px 12px 6px; transform: rotate(-3deg); box-shadow: 0 3px 0 var(--c); }
+  .B .bubble { position: relative; background: #fff; color: #111; border: 3px solid #000; border-radius: 14px; padding: 8px 10px; overflow: hidden; }
+  .B .bubble::after { content: ""; position: absolute; left: 18px; bottom: -14px; border: 7px solid transparent; border-top-color: #000; }
+  .B .fmt { color: #111; font-weight: 600; max-height: 100%; mask-image: linear-gradient(#000 75%, transparent); }
+  .B .off { justify-self: end; background: #fff; color: #b91c1c; border: 3px solid #000; border-radius: 999px; padding: 3px 10px; transform: rotate(4deg); }
+  .B[aria-pressed=true] { box-shadow: 0 0 0 4px var(--cyan), 7px 15px 0 #000; }
+
+  /* C · slab: Persona-like, tag-colour card, black slanted slab for the name, a white tilted note */
+  .C { background: var(--c); border: 3px solid #000; box-shadow: 7px 7px 0 #000; clip-path: polygon(0 0, 100% 0, 100% 92%, 90% 100%, 0 100%); padding: 0; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+  .C .head { background: #000; color: #fff; padding: 14px 14px 12px; clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%); }
+  .C .n { color: #fff; }
+  .C .note { background: #fff; color: #111; margin: 4px 12px 0; padding: 10px; transform: rotate(-2deg); box-shadow: 4px 4px 0 #000; overflow: hidden; }
+  .C .fmt { color: #111; font-weight: 600; mask-image: linear-gradient(#000 75%, transparent); max-height: 100%; }
+  .C .foot { padding: 10px 14px 14px; display: flex; justify-content: flex-start; }
+  .C .off { background: #000; color: #fff; padding: 3px 10px; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+  .C[aria-pressed=true] { filter: drop-shadow(0 0 0 var(--cyan)) drop-shadow(0 0 10px hsl(193 61% 52% / .9)); }
+
+  /* D · playing card: cream card, corner marks (first letter + due), a framed centre, name banner at the bottom */
+  .D { background: hsl(40 45% 94%); color: #1a1a1a; border: 3px solid #1a1a1a; border-radius: 12px; box-shadow: 7px 7px 0 #000; padding: 10px; display: grid; }
+  .D .frame { position: relative; border: 2px solid var(--c); border-radius: 8px; display: grid; grid-template-rows: 1fr auto; overflow: hidden; background: color-mix(in srgb, var(--c) 12%, transparent); }
+  .D .corner { position: absolute; display: grid; justify-items: center; line-height: 1; font: italic 800 1.4rem var(--display); color: color-mix(in srgb, var(--c) 70%, #000); z-index: 1; background: hsl(40 45% 94%); padding: 2px 4px; border-radius: 4px; }
+  .D .corner small { font: 800 .6rem var(--body); margin-top: 2px; }
+  .D .tl { top: -2px; left: -2px; } .D .br { bottom: 44px; right: -2px; transform: rotate(180deg); }
+  .D .fmt { color: #333; font-weight: 600; padding: 34px 14px 8px; text-align: center; mask-image: linear-gradient(#000 75%, transparent); }
+  .D .banner { background: var(--c); color: #0b1418; padding: 8px 10px 7px; text-align: center; border-top: 2px solid #1a1a1a; }
+  .D .n { font-size: 1.35rem; }
+  .D[aria-pressed=true] { box-shadow: 0 0 0 3px var(--cyan), 0 0 22px 4px hsl(193 61% 52% / .5), 7px 15px 0 #000; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Preset card designs</h1>
+    <p class="lede">Four looks for the cards in the carousel, all flat and cartoon. Tap a card to see it picked. Mix and match is fine ("C's slab with B's bubble"). Sample presets are made up; intent only.</p>
+  </header>
+  <section><h2>F · Black, white and light blue</h2><p class="note">From your picture: a glossy black card with a silver edge and a light-blue hard shadow, light-blue comic dots (full at the bottom, fading up), a white frosted slab with the name in black and a line under it in the tag's colour, the due time on a light-blue tag, and a small blue butterfly. The tag's own colour stays in the label above.</p><div class="row" data-d="F"></div></section>
+  <section><h2>E · Your mix: Now + comic dots + glass name slab</h2><p class="note">A's dark card and tag stripe, with comic dots in the tag's colour (full at the bottom, fading out towards the top) and a glass-grey slanted slab behind the name.</p><div class="row" data-d="E"></div></section>
+  <section><h2>A · Now</h2><p class="note">Flat dark card, the tag's colour as a stripe, hard black shadow.</p><div class="row" data-d="A"></div></section>
+  <section><h2>B · Comic</h2><p class="note">The whole card in the tag's colour with comic dots, thick black ink, the name on a tilted black ribbon, the format in a speech bubble, the due time in a round sticker.</p><div class="row" data-d="B"></div></section>
+  <section><h2>C · Slab</h2><p class="note">Like the app's banners: the card in the tag's colour, a black slanted slab for the name, the format on a white tilted note, a clipped corner.</p><div class="row" data-d="C"></div></section>
+  <section><h2>D · Playing card</h2><p class="note">A cream card with corner marks (the name's first letter and the due time), a frame in the tag's colour, and the name on a banner at the bottom.</p><div class="row" data-d="D"></div></section>
+</div>
+<script>
+{
+  const presets = [
+    { n: 'Meeting notes', f: 'Agenda:\n1.\n2.\nAttendees:\nDecisions:', tags: [['Work', '#f472b6']], off: '+2 hours', o: '2h' },
+    { n: 'Homework', f: 'Subject:\nPages:\nHand in to:\nNotes:', tags: [['School', '#38bdf8']], off: '+3 days', o: '3d' },
+    { n: 'Shopping', f: 'Buy:\n- \n- \nBudget:', tags: [['Home', '#4ade80']], off: 'No due date', o: '–' },
+  ];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const inner = {
+    F: (p) => `<span class="dots"></span><span class="head"><span class="n">${esc(p.n)}</span></span><span class="fmt">${esc(p.f)}</span><span class="off">${esc(p.off)}</span><svg class="bf" viewBox="0 0 64 60" aria-hidden="true"><g fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M22 40 C32 27 45 18 57 16 C63 15 65 21 61 26 C55 33 41 39 22 40 Z"/><path d="M22 40 C17 27 22 9 34 3 C41 0 47 4 45 11 C43 20 36 31 22 40 Z"/><path d="M22 40 C30 40 39 44 43 51 C45 56 40 59 35 56 C31 53 30 49 27 47 C24 45 23 43 22 40 Z"/><path d="M16 45 C17 41 20 38 24 39 C25 42 22 46 17 47 Z"/></g><g fill="none" stroke="#000" stroke-width=".9" stroke-linecap="round" opacity=".55"><path d="M25 37 C24 27 29 13 37 7 M25 37 C28 30 33 22 40 12"/><path d="M26 39 C35 32 46 25 57 21 M26 39 C35 35 45 31 55 28"/><path d="M25 41 C31 43 36 47 39 53"/></g><path d="M21 39 C17 30 11 26 5 27 C3 27 3 30 5 30 M21 39 C18 33 13 32 9 34 C7 35 8 37 10 36" fill="none" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><path d="M21 39 C17 30 11 26 5 27 C3 27 3 30 5 30 M21 39 C18 33 13 32 9 34 C7 35 8 37 10 36" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M44 34 L44 42" stroke="#000" stroke-width="2.6"/><path d="M44 34 L44 42" stroke="#fff" stroke-width="1.2"/><path d="M44 42 L47.5 46.5 L44 52 L40.5 46.5 Z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg>`,
+    E: (p) => `<span class="dots"></span><span class="head"><span class="n">${esc(p.n)}</span></span><span class="fmt">${esc(p.f)}</span><span class="off">${esc(p.off)}</span>`,
+    A: (p) => `<span class="n">${esc(p.n)}</span><span class="fmt">${esc(p.f)}</span><span class="off">${esc(p.off)}</span>`,
+    B: (p) => `<span class="n">${esc(p.n)}</span><span class="bubble"><span class="fmt">${esc(p.f)}</span></span><span class="off">${esc(p.off)}</span>`,
+    C: (p) => `<span class="head"><span class="n">${esc(p.n)}</span></span><span class="note"><span class="fmt">${esc(p.f)}</span></span><span class="foot"><span class="off">${esc(p.off)}</span></span>`,
+    D: (p) => `<span class="frame"><span class="corner tl">${esc(p.n[0])}<small>${esc(p.o)}</small></span><span class="corner br">${esc(p.n[0])}<small>${esc(p.o)}</small></span><span class="fmt">${esc(p.f)}</span><span class="banner"><span class="n">${esc(p.n)}</span></span></span>`,
+  };
+  document.querySelectorAll('.row').forEach((row) => {
+    const d = row.dataset.d;
+    row.innerHTML = presets.map((p) => `<div class="slot"><div class="cat" aria-hidden="true">${p.tags.map(([t, c]) => `<span style="--c:${c}">${esc(t)}</span>`).join('')}</div><button type="button" class="card ${d}" style="--c:${p.tags[0][1]}" aria-pressed="false" aria-label="${esc(p.n)}">${inner[d](p)}</button></div>`).join('');
+    row.querySelectorAll('.card').forEach((c) => c.addEventListener('click', () => {
+      const on = c.getAttribute('aria-pressed') !== 'true';
+      row.querySelectorAll('.card').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', String(on));
+    }));
+  });
+}
+</script>
+</body>
+</html>

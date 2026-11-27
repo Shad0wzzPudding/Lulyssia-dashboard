@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preset Form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: Settings page with Tag Management (black) then the new Presets card (white); "New preset" / pencil open the preset form dialog; intent only */
+  :root {
+    --page: hsl(200 20% 4%); --card: hsl(200 14% 8%); --field: hsl(200 14% 11%);
+    --fg: hsl(0 0% 98%); --muted: hsl(0 0% 64%); --cyan: hsl(193 61% 52%); --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%); --red: hsl(0 84% 60%);
+    --lcard: hsl(200 30% 96%); --lfg: hsl(200 30% 10%); --lmuted: hsl(200 10% 38%); --lline: hsl(200 20% 82%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font: 15px/1.5 var(--body); overflow-x: clip; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 18px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); line-height: 1.05; }
+  .lede, .muted { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
+  button { font-family: var(--body); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .scard { border-radius: 10px; padding: 18px; display: grid; gap: 12px; border: 1px solid var(--line); background: var(--card); }
+  .scard.light { background: var(--lcard); color: var(--lfg); border-color: var(--lline); }
+  .scard h2 { margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+  .scard .desc { margin: -6px 0 0; font-size: .85rem; color: var(--muted); }
+  .scard.light .desc { color: var(--lmuted); }
+  .stub { color: var(--muted); font-size: .85rem; }
+  .tag { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: 1px 8px; border: 1px solid currentColor; background: color-mix(in srgb, currentColor 15%, transparent); white-space: nowrap; }
+  .light .tag { filter: brightness(.6) saturate(1.4); }
+  .off { font-size: .7rem; font-weight: 700; color: #b91c1c; background: hsl(0 84% 60% / .14); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .off.none { color: var(--lmuted); background: hsl(0 0% 50% / .12); }
+  .newbtn { justify-self: start; font-weight: 700; font-size: .85rem; color: #fff; background: var(--lfg); border: 0; border-radius: 6px; padding: 9px 14px; cursor: pointer; min-height: 40px; }
+  .list { display: grid; gap: 8px; }
+  .prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--lline); border-left: 5px solid var(--c, var(--cyan)); border-radius: 8px; padding: 10px 10px 10px 12px; }
+  .prow .n { font-weight: 700; overflow-wrap: anywhere; }
+  .prow .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; align-items: center; }
+  .prow .uses { font-size: .7rem; color: var(--lmuted); }
+  .prow .acts { display: flex; gap: 4px; }
+  .ib { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--lline); background: transparent; color: var(--lfg); cursor: pointer; display: grid; place-items: center; }
+  .ib.del { color: #dc2626; }
+  .empty { text-align: center; color: var(--lmuted); font-size: .9rem; padding: 14px 0; }
+
+  /* The form dialog */
+  .scrim { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .7); }
+  .dialog { width: min(100%, 520px); max-height: calc(100vh - 32px); overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
+  .dialog h3 { margin: 0; font-size: 1.1rem; }
+  label { font-size: .85rem; font-weight: 600; display: block; margin-bottom: 4px; }
+  .opt { color: var(--muted); font-weight: 500; }
+  .field { width: 100%; font: 500 1rem var(--body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  textarea.field { min-height: 120px; resize: vertical; }
+  .tb { display: flex; gap: 4px; margin-bottom: 4px; }
+  .tb span { font-size: .75rem; border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; color: var(--muted); }
+  .help { font-size: .76rem; color: var(--muted); margin-top: 4px; }
+  .tpick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tpick button { font-size: .78rem; font-weight: 600; border-radius: 999px; padding: 3px 10px; border: 1px solid currentColor; background: transparent; cursor: pointer; }
+  .tpick button[aria-pressed=true] { background: color-mix(in srgb, currentColor 22%, transparent); box-shadow: 0 0 0 1px currentColor; }
+  .due { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .88rem; }
+  .due input[type=number] { width: 84px; }
+  .due select { width: auto; }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
+  .switch input { width: 18px; height: 18px; accent-color: var(--cyan); }
+  .err { color: #f87171; font-size: .8rem; margin-top: 4px; }
+  .actions { display: flex; gap: 8px; }
+  .actions button { font-weight: 600; font-size: .9rem; border-radius: 6px; padding: 10px; border: 1px solid var(--line); cursor: pointer; min-height: 44px; }
+  .actions .save { flex: 1; background: var(--fg); color: #111; }
+  .actions .cancel { background: transparent; color: var(--fg); }
+  .ask { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .6); }
+  .ask .box { background: var(--card); border: 2px solid var(--cyan); border-radius: 12px; padding: 16px; max-width: 360px; display: grid; gap: 12px; }
+  .ask p { margin: 0; }
+  .ask .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ask button { font-weight: 600; font-size: .85rem; border-radius: 6px; padding: 9px 14px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .ask button.danger { background: var(--red); border-color: var(--red); color: #fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Presets in Settings, and the preset form</h1>
+    <p class="lede">A new "Presets" card in Settings, right after Tag Management. "New preset" (or a pencil, or the "+" in the card carousel) opens the form: Name, Description format, Tags and a due offset. Sample presets are made up. Intent only: the build uses the app's real cards, editor and tag picker.</p>
+  </header>
+
+  <section class="scard">
+    <h2>🏷️ Tag Management</h2>
+    <p class="stub">(the existing tag card, unchanged)</p>
+  </section>
+
+  <section class="scard light" aria-labelledby="ph">
+    <h2 id="ph">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/></svg>
+      Presets
+    </h2>
+    <p class="desc">Ready-made setups for a task or an event. Pick one with "Presets" in the form.</p>
+    <button type="button" class="newbtn" id="new">+ New preset</button>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="scard">
+    <h2>Display</h2>
+    <p class="stub">(the cards after it keep alternating black and white, so Display, Sound and Editor each swap colour)</p>
+  </section>
+</div>
+
+<script>
+{
+  const TAGS = { School: '#38bdf8', Work: '#f472b6', Home: '#4ade80', Me: '#facc15', Important: '#fb923c' };
+  let presets = [
+    { n: 'Meeting notes', f: 'Agenda:\n1.\n2.\nAttendees:\nDecisions:', tags: ['Work'], off: [2, 'hours'], uses: 14 },
+    { n: 'Homework', f: 'Subject:\nPages:\nHand in to:\nNotes:', tags: ['School'], off: [3, 'days'], uses: 9 },
+    { n: 'Shopping', f: 'Buy:\n- \n- \nBudget:', tags: ['Home'], off: null, uses: 2 },
+    { n: 'Weekly review', f: 'Done this week:\nNext week:\nBlocked by:', tags: ['Work', 'Me'], off: [1, 'weeks'], uses: 0 },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const offText = (o) => o ? `Due: start +${o[0]} ${o[0] === 1 ? o[1].replace(/s$/, '') : o[1]}` : 'No due date';
+  const pencil = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  const trash = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
+
+  function draw() {
+    const sorted = [...presets].sort((a, b) => b.uses - a.uses);
+    $('list').innerHTML = sorted.length ? sorted.map((p) => `<div class="prow" style="--c:${TAGS[p.tags[0]] || '#64748b'}"><div><div class="n">${esc(p.n)}</div><div class="meta">${p.tags.map((t) => `<span class="tag" style="color:${TAGS[t]}">${esc(t)}</span>`).join('')}<span class="off${p.off ? '' : ' none'}">${offText(p.off)}</span><span class="uses">used ${p.uses}×</span></div></div><div class="acts"><button type="button" class="ib" data-e="${presets.indexOf(p)}" aria-label="Edit preset ${esc(p.n)}">${pencil}</button><button type="button" class="ib del" data-d="${presets.indexOf(p)}" aria-label="Delete preset ${esc(p.n)}">${trash}</button></div></div>`).join('')
+      : '<p class="empty">No presets yet. Make one to fill a task or event in one tap.</p>';
+    document.querySelectorAll('[data-e]').forEach((b) => b.addEventListener('click', () => form(presets[+b.dataset.e])));
+    document.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => del(presets[+b.dataset.d])));
+  }
+
+  function form(p) {
+    const editing = !!p;
+    const sel = new Set(p ? p.tags : []);
+    const s = document.createElement('div'); s.className = 'scrim';
+    s.innerHTML = `<form class="dialog" role="dialog" aria-label="${editing ? 'Edit preset' : 'New preset'}" novalidate>
+      <h3>${editing ? 'Edit Preset' : 'New Preset'}</h3>
+      <div><label for="pn">Name</label><input class="field" id="pn" maxlength="40" placeholder="e.g. Homework" value="${p ? esc(p.n) : ''}"><div class="err" id="perr" hidden>Give the preset a name.</div></div>
+      <div><label for="pf">Description format <span class="opt">(optional)</span></label><div class="tb" aria-hidden="true"><span><b>B</b></span><span><i>I</i></span><span><s>S</s></span><span>• list</span></div><textarea class="field" id="pf" placeholder="What goes in the description, e.g.&#10;Subject:&#10;Pages:">${p ? esc(p.f) : ''}</textarea><p class="help">The same editor as a task's description, so bold, lists and links carry over.</p></div>
+      <div><label>Tags <span class="opt">(optional)</span></label><div class="tpick">${Object.entries(TAGS).map(([t, c]) => `<button type="button" style="color:${c}" data-t="${esc(t)}" aria-pressed="${sel.has(t)}">${esc(t)}</button>`).join('')}</div><p class="help">The app's tag picker, where a new tag can also be made.</p></div>
+      <div><label>Due date</label>
+        <label class="switch"><input type="checkbox" id="pon" ${!p || p.off ? 'checked' : ''}> Set the Deadline / End from the start</label>
+        <div class="due" id="pdue" style="margin-top:8px"><span>Start +</span><input class="field" type="number" id="pnum" min="1" max="999" value="${p && p.off ? p.off[0] : 1}" aria-label="How many"><select class="field" id="punit" aria-label="Unit">${['hours', 'days', 'weeks'].map((u) => `<option value="${u}" ${p && p.off && p.off[1] === u ? 'selected' : u === 'days' && !(p && p.off) ? 'selected' : ''}>${u[0].toUpperCase() + u.slice(1)}</option>`).join('')}</select></div>
+        <p class="help" id="phelp"></p>
+      </div>
+      <div class="actions"><button type="submit" class="save">${editing ? 'Update' : 'Create'}</button><button type="button" class="cancel">Cancel</button></div>
+    </form>`;
+    document.body.append(s);
+    const f = s.querySelector('form');
+    const help = () => {
+      const on = $('pon').checked;
+      $('pdue').style.display = on ? 'flex' : 'none';
+      const n = Math.max(1, Math.round(+$('pnum').value || 1)), u = $('punit').value;
+      $('phelp').textContent = on ? `Picking this preset sets the Deadline (task) or End (event) to the start + ${n} ${n === 1 ? u.replace(/s$/, '') : u}. With no start yet, the start becomes now.` : 'Picking this preset leaves the Deadline / End as it is.';
+    };
+    ['pon', 'pnum', 'punit'].forEach((id) => $(id).addEventListener('input', help)); help();
+    s.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => { const t = b.dataset.t; sel.has(t) ? sel.delete(t) : sel.add(t); b.setAttribute('aria-pressed', String(sel.has(t))); }));
+    const close = () => s.remove();
+    s.querySelector('.cancel').addEventListener('click', close);
+    s.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    f.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = $('pn').value.trim();
+      if (!name) { $('perr').hidden = false; $('pn').focus(); return; }
+      const data = { n: name, f: $('pf').value, tags: Object.keys(TAGS).filter((t) => sel.has(t)), off: $('pon').checked ? [Math.max(1, Math.round(+$('pnum').value || 1)), $('punit').value] : null };
+      if (editing) Object.assign(p, data); else presets.push({ ...data, uses: 0 });
+      close(); draw();
+    });
+    $('pn').focus();
+  }
+
+  function del(p) {
+    const a = document.createElement('div'); a.className = 'ask';
+    a.innerHTML = `<div class="box" role="alertdialog" aria-label="Delete preset"><p>Delete the preset "${esc(p.n)}"? Tasks and events already made with it stay as they are.</p><div class="btns"><button type="button" class="danger">Yes, delete it</button><button type="button">Cancel</button></div></div>`;
+    document.body.append(a);
+    const [yes, no] = a.querySelectorAll('button');
+    yes.addEventListener('click', () => { presets = presets.filter((x) => x !== p); a.remove(); draw(); });
+    no.addEventListener('click', () => a.remove());
+    no.focus();
+  }
+
+  $('new').addEventListener('click', () => form(null));
+  draw();
+}
+</script>
+</body>
+</html>

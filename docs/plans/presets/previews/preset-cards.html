@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preset Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Asap+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: the task form with a Presets button; Presets opens a full-screen layer: banner, rows by tag (tag tile + cards), Skip / Apply; then the apply moment with Lulyssia; intent only */
+  :root {
+    --page: hsl(200 20% 4%); --card: hsl(200 14% 8%); --field: hsl(200 14% 11%);
+    --fg: hsl(0 0% 98%); --muted: hsl(0 0% 64%); --cyan: hsl(193 61% 52%); --cyan-dim: hsl(193 61% 52% / .35);
+    --line: hsl(193 40% 22%); --red: hsl(0 84% 60%);
+    --display: "Asap Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--fg); font: 15px/1.5 var(--body); overflow-x: clip; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 16px; }
+  h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 2rem; margin: 0; color: var(--cyan); line-height: 1.05; }
+  .lede, .muted { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
+  button { font-family: var(--body); }
+  button:focus-visible, .field:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  /* The form */
+  .dialog { width: min(100%, 520px); margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
+  .dialog h2 { margin: 0; font-size: 1.1rem; }
+  label { font-size: .85rem; font-weight: 600; }
+  .field { width: 100%; font: 500 .9rem var(--body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  textarea.field { min-height: 110px; resize: vertical; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pbtn { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: .78rem; color: var(--cyan); border: 1px solid var(--cyan-dim); background: hsl(193 61% 52% / .08); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: 1px 8px; border: 1px solid currentColor; background: color-mix(in srgb, currentColor 15%, transparent); white-space: nowrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .flash { animation: flash .9s ease-out; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 2px var(--cyan); } 100% { box-shadow: 0 0 0 2px transparent; } }
+
+  /* The Presets layer (full screen) */
+  .layer { position: fixed; inset: 0; z-index: 20; display: grid; grid-template-rows: auto 1fr auto; background: hsl(200 25% 3% / .94); backdrop-filter: blur(4px); }
+  .banner { display: flex; align-items: center; gap: 12px; background: var(--cyan); color: #04151b; padding: 10px 16px 10px 0; clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
+  .banner .ic { align-self: stretch; display: grid; place-items: center; background: #04151b; color: var(--cyan); padding: 0 16px; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+  .banner b { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.45rem; line-height: 1; }
+  .banner .hint { margin-left: auto; font-size: .78rem; font-weight: 600; text-align: right; }
+  .banner .plus { flex: none; width: 36px; height: 36px; border-radius: 6px; border: 2px solid #04151b; background: transparent; color: #04151b; font-size: 1.3rem; font-weight: 800; cursor: pointer; margin-right: 8px; }
+  @media (max-width: 600px) { .banner .hint { display: none; } .banner .plus { margin-left: auto; } }
+  .rows { overflow-y: auto; padding: 18px 16px; display: grid; gap: 22px; align-content: start; }
+  .trow { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 600px) { .trow { grid-template-columns: 76px minmax(0, 1fr); gap: 10px; } }
+  .ttile { position: relative; aspect-ratio: 3 / 4; border-radius: 6px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 55%, #fff 0%), color-mix(in srgb, var(--c) 25%, #000)); border: 2px solid color-mix(in srgb, var(--c) 70%, #fff); box-shadow: 4px 4px 0 #000; overflow: hidden; }
+  .ttile::after { content: "#"; position: absolute; right: -6px; bottom: -22px; font: 800 6rem/1 var(--display); color: rgb(0 0 0 / .18); }
+  .ttile .nm { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.15rem; line-height: 1.05; overflow-wrap: anywhere; color: #fff; text-shadow: 0 1px 2px #000; position: relative; z-index: 1; }
+  .ttile .ct { font-size: .7rem; font-weight: 700; color: #fff; background: rgb(0 0 0 / .45); border-radius: 4px; padding: 1px 6px; width: fit-content; position: relative; z-index: 1; }
+  .cards { display: flex; flex-wrap: wrap; gap: 14px; }
+  @media (max-width: 600px) { .cards { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; } .cards .pc { scroll-snap-align: start; } }
+  .pc { position: relative; flex: 0 0 168px; aspect-ratio: 3 / 4; text-align: left; color: var(--fg); background: linear-gradient(170deg, hsl(205 30% 18%), hsl(205 25% 10%)); border: 2px solid var(--line); border-radius: 6px; padding: 10px; cursor: pointer; display: grid; grid-template-rows: auto 1fr auto; gap: 6px; box-shadow: 4px 4px 0 #000; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: transform .15s, box-shadow .15s, border-color .15s; }
+  @media (max-width: 600px) { .pc { flex-basis: 140px; } }
+  .pc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, var(--cyan)); border-radius: 6px 0 0 6px; }
+  /* The chosen card look: comic dots in the tag colour, fading out; a black slanted slab behind the name */
+  .pc { background: radial-gradient(circle, color-mix(in srgb, var(--c, var(--cyan)) 55%, transparent) 1.3px, transparent 1.7px) 0 0 / 9px 9px, linear-gradient(170deg, hsl(205 30% 18%), hsl(205 25% 10%)); overflow: hidden; }
+  .pc .dots { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, hsl(205 25% 10%) 15%, hsl(205 25% 10% / .6) 45%, transparent 85%); }
+  .pc .n, .pc .f, .pc .meta { position: relative; }
+  .pc .head { position: relative; background: linear-gradient(180deg, hsl(205 18% 34% / .78), hsl(205 18% 22% / .72)); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: inset 0 1px 0 hsl(0 0% 100% / .22); margin: -10px -10px 0 -10px; padding: 10px 10px 12px 14px; clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%); }
+  .v2 .pc .head, .v3 .pc .head { margin: -18px -16px 0 -20px; padding: 16px 16px 18px 20px; }
+  .pc .head .n { color: #fff; }
+  .pc::before { z-index: 2; }
+  .pc .n { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.2rem; line-height: 1.05; overflow-wrap: anywhere; padding-right: 22px; }
+  .pc .f { font-size: .72rem; color: hsl(0 0% 78%); white-space: pre-line; overflow: hidden; mask-image: linear-gradient(#000 70%, transparent); }
+  .pc .meta { display: flex; flex-wrap: wrap; gap: 4px; }
+  .off { font-size: .68rem; font-weight: 700; color: #fca5a5; background: hsl(0 84% 60% / .18); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .off.none { color: var(--muted); background: hsl(0 0% 50% / .16); }
+  .info { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 999px; border: 1px solid var(--cyan-dim); background: rgb(0 0 0 / .4); color: var(--cyan); font: 700 .8rem var(--body); cursor: pointer; display: grid; place-items: center; z-index: 2; }
+  .pc:hover { border-color: hsl(193 50% 40%); }
+  .pc[aria-pressed=true] { border-color: var(--cyan); transform: translateY(-4px); box-shadow: 0 0 0 2px var(--cyan), 0 0 22px 4px hsl(193 61% 52% / .55), 4px 8px 0 #000; }
+  .check { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; }
+  .pc[aria-pressed=true] .check { display: grid; }
+  .check span { width: 52px; height: 52px; border-radius: 999px; display: grid; place-items: center; background: hsl(193 61% 52% / .9); color: #04151b; font-size: 1.6rem; font-weight: 900; box-shadow: 0 0 18px hsl(193 61% 52%); }
+  .foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+  .skip, .apply { font-weight: 700; font-size: .9rem; border-radius: 6px; padding: 10px 18px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
+  .skip { background: hsl(0 0% 92%); color: #111; border: 0; }
+  .apply { background: var(--cyan); color: #04151b; border: 0; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); padding-inline: 24px; }
+  .apply:disabled { background: hsl(193 15% 30%); color: hsl(0 0% 60%); cursor: default; }
+
+  /* Version switch */
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; color: var(--muted); }
+  .seg button { font-weight: 600; font-size: .8rem; color: var(--fg); background: transparent; border: 1px solid #444; border-radius: 6px; padding: 6px 10px; cursor: pointer; text-align: left; }
+  .seg button[aria-pressed=true] { border-color: var(--cyan); color: var(--cyan); background: hsl(193 61% 52% / .1); }
+
+  /* Version 2: one row of big cards that slide down from above */
+  .v2 .rows { display: flex; padding: 0; overflow: hidden; position: relative; }
+  .strip { flex: 1; height: 100%; align-items: center; display: flex; gap: clamp(14px, 2.4vw, 28px); overflow-x: auto; scroll-snap-type: x mandatory; padding: 26px max(16px, calc(50% - 470px)) 30px; scroll-padding-inline: max(16px, calc(50% - 470px)); }
+  /* Same cartoon card as Version 1 (flat colours, tag stripe, hard black shadow, cyan pick), just bigger */
+  .v2 .pc { flex: 0 0 clamp(230px, 27vw, 300px); aspect-ratio: 5 / 7; scroll-snap-align: center; padding: 18px 16px 14px 20px; border-width: 3px; gap: 10px; box-shadow: 7px 7px 0 #000; }
+  .v2 .pc::before { width: 7px; }
+  .v2 .pc .n { font-size: clamp(1.6rem, 2.3vw, 2rem); padding-right: 30px; }
+  .v2 .pc .f { font-size: .9rem; line-height: 1.6; }
+  .v2 .pc .tag, .v2 .pc .off { font-size: .75rem; }
+  .v2 .pc .info { width: 30px; height: 30px; top: 10px; right: 10px; }
+  .v2 .pc[aria-pressed=true] { transform: translateY(-10px); box-shadow: 0 0 0 3px var(--cyan), 0 0 26px 6px hsl(193 61% 52% / .5), 7px 16px 0 #000; }
+  .v2 .check span { width: 64px; height: 64px; font-size: 2rem; }
+  .v2 .rows > * { position: relative; z-index: 1; }
+
+  /* Version 3: a stacked carousel (the middle card in front, the others fanned behind it) */
+  .v3 .rows { display: grid; place-items: center; overflow: hidden; position: relative; padding: 0; touch-action: pan-y; cursor: grab; }
+  .v3 .rows.dragging { cursor: grabbing; }
+  .stack { position: absolute; inset: 0 0 34px; display: grid; place-items: center; }
+  .slot { position: absolute; will-change: transform; }
+  .v3 .pc { width: clamp(176px, 22vw, 256px); aspect-ratio: 2 / 3; padding: 18px 16px 14px 20px; border-width: 3px; gap: 10px; box-shadow: 7px 7px 0 #000; }
+  .v3 .pc::before { width: 7px; }
+  .v3 .pc .n { font-size: clamp(1.4rem, 2vw, 1.9rem); padding-right: 30px; }
+  .v3 .pc .f { font-size: .88rem; line-height: 1.6; }
+  .v3 .pc .info { width: 30px; height: 30px; top: 10px; right: 10px; }
+  .v3 .pc[aria-pressed=true] { transform: translateY(-8px); box-shadow: 0 0 0 3px var(--cyan), 0 0 26px 6px hsl(193 61% 52% / .5), 7px 15px 0 #000; }
+  .v3 .check span { width: 64px; height: 64px; font-size: 2rem; }
+  .dim { position: absolute; inset: 0; background: #000; border-radius: 6px; pointer-events: none; z-index: 3; }
+  .nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 200; width: 44px; height: 44px; border-radius: 999px; border: 2px solid var(--cyan); background: hsl(200 25% 6%); color: var(--cyan); font-size: 1.4rem; font-weight: 800; cursor: pointer; box-shadow: 3px 3px 0 #000; }
+  .nav.prev { left: max(10px, calc(50% - 480px)); } .nav.next { right: max(10px, calc(50% - 480px)); }
+  .count { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 200; font-size: .78rem; font-weight: 700; color: var(--muted); }
+  .moment.v3 .pc { width: min(60vw, 230px); }
+  /* The category (tag) label above each card: a slanted tab in the tag's colour */
+  .slot { display: grid; justify-items: center; gap: 12px; }
+  .cat { display: flex; gap: 6px; max-width: clamp(176px, 22vw, 256px); filter: drop-shadow(3px 3px 0 #000); }
+  .cat span { font: italic 800 1.05rem/1 var(--display); color: #0b1418; background: var(--c); padding: 6px 16px 5px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat span.none { background: hsl(0 0% 70%); }
+  .cat span { flex: 0 1 auto; min-width: 0; }
+  .cat span.more { flex: none; background: hsl(0 0% 92%); padding-inline: 12px; }
+  .v3 .pc .meta .tag { display: none; }
+
+
+  /* Card look F: black, white and light blue (the owner's reference picture) */
+  .pc { --blue: #4fc3f7; background: linear-gradient(125deg, transparent 38%, hsl(0 0% 100% / .07) 46%, transparent 54%), radial-gradient(circle, color-mix(in srgb, var(--blue) 70%, transparent) 1.3px, transparent 1.7px) 0 0 / 9px 9px, linear-gradient(170deg, #15181c, #050607); border-color: #d9dee3; box-shadow: 0 0 0 2px #000, 5px 5px 0 var(--blue); }
+  .v2 .pc, .v3 .pc { border-width: 2px; box-shadow: 0 0 0 2px #000, 7px 7px 0 var(--blue); }
+  .pc::before { display: none; }
+  .pc .dots { background: linear-gradient(180deg, #0a0c0e 18%, rgb(10 12 14 / .6) 48%, transparent 88%); }
+  .pc .head { background: var(--c, var(--blue)); padding-bottom: 16px; }
+  .v2 .pc .head, .v3 .pc .head { padding-bottom: 22px; }
+  .pc .head::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, hsl(0 0% 100% / .94), hsl(200 30% 88% / .9)); clip-path: polygon(0 0, 100% 0, 100% calc(72% - 5px), 0 calc(100% - 5px)); }
+  .pc .head .n { position: relative; }
+  .pc .head .n { color: #000; }
+  .pc .f { color: #f1f5f9; }
+  .pc .off { color: #000; background: var(--blue); border: 2px solid #000; }
+  .pc .off.none { color: #000; background: #d9dee3; }
+  .pc .bf { position: absolute; width: 50px; right: 8px; bottom: 8px; filter: drop-shadow(2px 2px 0 #000); pointer-events: none; }
+  .pc .info { color: #000; background: #fff; border-color: #000; }
+  .pc[aria-pressed=true], .v2 .pc[aria-pressed=true], .v3 .pc[aria-pressed=true] { box-shadow: 0 0 0 2px #000, 0 0 0 5px var(--blue), 0 0 26px 6px rgb(79 195 247 / .55), 7px 15px 0 var(--blue); }
+
+  /* Details, the ask, the apply moment */
+  .over { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .72); }
+  .big { width: min(100%, 360px); max-height: 90vh; overflow-y: auto; background: linear-gradient(170deg, hsl(205 30% 18%), hsl(205 25% 10%)); border: 2px solid var(--cyan); border-radius: 8px; padding: 18px; display: grid; gap: 10px; box-shadow: 0 0 30px hsl(193 61% 52% / .4); }
+  .big .n { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.7rem; line-height: 1.05; overflow-wrap: anywhere; }
+  .big pre { margin: 0; font: .85rem/1.55 var(--body); white-space: pre-wrap; background: rgb(0 0 0 / .3); border-radius: 6px; padding: 10px; }
+  .big .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .big .btns button { font-weight: 600; font-size: .85rem; border-radius: 6px; padding: 9px 14px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; min-height: 40px; }
+  .big .btns button.main { background: var(--cyan); color: #04151b; border-color: var(--cyan); }
+  .moment { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; background: radial-gradient(circle at 50% 55%, hsl(193 40% 12%), #000 70%); overflow: hidden; }
+  .moment img { position: absolute; bottom: 4%; width: min(62vw, 340px); left: 50%; transform: translateX(-50%); filter: drop-shadow(0 0 30px hsl(193 61% 52% / .5)); }
+  .moment .pc { position: relative; z-index: 2; flex: none; width: 168px; cursor: default; margin-bottom: 18vh; }
+  .moment.v2 .pc { width: min(64vw, 240px); }
+  .moment .white { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
+  .moment .skip { position: absolute; right: 16px; bottom: 16px; z-index: 4; }
+  .spark { position: absolute; z-index: 2; color: #e0f7ff; font-size: 18px; pointer-events: none; opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .layer { animation: fade .2s ease-out both; }
+    .banner { animation: bannerIn .32s cubic-bezier(.2,.8,.3,1) both; }
+    .v2 .pc { animation: slideDown .5s cubic-bezier(.2,.9,.3,1.12) backwards; animation-delay: calc(.12s + var(--i) * 90ms); }
+    .twinkle { animation: twinkle 1.8s ease-in-out infinite alternate; animation-delay: var(--d); }
+    @keyframes slideDown { 0% { opacity: 0; transform: translateY(-70vh) rotate(-2deg); } 70% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+    @keyframes twinkle { from { opacity: .15; transform: scale(.6); } to { opacity: .9; transform: scale(1.1); } }
+    .v3 .cat { animation: slideDown .5s cubic-bezier(.2,.9,.3,1.12) backwards; animation-delay: calc(.12s + var(--i) * 90ms); }
+    .v3 .pc { animation: slideDown .5s cubic-bezier(.2,.9,.3,1.12) backwards; animation-delay: calc(.12s + var(--i) * 90ms); }
+    .layer:not(.v2):not(.v3).deal .pc, .deal .ttile { animation: deal .3s cubic-bezier(.2,.8,.3,1.1) backwards; animation-delay: calc(.12s + var(--i) * 55ms); }
+    .moment img { animation: rise .4s cubic-bezier(.2,.8,.3,1) both; }
+    .moment .pc { animation: hold 1.2s cubic-bezier(.3,.6,.3,1) both; }
+    .spark { animation: spark .9s ease-out both; }
+    @keyframes fade { from { opacity: 0; } }
+    .moment.out, .layer.out { animation: fadeOut .38s ease-in forwards; pointer-events: none; }
+    @keyframes fadeOut { to { opacity: 0; } }
+    @keyframes bannerIn { from { transform: translateX(-40px); opacity: 0; } }
+    @keyframes deal { 0% { opacity: 0; transform: translate(-24px, 14px) rotate(-5deg) skewX(-6deg); } 100% { opacity: 1; transform: none; } }
+    @keyframes rise { from { opacity: 0; transform: translate(-50%, 40px); } }
+    @keyframes hold { 0% { transform: translateY(40px) scale(.9); opacity: 0; } 25% { transform: none; opacity: 1; filter: none; } 60% { filter: brightness(1.6) drop-shadow(0 0 24px hsl(193 61% 70%)); transform: scale(1.04); } 85%, 100% { filter: brightness(3) blur(6px); transform: scale(1.12); opacity: 0; } }
+    @keyframes white { 0%, 62% { opacity: 0; } 78% { opacity: .95; } 100% { opacity: 0; } }
+    @keyframes spark { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Presets, picked like cards</h1>
+    <p class="lede">Pick a version, then press "Presets". Version 2 (new): one row of big cards, in Version 1's cartoon look, that slide down from above, scrolling sideways when there are more. Version 1: the presets dealt in, in a row per tag. Tap a card to pick it (glow and check), then "Apply preset". Hold a card (or press ⓘ) to read all of it. After Apply, Lulyssia holds the card while it turns to light, a flash, and the form is filled. Try typing a description first. Sample presets are made up. Intent only: the build uses the app's real form and parts.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="Which version">
+    <span>Compare:</span>
+    <button type="button" data-v="1" aria-pressed="false">Version 1 · rows by tag</button>
+    <button type="button" data-v="2" aria-pressed="false">Version 2 · one row of big cards, sliding down</button>
+    <button type="button" data-v="3" aria-pressed="true">Version 3 · stacked carousel (new)</button>
+  </div>
+
+  <div class="dialog" id="dlg">
+    <h2>Create New Task</h2>
+    <input class="field" id="title" placeholder="Task title" aria-label="Task title">
+    <div class="row">
+      <label for="desc">Description</label>
+      <button type="button" class="pbtn" id="open">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/></svg>
+        Presets
+      </button>
+    </div>
+    <textarea class="field" id="desc" placeholder="Description (optional)"></textarea>
+    <div class="grid2">
+      <div><label for="start">Start Date</label><input class="field" id="start" type="datetime-local"></div>
+      <div><label for="dl">Deadline</label><input class="field" id="dl" type="datetime-local"></div>
+    </div>
+    <div><label>Tags</label><div class="tags" id="tags"><span class="muted" style="margin:0">No tags</span></div></div>
+  </div>
+  <p class="muted">Rules already decided: an empty title takes the preset's name; a description with text asks "Add below or replace?"; tags are added; with a due offset the Deadline is start + X (start = now if empty).</p>
+</div>
+
+<script>
+{
+  const TAGS = { School: '#38bdf8', Work: '#f472b6', Home: '#4ade80', Me: '#facc15', Important: '#fb923c' };
+  // The label above a card: every tag, unless their names together are longer than 16 letters;
+  // then only the first two, and a "…" after them
+  const LABEL_MAX_LETTERS = 16;
+  const labelTags = (tags) => tags.join('').length > LABEL_MAX_LETTERS && tags.length > 2 ? { shown: tags.slice(0, 2), more: true } : { shown: tags, more: false };
+  const presets = [
+    { n: 'Homework', f: 'Subject:\nPages:\nHand in to:\nNotes:', tags: ['School'], off: [3, 'days'] },
+    { n: 'Lab report', f: 'Experiment:\nAim:\nMethod:\nResults:\nConclusion:', tags: ['School'], off: [1, 'weeks'] },
+    { n: 'Meeting notes', f: 'Agenda:\n1.\n2.\nAttendees:\nDecisions:', tags: ['Work'], off: [2, 'hours'] },
+    { n: 'Weekly review', f: 'Done this week:\nNext week:\nBlocked by:', tags: ['Work', 'Me'], off: [1, 'weeks'] },
+    { n: 'Shopping', f: 'Buy:\n- \n- \nBudget:', tags: ['Home'], off: null },
+    { n: 'Quick note', f: 'Note:', tags: [], off: null },
+    { n: 'Exam prep', f: 'Subject:\nChapters:\nPast papers:\nWeak spots:', tags: ['School', 'Important', 'Me'], off: [5, 'days'] },
+  ];
+  let picked = null, formTags = [], version = 3, stack = null;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const offText = (o) => o ? `+${o[0]} ${o[0] === 1 ? o[1].replace(/s$/, '') : o[1]}` : 'No due date';
+  const pad = (n) => String(n).padStart(2, '0');
+  const local = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const tagChip = (t) => `<span class="tag" style="color:${TAGS[t]}">${esc(t)}</span>`;
+  const cardHtml = (p, i, k) => `<button type="button" class="pc" style="--i:${k};--c:${TAGS[p.tags[0]] || 'var(--cyan)'}" data-i="${i}" aria-pressed="false"><span class="dots"></span><span class="head"><span class="n">${esc(p.n)}</span></span><span class="f">${esc(p.f)}</span><span class="meta">${p.tags.map(tagChip).join('')}<span class="off${p.off ? '' : ' none'}">${offText(p.off)}</span></span><span class="check" aria-hidden="true"><span>✓</span></span><svg class="bf" viewBox="0 0 64 60" aria-hidden="true"><g fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M22 40 C32 27 45 18 57 16 C63 15 65 21 61 26 C55 33 41 39 22 40 Z"/><path d="M22 40 C17 27 22 9 34 3 C41 0 47 4 45 11 C43 20 36 31 22 40 Z"/><path d="M22 40 C30 40 39 44 43 51 C45 56 40 59 35 56 C31 53 30 49 27 47 C24 45 23 43 22 40 Z"/><path d="M16 45 C17 41 20 38 24 39 C25 42 22 46 17 47 Z"/></g><g fill="none" stroke="#000" stroke-width=".9" stroke-linecap="round" opacity=".55"><path d="M25 37 C24 27 29 13 37 7 M25 37 C28 30 33 22 40 12"/><path d="M26 39 C35 32 46 25 57 21 M26 39 C35 35 45 31 55 28"/><path d="M25 41 C31 43 36 47 39 53"/></g><path d="M21 39 C17 30 11 26 5 27 C3 27 3 30 5 30 M21 39 C18 33 13 32 9 34 C7 35 8 37 10 36" fill="none" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><path d="M21 39 C17 30 11 26 5 27 C3 27 3 30 5 30 M21 39 C18 33 13 32 9 34 C7 35 8 37 10 36" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M44 34 L44 42" stroke="#000" stroke-width="2.6"/><path d="M44 34 L44 42" stroke="#fff" stroke-width="1.2"/><path d="M44 42 L47.5 46.5 L44 52 L40.5 46.5 Z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></button>`;
+  const flash = (el) => { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); };
+
+  function openLayer() {
+    picked = null;
+    const groups = Object.keys(TAGS).map((t) => [t, presets.filter((p) => p.tags.includes(t))]).filter(([, l]) => l.length);
+    const untagged = presets.filter((p) => !p.tags.length);
+    if (untagged.length) groups.push(['No tag', untagged]);
+    let k = 0;
+    const rows = version !== 1 ? '' : groups.map(([t, list]) => `<section class="trow" aria-label="${esc(t)}"><div class="ttile" style="--i:${k++};--c:${TAGS[t] || '#64748b'}"><span class="nm">${esc(t)}</span><span class="ct">${list.length} preset${list.length > 1 ? 's' : ''}</span></div><div class="cards">${list.map((p) => cardHtml(p, presets.indexOf(p), k++)).join('')}</div></section>`).join('');
+    const layer = document.createElement('div');
+    layer.className = 'layer deal' + (version === 2 ? ' v2' : version === 3 ? ' v3' : ''); layer.id = 'layer'; layer.setAttribute('role', 'dialog'); layer.setAttribute('aria-label', 'Presets');
+    layer.innerHTML = `<div class="banner"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="13" height="16" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v13"/></svg></span><b>Choose 1 preset</b><span class="hint">Hold a card (or ⓘ) to read all of it</span><button type="button" class="plus" id="plus" aria-label="New preset" title="New preset">+</button></div><div class="rows">${version === 3 ? `<div class="stack">${presets.map((p, i) => `<div class="slot" data-i="${i}"><div class="cat" style="--i:${i}" aria-hidden="true">${p.tags.length ? (({ shown, more }) => shown.map((t) => `<span style="--c:${TAGS[t]}">${esc(t)}</span>`).join('') + (more ? '<span class="more" title="' + esc(p.tags.join(', ')) + '">…</span>' : ''))(labelTags(p.tags)) : '<span class="none">No tag</span>'}</div>${cardHtml(p, i, i)}</div>`).join('')}</div><button type="button" class="nav prev" id="prev" aria-label="Previous preset">‹</button><button type="button" class="nav next" id="next" aria-label="Next preset">›</button><span class="count" id="count" aria-live="polite"></span>` : version === 2 ? `<div class="strip">${presets.map((p, i) => cardHtml(p, i, i)).join('')}</div>` : rows}</div><div class="foot"><button type="button" class="skip" id="skip">Skip</button><button type="button" class="apply" id="apply" disabled>✓ Apply preset</button></div>`;
+    document.body.append(layer);
+    layer.querySelectorAll('.pc').forEach((c) => {
+      const info = document.createElement('span');
+      info.className = 'info'; info.textContent = 'i'; info.setAttribute('role', 'button'); info.tabIndex = 0; info.setAttribute('aria-label', 'Details');
+      c.append(info);
+      const p = presets[+c.dataset.i];
+      let timer = 0, held = false;
+      c.addEventListener('pointerdown', (e) => { if (e.target === info) return; held = false; timer = setTimeout(() => { held = true; details(p); }, 500); });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => c.addEventListener(ev, () => clearTimeout(timer)));
+      c.addEventListener('contextmenu', (e) => e.preventDefault());
+      c.addEventListener('click', (e) => { if (held || e.target === info) return; if (stack && stack.click(+c.dataset.i)) return; select(+c.dataset.i); });
+      info.addEventListener('click', (e) => { e.stopPropagation(); details(p); });
+      info.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); details(p); } });
+    });
+    $('skip').addEventListener('click', closeLayer);
+    $('apply').addEventListener('click', () => askThenApply(presets[picked]));
+    $('plus').addEventListener('click', () => note('The "New preset" form opens (part 2 of the plan).'));
+    layer.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.querySelector('.over')) closeLayer(); });
+    stack = version === 3 ? makeStack(layer) : null;
+    layer.querySelector('.pc').focus();
+  }
+  // The stacked carousel: a "progress" number; each card sits at (its index - progress), wrapped
+  // round so the stack loops. Dragging moves progress; letting go springs it to the nearest card.
+  function makeStack(layer) {
+    const area = layer.querySelector('.rows'), slots = [...layer.querySelectorAll('.slot')], total = slots.length;
+    slots.forEach((sl) => { const d = document.createElement('span'); d.className = 'dim'; sl.querySelector('.pc').append(d); });
+    let p = 0, target = 0, raf = 0, drag = null, moved = false;
+    const cfg = () => { const w = innerWidth; return w < 640 ? { x: 90, y: 20, r: 8, s: .06, sens: 180 } : w < 1024 ? { x: 130, y: 30, r: 10, s: .09, sens: 220 } : { x: 170, y: 40, r: 12, s: .12, sens: 250 }; };
+    const wrap = (d) => { d = ((d % total) + total) % total; return d > total / 2 ? d - total : d; };
+    const front = () => ((Math.round(p) % total) + total) % total;
+    function draw() {
+      const c = cfg();
+      slots.forEach((sl, i) => {
+        const o = wrap(i - p), a = Math.abs(o);
+        sl.style.transform = `translate(${o * c.x}px, ${a < .05 ? 0 : a * c.y}px) rotate(${a < .05 ? 0 : o * c.r}deg) scale(${1 - a * c.s})`;
+        sl.style.zIndex = Math.round(100 - a * 10);
+        sl.style.opacity = a > total / 2 - .5 ? Math.max(0, (total / 2 - a) * 2) : 1;
+        sl.querySelector('.dim').style.opacity = Math.min(.5, a * .25);
+        sl.querySelector('.cat').style.opacity = 1 - Math.min(.5, a * .25);
+        const card = sl.querySelector('.pc');
+        card.tabIndex = i === front() ? 0 : -1;
+        card.setAttribute('aria-hidden', String(i !== front()));
+      });
+      layer.querySelector('#count').textContent = `${front() + 1} of ${total}: ${presets[front()].n}`;
+    }
+    function spring() {
+      cancelAnimationFrame(raf);
+      const step = () => { p += (target - p) * .16; if (Math.abs(target - p) < .002) p = target; draw(); if (p !== target) raf = requestAnimationFrame(step); };
+      raf = requestAnimationFrame(step);
+    }
+    const go = (n) => { target = Math.round(target) + n; spring(); };
+    area.addEventListener('pointerdown', (e) => { if (e.target.closest('.nav, .info')) return; drag = { x: e.clientX, start: p, last: e.clientX, t: performance.now(), v: 0 }; moved = false; cancelAnimationFrame(raf); });
+    addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 6) { moved = true; area.classList.add('dragging'); layer.querySelectorAll('.pc').forEach((c) => c.dispatchEvent(new Event('pointercancel'))); }
+      const now = performance.now(); drag.v = (e.clientX - drag.last) / Math.max(1, now - drag.t); drag.last = e.clientX; drag.t = now;
+      p = drag.start - dx / cfg().sens; draw();
+    });
+    addEventListener('pointerup', () => {
+      if (!drag) return;
+      area.classList.remove('dragging');
+      const shift = Math.max(-3, Math.min(3, Math.round(p - drag.start - drag.v * 1.2)));
+      target = Math.round(drag.start) + shift; drag = null; spring();
+    });
+    layer.querySelector('#prev').addEventListener('click', () => go(-1));
+    layer.querySelector('#next').addEventListener('click', () => go(1));
+    layer.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); } if (e.key === 'ArrowRight') { e.preventDefault(); go(1); } });
+    addEventListener('resize', draw);
+    draw();
+    return {
+      // A tap after a drag does nothing; a tap on a card behind brings it to the front
+      click(i) { if (moved) { moved = false; return true; } if (i === front()) return false; target = Math.round(target) + wrap(i - target); spring(); return true; },
+    };
+  }
+
+  function closeLayer() {
+    const l = $('layer'); if (!l) return;
+    l.removeAttribute('id');
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) l.remove();
+    else { l.classList.add('out'); setTimeout(() => l.remove(), 400); }
+    $('open').focus();
+  }
+  function select(i) {
+    picked = picked === i ? null : i;
+    document.querySelectorAll('#layer .pc').forEach((c) => c.setAttribute('aria-pressed', String(+c.dataset.i === picked)));
+    $('apply').disabled = picked === null;
+  }
+  function overBox(inner) {
+    const o = document.createElement('div'); o.className = 'over';
+    o.innerHTML = `<div class="big" role="dialog">${inner}</div>`;
+    document.body.append(o);
+    o.addEventListener('click', (e) => { if (e.target === o) o.remove(); });
+    o.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); o.remove(); } });
+    return o;
+  }
+  function details(p) {
+    const o = overBox(`<span class="n">${esc(p.n)}</span><pre>${esc(p.f)}</pre><div class="tags">${p.tags.map(tagChip).join('') || '<span class="muted" style="margin:0">No tags</span>'}<span class="off${p.off ? '' : ' none'}">${p.off ? 'Due: start ' + offText(p.off) : 'No due date'}</span></div><div class="btns"><button type="button" class="main" data-a="pick">Pick this one</button><button type="button" data-a="close">Close</button></div>`);
+    o.querySelector('[data-a=pick]').addEventListener('click', () => { o.remove(); if (picked !== presets.indexOf(p)) select(presets.indexOf(p)); });
+    o.querySelector('[data-a=close]').addEventListener('click', () => o.remove());
+    o.querySelector('.main').focus();
+  }
+  function note(msg) {
+    const o = overBox(`<p style="margin:0">${esc(msg)}</p><div class="btns"><button type="button" class="main">OK</button></div>`);
+    const b = o.querySelector('button'); b.addEventListener('click', () => o.remove()); b.focus();
+  }
+  function askThenApply(p) {
+    if (!$('desc').value.trim()) return moment(p);
+    const o = overBox(`<p style="margin:0">The description already has text. Add "${esc(p.n)}" below it, or replace it?</p><div class="btns"><button type="button" class="main" data-h="add">Add below</button><button type="button" data-h="replace">Replace</button><button type="button" data-h="cancel">Cancel</button></div>`);
+    o.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { o.remove(); if (b.dataset.h !== 'cancel') moment(p, b.dataset.h); }));
+    o.querySelector('.main').focus();
+  }
+  function moment(p, how) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    $('layer').remove();
+    if (reduce) return fill(p, how);
+    const m = document.createElement('div'); m.className = 'moment' + (version === 2 ? ' v2' : version === 3 ? ' v3' : '');
+    m.innerHTML = `<img src="lulyssia_ritualing.webp" alt="">${cardHtml(p, presets.indexOf(p), 0)}<button type="button" class="skip">Skip</button>`;
+    for (let s = 0; s < 14; s++) {
+      const sp = document.createElement('span'); sp.className = 'spark'; sp.textContent = '✦';
+      const a = (s / 14) * Math.PI * 2, r = 120 + (s % 3) * 40;
+      sp.style.cssText = `left:calc(50% - 9px);top:calc(41% - 9px);--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px;animation-delay:${.35 + (s % 4) * .05}s`;
+      m.append(sp);
+    }
+    document.body.append(m);
+    let done = false;
+    // The moment fades out over the form, which is already filled underneath
+    const end = () => { if (done) return; done = true; fill(p, how); m.classList.add('out'); setTimeout(() => m.remove(), 400); };
+    m.querySelector('.skip').addEventListener('click', end);
+    setTimeout(end, 1250);
+  }
+  function fill(p, how) {
+    const title = $('title'), desc = $('desc');
+    if (!title.value.trim()) { title.value = p.n; flash(title); }
+    if (how === 'replace' || !desc.value.trim()) desc.value = p.f;
+    else desc.value = desc.value.replace(/\s+$/, '') + '\n\n' + p.f;
+    flash(desc);
+    p.tags.forEach((t) => { if (!formTags.includes(t)) formTags.push(t); });
+    $('tags').innerHTML = formTags.length ? formTags.map(tagChip).join('') : '<span class="muted" style="margin:0">No tags</span>';
+    flash($('tags'));
+    if (p.off) {
+      if (!$('start').value) { $('start').value = local(new Date()); flash($('start')); }
+      const d = new Date($('start').value), [n, u] = p.off;
+      d.setTime(d.getTime() + n * { hours: 36e5, days: 864e5, weeks: 6048e5 }[u]);
+      $('dl').value = local(d); flash($('dl'));
+    }
+    $('open').focus();
+  }
+  $('open').addEventListener('click', openLayer);
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    version = +b.dataset.v;
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+}
+</script>
+</body>
+</html>
