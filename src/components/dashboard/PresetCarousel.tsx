@@ -3,6 +3,7 @@ import { animate, motion, useMotionValue, useMotionValueEvent, useTransform, typ
 import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import type { Preset, Tag } from '@/lib/types';
 import { presetTags } from '@/lib/presets';
+import { playCardMoveSound } from '@/lib/sounds';
 import { PresetCard, PresetLabel } from './PresetCard';
 
 /** How far each step back sits: across, down, tilt, smaller; and how many px of drag move one card */
@@ -160,7 +161,12 @@ export const PresetCarousel = forwardRef<PresetCarouselHandle, PresetCarouselPro
       setFront(f);
     }
   };
-  useMotionValueEvent(progress, 'change', updateFront);
+  // Moving the stack: each card reaching the front has its sound (not a change from the list itself)
+  useMotionValueEvent(progress, 'change', (p) => {
+    const before = frontRef.current;
+    updateFront(p);
+    if (frontRef.current !== before) playCardMoveSound();
+  });
   useEffect(() => updateFront(progress.get()));
 
   const target = useRef(0);

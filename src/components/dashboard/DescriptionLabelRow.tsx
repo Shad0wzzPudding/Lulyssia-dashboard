@@ -1,4 +1,5 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect } from 'react';
+import { preloadPresetCardSounds } from '@/lib/sounds';
 import { GalleryHorizontalEnd } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -10,6 +11,8 @@ export const DescriptionLabelRow = forwardRef<HTMLButtonElement, { onPresets: ()
   { onPresets },
   ref
 ) {
+  // The cards' sounds load with the form, so opening them already has its sound
+  useEffect(() => preloadPresetCardSounds(), []);
   return (
     <>
       <div className="mb-3 flex items-center justify-between gap-2">

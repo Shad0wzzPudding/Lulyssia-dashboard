@@ -8,7 +8,7 @@ import { Dialog, DialogPortal, DialogContent, DialogHeader, DialogTitle, DialogD
 import { Button } from '@/components/ui/button';
 import { FormattedText } from '@/components/ui/formatted-text';
 import { STICKERS } from '@/lib/stickers';
-import { playCancelSound, playEditSound, playExpandSound, playSuccessSound } from '@/lib/sounds';
+import { playCancelSound, playCardOpenSound, playCardPickSound, playCardUnpickSound, playSuccessSound } from '@/lib/sounds';
 import { presetDueLabel, presetTags } from '@/lib/presets';
 import type { ApplyHow } from '@/lib/presetApply';
 import { PresetButterflySymbol } from './PresetCard';
@@ -66,7 +66,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
     }
   }
   useEffect(() => {
-    if (open) playExpandSound();
+    if (open) playCardOpenSound();
   }, [open]);
 
   // A deleted preset can't stay picked
@@ -100,7 +100,8 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
     close();
   };
   const togglePick = (preset: Preset) => {
-    playEditSound();
+    if (pickedId === preset.id) playCardUnpickSound();
+    else playCardPickSound();
     setPickedId((id) => (id === preset.id ? null : preset.id));
   };
   const apply = (preset: Preset, how?: ApplyHow) => {

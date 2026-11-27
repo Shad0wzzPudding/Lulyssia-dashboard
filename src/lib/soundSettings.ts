@@ -22,6 +22,15 @@ export const SOUND_GROUPS = [
     ],
   },
   {
+    name: 'Preset cards',
+    sounds: [
+      { id: 'cardOpen', name: 'Cards open', when: 'The "Presets" button in a task or event form' },
+      { id: 'cardMove', name: 'Card moves', when: 'Another card coming to the front' },
+      { id: 'cardPick', name: 'Card picked', when: 'Picking a preset card' },
+      { id: 'cardUnpick', name: 'Card unpicked', when: 'Unpicking the picked card' },
+    ],
+  },
+  {
     name: 'Menus & pages',
     sounds: [
       { id: 'menuOpen', name: 'Message menu opens', when: 'The round button in the corner' },
