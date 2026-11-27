@@ -34,6 +34,16 @@ type WindowWithWebkitAudio = Window & { webkitAudioContext?: typeof AudioContext
 // stop creating them after a handful, which made sounds go silent.
 let sharedAudioContext: AudioContext | null = null;
 
+/**
+ * Whether the context has to be resumed before it can play: "suspended" (not unlocked yet) and, on
+ * iPhone and iPad, "interrupted" (after the screen was locked, a call, or another app took the
+ * sound; without a resume every sound stayed silent until the page was reloaded)
+ */
+const needsResume = (ctx: AudioContext) => {
+  const state: string = ctx.state;
+  return state !== 'running' && state !== 'closed';
+};
+
 const getAudioContext = (): AudioContext => {
   if (!sharedAudioContext) {
     const AudioContextClass = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
@@ -41,8 +51,8 @@ const getAudioContext = (): AudioContext => {
   }
   
   // Always try to resume (no-op if already running)
-  if (sharedAudioContext.state === 'suspended') {
-    sharedAudioContext.resume();
+  if (needsResume(sharedAudioContext)) {
+    sharedAudioContext.resume().catch(() => { /* not allowed yet: the next tap tries again */ });
   }
   
   return sharedAudioContext;
@@ -223,7 +233,7 @@ export const playCancelSound = async () => {
     const audioContext = getAudioContext();
     
     // iOS requires resuming the audio context on user gesture
-    if (audioContext.state === 'suspended') {
+    if (needsResume(audioContext)) {
       await audioContext.resume();
     }
     
@@ -263,7 +273,7 @@ export const playDeleteSound = async () => {
     const audioContext = getAudioContext();
     
     // iOS requires resuming the audio context on user gesture
-    if (audioContext.state === 'suspended') {
+    if (needsResume(audioContext)) {
       await audioContext.resume();
     }
     
@@ -337,7 +347,7 @@ export const playPinSound = async () => {
     const audioContext = getAudioContext();
     
     // iOS requires resuming the audio context on user gesture
-    if (audioContext.state === 'suspended') {
+    if (needsResume(audioContext)) {
       await audioContext.resume();
     }
     
