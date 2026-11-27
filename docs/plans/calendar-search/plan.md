@@ -1,6 +1,6 @@
 # Plan: calendar-search
 
-**Status:** Ready to build <!-- Draft → Ready to build → Building → Built → Reviewed -->
+**Status:** Built <!-- Draft → Ready to build → Building → Built → Reviewed -->
 **Written against:** `main` at `76a1ea8` (2026-11-27)
 **Decided with the owner on:** 2026-11-27
 
@@ -176,7 +176,9 @@ skip the item and mark it Blocked in its log with the question for the owner.
 
 ## Deploy checklist
 
-- [x] Nothing to apply or deploy: front end only, out with Vercel when merged. Merge order: 1, then 2.
+- [x] Nothing to apply or deploy: front end only, out with Vercel when merged. Merge order:
+      `plan/calendar-search/1-search`, then `plan/calendar-search/2-rise`, then
+      `plan/calendar-search/summary`. Build notes in `log/summary.md`.
 
 ## Summary
 
