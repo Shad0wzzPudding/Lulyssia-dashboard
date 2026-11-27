@@ -11,6 +11,10 @@ import annoyedCloseEffect from "@/assets/sound/annoyed_close.wav";
 import drawerOpenEffect from "@/assets/sound/drawer_open.mp3";
 import drawerCloseEffect from "@/assets/sound/drawer_close.mp3";
 import slidingEffect from "@/assets/sound/sliding.wav";
+import cardSwapEffect from "@/assets/sound/card_swap.mp3";
+import cardDropEffect from "@/assets/sound/card_drop.mp3";
+import cardChooseEffect from "@/assets/sound/card_choose.mp3";
+import cardUnchooseEffect from "@/assets/sound/card_unchoose.mp3";
 import { soundLevel, type SoundId } from "@/lib/soundSettings";
 
 // Haptic feedback utility - vibrates if supported
@@ -781,6 +785,56 @@ const loadSoundBuffer = (url: string) => {
     soundLoading.set(url, loading);
   }
   return loading;
+};
+
+// The preset cards' sounds (card_swap, card_drop, card_choose, card_unchoose). Loaded when a form
+// with "Presets" opens, so the first opening already has its sound.
+export const preloadPresetCardSounds = () => {
+  for (const url of [cardSwapEffect, cardDropEffect, cardChooseEffect, cardUnchooseEffect]) void loadSoundBuffer(url);
+};
+
+/** Plays a loaded sound file through its setting's gain; returns the source, or null. */
+const playBuffer = (id: SoundId, buffer: AudioBuffer) => {
+  try {
+    const ctx = getAudioContext();
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(out(id));
+    source.start();
+    return source;
+  } catch (e) {
+    console.warn(`[sounds] Could not play ${id}:`, e);
+    return null;
+  }
+};
+
+/** A sound file for a one-off action: if it isn't loaded yet, it plays as soon as it is. */
+const playCardFile = (id: SoundId, url: string) => {
+  if (!soundOn(id)) return;
+  const buffer = soundBuffers.get(url);
+  if (buffer) playBuffer(id, buffer);
+  else void loadSoundBuffer(url).then((b) => { if (b && soundOn(id)) playBuffer(id, b); });
+};
+
+/** Opening the preset cards (card_swap) */
+export const playCardOpenSound = () => playCardFile('cardOpen', cardSwapEffect);
+/** Picking a card (card_choose) */
+export const playCardPickSound = () => playCardFile('cardPick', cardChooseEffect);
+/** Unpicking the picked card (card_unchoose) */
+export const playCardUnpickSound = () => playCardFile('cardUnpick', cardUnchooseEffect);
+
+// Another card reaching the front (card_drop). A new one cuts off the one before, so a quick drag
+// or flick past several cards doesn't pile them up; not loaded yet, it's skipped (it would be late)
+let cardMoveSource: AudioBufferSourceNode | null = null;
+export const playCardMoveSound = () => {
+  if (!soundOn('cardMove')) return;
+  const buffer = soundBuffers.get(cardDropEffect);
+  if (!buffer) {
+    void loadSoundBuffer(cardDropEffect);
+    return;
+  }
+  try { cardMoveSource?.stop(); } catch { /* already ended */ }
+  cardMoveSource = playBuffer('cardMove', buffer);
 };
 
 export const preloadTrainSound = () => {
