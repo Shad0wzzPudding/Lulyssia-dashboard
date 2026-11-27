@@ -90,8 +90,13 @@ export const LulyssiaConfirmDialog = ({
   // The confirm button stays clickable while the dialog fades out: a double click would run the
   // action twice (e.g. a second, empty delete saying "0 event(s) deleted"). One confirm per opening.
   const confirmedRef = useRef(false);
-  // With a third answer the first one ("Add below") takes the focus when the window opens
+  // The focus goes into the window when it opens (Radix only moves it to its own Cancel part, which
+  // this window doesn't use, so it stayed on the button behind and Enter pressed that again): to
+  // Cancel, or with a third answer to the first one ("Add below")
   const firstAnswerRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  // The button that opened the window gets the focus back when it closes (when it's still there)
+  const openerRef = useRef<HTMLElement | null>(null);
 
   // Play sound when dialog opens
   useEffect(() => {
@@ -118,10 +123,17 @@ export const LulyssiaConfirmDialog = ({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent
-        onOpenAutoFocus={secondaryText ? (e) => {
+        onOpenAutoFocus={(e) => {
           e.preventDefault();
-          firstAnswerRef.current?.focus();
-        } : undefined}
+          openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          (secondaryText ? firstAnswerRef : cancelRef).current?.focus();
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          const opener = openerRef.current;
+          openerRef.current = null;
+          if (opener?.isConnected && opener !== document.body) opener.focus({ preventScroll: true });
+        }}
         className="bg-card border-2 border-foreground/80 shadow-[6px_6px_0_0_hsl(var(--primary))] max-w-md w-[calc(100vw-2rem)] [&>*]:min-w-0">
         <AlertDialogHeader className="text-center min-w-0">
           <div className="flex justify-center mb-2">
@@ -177,6 +189,7 @@ export const LulyssiaConfirmDialog = ({
             </AlertDialogAction>
           </>)}
           <Button 
+            ref={cancelRef}
             variant="outline"
             type="button"
             onClick={() => {
