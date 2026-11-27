@@ -499,3 +499,15 @@ What to do (owner):
 
 ### Findings
 - [x] Low: The rule added in `d201546` (.claude/settings.json) lets Claude delete any GitHub branch without asking (`git push origin --delete *`) and blocks only the exact command `git push origin --delete main`. Other spellings of the same thing match the allowed pattern and aren't blocked, so they'd go through without a question: `git push origin --delete refs/heads/main`, or `git push origin --delete old-branch main` (two branches at once). Nothing has happened; it's a gap in the safety net. Decided (owner): (c) both. Done: deny rules for `main` alone, with other branches, as `refs/heads/main` and in quotes (this commit); branch protection for `main` is a GitHub setting the owner turns on (see What to do)
+
+## Cloud review (27 Nov 2026)
+
+Summary: (filled in at the end of the run). Rounds log: [docs/reviews/2026-11-27-cloud-review.md](docs/reviews/2026-11-27-cloud-review.md).
+
+Branch `cloud-review-2026-11-27`: `main` at `221dabc` with the plan builds calendar-search
+(`plan/calendar-search/2-rise`, `summary`) and presets (`plan/presets/4-moment`, `summary`) merged in
+their order. Merging this branch brings both builds. Presets needs migration
+`supabase/migrations/20261127000000_presets.sql` applied before merging, and `npm install` (package `motion`).
+
+### Findings
+- [x] Medium: After "Apply preset", when Lulyssia's moment ended and faded out over the filled form, the cards layer came back behind it for about half a second (it showed again, then faded out a second time). Done: the layer stays shut once the preset is applied, until the form hears it's closed (this commit)

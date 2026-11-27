@@ -46,6 +46,9 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   const [asking, setAsking] = useState<Preset | null>(null);
   // The apply moment playing (the layer has gone; the form is filled when it ends)
   const [moment, setMoment] = useState<{ preset: Preset; how?: ApplyHow } | null>(null);
+  // Applied: the layer stays shut while the moment fades out over the form (until the form is told
+  // the layer is closed), instead of coming back for that moment
+  const [applied, setApplied] = useState(false);
   // A preset just made with "+": brought to the front once it is in the list
   const [bringId, setBringId] = useState<string | null>(null);
 
@@ -53,6 +56,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
+    setApplied(false);
     if (open) {
       setPickedId(null);
       setDetailsId(null);
@@ -102,6 +106,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
   const endMoment = () => {
     if (!moment) return;
     onApply(moment.preset, moment.how);
+    setApplied(true);
     setMoment(null);
   };
   const pressApply = () => {
@@ -114,7 +119,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
 
   return (
     <>
-      <Dialog open={open && !moment} onOpenChange={(o) => { if (!o) skip(); }}>
+      <Dialog open={open && !moment && !applied} onOpenChange={(o) => { if (!o) skip(); }}>
         <DialogPortal>
           <DialogPrimitive.Content
             aria-describedby={undefined}
@@ -126,7 +131,7 @@ export const PresetPicker = ({ open, onClose, hasDescription, onApply, returnFoc
             onCloseAutoFocus={(e) => {
               e.preventDefault();
               // During the apply moment the focus goes back once the moment has gone
-              if (!moment) returnFocusRef.current?.focus();
+              if (!moment && !applied) returnFocusRef.current?.focus();
             }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); carousel.current?.go(-1); }
