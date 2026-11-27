@@ -26,6 +26,12 @@ interface LulyssiaConfirmDialogProps {
   cancelText?: string;
   /** Shows a tick box with this label above the buttons (unticked each time the window opens) */
   dontAskLabel?: string;
+  /**
+   * A third answer (e.g. "Replace" beside "Add below"): with it the confirm button comes first
+   * (and takes the focus), then this one, then Cancel
+   */
+  secondaryText?: string;
+  onSecondary?: () => void;
 }
 
 const handleConfirmClick = (onConfirm: (dontAsk: boolean) => void, dontAsk: boolean) => {
@@ -62,6 +68,8 @@ export const LulyssiaConfirmDialog = ({
   confirmText = "Yes, I'm sure!",
   cancelText = "Nevermind~",
   dontAskLabel,
+  secondaryText,
+  onSecondary,
 }: LulyssiaConfirmDialogProps) => {
   const [dontAsk, setDontAsk] = useState(false);
   const pickMessage = () => pickRandom(lulyssiaMessages);
@@ -82,6 +90,8 @@ export const LulyssiaConfirmDialog = ({
   // The confirm button stays clickable while the dialog fades out: a double click would run the
   // action twice (e.g. a second, empty delete saying "0 event(s) deleted"). One confirm per opening.
   const confirmedRef = useRef(false);
+  // With a third answer the first one ("Add below") takes the focus when the window opens
+  const firstAnswerRef = useRef<HTMLButtonElement>(null);
 
   // Play sound when dialog opens
   useEffect(() => {
@@ -107,7 +117,12 @@ export const LulyssiaConfirmDialog = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="bg-card border-2 border-foreground/80 shadow-[6px_6px_0_0_hsl(var(--primary))] max-w-md w-[calc(100vw-2rem)] [&>*]:min-w-0">
+      <AlertDialogContent
+        onOpenAutoFocus={secondaryText ? (e) => {
+          e.preventDefault();
+          firstAnswerRef.current?.focus();
+        } : undefined}
+        className="bg-card border-2 border-foreground/80 shadow-[6px_6px_0_0_hsl(var(--primary))] max-w-md w-[calc(100vw-2rem)] [&>*]:min-w-0">
         <AlertDialogHeader className="text-center min-w-0">
           <div className="flex justify-center mb-2">
             <img 
@@ -135,6 +150,32 @@ export const LulyssiaConfirmDialog = ({
           </label>
         )}
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          {secondaryText && (<>
+            <AlertDialogAction
+              ref={firstAnswerRef}
+              onClick={() => {
+                if (confirmedRef.current) return;
+                confirmedRef.current = true;
+                justConfirmedRef.current = true;
+                handleConfirmClick(onConfirm, dontAsk);
+              }}
+              className="w-full sm:w-auto font-semibold"
+            >
+              {confirmText}
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmedRef.current) return;
+                confirmedRef.current = true;
+                justConfirmedRef.current = true;
+                playConfirmSound();
+                onSecondary?.();
+              }}
+              className="w-full sm:w-auto font-semibold"
+            >
+              {secondaryText}
+            </AlertDialogAction>
+          </>)}
           <Button 
             variant="outline"
             type="button"
@@ -151,7 +192,7 @@ export const LulyssiaConfirmDialog = ({
           >
             {cancelText}
           </Button>
-          <AlertDialogAction
+          {!secondaryText && <AlertDialogAction
             onClick={() => {
               if (confirmedRef.current) return;
               confirmedRef.current = true;
@@ -161,7 +202,7 @@ export const LulyssiaConfirmDialog = ({
             className="w-full sm:w-auto font-semibold"
           >
             {confirmText}
-          </AlertDialogAction>
+          </AlertDialogAction>}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

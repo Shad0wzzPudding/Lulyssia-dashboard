@@ -15,6 +15,10 @@ import { AttachmentsField } from './AttachmentsField';
 import { autoDeadline } from '@/lib/autoDeadline';
 import { DEADLINE_BEFORE_START_MESSAGE, deadlineBeforeStart } from '@/lib/dateOrder';
 import { refuseSaveOffline } from '@/lib/formSave';
+import { applyPreset, descriptionHasText, followStart } from '@/lib/presetApply';
+import { useFormPresets } from '@/hooks/useFormPresets';
+import { PresetPicker } from './PresetPicker';
+import { DescriptionLabelRow } from './DescriptionLabelRow';
 
 type RecurrenceUnit = '' | 'day' | 'week' | 'month' | 'year';
 
@@ -57,6 +61,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
     setSaving(false);
     setIsCreateOpen(false);
   };
+  const { presetsOpen, setPresetsOpen, dueOffset, setDueOffset, presetsButtonRef, formContentRef } = useFormPresets();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -87,6 +92,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
     });
     setEditingTask(null);
     setDateErrorShown(false);
+    setDueOffset(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -152,6 +158,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
     playEditSound();
     setEditingTask(task);
     setDateErrorShown(false);
+    setDueOffset(null);
     setFormData({
       title: task.title,
       description: task.description || '',
@@ -185,7 +192,7 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
   return (
     <Dialog open={isCreateOpen} onOpenChange={(open) => { if (!open && isCreateOpen) playCancelSound(); if (open) setIsCreateOpen(true); else closeForm(); }}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <ResizableDialogContent>
+      <ResizableDialogContent ref={formContentRef}>
         <DialogHeader>
           <DialogTitle>
             {editingTask ? 'Edit Task' : 'Create New Task'}
@@ -198,11 +205,14 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             required
           />
-          <FormattedTextarea
-            placeholder="Description (optional)"
-            value={formData.description}
-            onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-          />
+          <div>
+            <DescriptionLabelRow ref={presetsButtonRef} onPresets={() => setPresetsOpen(true)} />
+            <FormattedTextarea
+              placeholder="Description (optional)"
+              value={formData.description}
+              onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
+            />
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Start Date <span className="text-muted-foreground">(optional)</span></label>
             <div className="flex gap-2 items-center">
@@ -213,12 +223,11 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
                 onChange={(e) => {
                   const v = e.target.value;
                   setFormData(prev => {
-                    const next = { ...prev, start_date: v };
-                    // The deadline follows the start (+5 h) until it is set by hand
-                    if (v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_date))) {
-                      next.deadline = autoDeadline(v);
-                    }
-                    return next;
+                    // The deadline follows the start: at start + X after a preset set it that way, otherwise
+                    // +5 h; either until it is set by hand
+                    const deadline = followStart(prev.start_date, prev.deadline, v, dueOffset, () =>
+                      v && (!prev.deadline || prev.deadline === autoDeadline(prev.start_date)) ? autoDeadline(v) : prev.deadline);
+                    return { ...prev, start_date: v, deadline };
                   });
                 }}
                 className="flex-1 h-9 text-base md:text-sm"
@@ -356,6 +365,23 @@ export const TaskFormDialog = forwardRef<TaskFormHandle, TaskFormDialogProps>(fu
             </Button>
           </div>
         </form>
+        <PresetPicker
+          open={presetsOpen}
+          onClose={() => setPresetsOpen(false)}
+          hasDescription={descriptionHasText(formData.description)}
+          returnFocusRef={presetsButtonRef}
+          onApply={(preset, how) => {
+            setFormData((prev) => {
+              const next = applyPreset(
+                { title: prev.title, description: prev.description, start: prev.start_date, deadline: prev.deadline, tag_ids: prev.tag_ids },
+                preset,
+                how
+              );
+              return { ...prev, title: next.title, description: next.description, start_date: next.start, deadline: next.deadline, tag_ids: next.tag_ids };
+            });
+            if (preset.due_amount && preset.due_unit) setDueOffset({ due_amount: preset.due_amount, due_unit: preset.due_unit });
+          }}
+        />
       </ResizableDialogContent>
     </Dialog>
   );
